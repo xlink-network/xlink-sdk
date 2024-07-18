@@ -1,3 +1,20 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib"
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "cSpell.words": [
+    "abtc",
+    "Bitlayer",
+    "Bsquared",
+    "BTCB",
+    "codegen",
+    "PSBT",
+    "Satoshi",
+    "sats",
+    "scure",
+    "Sepolia",
+    "susdt",
+    "txid",
+    "UTXO",
+    "viem",
+    "xlink"
+  ]
 }

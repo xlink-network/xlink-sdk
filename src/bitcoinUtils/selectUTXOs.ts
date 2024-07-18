@@ -60,7 +60,7 @@ export const reselectSpendableUTXOsWithSafePadFactory = (
         index: 0,
         amount: MAX_BIGINT,
         /**
-         * OutScript.bencode({
+         * OutScript.encode({
          *   type: 'pkh',
          *   hash: hash160(secp256k1.getPublicKey(
          *     hex.decode('0000000000000000000000000000000000000000000000000000000000000001'),

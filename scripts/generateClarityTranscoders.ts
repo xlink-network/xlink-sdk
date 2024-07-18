@@ -5,7 +5,14 @@ import { STACKS_CONTRACT_DEPLOYER_MAINNET, STACKS_MAINNET } from "../src/config"
   await generateContracts(
     STACKS_MAINNET.coreApiUrl,
     STACKS_CONTRACT_DEPLOYER_MAINNET,
-    ["btc-bridge-endpoint-v1-11", "cross-bridge-endpoint-v1-03"],
+    [
+      "btc-bridge-registry-v2-01",
+      "btc-peg-in-endpoint-v2-01",
+      "btc-peg-out-endpoint-v2-01",
+      "cross-bridge-registry-v2-01",
+      "cross-peg-in-endpoint-v2-01",
+      "cross-peg-out-endpoint-v2-01",
+    ],
     path.resolve(__dirname, "../generated/smartContract/"),
     "xlink",
     "../smartContractHelpers/codegenImport",

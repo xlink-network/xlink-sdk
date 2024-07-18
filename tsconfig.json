@@ -1,5 +1,8 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "extends": "@c4605/toolconfs/tsconfig-esModule",
-  "exclude": ["lib"]
+  "exclude": ["lib"],
+  "compilerOptions": {
+    "noEmit": true
+  }
 }

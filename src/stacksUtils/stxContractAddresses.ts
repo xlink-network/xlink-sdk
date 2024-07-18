@@ -4,61 +4,70 @@ import {
 } from "../config"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 
-interface ContractInfo {
-  contractAddress: string
+export interface ContractAddress {
+  deployerAddress: string
   contractName: string
 }
 
+const xlinkContractsDeployerMainnet = STACKS_CONTRACT_DEPLOYER_MAINNET
+const xlinkContractsDeployerTestnet = STACKS_CONTRACT_DEPLOYER_TESTNET
+
+const alexContractDeployerMainnet = "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM"
+const alexContractDeployerTestnet = "ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK"
+
 export const stxTokenContractAddresses: Partial<
-  Record<string, Record<KnownChainId.StacksChain, ContractInfo>>
+  Record<
+    KnownTokenId.StacksToken,
+    Record<KnownChainId.StacksChain, ContractAddress>
+  >
 > = {
   [KnownTokenId.Stacks.ALEX]: {
     [KnownChainId.Stacks.Mainnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_MAINNET,
-      contractName: "age000-governance-token",
+      deployerAddress: alexContractDeployerMainnet,
+      contractName: "token-alex",
     },
     [KnownChainId.Stacks.Testnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_TESTNET,
-      contractName: "age000-governance-token",
+      deployerAddress: alexContractDeployerTestnet,
+      contractName: "token-alex",
     },
   },
   [KnownTokenId.Stacks.aBTC]: {
     [KnownChainId.Stacks.Mainnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_MAINNET,
+      deployerAddress: xlinkContractsDeployerMainnet,
       contractName: "token-abtc",
     },
     [KnownChainId.Stacks.Testnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_TESTNET,
+      deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-abtc",
     },
   },
   [KnownTokenId.Stacks.sUSDT]: {
     [KnownChainId.Stacks.Mainnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_MAINNET,
+      deployerAddress: xlinkContractsDeployerMainnet,
       contractName: "token-susdt",
     },
     [KnownChainId.Stacks.Testnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_TESTNET,
+      deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-susdt",
     },
   },
   [KnownTokenId.Stacks.sLUNR]: {
     [KnownChainId.Stacks.Mainnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_MAINNET,
+      deployerAddress: xlinkContractsDeployerMainnet,
       contractName: "token-slunr",
     },
     [KnownChainId.Stacks.Testnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_TESTNET,
+      deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-slunr",
     },
   },
   [KnownTokenId.Stacks.sSKO]: {
     [KnownChainId.Stacks.Mainnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_MAINNET,
+      deployerAddress: xlinkContractsDeployerMainnet,
       contractName: "token-ssko",
     },
     [KnownChainId.Stacks.Testnet]: {
-      contractAddress: STACKS_CONTRACT_DEPLOYER_TESTNET,
+      deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-ssko",
     },
   },

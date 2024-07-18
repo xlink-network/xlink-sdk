@@ -1,7 +1,58 @@
+import { OneOrMore } from "./typeHelpers"
+
 export function hasAny<T>(ary: T[]): ary is [T, ...T[]]
 export function hasAny<T>(ary: readonly T[]): ary is readonly [T, ...T[]]
 export function hasAny<T>(ary: readonly T[]): ary is readonly [T, ...T[]] {
   return ary.length > 0
+}
+
+export function hasLength<T>(input: readonly T[], length: 0): input is []
+export function hasLength<T>(input: readonly T[], length: 1): input is [T]
+export function hasLength<T>(input: readonly T[], length: 2): input is [T, T]
+export function hasLength<T>(input: readonly T[], length: 3): input is [T, T, T]
+export function hasLength<T>(
+  input: readonly T[],
+  length: 4,
+): input is [T, T, T, T]
+export function hasLength<T>(
+  input: readonly T[],
+  length: 5,
+): input is [T, T, T, T, T]
+export function hasLength<T>(
+  input: readonly T[],
+  length: number,
+): input is OneOrMore<T> {
+  return input.length === length
+}
+
+export function first<T>(ary: readonly [T, ...T[]]): T
+export function first<T>(ary: readonly [...T[], T]): T
+export function first<T>(ary: readonly T[]): undefined | T
+export function first<T>(ary: readonly T[]): undefined | T {
+  return ary[0]
+}
+
+export function last<T>(ary: readonly [T, ...T[]]): T
+export function last<T>(ary: readonly [...T[], T]): T
+export function last<T>(ary: readonly T[]): undefined | T
+export function last<T>(ary: readonly T[]): undefined | T {
+  return ary[ary.length - 1]
+}
+
+const _concat = [].concat
+export function concat<Ts extends any[]>(
+  ...inputArrays: Ts[]
+): Ts[number] extends (infer U)[] ? U[] : never {
+  return _concat.apply([], inputArrays as any) as any
+}
+
+const _reduce = [].reduce
+export function reduce<Ts extends readonly any[], U>(
+  fn: (acc: U, item: Ts[number], index: number, items: Ts) => U,
+  initialValue: U,
+  inputArray: Ts,
+): U {
+  return _reduce.call(inputArray, fn as any, initialValue) as any
 }
 
 export function range(start: number, end: number): number[] {
@@ -90,3 +141,44 @@ function compareMultiple<T>(
 
   return obj.index - oth.index
 }
+
+export interface CurriedMapFindFn {
+  <T, U>(fn: (input: T) => U | undefined, input: readonly T[]): U | undefined
+  <T, U>(
+    fn: (input: T) => U | undefined,
+  ): (input: readonly T[]) => U | undefined
+}
+export const mapFind: CurriedMapFindFn = (<T, U>(
+  fn: (input: T) => U | undefined,
+  input: readonly T[],
+): U | undefined => {
+  for (const item of input) {
+    const result = fn(item)
+    if (result != null) {
+      return result
+    }
+  }
+  return undefined
+}) as any
+
+export interface CurriedMapFindPFn {
+  <T, U>(
+    fn: (input: T) => Promise<U | undefined> | U | undefined,
+    input: readonly T[],
+  ): Promise<U | undefined>
+  <T, U>(
+    fn: (input: T) => Promise<U | undefined> | U | undefined,
+  ): (input: readonly T[]) => Promise<U | undefined>
+}
+export const mapFindP: CurriedMapFindPFn = (async <T, U>(
+  fn: (input: T) => Promise<U | undefined> | U | undefined,
+  input: readonly T[],
+): Promise<U | undefined> => {
+  for (const item of input) {
+    const result = await fn(item)
+    if (result != null) {
+      return result
+    }
+  }
+  return undefined
+}) as any

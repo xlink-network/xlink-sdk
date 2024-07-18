@@ -6,6 +6,9 @@ module.exports = {
     "./node_modules/@c4605/toolconfs/eslintrc.ts",
   ],
   parserOptions: {
-    project: './tsconfig.json',
+    project: "./tsconfig.json",
+  },
+  rules: {
+    "@typescript-eslint/ban-ts-comment": "off",
   },
 }

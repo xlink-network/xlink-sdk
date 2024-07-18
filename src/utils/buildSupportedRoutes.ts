@@ -1,42 +1,50 @@
+import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 import { UnsupportedBridgeRouteError } from "./errors"
-import { ChainIdInternal, TokenIdInternal } from "./types.internal"
-import { OneOrMore } from "./typeHelpers"
+import { AnyChainIdInternal, AnyTokenIdInternal } from "./types.internal"
 
 export type SupportedRoute = {
-  chainLeft: ChainIdInternal
-  chainRight: ChainIdInternal
-  tokenLeft: TokenIdInternal
-  tokenRight: TokenIdInternal
+  chainLeft: AnyChainIdInternal
+  chainRight: AnyChainIdInternal
+  tokenLeft: AnyTokenIdInternal
+  tokenRight: AnyTokenIdInternal
 }
 
 export function defineRoute<
-  ChainPair extends [chainLeft: ChainIdInternal, chainRight: ChainIdInternal],
-  TokenPairs extends OneOrMore<
-    [tokenLeft: TokenIdInternal, tokenRight: TokenIdInternal]
-  >,
+  const ChainPairs extends [
+    chainLeft: AnyChainIdInternal,
+    chainRight: AnyChainIdInternal,
+  ][],
+  const TokenPairs extends [
+    tokenLeft: AnyTokenIdInternal,
+    tokenRight: AnyTokenIdInternal,
+  ][],
 >(
-  chainPair: ChainPair,
+  chainPairs: ChainPairs,
   tokenPairs: TokenPairs,
 ): {
-  [K in keyof TokenPairs]: {
-    chainLeft: ChainPair[0]
-    chainRight: ChainPair[1]
-    tokenLeft: TokenPairs[K][0]
-    tokenRight: TokenPairs[K][1]
-  }
-} {
-  return tokenPairs.map(tokenPair => ({
-    chainLeft: chainPair[0],
-    chainRight: chainPair[1],
-    tokenLeft: tokenPair[0],
-    tokenRight: tokenPair[1],
-  })) as any
+  [K1 in keyof ChainPairs]: {
+    [K2 in keyof TokenPairs]: {
+      chainLeft: ChainPairs[K1][0]
+      chainRight: ChainPairs[K1][1]
+      tokenLeft: TokenPairs[K2][0]
+      tokenRight: TokenPairs[K2][1]
+    }
+  }[number]
+}[number][] {
+  return chainPairs.flatMap(chainPair =>
+    tokenPairs.map(tokenPair => ({
+      chainLeft: chainPair[0],
+      chainRight: chainPair[1],
+      tokenLeft: tokenPair[0],
+      tokenRight: tokenPair[1],
+    })),
+  ) as any
 }
 
 type ExtractRouteLtr<
   Routes extends SupportedRoute,
-  FromChain extends ChainIdInternal,
-  ToChain extends ChainIdInternal,
+  FromChain extends AnyChainIdInternal,
+  ToChain extends AnyChainIdInternal,
 > = Routes extends {
   chainLeft: FromChain
   chainRight: ToChain
@@ -52,8 +60,8 @@ type ExtractRouteLtr<
   : never
 type ExtractRouteRtl<
   Routes extends SupportedRoute,
-  FromChain extends ChainIdInternal,
-  ToChain extends ChainIdInternal,
+  FromChain extends AnyChainIdInternal,
+  ToChain extends AnyChainIdInternal,
 > = Routes extends {
   chainRight: FromChain
   chainLeft: ToChain
@@ -69,14 +77,14 @@ type ExtractRouteRtl<
   : never
 
 export type GetSupportedRoutesFnAnyResult = {
-  fromChain: ChainIdInternal
-  toChain: ChainIdInternal
-  fromToken: TokenIdInternal
-  toToken: TokenIdInternal
+  fromChain: AnyChainIdInternal
+  toChain: AnyChainIdInternal
+  fromToken: AnyTokenIdInternal
+  toToken: AnyTokenIdInternal
 }[]
 export type GetSupportedTokensFn<Routes extends SupportedRoute> = <
-  FromChain extends ChainIdInternal,
-  ToChain extends ChainIdInternal,
+  FromChain extends AnyChainIdInternal,
+  ToChain extends AnyChainIdInternal,
 >(
   fromChain: FromChain,
   toChain: ToChain,
@@ -87,33 +95,40 @@ export type GetSupportedTokensFn<Routes extends SupportedRoute> = <
   )[]
 >
 
-export type PickLeftToRightRouteOrThrowFn<Routes extends SupportedRoute> = <
-  FromChain extends ChainIdInternal,
-  ToChain extends ChainIdInternal,
->(
-  fromChain: FromChain,
-  toChain: ToChain,
-  fromToken: TokenIdInternal,
-  toToken: TokenIdInternal,
+export type PickLeftToRightRouteOrThrowFn<Routes extends SupportedRoute> = (
+  fromChain: ChainId,
+  toChain: ChainId,
+  fromToken: TokenId,
+  toToken: TokenId,
 ) => Promise<
-  // prettier-ignore
-  Routes extends { chainLeft: infer FromChain; chainRight: infer ToChain }
-      ? { fromChain: FromChain; toChain: ToChain }
-      : never
+  Routes extends any
+    ? {
+        fromChain: Routes["chainLeft"]
+        toChain: Routes["chainRight"]
+        fromToken: Routes["tokenLeft"]
+        toToken: Routes["tokenRight"]
+      }
+    : never
 >
-export type PickRightToLeftRouteOrThrowFn<Routes extends SupportedRoute> = <
-  FromChain extends ChainIdInternal,
-  ToChain extends ChainIdInternal,
->(
-  fromChain: FromChain,
-  toChain: ToChain,
-  fromToken: TokenIdInternal,
-  toToken: TokenIdInternal,
+export type PickRightToLeftRouteOrThrowFn<Routes extends SupportedRoute> = (
+  fromChain: ChainId,
+  toChain: ChainId,
+  fromToken: TokenId,
+  toToken: TokenId,
 ) => Promise<
-  // prettier-ignore
-  Routes extends { chainRight: infer FromChain; chainLeft: infer ToChain }
-      ? { fromChain: FromChain; toChain: ToChain }
-      : never
+  Routes extends {
+    chainRight: infer FromChain
+    chainLeft: infer ToChain
+    tokenRight: infer FromToken
+    tokenLeft: infer ToToken
+  }
+    ? {
+        fromChain: FromChain
+        toChain: ToChain
+        fromToken: FromToken
+        toToken: ToToken
+      }
+    : never
 >
 
 export interface BuiltSupportedRoutes<SR extends SupportedRoute> {
@@ -187,7 +202,8 @@ const pickRightToLeftRouteOrThrowFactory =
   async (fromChain, toChain, fromToken, toToken) => {
     let result:
       | undefined
-      | { fromChain: ChainIdInternal; toChain: ChainIdInternal } = undefined
+      | { fromChain: AnyChainIdInternal; toChain: AnyChainIdInternal } =
+      undefined
 
     for (const r of routes) {
       if (
@@ -225,7 +241,8 @@ const pickLeftToRightRouteOrThrowFactory =
   async (fromChain, toChain, fromToken, toToken) => {
     let result:
       | undefined
-      | { fromChain: ChainIdInternal; toChain: ChainIdInternal } = undefined
+      | { fromChain: AnyChainIdInternal; toChain: AnyChainIdInternal } =
+      undefined
 
     for (const r of routes) {
       if (
@@ -266,19 +283,19 @@ const getSupportedTokensFactory =
         r,
       ): Promise<
         {
-          fromChain: ChainIdInternal
-          toChain: ChainIdInternal
-          fromToken: TokenIdInternal
-          toToken: TokenIdInternal
+          fromChain: AnyChainIdInternal
+          toChain: AnyChainIdInternal
+          fromToken: AnyTokenIdInternal
+          toToken: AnyTokenIdInternal
         }[]
       > => {
         let route:
           | undefined
           | {
-              fromChain: ChainIdInternal
-              toChain: ChainIdInternal
-              fromToken: TokenIdInternal
-              toToken: TokenIdInternal
+              fromChain: AnyChainIdInternal
+              toChain: AnyChainIdInternal
+              fromToken: AnyTokenIdInternal
+              toToken: AnyTokenIdInternal
             } = undefined
 
         if (r.chainLeft === fromChain && r.chainRight === toChain) {

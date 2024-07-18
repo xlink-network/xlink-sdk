@@ -1,38 +1,36 @@
+import { getBtc2StacksFeeInfo } from "../bitcoinUtils/peggingHelpers"
+import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
+import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
 import {
-  executeReadonlyCallXLINK,
-  getContractCallInfo,
-  numberFromStacksContractNumber,
+  getStacksContractCallInfo,
+  getStacksTokenContractInfo,
 } from "../stacksUtils/xlinkContractHelpers"
-import { BigNumber } from "../utils/BigNumber"
 import { GetSupportedRoutesFnAnyResult } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
-import { checkNever } from "../utils/typeHelpers"
-import {
-  KnownChainId,
-  KnownTokenId,
-  TokenIdInternal,
-} from "../utils/types.internal"
+import { composeTransferProphet2 } from "../utils/feeRateHelpers"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { supportedRoutes } from "./bridgeFromBitcoin"
-import { ChainId, TokenId } from "./types"
+import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
 
-export interface BridgeFeeFromBitcoinInput {
+export interface BridgeInfoFromBitcoinInput {
   fromChain: ChainId
   toChain: ChainId
-  amount: string
+  amount: SDKNumber
 }
 
-export interface BridgeFeeFromBitcoinOutput {
-  paused: boolean
+export interface BridgeInfoFromBitcoinOutput {
+  isPaused: boolean
   feeToken: TokenId
-  feeRate: string
-  minFeeAmount: string
-  minBridgeAmount: null | string
-  maxBridgeAmount: null | string
+  feeRate: SDKNumber
+  minFeeAmount: SDKNumber
+  minBridgeAmount: null | SDKNumber
+  maxBridgeAmount: null | SDKNumber
 }
 
-export const bridgeFeeFromBitcoin = async (
-  info: BridgeFeeFromBitcoinInput,
-): Promise<BridgeFeeFromBitcoinOutput> => {
+export const bridgeInfoFromBitcoin = async (
+  info: BridgeInfoFromBitcoinInput,
+): Promise<BridgeInfoFromBitcoinOutput> => {
   const res: GetSupportedRoutesFnAnyResult =
     await supportedRoutes.getSupportedTokens(info.fromChain, info.toChain)
   if (res.length <= 0) {
@@ -43,53 +41,48 @@ export const bridgeFeeFromBitcoin = async (
     )
   }
 
-  const route = await supportedRoutes.pickLeftToRightRouteOrThrow(
-    info.fromChain,
-    info.toChain,
-    KnownTokenId.Bitcoin.BTC,
-    res[0].toToken,
-  )
+  const fromChain = info.fromChain as KnownChainId.AllChain
+  const toChain = info.toChain as KnownChainId.AllChain
 
-  if (
-    route.fromChain === KnownChainId.Bitcoin.Mainnet ||
-    route.fromChain === KnownChainId.Bitcoin.Testnet
-  ) {
-    if (
-      route.toChain === KnownChainId.Stacks.Mainnet ||
-      route.toChain === KnownChainId.Stacks.Testnet
-    ) {
-      return bridgeFeeFromBitcoin_toStacks({
+  if (KnownChainId.isBitcoinChain(fromChain)) {
+    if (KnownChainId.isStacksChain(toChain)) {
+      return bridgeInfoFromBitcoin_toStacks({
         ...info,
-        fromChain: route.fromChain,
-        toChain: route.toChain,
+        fromChain: fromChain,
+        toChain: toChain,
       })
     }
 
-    checkNever(route)
+    if (KnownChainId.isEVMChain(toChain)) {
+      return bridgeInfoFromBitcoin_toEVM({
+        ...info,
+        fromChain: fromChain,
+        toChain: toChain,
+      })
+    }
+
+    assertExclude(toChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    checkNever(toChain)
   } else {
-    checkNever(route)
+    assertExclude(fromChain, assertExclude.i<KnownChainId.StacksChain>())
+    assertExclude(fromChain, assertExclude.i<KnownChainId.EVMChain>())
+    checkNever(fromChain)
   }
 
   throw new UnsupportedBridgeRouteError(
     info.fromChain,
     info.toChain,
     KnownTokenId.Bitcoin.BTC,
-    res[0].toToken,
   )
 }
 
-async function bridgeFeeFromBitcoin_toStacks(
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  info: Omit<BridgeFeeFromBitcoinInput, "fromChain" | "toChain"> & {
-    fromChain:
-      | typeof KnownChainId.Bitcoin.Mainnet
-      | typeof KnownChainId.Bitcoin.Testnet
-    toChain:
-      | typeof KnownChainId.Stacks.Mainnet
-      | typeof KnownChainId.Stacks.Testnet
+async function bridgeInfoFromBitcoin_toStacks(
+  info: Omit<BridgeInfoFromBitcoinInput, "fromChain" | "toChain"> & {
+    fromChain: KnownChainId.BitcoinChain
+    toChain: KnownChainId.StacksChain
   },
-): Promise<BridgeFeeFromBitcoinOutput> {
-  const contractCallInfo = getContractCallInfo(info.toChain)
+): Promise<BridgeInfoFromBitcoinOutput> {
+  const contractCallInfo = getStacksContractCallInfo(info.toChain)
   if (contractCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -98,39 +91,77 @@ async function bridgeFeeFromBitcoin_toStacks(
     )
   }
 
-  const [paused, pegInFeeRate, pegInMinFee] = await Promise.all([
-    executeReadonlyCallXLINK(
-      "btc-bridge-endpoint-v1-11",
-      "is-peg-in-paused",
-      {},
-      {
-        deployerAddress: contractCallInfo.deployerAddress,
-      },
-    ),
-    executeReadonlyCallXLINK(
-      "btc-bridge-endpoint-v1-11",
-      "get-peg-in-fee",
-      {},
-      {
-        deployerAddress: contractCallInfo.deployerAddress,
-      },
-    ).then(numberFromStacksContractNumber),
-    executeReadonlyCallXLINK(
-      "btc-bridge-endpoint-v1-11",
-      "get-peg-in-min-fee",
-      {},
-      {
-        deployerAddress: contractCallInfo.deployerAddress,
-      },
-    ).then(numberFromStacksContractNumber),
-  ])
+  const feeInfo = await getBtc2StacksFeeInfo({
+    network: contractCallInfo.network,
+    endpointDeployerAddress: contractCallInfo.deployerAddress,
+  })
 
   return {
-    paused,
-    feeToken: TokenIdInternal.toTokenId(KnownTokenId.Bitcoin.BTC),
-    feeRate: BigNumber.toString(pegInFeeRate),
-    minFeeAmount: BigNumber.toString(pegInMinFee),
-    minBridgeAmount: BigNumber.toString(pegInMinFee),
-    maxBridgeAmount: null,
+    isPaused: feeInfo.isPaused,
+    feeToken: KnownTokenId.Bitcoin.BTC as TokenId,
+    feeRate: toSDKNumberOrUndefined(feeInfo.feeRate),
+    minFeeAmount: toSDKNumberOrUndefined(feeInfo.minFee),
+    minBridgeAmount: toSDKNumberOrUndefined(feeInfo.minAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(feeInfo.maxAmount),
+  }
+}
+
+async function bridgeInfoFromBitcoin_toEVM(
+  info: Omit<BridgeInfoFromBitcoinInput, "fromChain" | "toChain"> & {
+    fromChain: KnownChainId.BitcoinChain
+    toChain: KnownChainId.EVMChain
+  },
+): Promise<BridgeInfoFromBitcoinOutput> {
+  const transitStacksChainId =
+    info.fromChain === KnownChainId.Bitcoin.Mainnet
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet
+  const stacksContractCallInfo = getStacksTokenContractInfo(
+    transitStacksChainId,
+    KnownTokenId.Stacks.aBTC,
+  )
+  if (stacksContractCallInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
+
+  const step1FeeInfo = await getBtc2StacksFeeInfo({
+    network: stacksContractCallInfo.network,
+    endpointDeployerAddress: stacksContractCallInfo.deployerAddress,
+  })
+  const step2FeeInfo = await getStacks2EvmFeeInfo(
+    {
+      network: stacksContractCallInfo.network,
+      endpointDeployerAddress: stacksContractCallInfo.deployerAddress,
+    },
+    {
+      toChainId: contractAssignedChainIdFromBridgeChain(info.toChain),
+      stacksToken: stacksContractCallInfo,
+    },
+  )
+  if (step2FeeInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
+
+  const finalInfo = composeTransferProphet2(step1FeeInfo, step2FeeInfo)
+
+  return {
+    isPaused: finalInfo.isPaused,
+    feeToken: KnownTokenId.Bitcoin.BTC as TokenId,
+    feeRate: toSDKNumberOrUndefined(finalInfo.feeRate),
+    minFeeAmount: toSDKNumberOrUndefined(finalInfo.minFee),
+    minBridgeAmount: toSDKNumberOrUndefined(finalInfo.minAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(finalInfo.maxAmount),
+
+    // for debugging
+    // @ts-ignore
+    _transferProphets: finalInfo.transferProphets,
   }
 }

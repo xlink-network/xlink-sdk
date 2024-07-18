@@ -1,6 +1,11 @@
 import { TxBroadcastResultRejected } from "@stacks/transactions"
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
-import { ChainIdInternal, TokenIdInternal } from "./types.internal"
+import {
+  AnyChainIdInternal,
+  AnyTokenIdInternal,
+  ChainIdInternal,
+  TokenIdInternal,
+} from "./types.internal"
 
 export class XLINKSDKErrorBase extends Error {
   constructor(message: string) {
@@ -16,10 +21,10 @@ export class UnsupportedBridgeRouteError extends XLINKSDKErrorBase {
   toToken?: TokenId
 
   constructor(
-    fromChain: ChainId | ChainIdInternal,
-    toChain: ChainId | ChainIdInternal,
-    fromToken: TokenId | TokenIdInternal,
-    toToken?: TokenId | TokenIdInternal,
+    fromChain: ChainId | AnyChainIdInternal,
+    toChain: ChainId | AnyChainIdInternal,
+    fromToken: TokenId | AnyTokenIdInternal,
+    toToken?: TokenId | AnyTokenIdInternal,
   ) {
     super(
       `Unsupported chain combination: ${fromToken}(${fromChain}) -> ${toToken ?? "Unknown Token"}(${toChain})`,
@@ -37,6 +42,12 @@ export class UnsupportedChainError extends XLINKSDKErrorBase {
   constructor(public chainId: ChainId) {
     super(`Unsupported chain: ${chainId}`)
     this.name = "UnsupportedChainError"
+  }
+}
+export class UnsupportedContractAssignedChainIdError extends XLINKSDKErrorBase {
+  constructor(public chainId: bigint) {
+    super(`Unsupported smart contract assigned chain id: ${chainId}`)
+    this.name = "UnsupportedContractAssignedChainIdError"
   }
 }
 

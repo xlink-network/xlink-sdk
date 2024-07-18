@@ -5,100 +5,100 @@ import {
 } from "@stacks/transactions"
 import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
-import { contractAssignedChainIdFromBridgeChain } from "../ethereumUtils/crossContractDataMapping"
+import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
+import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
+import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 import {
   composeTxXLINK,
-  getContractCallInfo,
-  getTokenContractInfo,
+  getStacksContractCallInfo,
+  getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import {
   buildSupportedRoutes,
   defineRoute,
 } from "../utils/buildSupportedRoutes"
-import { decodeHex } from "../utils/hexHelpers"
 import {
   StacksTransactionBroadcastError,
   UnsupportedBridgeRouteError,
 } from "../utils/errors"
+import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { ChainId, TokenId } from "./types"
-import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
+import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
     // from mainnet
     defineRoute(
-      [KnownChainId.Stacks.Mainnet, KnownChainId.Bitcoin.Mainnet],
+      // to Bitcoin
+      [[KnownChainId.Stacks.Mainnet, KnownChainId.Bitcoin.Mainnet]],
       [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
     ),
     defineRoute(
-      [KnownChainId.Stacks.Mainnet, KnownChainId.Ethereum.Mainnet],
+      // to Ethereum
+      [[KnownChainId.Stacks.Mainnet, KnownChainId.EVM.Ethereum]],
       [
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.Ethereum.WBTC],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.Ethereum.USDT],
-        [KnownTokenId.Stacks.sLUNR, KnownTokenId.Ethereum.LUNR],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.Ethereum.ALEX],
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.Ethereum.SKO],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
     defineRoute(
-      [KnownChainId.Stacks.Mainnet, KnownChainId.Ethereum.BSC],
+      // to BSC
+      [[KnownChainId.Stacks.Mainnet, KnownChainId.EVM.BSC]],
       [
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.Ethereum.BTCB],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.Ethereum.USDT],
-        [KnownTokenId.Stacks.sLUNR, KnownTokenId.Ethereum.LUNR],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.Ethereum.ALEX],
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.Ethereum.SKO],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
+        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
+        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
+      ],
+    ),
+    defineRoute(
+      // to rest EVM chains
+      [
+        [KnownChainId.Stacks.Mainnet, KnownChainId.EVM.CoreDAO],
+        [KnownChainId.Stacks.Mainnet, KnownChainId.EVM.Bsquared],
+        [KnownChainId.Stacks.Mainnet, KnownChainId.EVM.BOB],
+        [KnownChainId.Stacks.Mainnet, KnownChainId.EVM.Bitlayer],
+        [KnownChainId.Stacks.Mainnet, KnownChainId.EVM.Lorenzo],
+        [KnownChainId.Stacks.Mainnet, KnownChainId.EVM.Merlin],
+      ],
+      [
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
+        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
+        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
       ],
     ),
 
     // from testnet
-    defineRoute(
-      [KnownChainId.Stacks.Testnet, KnownChainId.Bitcoin.Testnet],
-      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
-    ),
-    defineRoute(
-      [KnownChainId.Stacks.Testnet, KnownChainId.Ethereum.Sepolia],
-      [
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.Ethereum.WBTC],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.Ethereum.USDT],
-        [KnownTokenId.Stacks.sLUNR, KnownTokenId.Ethereum.LUNR],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.Ethereum.ALEX],
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.Ethereum.SKO],
-      ],
-    ),
-    defineRoute(
-      [KnownChainId.Stacks.Testnet, KnownChainId.Ethereum.BSCTest],
-      [
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.Ethereum.BTCB],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.Ethereum.USDT],
-        [KnownTokenId.Stacks.sLUNR, KnownTokenId.Ethereum.LUNR],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.Ethereum.ALEX],
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.Ethereum.SKO],
-      ],
-    ),
   ],
   {
     async isAvailable(route) {
+      if (!KnownChainId.isStacksChain(route.fromChain)) return false
+      if (!KnownTokenId.isStacksToken(route.fromToken)) return false
       if (
-        route.fromChain === KnownChainId.Stacks.Mainnet ||
-        route.fromChain === KnownChainId.Stacks.Testnet
+        stxTokenContractAddresses[route.fromToken]?.[route.fromChain] == null
       ) {
-        return (
-          stxTokenContractAddresses[route.fromToken]?.[route.fromChain] != null
-        )
+        return false
       }
 
-      if (
-        route.toChain === KnownChainId.Stacks.Mainnet ||
-        route.toChain === KnownChainId.Stacks.Testnet
-      ) {
-        return stxTokenContractAddresses[route.toToken]?.[route.toChain] != null
+      if (KnownChainId.isStacksChain(route.toChain)) {
+        return false
       }
 
-      checkNever(route)
+      if (KnownChainId.isEVMChain(route.toChain)) {
+        if (!KnownTokenId.isEVMToken(route.toToken)) return false
+        return evmContractAddresses[route.toChain][route.toToken] != null
+      }
+
+      if (KnownChainId.isBitcoinChain(route.toChain)) {
+        if (!KnownTokenId.isBitcoinToken(route.toToken)) return false
+        return getBTCPegInAddress(route.toChain) != null
+      }
+
+      checkNever(route.toChain)
       return false
     },
   },
@@ -130,37 +130,38 @@ export async function bridgeFromStacks(
     info.toToken,
   )
 
-  if (
-    route.fromChain === KnownChainId.Stacks.Mainnet ||
-    route.fromChain === KnownChainId.Stacks.Testnet
-  ) {
-    if (
-      route.toChain === KnownChainId.Bitcoin.Mainnet ||
-      route.toChain === KnownChainId.Bitcoin.Testnet
-    ) {
-      return bridgeFromStacks_toBitcoin({
-        ...info,
-        fromChain: route.fromChain,
-        toChain: route.toChain,
-      })
+  if (KnownChainId.isStacksChain(route.fromChain)) {
+    if (KnownChainId.isBitcoinChain(route.toChain)) {
+      if (
+        KnownTokenId.isStacksToken(route.fromToken) &&
+        KnownTokenId.isBitcoinToken(route.toToken)
+      ) {
+        return bridgeFromStacks_toBitcoin({
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isEVMChain(route.toChain)) {
+      if (
+        KnownTokenId.isStacksToken(route.fromToken) &&
+        KnownTokenId.isEVMToken(route.toToken)
+      ) {
+        return bridgeFromStacks_toEVM({
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else {
+      checkNever(route.toChain)
     }
-
-    if (
-      route.toChain === KnownChainId.Ethereum.Mainnet ||
-      route.toChain === KnownChainId.Ethereum.Sepolia ||
-      route.toChain === KnownChainId.Ethereum.BSC ||
-      route.toChain === KnownChainId.Ethereum.BSCTest
-    ) {
-      return bridgeFromStacks_toEthereum({
-        ...info,
-        fromChain: route.fromChain,
-        toChain: route.toChain,
-      })
-    }
-
-    checkNever(route)
   } else {
-    checkNever(route)
+    checkNever(route.fromChain)
   }
 
   throw new UnsupportedBridgeRouteError(
@@ -172,16 +173,17 @@ export async function bridgeFromStacks(
 }
 
 async function bridgeFromStacks_toBitcoin(
-  info: Omit<BridgeFromStacksInput, "fromChain" | "toChain"> & {
-    fromChain:
-      | typeof KnownChainId.Stacks.Mainnet
-      | typeof KnownChainId.Stacks.Testnet
-    toChain:
-      | typeof KnownChainId.Bitcoin.Mainnet
-      | typeof KnownChainId.Bitcoin.Testnet
+  info: Omit<
+    BridgeFromStacksInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > & {
+    fromChain: KnownChainId.StacksChain
+    toChain: KnownChainId.BitcoinChain
+    fromToken: KnownTokenId.StacksToken
+    toToken: KnownTokenId.BitcoinToken
   },
 ): Promise<BridgeFromStacksOutput> {
-  const contractCallInfo = getContractCallInfo(info.fromChain)
+  const contractCallInfo = getStacksContractCallInfo(info.fromChain)
   if (!contractCallInfo) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -199,7 +201,7 @@ async function bridgeFromStacks_toBitcoin(
       : btc.TEST_NETWORK
 
   const options = composeTxXLINK(
-    "btc-bridge-endpoint-v1-11",
+    "btc-peg-out-endpoint-v2-01",
     "request-peg-out-0",
     {
       "peg-out-address": addressToScriptPubKey(bitcoinNetwork, info.toAddress),
@@ -222,20 +224,22 @@ async function bridgeFromStacks_toBitcoin(
   return { txid: broadcastResponse.txid }
 }
 
-async function bridgeFromStacks_toEthereum(
-  info: Omit<BridgeFromStacksInput, "fromChain" | "toChain"> & {
-    fromChain:
-      | typeof KnownChainId.Stacks.Mainnet
-      | typeof KnownChainId.Stacks.Testnet
-    toChain:
-      | typeof KnownChainId.Ethereum.Mainnet
-      | typeof KnownChainId.Ethereum.Sepolia
-      | typeof KnownChainId.Ethereum.BSC
-      | typeof KnownChainId.Ethereum.BSCTest
+async function bridgeFromStacks_toEVM(
+  info: Omit<
+    BridgeFromStacksInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > & {
+    fromChain: KnownChainId.StacksChain
+    toChain: KnownChainId.EVMChain
+    fromToken: KnownTokenId.StacksToken
+    toToken: KnownTokenId.EVMToken
   },
 ): Promise<BridgeFromStacksOutput> {
-  const contractCallInfo = getContractCallInfo(info.fromChain)
-  const tokenContractInfo = getTokenContractInfo(info.fromChain, info.fromToken)
+  const contractCallInfo = getStacksContractCallInfo(info.fromChain)
+  const tokenContractInfo = getStacksTokenContractInfo(
+    info.fromChain,
+    info.fromToken,
+  )
   if (contractCallInfo == null || tokenContractInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -246,12 +250,12 @@ async function bridgeFromStacks_toEthereum(
   }
 
   const options = composeTxXLINK(
-    "cross-bridge-endpoint-v1-03",
+    "cross-peg-out-endpoint-v2-01",
     "transfer-to-unwrap",
     {
       "token-trait": `${tokenContractInfo.deployerAddress}.${tokenContractInfo.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
-      "the-chain-id": contractAssignedChainIdFromBridgeChain(info.toChain),
+      "dest-chain-id": contractAssignedChainIdFromBridgeChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),
     },
     { deployerAddress: contractCallInfo.deployerAddress },

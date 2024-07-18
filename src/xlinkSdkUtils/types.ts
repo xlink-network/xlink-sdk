@@ -1,6 +1,13 @@
-export type TokenId = string & { __brand: "XLINK SDK Token Id" }
+import { BigNumber } from "../utils/BigNumber"
 
-export type ChainId = string & { __brand: "XLINK SDK Chain Id" }
+export type TokenId = string & { __brand: "XLink SDK Token Id" }
+
+export type ChainId = string & { __brand: "XLink SDK Chain Id" }
+
+export interface ChainToken {
+  chain: ChainId
+  token: TokenId
+}
 
 export interface SupportedToken {
   fromChain: ChainId
@@ -9,4 +16,17 @@ export interface SupportedToken {
   toToken: TokenId
 }
 
-export type TokenAmount = string & { __brand: "XLINK SDK Token Amount" }
+export type SDKNumber = `${number}` & { __brand: "XLink SDK Result Number" }
+export function toSDKNumberOrUndefined(n: number | BigNumber): SDKNumber
+export function toSDKNumberOrUndefined(
+  n: undefined | number | BigNumber,
+): undefined | SDKNumber
+export function toSDKNumberOrUndefined(
+  n: null | number | BigNumber,
+): null | SDKNumber
+export function toSDKNumberOrUndefined(
+  n: null | undefined | number | BigNumber,
+): null | undefined | SDKNumber {
+  if (n == null) return undefined
+  return BigNumber.toString(n) as SDKNumber
+}

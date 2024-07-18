@@ -1,19 +1,19 @@
+import { StacksNetwork } from "@stacks/network"
 import {
   composeTxOptionsFactory,
   executeReadonlyCallFactory,
 } from "clarity-codegen"
 import { xlinkContracts } from "../../generated/smartContract/contracts_xlink"
-import { KnownChainId, TokenIdInternal } from "../utils/types.internal"
 import {
   STACKS_CONTRACT_DEPLOYER_MAINNET,
   STACKS_CONTRACT_DEPLOYER_TESTNET,
   STACKS_MAINNET,
   STACKS_TESTNET,
 } from "../config"
-import { StacksNetwork } from "@stacks/network"
-import { stxTokenContractAddresses } from "./stxContractAddresses"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
 import { checkNever } from "../utils/typeHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { stxTokenContractAddresses } from "./stxContractAddresses"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
 export const numberFromStacksContractNumber = (
@@ -42,7 +42,7 @@ export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
   {},
 )
 
-export const getContractCallInfo = (
+export const getStacksContractCallInfo = (
   chainId: KnownChainId.StacksChain,
 ):
   | undefined
@@ -66,9 +66,9 @@ export const getContractCallInfo = (
   return
 }
 
-export const getTokenContractInfo = (
+export const getStacksTokenContractInfo = (
   chainId: KnownChainId.StacksChain,
-  tokenId: TokenIdInternal,
+  tokenId: KnownTokenId.StacksToken,
 ):
   | undefined
   | {
@@ -76,7 +76,7 @@ export const getTokenContractInfo = (
       deployerAddress: string
       contractName: string
     } => {
-  const contractCallInfo = getContractCallInfo(chainId)
+  const contractCallInfo = getStacksContractCallInfo(chainId)
 
   if (
     contractCallInfo == null ||
