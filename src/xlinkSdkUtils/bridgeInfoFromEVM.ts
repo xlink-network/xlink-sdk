@@ -110,7 +110,7 @@ async function bridgeInfoFromEVM_toStacks(
     toToken: KnownTokenId.StacksToken
   },
 ): Promise<BridgeInfoFromEVMOutput> {
-  const evmContractCallInfo = getEVMTokenContractInfo(
+  const evmContractCallInfo = await getEVMTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )
@@ -169,7 +169,7 @@ async function bridgeInfoFromEVM_toBitcoin(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
   const stacksContractCallInfo = getStacksContractCallInfo(stacksChain)
-  const evmContractCallInfo = getEVMTokenContractInfo(
+  const evmContractCallInfo = await getEVMTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )
@@ -242,7 +242,7 @@ async function bridgeInfoFromEVM_toEVM(
   const stacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const evmContractCallInfo = getEVMTokenContractInfo(
+  const evmContractCallInfo = await getEVMTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )

@@ -185,37 +185,61 @@ export async function fromCorrespondingStacksCurrency(
   const EVMToken = KnownTokenId.EVM
   const StacksToken = KnownTokenId.Stacks
 
-  const restEthCurrency = assertExclude.i<KnownTokenId.EVMToken>()
-
-  if (stacksToken === StacksToken.sUSDT) {
-    return EVMToken.USDT
-  }
-  assertExclude(restEthCurrency, EVMToken.USDT)
+  const restEVMTokenPossibilities = assertExclude.i<KnownTokenId.EVMToken>()
 
   if (stacksToken === StacksToken.sLUNR) {
     return EVMToken.LUNR
   }
-  assertExclude(restEthCurrency, EVMToken.LUNR)
+  assertExclude(restEVMTokenPossibilities, EVMToken.LUNR)
 
   if (stacksToken === StacksToken.ALEX) {
     return EVMToken.ALEX
   }
-  assertExclude(restEthCurrency, EVMToken.ALEX)
+  assertExclude(restEVMTokenPossibilities, EVMToken.ALEX)
 
   if (stacksToken === StacksToken.sSKO) {
     return EVMToken.SKO
   }
-  assertExclude(restEthCurrency, EVMToken.SKO)
+  assertExclude(restEVMTokenPossibilities, EVMToken.SKO)
 
   if (stacksToken === StacksToken.vLiSTX) {
     return EVMToken.vLiSTX
   }
-  assertExclude(restEthCurrency, EVMToken.vLiSTX)
+  assertExclude(restEVMTokenPossibilities, EVMToken.vLiSTX)
 
   if (stacksToken === StacksToken.vLiALEX) {
     return EVMToken.vLiALEX
   }
-  assertExclude(restEthCurrency, EVMToken.vLiALEX)
+  assertExclude(restEVMTokenPossibilities, EVMToken.vLiALEX)
+
+  if (stacksToken === StacksToken.sUSDT) {
+    switch (toChain) {
+      case EVMChain.Ethereum:
+      case EVMChain.Sepolia:
+      case EVMChain.BSC:
+      case EVMChain.BSCTestnet:
+        return EVMToken.USDT
+      case EVMChain.CoreDAO:
+      case EVMChain.CoreDAOTestnet:
+      case EVMChain.Bsquared:
+      case EVMChain.BsquaredTestnet:
+      case EVMChain.BOB:
+      case EVMChain.BOBTestnet:
+      case EVMChain.Bitlayer:
+      case EVMChain.BitlayerTestnet:
+      case EVMChain.Lorenzo:
+      case EVMChain.LorenzoTestnet:
+      case EVMChain.Merlin:
+      case EVMChain.MerlinTestnet:
+      case EVMChain.AILayer:
+      case EVMChain.AILayerTestnet:
+        return EVMToken.sUSDT
+      default:
+        checkNever(toChain)
+    }
+  }
+  assertExclude(restEVMTokenPossibilities, EVMToken.USDT)
+  assertExclude(restEVMTokenPossibilities, EVMToken.sUSDT)
 
   if (stacksToken === StacksToken.aBTC) {
     switch (toChain) {
@@ -244,11 +268,11 @@ export async function fromCorrespondingStacksCurrency(
         checkNever(toChain)
     }
   }
-  assertExclude(restEthCurrency, EVMToken.aBTC)
-  assertExclude(restEthCurrency, EVMToken.WBTC)
-  assertExclude(restEthCurrency, EVMToken.BTCB)
+  assertExclude(restEVMTokenPossibilities, EVMToken.aBTC)
+  assertExclude(restEVMTokenPossibilities, EVMToken.WBTC)
+  assertExclude(restEVMTokenPossibilities, EVMToken.BTCB)
 
-  checkNever(restEthCurrency)
+  checkNever(restEVMTokenPossibilities)
   return undefined
 }
 export async function toCorrespondingStacksCurrency(
@@ -258,8 +282,6 @@ export async function toCorrespondingStacksCurrency(
   const StacksToken = KnownTokenId.Stacks
 
   switch (evmToken) {
-    case EVMToken.USDT:
-      return StacksToken.sUSDT
     case EVMToken.LUNR:
       return StacksToken.sLUNR
     case EVMToken.ALEX:
@@ -270,6 +292,9 @@ export async function toCorrespondingStacksCurrency(
       return StacksToken.vLiSTX
     case EVMToken.vLiALEX:
       return StacksToken.vLiALEX
+    case EVMToken.USDT:
+    case EVMToken.sUSDT:
+      return StacksToken.sUSDT
     case EVMToken.BTCB:
     case EVMToken.WBTC:
     case EVMToken.aBTC:

@@ -3,6 +3,7 @@
   "extends": "@c4605/toolconfs/tsconfig-esModule",
   "exclude": ["lib"],
   "compilerOptions": {
+    "skipLibCheck": true,
     "noEmit": true
   }
 }

@@ -66,6 +66,7 @@ export const supportedRoutes = buildSupportedRoutes(
       ],
       [
         [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
         [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
         [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
         [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],

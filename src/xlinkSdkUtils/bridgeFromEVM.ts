@@ -2,13 +2,12 @@ import { Address, Hex, encodeFunctionData } from "viem"
 import { sendRawTransaction } from "viem/actions"
 import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
-import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
 import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
 import {
-  getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberToSolidityContractNumber,
 } from "../evmUtils/xlinkContractHelpers"
+import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
 import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 import {
   buildSupportedRoutes,
@@ -34,6 +33,7 @@ export const supportedRoutes = buildSupportedRoutes(
       [[KnownChainId.EVM.Ethereum, KnownChainId.Stacks.Mainnet]],
       [
         [KnownTokenId.EVM.WBTC, KnownTokenId.Stacks.aBTC],
+        [KnownTokenId.EVM.USDT, KnownTokenId.Stacks.sUSDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.Stacks.ALEX],
       ],
     ),
@@ -42,6 +42,7 @@ export const supportedRoutes = buildSupportedRoutes(
       [[KnownChainId.EVM.Ethereum, KnownChainId.EVM.BSC]],
       [
         [KnownTokenId.EVM.WBTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.EVM.USDT, KnownTokenId.EVM.USDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
@@ -57,6 +58,7 @@ export const supportedRoutes = buildSupportedRoutes(
       ],
       [
         [KnownTokenId.EVM.WBTC, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.EVM.USDT, KnownTokenId.EVM.sUSDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
@@ -81,6 +83,7 @@ export const supportedRoutes = buildSupportedRoutes(
       [[KnownChainId.EVM.BSC, KnownChainId.EVM.Ethereum]],
       [
         [KnownTokenId.EVM.BTCB, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.EVM.USDT, KnownTokenId.EVM.USDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
@@ -96,6 +99,7 @@ export const supportedRoutes = buildSupportedRoutes(
       ],
       [
         [KnownTokenId.EVM.BTCB, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.EVM.USDT, KnownTokenId.EVM.sUSDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
@@ -124,6 +128,7 @@ export const supportedRoutes = buildSupportedRoutes(
       ],
       [
         [KnownTokenId.EVM.aBTC, KnownTokenId.Stacks.aBTC],
+        [KnownTokenId.EVM.sUSDT, KnownTokenId.Stacks.sUSDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.Stacks.ALEX],
         [KnownTokenId.EVM.vLiSTX, KnownTokenId.Stacks.vLiSTX],
         [KnownTokenId.EVM.vLiALEX, KnownTokenId.Stacks.vLiALEX],
@@ -141,6 +146,7 @@ export const supportedRoutes = buildSupportedRoutes(
       ],
       [
         [KnownTokenId.EVM.aBTC, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.EVM.sUSDT, KnownTokenId.EVM.USDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
@@ -156,6 +162,7 @@ export const supportedRoutes = buildSupportedRoutes(
       ],
       [
         [KnownTokenId.EVM.aBTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.EVM.sUSDT, KnownTokenId.EVM.USDT],
         [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
       ],
     ),
@@ -172,6 +179,7 @@ export const supportedRoutes = buildSupportedRoutes(
         ary.filter(i => i !== el).map(el2 => [el, el2]),
         [
           [KnownTokenId.EVM.aBTC, KnownTokenId.EVM.aBTC],
+          [KnownTokenId.EVM.sUSDT, KnownTokenId.EVM.sUSDT],
           [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
           [KnownTokenId.EVM.vLiSTX, KnownTokenId.EVM.vLiSTX],
           [KnownTokenId.EVM.vLiALEX, KnownTokenId.EVM.vLiALEX],
@@ -304,16 +312,11 @@ async function bridgeFromEVM_toStacks(
 ): Promise<BridgeFromEVMOutput> {
   const bridgeEndpointAddress =
     evmContractAddresses[info.fromChain].BridgeEndpoint
-  const contractCallInfo = getEVMContractCallInfo(info.fromChain)
-  const fromTokenContractAddress = getEVMTokenContractInfo(
+  const fromTokenContractAddress = await getEVMTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )
-  if (
-    bridgeEndpointAddress == null ||
-    contractCallInfo == null ||
-    fromTokenContractAddress == null
-  ) {
+  if (bridgeEndpointAddress == null || fromTokenContractAddress == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -337,7 +340,7 @@ async function bridgeFromEVM_toStacks(
     data: decodeHex(functionData),
   })
 
-  const txid = await sendRawTransaction(contractCallInfo.client, {
+  const txid = await sendRawTransaction(fromTokenContractAddress.client, {
     serializedTransaction: transactionHex as Hex,
   })
 
@@ -357,16 +360,11 @@ async function bridgeFromEVM_toBitcoinOrEVM(
 ): Promise<BridgeFromEVMOutput> {
   const bridgeEndpointAddress =
     evmContractAddresses[info.fromChain].BridgeEndpoint
-  const contractCallInfo = getEVMContractCallInfo(info.fromChain)
-  const fromTokenContractAddress = getEVMTokenContractInfo(
+  const fromTokenContractAddress = await getEVMTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )
-  if (
-    bridgeEndpointAddress == null ||
-    contractCallInfo == null ||
-    fromTokenContractAddress == null
-  ) {
+  if (bridgeEndpointAddress == null || fromTokenContractAddress == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -391,7 +389,7 @@ async function bridgeFromEVM_toBitcoinOrEVM(
     data: decodeHex(functionData),
   })
 
-  const txid = await sendRawTransaction(contractCallInfo.client, {
+  const txid = await sendRawTransaction(fromTokenContractAddress.client, {
     serializedTransaction: transactionHex as Hex,
   })
 

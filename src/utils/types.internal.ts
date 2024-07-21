@@ -39,6 +39,7 @@ export namespace KnownTokenId {
 
     // wrapped tokens
     export const aBTC = tokenId("evm-abtc")
+    export const sUSDT = tokenId("evm-susdt")
     export const ALEX = tokenId("evm-alex")
     export const SKO = tokenId("evm-sko")
     export const vLiSTX = tokenId("evm-vlistx")
@@ -52,6 +53,7 @@ export namespace KnownTokenId {
       value === EVM.WBTC ||
       value === EVM.BTCB ||
       value === EVM.aBTC ||
+      value === EVM.sUSDT ||
       value === EVM.ALEX ||
       value === EVM.SKO ||
       value === EVM.vLiSTX ||
