@@ -221,24 +221,24 @@ export async function fromCorrespondingStacksCurrency(
     switch (toChain) {
       case EVMChain.Ethereum:
       case EVMChain.Sepolia:
-      case EVMChain.BSCTest:
+      case EVMChain.BSCTestnet:
         return EVMToken.WBTC
       case EVMChain.BSC:
         return EVMToken.BTCB
       case EVMChain.CoreDAO:
-      case EVMChain.CoreDAOTest:
+      case EVMChain.CoreDAOTestnet:
       case EVMChain.Bsquared:
-      case EVMChain.BsquaredTest:
+      case EVMChain.BsquaredTestnet:
       case EVMChain.BOB:
-      case EVMChain.BOBTest:
+      case EVMChain.BOBTestnet:
       case EVMChain.Bitlayer:
-      case EVMChain.BitlayerTest:
+      case EVMChain.BitlayerTestnet:
       case EVMChain.Lorenzo:
-      case EVMChain.LorenzoTest:
+      case EVMChain.LorenzoTestnet:
       case EVMChain.Merlin:
-      case EVMChain.MerlinTest:
+      case EVMChain.MerlinTestnet:
       case EVMChain.AILayer:
-      case EVMChain.AILayerTest:
+      case EVMChain.AILayerTestnet:
         return EVMToken.aBTC
       default:
         checkNever(toChain)

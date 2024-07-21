@@ -107,35 +107,35 @@ export namespace KnownChainId {
 
     // BNB Smart Chain
     export const BSC = chainId("evm-bsc")
-    export const BSCTest = chainId("evm-bsctestnet")
+    export const BSCTestnet = chainId("evm-bsctestnet")
 
     // CoreDAO
     export const CoreDAO = chainId("evm-coredao")
-    export const CoreDAOTest = chainId("evm-coredao-testnet")
+    export const CoreDAOTestnet = chainId("evm-coredao-testnet")
 
     // B2 Bsquared
     export const Bsquared = chainId("evm-bsquared")
-    export const BsquaredTest = chainId("evm-bsquared-testnet")
+    export const BsquaredTestnet = chainId("evm-bsquared-testnet")
 
     // BOB
     export const BOB = chainId("evm-bob")
-    export const BOBTest = chainId("evm-bob-testnet")
+    export const BOBTestnet = chainId("evm-bob-testnet")
 
     // Bitlayer
     export const Bitlayer = chainId("evm-bitlayer")
-    export const BitlayerTest = chainId("evm-bitlayer-testnet")
+    export const BitlayerTestnet = chainId("evm-bitlayer-testnet")
 
     // Lorenzo
     export const Lorenzo = chainId("evm-lorenzo")
-    export const LorenzoTest = chainId("evm-lorenzo-testnet")
+    export const LorenzoTestnet = chainId("evm-lorenzo-testnet")
 
     // Merlin
     export const Merlin = chainId("evm-merlin")
-    export const MerlinTest = chainId("evm-merlin-testnet")
+    export const MerlinTestnet = chainId("evm-merlin-testnet")
 
     // AILayer
     export const AILayer = chainId("evm-ailayer")
-    export const AILayerTest = chainId("evm-ailayer-testnet")
+    export const AILayerTestnet = chainId("evm-ailayer-testnet")
   }
 
   const evmMainnetChains = [
@@ -158,14 +158,14 @@ export namespace KnownChainId {
 
   const evmTestnetChains = [
     EVM.Sepolia,
-    EVM.BSCTest,
-    EVM.CoreDAOTest,
-    EVM.BsquaredTest,
-    EVM.BOBTest,
-    EVM.BitlayerTest,
-    EVM.LorenzoTest,
-    EVM.MerlinTest,
-    EVM.AILayerTest,
+    EVM.BSCTestnet,
+    EVM.CoreDAOTestnet,
+    EVM.BsquaredTestnet,
+    EVM.BOBTestnet,
+    EVM.BitlayerTestnet,
+    EVM.LorenzoTestnet,
+    EVM.MerlinTestnet,
+    EVM.AILayerTestnet,
   ] as const
   export type EVMTestnetChain = (typeof evmTestnetChains)[number]
   export function isEVMTestnetChain(

@@ -20,28 +20,28 @@ export function contractAssignedChainIdFromBridgeChain(
     case KnownChainId.EVM.Sepolia:
       return 1n
     case KnownChainId.EVM.BSC:
-    case KnownChainId.EVM.BSCTest:
+    case KnownChainId.EVM.BSCTestnet:
       return 2n
     case KnownChainId.EVM.CoreDAO:
-    case KnownChainId.EVM.CoreDAOTest:
+    case KnownChainId.EVM.CoreDAOTestnet:
       return 3n
     case KnownChainId.EVM.Bsquared:
-    case KnownChainId.EVM.BsquaredTest:
+    case KnownChainId.EVM.BsquaredTestnet:
       return 4n
     case KnownChainId.EVM.BOB:
-    case KnownChainId.EVM.BOBTest:
+    case KnownChainId.EVM.BOBTestnet:
       return 5n
     case KnownChainId.EVM.Bitlayer:
-    case KnownChainId.EVM.BitlayerTest:
+    case KnownChainId.EVM.BitlayerTestnet:
       return 6n
     case KnownChainId.EVM.Lorenzo:
-    case KnownChainId.EVM.LorenzoTest:
+    case KnownChainId.EVM.LorenzoTestnet:
       return 7n
     case KnownChainId.EVM.Merlin:
-    case KnownChainId.EVM.MerlinTest:
+    case KnownChainId.EVM.MerlinTestnet:
       return 8n
     case KnownChainId.EVM.AILayer:
-    case KnownChainId.EVM.AILayerTest:
+    case KnownChainId.EVM.AILayerTestnet:
       return 9n
     default:
       checkNever(chain)
@@ -67,52 +67,52 @@ export function contractAssignedChainIdToBridgeChain(
   assertExclude(resPossibilities, KnownChainId.EVM.Sepolia)
 
   if (chainId === 2n) {
-    return [KnownChainId.EVM.BSC, KnownChainId.EVM.BSCTest]
+    return [KnownChainId.EVM.BSC, KnownChainId.EVM.BSCTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.BSC)
-  assertExclude(resPossibilities, KnownChainId.EVM.BSCTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.BSCTestnet)
 
   if (chainId === 3n) {
-    return [KnownChainId.EVM.CoreDAO, KnownChainId.EVM.CoreDAOTest]
+    return [KnownChainId.EVM.CoreDAO, KnownChainId.EVM.CoreDAOTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.CoreDAO)
-  assertExclude(resPossibilities, KnownChainId.EVM.CoreDAOTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.CoreDAOTestnet)
 
   if (chainId === 4n) {
-    return [KnownChainId.EVM.Bsquared, KnownChainId.EVM.BsquaredTest]
+    return [KnownChainId.EVM.Bsquared, KnownChainId.EVM.BsquaredTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Bsquared)
-  assertExclude(resPossibilities, KnownChainId.EVM.BsquaredTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.BsquaredTestnet)
 
   if (chainId === 5n) {
-    return [KnownChainId.EVM.BOB, KnownChainId.EVM.BOBTest]
+    return [KnownChainId.EVM.BOB, KnownChainId.EVM.BOBTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.BOB)
-  assertExclude(resPossibilities, KnownChainId.EVM.BOBTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.BOBTestnet)
 
   if (chainId === 6n) {
-    return [KnownChainId.EVM.Bitlayer, KnownChainId.EVM.BitlayerTest]
+    return [KnownChainId.EVM.Bitlayer, KnownChainId.EVM.BitlayerTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Bitlayer)
-  assertExclude(resPossibilities, KnownChainId.EVM.BitlayerTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.BitlayerTestnet)
 
   if (chainId === 7n) {
-    return [KnownChainId.EVM.Lorenzo, KnownChainId.EVM.LorenzoTest]
+    return [KnownChainId.EVM.Lorenzo, KnownChainId.EVM.LorenzoTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Lorenzo)
-  assertExclude(resPossibilities, KnownChainId.EVM.LorenzoTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.LorenzoTestnet)
 
   if (chainId === 8n) {
-    return [KnownChainId.EVM.Merlin, KnownChainId.EVM.MerlinTest]
+    return [KnownChainId.EVM.Merlin, KnownChainId.EVM.MerlinTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Merlin)
-  assertExclude(resPossibilities, KnownChainId.EVM.MerlinTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.MerlinTestnet)
 
   if (chainId === 9n) {
-    return [KnownChainId.EVM.AILayer, KnownChainId.EVM.AILayerTest]
+    return [KnownChainId.EVM.AILayer, KnownChainId.EVM.AILayerTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.AILayer)
-  assertExclude(resPossibilities, KnownChainId.EVM.AILayerTest)
+  assertExclude(resPossibilities, KnownChainId.EVM.AILayerTestnet)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)

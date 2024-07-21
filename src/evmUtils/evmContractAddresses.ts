@@ -77,35 +77,35 @@ export const evmClients: Record<EVMChain, Client> = {
     chain: sepolia,
     transport: http(),
   }),
-  [EVMChain.BSCTest]: createClient({
+  [EVMChain.BSCTestnet]: createClient({
     chain: bscTestnet,
     transport: http(),
   }),
-  [EVMChain.CoreDAOTest]: createClient({
+  [EVMChain.CoreDAOTestnet]: createClient({
     chain: coreDaoTestnet,
     transport: http(),
   }),
-  [EVMChain.BsquaredTest]: createClient({
+  [EVMChain.BsquaredTestnet]: createClient({
     chain: bsquaredTestnet,
     transport: http(),
   }),
-  [EVMChain.BOBTest]: createClient({
+  [EVMChain.BOBTestnet]: createClient({
     chain: bobTestnet,
     transport: http(),
   }),
-  [EVMChain.BitlayerTest]: createClient({
+  [EVMChain.BitlayerTestnet]: createClient({
     chain: bitlayerTestnet,
     transport: http(),
   }),
-  [EVMChain.LorenzoTest]: createClient({
+  [EVMChain.LorenzoTestnet]: createClient({
     chain: lorenzoTestnet,
     transport: http(),
   }),
-  [EVMChain.MerlinTest]: createClient({
+  [EVMChain.MerlinTestnet]: createClient({
     chain: merlinTestnet,
     transport: http(),
   }),
-  [EVMChain.AILayerTest]: createClient({
+  [EVMChain.AILayerTestnet]: createClient({
     chain: ailayerTestnet,
     transport: http(),
   }),
@@ -211,17 +211,17 @@ export const evmContractAddresses: Record<
     [EVMToken.WBTC]: "0x9CE827b04cD5f0c20dC1ac5621120204b348B4cD",
     [EVMToken.ALEX]: "0x564e0DAd09B0e227409A703326698b68C238374b",
   },
-  [EVMChain.BSCTest]: {},
-  [EVMChain.CoreDAOTest]: {
+  [EVMChain.BSCTestnet]: {},
+  [EVMChain.CoreDAOTestnet]: {
     [EVMEndpointContract.BridgeEndpoint]:
       "0x78cFEbF19Cfd950A434ec3008eDE746DA45EF096",
     [EVMToken.aBTC]: "0x391c193a3268aA0A93D76EAc85B88985b5CB92da",
     [EVMToken.ALEX]: "0xd74aE62e92f0EB0D3DF986387D61f3f09E0f1954",
   },
-  [EVMChain.BsquaredTest]: {},
-  [EVMChain.BOBTest]: {},
-  [EVMChain.BitlayerTest]: {},
-  [EVMChain.LorenzoTest]: {},
-  [EVMChain.MerlinTest]: {},
-  [EVMChain.AILayerTest]: {},
+  [EVMChain.BsquaredTestnet]: {},
+  [EVMChain.BOBTestnet]: {},
+  [EVMChain.BitlayerTestnet]: {},
+  [EVMChain.LorenzoTestnet]: {},
+  [EVMChain.MerlinTestnet]: {},
+  [EVMChain.AILayerTestnet]: {},
 }
