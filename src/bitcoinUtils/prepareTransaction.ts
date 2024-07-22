@@ -15,7 +15,7 @@ import {
 } from "./bitcoinHelpers"
 import { Recipient as _Recipient } from "./createTransaction"
 
-export type Recipient = _Recipient
+export type BitcoinRecipient = _Recipient
 
 export type ReselectSpendableUTXOsFn = (
   satsToSend: bigint,
@@ -25,7 +25,7 @@ export type ReselectSpendableUTXOsFn = (
 
 export async function prepareTransaction(txInfo: {
   network: BitcoinNetwork
-  recipients: Array<Recipient>
+  recipients: Array<BitcoinRecipient>
   changeAddress: string
   opReturnData?: Uint8Array[]
   selectedUTXOs?: Array<UTXOSpendable>
@@ -33,7 +33,7 @@ export async function prepareTransaction(txInfo: {
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
 }): Promise<{
   inputs: Array<UTXOSpendable>
-  recipients: Array<Recipient>
+  recipients: Array<BitcoinRecipient>
   changeAmount: bigint
   fee: bigint
 }> {

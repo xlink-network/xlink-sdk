@@ -1,4 +1,6 @@
+import { PublicEVMContractType } from "./evmUtils/evmContractAddresses"
 import {
+  getEVMContractCallInfo,
   getEVMToken,
   getEVMTokenContractInfo,
 } from "./evmUtils/xlinkContractHelpers"
@@ -75,6 +77,19 @@ export class XLinkSDK {
     }
 
     return []
+  }
+
+  async getEVMContractAddress(
+    chain: ChainId,
+    contractType: PublicEVMContractType,
+  ): Promise<undefined | EVMAddress> {
+    if (!KnownChainId.isEVMChain(chain)) return
+
+    const info = await getEVMContractCallInfo(chain)
+    if (contractType === PublicEVMContractType.BridgeEndpoint) {
+      return info?.bridgeEndpointContractAddress
+    }
+    return
   }
 
   async evmAddressFromEVMToken(

@@ -29,9 +29,17 @@ const EVMChain = KnownChainId.EVM
 type EVMToken = KnownTokenId.EVMToken
 const EVMToken = KnownTokenId.EVM
 
-export enum EVMEndpointContract {
-  BridgeEndpoint = "BridgeEndpoint",
-  BridgeConfig = "BridgeConfig",
+export type EVMEndpointContract =
+  | typeof EVMEndpointContract.BridgeEndpoint
+  | typeof EVMEndpointContract.BridgeConfig
+export namespace EVMEndpointContract {
+  export const BridgeEndpoint = "BridgeEndpoint"
+  export const BridgeConfig = "BridgeConfig"
+}
+
+export type PublicEVMContractType = typeof PublicEVMContractType.BridgeEndpoint
+export namespace PublicEVMContractType {
+  export const BridgeEndpoint = EVMEndpointContract.BridgeEndpoint
 }
 
 export const evmClients: Record<EVMChain, Client> = {
