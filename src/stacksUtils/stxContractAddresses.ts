@@ -3,11 +3,7 @@ import {
   STACKS_CONTRACT_DEPLOYER_TESTNET,
 } from "../config"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-
-export interface ContractAddress {
-  deployerAddress: string
-  contractName: string
-}
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
 
 const xlinkContractsDeployerMainnet = STACKS_CONTRACT_DEPLOYER_MAINNET
 const xlinkContractsDeployerTestnet = STACKS_CONTRACT_DEPLOYER_TESTNET
@@ -18,7 +14,7 @@ const alexContractDeployerTestnet = "ST1J4G6RR643BCG8G8SR6M2D9Z9KXT2NJDRK3FBTK"
 export const stxTokenContractAddresses: Partial<
   Record<
     KnownTokenId.StacksToken,
-    Record<KnownChainId.StacksChain, ContractAddress>
+    Record<KnownChainId.StacksChain, StacksContractAddress>
   >
 > = {
   [KnownTokenId.Stacks.ALEX]: {

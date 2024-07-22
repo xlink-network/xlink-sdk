@@ -13,8 +13,7 @@ import { bridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { bridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import { numberFromSolidityContractNumber } from "./xlinkContractHelpers"
 import { TransferProphet } from "../utils/feeRateHelpers"
-import { ContractAddress } from "../stacksUtils/stxContractAddresses"
-import { ChainToken } from "../xlinkSdkUtils/types"
+import { ChainToken, StacksContractAddress } from "../xlinkSdkUtils/types"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 
@@ -113,7 +112,7 @@ export const getStacks2EvmFeeInfo = async (
   },
   info: {
     toChainId: bigint
-    stacksToken: ContractAddress
+    stacksToken: StacksContractAddress
   },
 ): Promise<undefined | TransferProphet> => {
   const executeOptions = {

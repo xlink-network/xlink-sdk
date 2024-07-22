@@ -1,3 +1,6 @@
+import { getEVMToken } from "./evmUtils/xlinkContractHelpers"
+import { getStacksToken } from "./stacksUtils/xlinkContractHelpers"
+import { KnownChainId, KnownTokenId } from "./utils/types.internal"
 import {
   bridgeFromBitcoin,
   supportedRoutes as supportedRoutesFromBitcoin,
@@ -13,7 +16,12 @@ import {
 import { bridgeInfoFromBitcoin } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
 import { bridgeInfoFromEVM } from "./xlinkSdkUtils/bridgeInfoFromEVM"
 import { bridgeInfoFromStacks } from "./xlinkSdkUtils/bridgeInfoFromStacks"
-import { ChainId, SupportedToken } from "./xlinkSdkUtils/types"
+import {
+  ChainId,
+  EVMAddress,
+  StacksContractAddress,
+  SupportedToken,
+} from "./xlinkSdkUtils/types"
 
 export {
   BridgeFromBitcoinInput,
@@ -63,11 +71,26 @@ export class XLinkSDK {
     return []
   }
 
+  async getTokenFromEVMAddress(
+    chain: ChainId,
+    address: EVMAddress,
+  ): Promise<undefined | KnownTokenId.EVMToken> {
+    if (!KnownChainId.isEVMChain(chain)) return
+    return getEVMToken(chain, address)
+  }
+  async getTokenFromStacksAddress(
+    chain: ChainId,
+    address: StacksContractAddress,
+  ): Promise<undefined | KnownTokenId.StacksToken> {
+    if (!KnownChainId.isStacksChain(chain)) return
+    return getStacksToken(chain, address)
+  }
+
   bridgeInfoFromStacks = bridgeInfoFromStacks
   bridgeFromStacks = bridgeFromStacks
 
-  bridgeInfoFromEthereum = bridgeInfoFromEVM
-  bridgeFromEthereum = bridgeFromEVM
+  bridgeInfoFromEVM = bridgeInfoFromEVM
+  bridgeFromEVM = bridgeFromEVM
 
   bridgeInfoFromBitcoin = bridgeInfoFromBitcoin
   bridgeFromBitcoin = bridgeFromBitcoin

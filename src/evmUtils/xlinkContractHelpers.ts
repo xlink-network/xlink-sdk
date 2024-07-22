@@ -1,6 +1,10 @@
 import { Address, Client, isAddress } from "viem"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import {
+  KnownChainId,
+  KnownTokenId,
+  _allKnownEVMTokens,
+} from "../utils/types.internal"
 import {
   EVMEndpointContract,
   EVMOnChainAddresses,
@@ -9,6 +13,7 @@ import {
 } from "./evmContractAddresses"
 import { readContract } from "viem/actions"
 import { bridgeConfigAbi } from "./contractAbi/bridgeConfig"
+import { EVMAddress } from "../xlinkSdkUtils/types"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 18
 export const numberFromSolidityContractNumber = (
@@ -81,6 +86,22 @@ export async function getEVMTokenContractInfo(
     bridgeEndpointContractAddress,
     tokenContractAddress,
   }
+}
+
+export async function getEVMToken(
+  chain: KnownChainId.EVMChain,
+  tokenAddress: EVMAddress,
+): Promise<undefined | KnownTokenId.EVMToken> {
+  const addresses = await getAllAddresses(chain)
+  if (addresses == null) return
+
+  tokenAddress = tokenAddress.toLowerCase() as EVMAddress
+  return Object.values(_allKnownEVMTokens).find(
+    token =>
+      (
+        addresses.onChainAddresses?.[token] ?? addresses.localAddresses?.[token]
+      )?.toLowerCase() === tokenAddress,
+  )
 }
 
 async function getAllAddresses(chainId: KnownChainId.EVMChain): Promise<

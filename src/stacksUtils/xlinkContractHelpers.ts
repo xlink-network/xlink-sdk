@@ -13,6 +13,7 @@ import {
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { stxTokenContractAddresses } from "./stxContractAddresses"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
@@ -92,4 +93,25 @@ export const getStacksTokenContractInfo = (
     network,
     deployerAddress,
   }
+}
+
+export async function getStacksToken(
+  chain: KnownChainId.StacksChain,
+  tokenAddress: StacksContractAddress,
+): Promise<undefined | KnownTokenId.StacksToken> {
+  for (const token of Object.keys(
+    stxTokenContractAddresses,
+  ) as (keyof typeof stxTokenContractAddresses)[]) {
+    const info = stxTokenContractAddresses[token]?.[chain]
+    if (info == null) continue
+
+    if (
+      info.deployerAddress === tokenAddress.deployerAddress &&
+      info.contractName === tokenAddress.contractName
+    ) {
+      return token
+    }
+  }
+
+  return
 }

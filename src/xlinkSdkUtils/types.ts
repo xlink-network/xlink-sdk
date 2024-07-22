@@ -34,3 +34,10 @@ export function toSDKNumberOrUndefined(
   if (n == null) return undefined
   return BigNumber.toString(n) as SDKNumber
 }
+
+export type EVMAddress = `0x${string}`
+
+export interface StacksContractAddress {
+  deployerAddress: string
+  contractName: string
+}

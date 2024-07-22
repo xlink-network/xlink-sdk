@@ -13,9 +13,9 @@ export namespace KnownTokenId {
   export namespace Bitcoin {
     export const BTC = tokenId("btc-btc")
   }
-  export type BitcoinToken = (typeof Bitcoin)[keyof typeof Bitcoin]
+  export type BitcoinToken = (typeof _allKnownBitcoinTokens)[number]
   export function isBitcoinToken(value: TokenId): value is BitcoinToken {
-    return value === KnownTokenId.Bitcoin.BTC
+    return _allKnownBitcoinTokens.includes(value as any)
   }
 
   export namespace EVM {
@@ -32,20 +32,9 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("evm-vlistx")
     export const vLiALEX = tokenId("evm-vlialex")
   }
-  export type EVMToken = (typeof EVM)[keyof typeof EVM]
+  export type EVMToken = (typeof _allKnownEVMTokens)[number]
   export function isEVMToken(value: TokenId): value is EVMToken {
-    return (
-      value === EVM.USDT ||
-      value === EVM.LUNR ||
-      value === EVM.WBTC ||
-      value === EVM.BTCB ||
-      value === EVM.aBTC ||
-      value === EVM.sUSDT ||
-      value === EVM.ALEX ||
-      value === EVM.SKO ||
-      value === EVM.vLiSTX ||
-      value === EVM.vLiALEX
-    )
+    return _allKnownEVMTokens.includes(value as any)
   }
 
   export namespace Stacks {
@@ -58,19 +47,14 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("stx-vlistx")
     export const vLiALEX = tokenId("stx-vlialex")
   }
-  export type StacksToken = (typeof Stacks)[keyof typeof Stacks]
+  export type StacksToken = (typeof _allKnownStacksTokens)[number]
   export function isStacksToken(value: TokenId): value is StacksToken {
-    return (
-      value === Stacks.sUSDT ||
-      value === Stacks.sLUNR ||
-      value === Stacks.aBTC ||
-      value === Stacks.ALEX ||
-      value === Stacks.sSKO ||
-      value === Stacks.vLiSTX ||
-      value === Stacks.vLiALEX
-    )
+    return _allKnownStacksTokens.includes(value as any)
   }
 }
+export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
+export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
+export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 
 export namespace KnownChainId {
   export type AllChain = BitcoinChain | EVMChain | StacksChain
@@ -82,10 +66,9 @@ export namespace KnownChainId {
     export const Mainnet = chainId("bitcoin-mainnet")
     export const Testnet = chainId("bitcoin-testnet")
   }
-  const bitcoinChains = [Bitcoin.Mainnet, Bitcoin.Testnet] as const
-  export type BitcoinChain = (typeof bitcoinChains)[number]
+  export type BitcoinChain = (typeof _allKnownBitcoinChains)[number]
   export function isBitcoinChain(value: ChainId): value is BitcoinChain {
-    return bitcoinChains.includes(value as any)
+    return _allKnownBitcoinChains.includes(value as any)
   }
 
   export namespace EVM {
@@ -126,51 +109,55 @@ export namespace KnownChainId {
     export const AILayerTestnet = chainId("evm-ailayer-testnet")
   }
 
-  const evmMainnetChains = [
-    EVM.Ethereum,
-    EVM.BSC,
-    EVM.CoreDAO,
-    EVM.Bsquared,
-    EVM.BOB,
-    EVM.Bitlayer,
-    EVM.Lorenzo,
-    EVM.Merlin,
-    EVM.AILayer,
-  ] as const
-  export type EVMMainnetChain = (typeof evmMainnetChains)[number]
+  export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
   export function isEVMMainnetChain(value: ChainId): value is EVMMainnetChain {
-    return evmMainnetChains.includes(value as any)
+    return _allKnownEVMMainnetChains.includes(value as any)
   }
 
-  const evmTestnetChains = [
-    EVM.Sepolia,
-    EVM.BSCTestnet,
-    EVM.CoreDAOTestnet,
-    EVM.BsquaredTestnet,
-    EVM.BOBTestnet,
-    EVM.BitlayerTestnet,
-    EVM.LorenzoTestnet,
-    EVM.MerlinTestnet,
-    EVM.AILayerTestnet,
-  ] as const
-  export type EVMTestnetChain = (typeof evmTestnetChains)[number]
+  export type EVMTestnetChain = (typeof _allKnownEVMTestnetChains)[number]
   export function isEVMTestnetChain(value: ChainId): value is EVMTestnetChain {
-    return evmTestnetChains.includes(value as any)
+    return _allKnownEVMTestnetChains.includes(value as any)
   }
 
-  const evmChains = [...evmMainnetChains, ...evmTestnetChains] as const
-  export type EVMChain = (typeof evmChains)[number]
+  export type EVMChain = (typeof _allKnownEVMChains)[number]
   export function isEVMChain(value: ChainId): value is EVMChain {
-    return evmChains.includes(value as any)
+    return _allKnownEVMChains.includes(value as any)
   }
 
   export namespace Stacks {
     export const Mainnet = chainId("stacks-mainnet")
     export const Testnet = chainId("stacks-testnet")
   }
-  const stacksChains = [Stacks.Mainnet, Stacks.Testnet] as const
-  export type StacksChain = (typeof stacksChains)[number]
+  export type StacksChain = (typeof _allKnownStacksChains)[number]
   export function isStacksChain(value: ChainId): value is StacksChain {
-    return stacksChains.includes(value as any)
+    return _allKnownStacksChains.includes(value as any)
   }
 }
+export const _allKnownBitcoinChains = Object.values(KnownChainId.Bitcoin)
+export const _allKnownEVMMainnetChains = [
+  KnownChainId.EVM.Ethereum,
+  KnownChainId.EVM.BSC,
+  KnownChainId.EVM.CoreDAO,
+  KnownChainId.EVM.Bsquared,
+  KnownChainId.EVM.BOB,
+  KnownChainId.EVM.Bitlayer,
+  KnownChainId.EVM.Lorenzo,
+  KnownChainId.EVM.Merlin,
+  KnownChainId.EVM.AILayer,
+] as const
+export const _allKnownEVMTestnetChains = [
+  KnownChainId.EVM.Sepolia,
+  KnownChainId.EVM.BSCTestnet,
+  KnownChainId.EVM.CoreDAOTestnet,
+  KnownChainId.EVM.BsquaredTestnet,
+  KnownChainId.EVM.BOBTestnet,
+  KnownChainId.EVM.BitlayerTestnet,
+  KnownChainId.EVM.LorenzoTestnet,
+  KnownChainId.EVM.MerlinTestnet,
+  KnownChainId.EVM.AILayerTestnet,
+] as const
+export const _allKnownEVMChains = [
+  ..._allKnownEVMMainnetChains,
+  ..._allKnownEVMTestnetChains,
+] as const
+export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
