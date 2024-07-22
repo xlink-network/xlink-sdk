@@ -1,5 +1,9 @@
 import { PublicEVMContractType } from "./evmUtils/evmContractAddresses"
 import {
+  claimTimeLockedAssetsFromEVM,
+  getTimeLockedAssetsFromEVM,
+} from "./xlinkSdkUtils/timelockFromEVM"
+import {
   getEVMContractCallInfo,
   getEVMToken,
   getEVMTokenContractInfo,
@@ -15,7 +19,7 @@ import {
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
 import {
   bridgeFromEVM,
-  supportedRoutes as supportedRoutesFromEthereum,
+  supportedRoutes as supportedRoutesFromEVM,
 } from "./xlinkSdkUtils/bridgeFromEVM"
 import {
   bridgeFromStacks,
@@ -55,17 +59,23 @@ export {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
 } from "./xlinkSdkUtils/bridgeInfoFromStacks"
+export {
+  GetTimeLockedAssetsInput,
+  GetTimeLockedAssetsOutput,
+  ClaimTimeLockedAssetsInput,
+  ClaimTimeLockedAssetsOutput,
+} from "./xlinkSdkUtils/timelockFromEVM"
 
 export class XLinkSDK {
   async getSupportedTokens(
     fromChain: ChainId,
     toChain: ChainId,
   ): Promise<SupportedToken[]> {
-    for (const rules of [
+    const promises = [
       supportedRoutesFromStacks,
-      supportedRoutesFromEthereum,
+      supportedRoutesFromEVM,
       supportedRoutesFromBitcoin,
-    ]) {
+    ].map(async rules => {
       const result = await rules.getSupportedTokens(fromChain, toChain)
 
       return result.map(res => ({
@@ -74,9 +84,9 @@ export class XLinkSDK {
         toChain: res.toChain,
         toToken: res.toToken,
       }))
-    }
+    })
 
-    return []
+    return (await Promise.all(promises)).flat()
   }
 
   async getEVMContractAddress(
@@ -133,6 +143,8 @@ export class XLinkSDK {
 
   bridgeInfoFromEVM = bridgeInfoFromEVM
   bridgeFromEVM = bridgeFromEVM
+  getTimeLockedAssetsFromEVM = getTimeLockedAssetsFromEVM
+  claimTimeLockedAssetsFromEVM = claimTimeLockedAssetsFromEVM
 
   bridgeInfoFromBitcoin = bridgeInfoFromBitcoin
   bridgeFromBitcoin = bridgeFromBitcoin

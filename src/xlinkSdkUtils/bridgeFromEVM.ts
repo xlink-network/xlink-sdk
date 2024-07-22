@@ -1,4 +1,4 @@
-import { Address, Hex, encodeFunctionData } from "viem"
+import { Hex, encodeFunctionData } from "viem"
 import { sendRawTransaction } from "viem/actions"
 import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
@@ -17,7 +17,7 @@ import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-import { ChainId, SDKNumber, TokenId } from "./types"
+import { ChainId, EVMAddress, SDKNumber, TokenId } from "./types"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -225,7 +225,7 @@ export interface BridgeFromEVMInput {
   toToken: TokenId
   toAddress: string
   amount: SDKNumber
-  signTransaction: (tx: { to: Address; data: Uint8Array }) => Promise<{
+  signTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
     transactionHex: string
   }>
 }
