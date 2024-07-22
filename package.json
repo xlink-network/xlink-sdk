@@ -19,7 +19,11 @@
   ],
   "main": "lib/index.js",
   "exports": {
-    "./": "./lib/index.mjs"
+    ".": {
+      "import": "./lib/index.mjs",
+      "require": "./lib/index.js",
+      "types": "./lib/index.d.ts"
+    }
   },
   "scripts": {
     "gen:stacksContract": "rm -rf generated/smartContract && mkdir -p generated/smartContract && tsx ./scripts/generateClarityTranscoders.ts",
