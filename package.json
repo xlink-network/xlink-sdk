@@ -1,5 +1,5 @@
 {
-  "name": "xlink-sdk",
+  "name": "@xlink-network/xlink-sdk",
   "version": "0.0.1",
   "description": "XLINK js SDK",
   "keywords": [
