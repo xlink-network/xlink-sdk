@@ -26,7 +26,7 @@ import {
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-import { ChainId, TokenId } from "./types"
+import { ChainId, SDKNumber, TokenId } from "./types"
 import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
 import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 
@@ -114,7 +114,7 @@ export interface BridgeFromBitcoinInput {
   toToken: TokenId
   fromAddress: string
   toAddress: string
-  amount: string
+  amount: SDKNumber
   networkFeeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
   signPsbt: (tx: { psbt: Uint8Array }) => Promise<{ psbt: Uint8Array }>

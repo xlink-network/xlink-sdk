@@ -17,7 +17,7 @@ import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-import { ChainId, TokenId } from "./types"
+import { ChainId, SDKNumber, TokenId } from "./types"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -224,7 +224,7 @@ export interface BridgeFromEVMInput {
   fromToken: TokenId
   toToken: TokenId
   toAddress: string
-  amount: string
+  amount: SDKNumber
   signTransaction: (tx: { to: Address; data: Uint8Array }) => Promise<{
     transactionHex: string
   }>

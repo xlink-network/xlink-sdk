@@ -1,5 +1,3 @@
-import { GetSupportedRoutesFnAnyResult } from "./utils/buildSupportedRoutes"
-import { ChainIdInternal, TokenIdInternal } from "./utils/types.internal"
 import {
   bridgeFromBitcoin,
   supportedRoutes as supportedRoutesFromBitcoin,
@@ -52,19 +50,14 @@ export class XLinkSDK {
       supportedRoutesFromEthereum,
       supportedRoutesFromBitcoin,
     ]) {
-      const result: GetSupportedRoutesFnAnyResult =
-        await rules.getSupportedTokens(fromChain, toChain)
+      const result = await rules.getSupportedTokens(fromChain, toChain)
 
-      if (result.length > 0) {
-        return result.flatMap(res => [
-          {
-            fromChain: ChainIdInternal.toChainId(res.fromChain),
-            fromToken: TokenIdInternal.toTokenId(res.fromToken),
-            toChain: ChainIdInternal.toChainId(res.toChain),
-            toToken: TokenIdInternal.toTokenId(res.toToken),
-          },
-        ])
-      }
+      return result.map(res => ({
+        fromChain: res.fromChain,
+        fromToken: res.fromToken,
+        toChain: res.toChain,
+        toToken: res.toToken,
+      }))
     }
 
     return []

@@ -1,4 +1,4 @@
-import { XLINKSDKErrorBase } from "./errors"
+import { XLinkSDKErrorBase } from "./errors"
 
 /**
  * https://github.com/wevm/viem/blob/d2f93e726df1ab1ff86098d68a4406f6fae315b8/src/utils/encoding/toBytes.ts#L150-L175
@@ -13,7 +13,7 @@ export function decodeHex(hex: string): Uint8Array {
     const nibbleLeft = charCodeToBase16(hexString.charCodeAt(j++))
     const nibbleRight = charCodeToBase16(hexString.charCodeAt(j++))
     if (nibbleLeft === undefined || nibbleRight === undefined) {
-      throw new XLINKSDKErrorBase(
+      throw new XLinkSDKErrorBase(
         `Invalid byte sequence ("${hexString[j - 2]}${
           hexString[j - 1]
         }" in "${hexString}").`,

@@ -25,7 +25,7 @@ import {
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-import { ChainId, TokenId } from "./types"
+import { ChainId, SDKNumber, TokenId } from "./types"
 import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
 
 export const supportedRoutes = buildSupportedRoutes(
@@ -111,7 +111,7 @@ export interface BridgeFromStacksInput {
   fromToken: TokenId
   toToken: TokenId
   toAddress: string
-  amount: string
+  amount: SDKNumber
   signTransaction: (tx: ContractCallOptions) => Promise<{
     transactionHex: string
   }>

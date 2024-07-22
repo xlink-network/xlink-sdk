@@ -1,33 +1,20 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 
-export type AnyChainIdInternal = string
-export namespace ChainIdInternal {
-  export const toChainId = (value: AnyChainIdInternal): ChainId =>
-    value as ChainId
-}
+const chainId = <const T extends string>(value: T): ChainId<T> => value as any
 
-export type AnyTokenIdInternal = string
-export namespace TokenIdInternal {
-  export const toTokenId = (value: AnyTokenIdInternal): TokenId =>
-    value as TokenId
-}
-
-const chainId = <const T extends AnyChainIdInternal>(value: T): T =>
-  value as any
-
-const tokenId = <const T extends AnyTokenIdInternal>(value: T): T =>
-  value as any
+const tokenId = <const T extends string>(value: T): TokenId<T> => value as any
 
 export namespace KnownTokenId {
-  export type AllToken = BitcoinToken | EVMToken | StacksToken
+  export type KnownToken = BitcoinToken | EVMToken | StacksToken
+  export function isKnownToken(value: TokenId): value is KnownToken {
+    return isBitcoinToken(value) || isEVMToken(value) || isStacksToken(value)
+  }
 
   export namespace Bitcoin {
     export const BTC = tokenId("btc-btc")
   }
   export type BitcoinToken = (typeof Bitcoin)[keyof typeof Bitcoin]
-  export function isBitcoinToken(
-    value: AnyTokenIdInternal,
-  ): value is BitcoinToken {
+  export function isBitcoinToken(value: TokenId): value is BitcoinToken {
     return value === KnownTokenId.Bitcoin.BTC
   }
 
@@ -46,7 +33,7 @@ export namespace KnownTokenId {
     export const vLiALEX = tokenId("evm-vlialex")
   }
   export type EVMToken = (typeof EVM)[keyof typeof EVM]
-  export function isEVMToken(value: AnyTokenIdInternal): value is EVMToken {
+  export function isEVMToken(value: TokenId): value is EVMToken {
     return (
       value === EVM.USDT ||
       value === EVM.LUNR ||
@@ -72,9 +59,7 @@ export namespace KnownTokenId {
     export const vLiALEX = tokenId("stx-vlialex")
   }
   export type StacksToken = (typeof Stacks)[keyof typeof Stacks]
-  export function isStacksToken(
-    value: AnyTokenIdInternal,
-  ): value is StacksToken {
+  export function isStacksToken(value: TokenId): value is StacksToken {
     return (
       value === Stacks.sUSDT ||
       value === Stacks.sLUNR ||
@@ -89,6 +74,9 @@ export namespace KnownTokenId {
 
 export namespace KnownChainId {
   export type AllChain = BitcoinChain | EVMChain | StacksChain
+  export function isKnownChain(value: ChainId): value is AllChain {
+    return isBitcoinChain(value) || isEVMChain(value) || isStacksChain(value)
+  }
 
   export namespace Bitcoin {
     export const Mainnet = chainId("bitcoin-mainnet")
@@ -96,9 +84,7 @@ export namespace KnownChainId {
   }
   const bitcoinChains = [Bitcoin.Mainnet, Bitcoin.Testnet] as const
   export type BitcoinChain = (typeof bitcoinChains)[number]
-  export function isBitcoinChain(
-    value: AnyChainIdInternal,
-  ): value is BitcoinChain {
+  export function isBitcoinChain(value: ChainId): value is BitcoinChain {
     return bitcoinChains.includes(value as any)
   }
 
@@ -152,9 +138,7 @@ export namespace KnownChainId {
     EVM.AILayer,
   ] as const
   export type EVMMainnetChain = (typeof evmMainnetChains)[number]
-  export function isEVMMainnetChain(
-    value: AnyChainIdInternal,
-  ): value is EVMMainnetChain {
+  export function isEVMMainnetChain(value: ChainId): value is EVMMainnetChain {
     return evmMainnetChains.includes(value as any)
   }
 
@@ -170,15 +154,13 @@ export namespace KnownChainId {
     EVM.AILayerTestnet,
   ] as const
   export type EVMTestnetChain = (typeof evmTestnetChains)[number]
-  export function isEVMTestnetChain(
-    value: AnyChainIdInternal,
-  ): value is EVMTestnetChain {
+  export function isEVMTestnetChain(value: ChainId): value is EVMTestnetChain {
     return evmTestnetChains.includes(value as any)
   }
 
   const evmChains = [...evmMainnetChains, ...evmTestnetChains] as const
   export type EVMChain = (typeof evmChains)[number]
-  export function isEVMChain(value: AnyChainIdInternal): value is EVMChain {
+  export function isEVMChain(value: ChainId): value is EVMChain {
     return evmChains.includes(value as any)
   }
 
@@ -188,9 +170,7 @@ export namespace KnownChainId {
   }
   const stacksChains = [Stacks.Mainnet, Stacks.Testnet] as const
   export type StacksChain = (typeof stacksChains)[number]
-  export function isStacksChain(
-    value: AnyChainIdInternal,
-  ): value is StacksChain {
+  export function isStacksChain(value: ChainId): value is StacksChain {
     return stacksChains.includes(value as any)
   }
 }
