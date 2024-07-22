@@ -1,5 +1,11 @@
-import { getEVMToken } from "./evmUtils/xlinkContractHelpers"
-import { getStacksToken } from "./stacksUtils/xlinkContractHelpers"
+import {
+  getEVMToken,
+  getEVMTokenContractInfo,
+} from "./evmUtils/xlinkContractHelpers"
+import {
+  getStacksToken,
+  getStacksTokenContractInfo,
+} from "./stacksUtils/xlinkContractHelpers"
 import { KnownChainId, KnownTokenId } from "./utils/types.internal"
 import {
   bridgeFromBitcoin,
@@ -71,14 +77,35 @@ export class XLinkSDK {
     return []
   }
 
-  async getTokenFromEVMAddress(
+  async evmAddressFromEVMToken(
+    chain: ChainId,
+    token: KnownTokenId.EVMToken,
+  ): Promise<undefined | EVMAddress> {
+    if (!KnownChainId.isEVMChain(chain)) return
+    const info = await getEVMTokenContractInfo(chain, token)
+    return info?.tokenContractAddress
+  }
+  async evmAddressToEVMToken(
     chain: ChainId,
     address: EVMAddress,
   ): Promise<undefined | KnownTokenId.EVMToken> {
     if (!KnownChainId.isEVMChain(chain)) return
     return getEVMToken(chain, address)
   }
-  async getTokenFromStacksAddress(
+
+  async stacksAddressFromStacksToken(
+    chain: ChainId,
+    token: KnownTokenId.StacksToken,
+  ): Promise<undefined | StacksContractAddress> {
+    if (!KnownChainId.isStacksChain(chain)) return
+    const info = await getStacksTokenContractInfo(chain, token)
+    if (info == null) return
+    return {
+      deployerAddress: info.deployerAddress,
+      contractName: info.contractName,
+    }
+  }
+  async stacksAddressToStacksToken(
     chain: ChainId,
     address: StacksContractAddress,
   ): Promise<undefined | KnownTokenId.StacksToken> {
