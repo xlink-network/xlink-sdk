@@ -1,15 +1,16 @@
-import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
+import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
+import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
 import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
 } from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
+import { PublicTransferProphet } from "./types"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { supportedRoutes } from "./bridgeFromStacks"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
-import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 
 export interface BridgeInfoFromStacksInput {
   fromChain: ChainId
@@ -19,13 +20,8 @@ export interface BridgeInfoFromStacksInput {
   amount: SDKNumber
 }
 
-export interface BridgeInfoFromStacksOutput {
-  isPaused: boolean
+export interface BridgeInfoFromStacksOutput extends PublicTransferProphet {
   feeToken: TokenId
-  feeRate: SDKNumber
-  minFeeAmount: SDKNumber
-  minBridgeAmount: null | SDKNumber
-  maxBridgeAmount: null | SDKNumber
 }
 
 export async function bridgeInfoFromStacks(
@@ -108,9 +104,9 @@ async function bridgeInfoFromStacks_toBitcoin(
     isPaused: transferProphet.isPaused,
     feeToken: info.fromToken as TokenId,
     feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
   }
 }
 
@@ -162,8 +158,8 @@ async function bridgeInfoFromStacks_toEVM(
     isPaused: transferProphet.isPaused,
     feeToken: info.fromToken as TokenId,
     feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
   }
 }

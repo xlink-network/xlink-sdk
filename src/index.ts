@@ -5,5 +5,8 @@ export {
   ReselectSpendableUTXOsFn,
 } from "./bitcoinUtils/prepareTransaction"
 export { TimeLockedAsset } from "./xlinkSdkUtils/timelockFromEVM"
-export { PublicEVMContractType as EVMContractType } from "./evmUtils/evmContractAddresses"
-export { KnownChainId, KnownTokenId } from "./utils/types.internal"
+export {
+  PublicEVMContractType as EVMContractType,
+  PublicTransferProphet as TransferProphet,
+} from "./xlinkSdkUtils/types"
+export { KnownChainId, KnownTokenId } from "./utils/knownIds"

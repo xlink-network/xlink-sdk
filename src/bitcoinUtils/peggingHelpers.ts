@@ -13,7 +13,7 @@ import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { TransferProphet } from "../utils/feeRateHelpers"
 import { props } from "../utils/promiseHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 
 export const getBtc2StacksFeeInfo = async (contractCallInfo: {
   network: StacksNetwork
@@ -52,9 +52,11 @@ export const getBtc2StacksFeeInfo = async (contractCallInfo: {
   return {
     isPaused: resp.isPaused,
     feeRate: resp.feeRate,
-    minFee: resp.minFeeAmount,
-    minAmount: BigNumber.isZero(resp.minFeeAmount) ? null : resp.minFeeAmount,
-    maxAmount: null,
+    minFeeAmount: resp.minFeeAmount,
+    minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
+      ? null
+      : resp.minFeeAmount,
+    maxBridgeAmount: null,
   }
 }
 
@@ -95,9 +97,11 @@ export const getStacks2BtcFeeInfo = async (contractCallInfo: {
   return {
     isPaused: resp.isPaused,
     feeRate: resp.feeRate,
-    minFee: resp.minFeeAmount,
-    minAmount: BigNumber.isZero(resp.minFeeAmount) ? null : resp.minFeeAmount,
-    maxAmount: null,
+    minFeeAmount: resp.minFeeAmount,
+    minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
+      ? null
+      : resp.minFeeAmount,
+    maxBridgeAmount: null,
   }
 }
 

@@ -1,6 +1,6 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 import { UnsupportedBridgeRouteError } from "./errors"
-import { KnownChainId, KnownTokenId } from "./types.internal"
+import { KnownChainId, KnownTokenId } from "./knownIds"
 
 export interface DefinedRoute {
   fromChain: ChainId

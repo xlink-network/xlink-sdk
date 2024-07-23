@@ -12,7 +12,7 @@ import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { TransferProphet } from "../utils/feeRateHelpers"
 import { props } from "../utils/promiseHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { bridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { bridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
@@ -104,9 +104,9 @@ export const getEvm2StacksFeeInfo = async (
   return {
     isPaused: resp.isPaused,
     feeRate: resp.feeRate,
-    minFee: resp.minFeeAmount,
-    minAmount: BigNumber.isZero(minAmount) ? null : minAmount,
-    maxAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
+    minFeeAmount: resp.minFeeAmount,
+    minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
+    maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
   }
 }
 
@@ -175,9 +175,9 @@ export const getStacks2EvmFeeInfo = async (
   return {
     isPaused: tokenConf.isPaused || tokenConf.approved === false,
     feeRate,
-    minFee,
-    minAmount: BigNumber.isZero(minAmount) ? null : minAmount,
-    maxAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
+    minFeeAmount: minFee,
+    minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
+    maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
   }
 }
 

@@ -8,7 +8,7 @@ import {
   merlin,
   sepolia,
 } from "viem/chains"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import {
   ailayer,
   ailayerTestnet,
@@ -35,11 +35,6 @@ export type EVMEndpointContract =
 export namespace EVMEndpointContract {
   export const BridgeEndpoint = "BridgeEndpoint"
   export const BridgeConfig = "BridgeConfig"
-}
-
-export type PublicEVMContractType = typeof PublicEVMContractType.BridgeEndpoint
-export namespace PublicEVMContractType {
-  export const BridgeEndpoint = EVMEndpointContract.BridgeEndpoint
 }
 
 export const evmClients: Record<EVMChain, Client> = {

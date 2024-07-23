@@ -3,7 +3,7 @@ import {
   UnsupportedContractAssignedChainIdError,
 } from "../utils/errors"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { KnownChainId } from "../utils/types.internal"
+import { KnownChainId } from "../utils/knownIds"
 
 export type KnownChainIdWithAssignedId =
   | KnownChainId.EVMChain

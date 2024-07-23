@@ -31,7 +31,7 @@ import {
   KnownTokenId,
   _allKnownEVMMainnetChains,
   _allKnownEVMTestnetChains,
-} from "../utils/types.internal"
+} from "../utils/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 
 export const supportedRoutes = buildSupportedRoutes(

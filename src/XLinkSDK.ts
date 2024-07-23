@@ -1,4 +1,4 @@
-import { PublicEVMContractType } from "./evmUtils/evmContractAddresses"
+import { PublicEVMContractType } from "./xlinkSdkUtils/types"
 import {
   claimTimeLockedAssetsFromEVM,
   getTimeLockedAssetsFromEVM,
@@ -12,7 +12,7 @@ import {
   getStacksToken,
   getStacksTokenContractInfo,
 } from "./stacksUtils/xlinkContractHelpers"
-import { KnownChainId, KnownTokenId } from "./utils/types.internal"
+import { KnownChainId, KnownTokenId } from "./utils/knownIds"
 import {
   bridgeFromBitcoin,
   supportedRoutes as supportedRoutesFromBitcoin,

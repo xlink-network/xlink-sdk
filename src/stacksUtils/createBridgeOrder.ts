@@ -5,7 +5,7 @@ import { contractAssignedChainIdFromBridgeChain } from "./crossContractDataMappi
 import { hasLength } from "../utils/arrayHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId } from "../utils/types.internal"
+import { KnownChainId } from "../utils/knownIds"
 import { executeReadonlyCallXLINK } from "./xlinkContractHelpers"
 
 export interface BridgeSwapRouteNode {

@@ -12,8 +12,9 @@ import {
 } from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { composeTransferProphet2 } from "../utils/feeRateHelpers"
+import { PublicTransferProphet } from "./types"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { supportedRoutes } from "./bridgeFromEVM"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
 
@@ -25,13 +26,8 @@ export interface BridgeInfoFromEVMInput {
   amount: SDKNumber
 }
 
-export interface BridgeInfoFromEVMOutput {
-  isPaused: boolean
+export interface BridgeInfoFromEVMOutput extends PublicTransferProphet {
   feeToken: TokenId
-  feeRate: SDKNumber
-  minFeeAmount: SDKNumber
-  minBridgeAmount: null | SDKNumber
-  maxBridgeAmount: null | SDKNumber
 }
 
 export async function bridgeInfoFromEVM(
@@ -145,9 +141,9 @@ async function bridgeInfoFromEVM_toStacks(
     isPaused: transferProphet.isPaused,
     feeToken: info.fromToken as TokenId,
     feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
   }
 }
 
@@ -215,9 +211,9 @@ async function bridgeInfoFromEVM_toBitcoin(
     isPaused: composed.isPaused,
     feeToken: info.fromToken as TokenId,
     feeRate: toSDKNumberOrUndefined(composed.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(composed.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(composed.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(composed.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(composed.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxBridgeAmount),
 
     // For debugging
     // @ts-ignore
@@ -303,9 +299,9 @@ async function bridgeInfoFromEVM_toEVM(
     isPaused: composed.isPaused,
     feeToken: info.fromToken as TokenId,
     feeRate: toSDKNumberOrUndefined(composed.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(composed.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(composed.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(composed.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(composed.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxBridgeAmount),
 
     // For debugging
     // @ts-ignore

@@ -7,8 +7,9 @@ import {
 } from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { composeTransferProphet2 } from "../utils/feeRateHelpers"
+import { PublicTransferProphet } from "./types"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
 
 export interface BridgeInfoFromBitcoinInput {
@@ -17,13 +18,8 @@ export interface BridgeInfoFromBitcoinInput {
   amount: SDKNumber
 }
 
-export interface BridgeInfoFromBitcoinOutput {
-  isPaused: boolean
+export interface BridgeInfoFromBitcoinOutput extends PublicTransferProphet {
   feeToken: TokenId
-  feeRate: SDKNumber
-  minFeeAmount: SDKNumber
-  minBridgeAmount: null | SDKNumber
-  maxBridgeAmount: null | SDKNumber
 }
 
 export const bridgeInfoFromBitcoin = async (
@@ -99,9 +95,9 @@ async function bridgeInfoFromBitcoin_toStacks(
     isPaused: feeInfo.isPaused,
     feeToken: KnownTokenId.Bitcoin.BTC as TokenId,
     feeRate: toSDKNumberOrUndefined(feeInfo.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(feeInfo.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(feeInfo.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(feeInfo.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(feeInfo.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(feeInfo.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(feeInfo.maxBridgeAmount),
   }
 }
 
@@ -155,9 +151,9 @@ async function bridgeInfoFromBitcoin_toEVM(
     isPaused: finalInfo.isPaused,
     feeToken: KnownTokenId.Bitcoin.BTC as TokenId,
     feeRate: toSDKNumberOrUndefined(finalInfo.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(finalInfo.minFee),
-    minBridgeAmount: toSDKNumberOrUndefined(finalInfo.minAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(finalInfo.maxAmount),
+    minFeeAmount: toSDKNumberOrUndefined(finalInfo.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(finalInfo.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(finalInfo.maxBridgeAmount),
 
     // for debugging
     // @ts-ignore

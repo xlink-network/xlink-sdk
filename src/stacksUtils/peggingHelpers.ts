@@ -2,7 +2,7 @@ import { fromCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 
 export const isSupportedStacksRoute: IsSupportedFn = async route => {
   if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
