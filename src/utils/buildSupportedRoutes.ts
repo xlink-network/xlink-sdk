@@ -1,313 +1,178 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 import { UnsupportedBridgeRouteError } from "./errors"
+import { KnownChainId, KnownTokenId } from "./types.internal"
 
-export type SupportedRoute = {
-  chainLeft: ChainId
-  chainRight: ChainId
-  tokenLeft: TokenId
-  tokenRight: TokenId
-}
-
-export function defineRoute<
-  const ChainPairs extends [chainLeft: ChainId, chainRight: ChainId][],
-  const TokenPairs extends [tokenLeft: TokenId, tokenRight: TokenId][],
->(
-  chainPairs: ChainPairs,
-  tokenPairs: TokenPairs,
-): {
-  [K1 in keyof ChainPairs]: {
-    [K2 in keyof TokenPairs]: {
-      chainLeft: ChainPairs[K1][0]
-      chainRight: ChainPairs[K1][1]
-      tokenLeft: TokenPairs[K2][0]
-      tokenRight: TokenPairs[K2][1]
-    }
-  }[number]
-}[number][] {
-  return chainPairs.flatMap(chainPair =>
-    tokenPairs.map(tokenPair => ({
-      chainLeft: chainPair[0],
-      chainRight: chainPair[1],
-      tokenLeft: tokenPair[0],
-      tokenRight: tokenPair[1],
-    })),
-  ) as any
-}
-
-type ExtractRouteLtr<
-  Routes extends SupportedRoute,
-  FromChain extends ChainId,
-  ToChain extends ChainId,
-> = Routes extends {
-  chainLeft: FromChain
-  chainRight: ToChain
-  tokenLeft: infer _FromToken
-  tokenRight: infer _ToToken
-}
-  ? {
-      fromChain: FromChain
-      toChain: ToChain
-      fromToken: _FromToken
-      toToken: _ToToken
-    }
-  : never
-type ExtractRouteRtl<
-  Routes extends SupportedRoute,
-  FromChain extends ChainId,
-  ToChain extends ChainId,
-> = Routes extends {
-  chainRight: FromChain
-  chainLeft: ToChain
-  tokenRight: infer _FromToken
-  tokenLeft: infer _ToToken
-}
-  ? {
-      fromChain: FromChain
-      toChain: ToChain
-      fromToken: _FromToken
-      toToken: _ToToken
-    }
-  : never
-
-export type GetSupportedRoutesFnAnyResult = {
+export interface DefinedRoute {
   fromChain: ChainId
   toChain: ChainId
   fromToken: TokenId
   toToken: TokenId
-}[]
-export type GetSupportedTokensFn<Routes extends SupportedRoute> = <
-  FromChain extends ChainId,
-  ToChain extends ChainId,
->(
-  fromChain: FromChain,
-  toChain: ToChain,
-) => Promise<
-  (
-    | ExtractRouteLtr<Routes, FromChain, ToChain>
-    | ExtractRouteRtl<Routes, FromChain, ToChain>
-  )[]
->
-
-export type PickLeftToRightRouteOrThrowFn<Routes extends SupportedRoute> = (
-  fromChain: ChainId,
-  toChain: ChainId,
-  fromToken: TokenId,
-  toToken: TokenId,
-) => Promise<
-  Routes extends any
-    ? {
-        fromChain: Routes["chainLeft"]
-        toChain: Routes["chainRight"]
-        fromToken: Routes["tokenLeft"]
-        toToken: Routes["tokenRight"]
-      }
-    : never
->
-export type PickRightToLeftRouteOrThrowFn<Routes extends SupportedRoute> = (
-  fromChain: ChainId,
-  toChain: ChainId,
-  fromToken: TokenId,
-  toToken: TokenId,
-) => Promise<
-  Routes extends {
-    chainRight: infer FromChain
-    chainLeft: infer ToChain
-    tokenRight: infer FromToken
-    tokenLeft: infer ToToken
-  }
-    ? {
-        fromChain: FromChain
-        toChain: ToChain
-        fromToken: FromToken
-        toToken: ToToken
-      }
-    : never
->
-
-export interface BuiltSupportedRoutes<SR extends SupportedRoute> {
-  supportedRoutes: SR[]
-  getSupportedTokens: GetSupportedTokensFn<SR>
-  pickLeftToRightRouteOrThrow: PickLeftToRightRouteOrThrowFn<SR>
-  pickRightToLeftRouteOrThrow: PickRightToLeftRouteOrThrowFn<SR>
 }
 
-export type SupportedRoutesOf<T extends BuiltSupportedRoutes<any>> =
-  T["supportedRoutes"][number]
+export type KnownRoute =
+  // from Stacks
+  | {
+      fromChain: KnownChainId.StacksChain
+      toChain: KnownChainId.BitcoinChain
+      fromToken: KnownTokenId.StacksToken
+      toToken: KnownTokenId.BitcoinToken
+    }
+  | {
+      fromChain: KnownChainId.StacksChain
+      toChain: KnownChainId.EVMChain
+      fromToken: KnownTokenId.StacksToken
+      toToken: KnownTokenId.EVMToken
+    }
+  // from Bitcoin
+  | {
+      fromChain: KnownChainId.BitcoinChain
+      toChain: KnownChainId.StacksChain
+      fromToken: KnownTokenId.BitcoinToken
+      toToken: KnownTokenId.StacksToken
+    }
+  | {
+      fromChain: KnownChainId.BitcoinChain
+      toChain: KnownChainId.EVMChain
+      fromToken: KnownTokenId.BitcoinToken
+      toToken: KnownTokenId.EVMToken
+    }
+  // from EVM
+  | {
+      fromChain: KnownChainId.EVMChain
+      toChain: KnownChainId.BitcoinChain
+      fromToken: KnownTokenId.EVMToken
+      toToken: KnownTokenId.BitcoinToken
+    }
+  | {
+      fromChain: KnownChainId.EVMChain
+      toChain: KnownChainId.StacksChain
+      fromToken: KnownTokenId.EVMToken
+      toToken: KnownTokenId.StacksToken
+    }
+  | {
+      fromChain: KnownChainId.EVMChain
+      toChain: KnownChainId.EVMChain
+      fromToken: KnownTokenId.EVMToken
+      toToken: KnownTokenId.EVMToken
+    }
 
-export type IsAvailableFn<SR extends SupportedRoute> = (
-  route: SR extends {
-    chainLeft: infer ChainLeft
-    chainRight: infer ChainRight
-    tokenLeft: infer TokenLeft
-    tokenRight: infer TokenRight
+export function defineRoute(
+  chainPairs: [fromChains: ChainId[], toChains: ChainId[]],
+  tokenPairs: [fromToken: TokenId, toToken: TokenId][],
+): DefinedRoute[] {
+  const result: DefinedRoute[] = []
+
+  for (const fromChain of chainPairs[0]) {
+    for (const toChain of chainPairs[1]) {
+      tokenPairs.forEach(tokenPair => {
+        result.push({
+          fromChain,
+          toChain,
+          fromToken: tokenPair[0],
+          toToken: tokenPair[1],
+        })
+      })
+    }
   }
-    ?
-        | {
-            fromChain: ChainLeft
-            toChain: ChainRight
-            fromToken: TokenLeft
-            toToken: TokenRight
-          }
-        | {
-            fromChain: ChainRight
-            toChain: ChainLeft
-            fromToken: TokenRight
-            toToken: TokenLeft
-          }
-    : never,
-) => Promise<boolean>
 
-export function buildSupportedRoutes<SRs extends SupportedRoute[]>(
-  routes: SRs[],
+  return result
+}
+
+export type IsSupportedFn = (route: DefinedRoute) => Promise<boolean>
+const memoizedIsSupportedFactory = (
+  isSupported: IsSupportedFn,
+): IsSupportedFn => {
+  const cache = new Map<string, Promise<boolean>>()
+
+  return async route => {
+    const key = `${route.fromChain}-${route.toChain}-${route.fromToken}-${route.toToken}`
+
+    const cachedPromise = cache.get(key)
+    if (cachedPromise != null) return cachedPromise
+
+    const promise = isSupported(route).catch(err => {
+      const cachedPromise = cache.get(key)
+
+      if (cachedPromise === promise) {
+        cache.delete(key)
+      }
+
+      throw err
+    })
+    cache.set(key, promise)
+    return promise
+  }
+}
+
+export type GetSupportedRoutesFn = (conditions?: {
+  fromChain?: ChainId
+  toChain?: ChainId
+  fromToken?: TokenId
+  toToken?: TokenId
+}) => Promise<KnownRoute[]>
+
+export function buildSupportedRoutes(
+  routes: DefinedRoute[],
   options: {
-    isAvailable?: IsAvailableFn<SRs[number]>
+    isSupported?: IsSupportedFn
   } = {},
-): BuiltSupportedRoutes<SRs[number]> {
-  const _routes = routes.flat()
-
-  const isAvailable = options.isAvailable || (() => Promise.resolve(true))
-
-  const getSupportedTokens = getSupportedTokensFactory(_routes, isAvailable)
-
-  const pickLeftToRightRouteOrThrow = pickLeftToRightRouteOrThrowFactory(
-    _routes,
-    isAvailable,
+): {
+  getSupportedRoutes: GetSupportedRoutesFn
+  checkRouteValid(route: DefinedRoute): Promise<KnownRoute>
+} {
+  const isSupported = memoizedIsSupportedFactory(
+    options.isSupported || (() => Promise.resolve(true)),
   )
 
-  const pickRightToLeftRouteOrThrow = pickRightToLeftRouteOrThrowFactory(
-    _routes,
-    isAvailable,
-  )
+  const getSupportedRoutes: GetSupportedRoutesFn = async (conditions = {}) => {
+    const filteredDefinitions = routes.filter(r => {
+      if (
+        conditions.fromChain != null &&
+        conditions.fromChain !== r.fromChain
+      ) {
+        return false
+      }
+      if (conditions.toChain != null && conditions.toChain !== r.toChain) {
+        return false
+      }
+      if (
+        conditions.fromToken != null &&
+        conditions.fromToken !== r.fromToken
+      ) {
+        return false
+      }
+      if (conditions.toToken != null && conditions.toToken !== r.toToken) {
+        return false
+      }
+
+      return true
+    })
+
+    const res = await Promise.all(
+      filteredDefinitions.map(
+        async route => [await isSupported(route), route] as const,
+      ),
+    )
+    return res
+      .filter(([isSupported]) => isSupported)
+      .map(([, route]) => route as KnownRoute)
+  }
 
   return {
-    supportedRoutes: _routes,
-    getSupportedTokens,
-    pickLeftToRightRouteOrThrow,
-    pickRightToLeftRouteOrThrow,
+    getSupportedRoutes,
+    async checkRouteValid(route): Promise<KnownRoute> {
+      const isValid = await isSupported(route)
+
+      if (!isValid) {
+        throw new UnsupportedBridgeRouteError(
+          route.fromChain,
+          route.toChain,
+          route.fromToken,
+          route.toToken,
+        )
+      }
+
+      return route as any
+    },
   }
 }
-
-const pickRightToLeftRouteOrThrowFactory =
-  <SR extends SupportedRoute>(
-    routes: SR[],
-    isAvailable: IsAvailableFn<SR>,
-  ): PickRightToLeftRouteOrThrowFn<SR> =>
-  async (fromChain, toChain, fromToken, toToken) => {
-    let result: undefined | { fromChain: ChainId; toChain: ChainId } = undefined
-
-    for (const r of routes) {
-      if (
-        r.chainRight === fromChain &&
-        r.chainLeft === toChain &&
-        r.tokenRight === fromToken &&
-        r.tokenLeft === toToken &&
-        (await isAvailable({
-          fromChain,
-          toChain,
-          fromToken,
-          toToken,
-        } as any))
-      ) {
-        result = { fromChain, toChain }
-        break
-      }
-
-      if (result) return result as any
-    }
-
-    throw new UnsupportedBridgeRouteError(
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-    )
-  }
-
-const pickLeftToRightRouteOrThrowFactory =
-  <SR extends SupportedRoute>(
-    routes: SR[],
-    isAvailable: IsAvailableFn<SR>,
-  ): PickLeftToRightRouteOrThrowFn<SR> =>
-  async (fromChain, toChain, fromToken, toToken) => {
-    let result: undefined | { fromChain: ChainId; toChain: ChainId } = undefined
-
-    for (const r of routes) {
-      if (
-        r.chainLeft === fromChain &&
-        r.chainRight === toChain &&
-        r.tokenLeft === fromToken &&
-        r.tokenRight === toToken &&
-        (await isAvailable({
-          fromChain,
-          toChain,
-          fromToken,
-          toToken,
-        } as any))
-      ) {
-        result = { fromChain, toChain }
-        break
-      }
-
-      if (result) return result as any
-    }
-
-    throw new UnsupportedBridgeRouteError(
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-    )
-  }
-
-const getSupportedTokensFactory =
-  <SR extends SupportedRoute>(
-    routes: SR[],
-    isAvailable: IsAvailableFn<SR>,
-  ): GetSupportedTokensFn<SR> =>
-  async (fromChain, toChain) => {
-    const promises = routes.map(
-      async (
-        r,
-      ): Promise<
-        {
-          fromChain: ChainId
-          toChain: ChainId
-          fromToken: TokenId
-          toToken: TokenId
-        }[]
-      > => {
-        let route:
-          | undefined
-          | {
-              fromChain: ChainId
-              toChain: ChainId
-              fromToken: TokenId
-              toToken: TokenId
-            } = undefined
-
-        if (r.chainLeft === fromChain && r.chainRight === toChain) {
-          route = {
-            fromChain: r.chainLeft,
-            toChain: r.chainRight,
-            fromToken: r.tokenLeft,
-            toToken: r.tokenRight,
-          }
-        }
-
-        if (r.chainLeft === toChain && r.chainRight === fromChain) {
-          route = {
-            fromChain: r.chainRight,
-            toChain: r.chainLeft,
-            fromToken: r.tokenRight,
-            toToken: r.tokenLeft,
-          }
-        }
-
-        return route == null || !(await isAvailable(route as any))
-          ? []
-          : [route]
-      },
-    )
-
-    return Promise.all(promises).then(results => results.flat() as any)
-  }

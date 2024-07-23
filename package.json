@@ -33,7 +33,7 @@
     "test": "vitest --exclude lib"
   },
   "dependencies": {
-    "@c4/btc-utils": "^0.2.0",
+    "@c4/btc-utils": "^0.3.1",
     "clarity-codegen": "^0.5.2"
   },
   "devDependencies": {

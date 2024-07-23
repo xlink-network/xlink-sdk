@@ -5,12 +5,10 @@ import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
 } from "../stacksUtils/xlinkContractHelpers"
-import { GetSupportedRoutesFnAnyResult } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { composeTransferProphet2 } from "../utils/feeRateHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-import { supportedRoutes } from "./bridgeFromBitcoin"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
 
 export interface BridgeInfoFromBitcoinInput {
@@ -31,18 +29,19 @@ export interface BridgeInfoFromBitcoinOutput {
 export const bridgeInfoFromBitcoin = async (
   info: BridgeInfoFromBitcoinInput,
 ): Promise<BridgeInfoFromBitcoinOutput> => {
-  const res: GetSupportedRoutesFnAnyResult =
-    await supportedRoutes.getSupportedTokens(info.fromChain, info.toChain)
-  if (res.length <= 0) {
+  const fromChain = info.fromChain
+  const toChain = info.toChain
+
+  if (
+    !KnownChainId.isKnownChain(fromChain) ||
+    !KnownChainId.isKnownChain(toChain)
+  ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
       KnownTokenId.Bitcoin.BTC,
     )
   }
-
-  const fromChain = info.fromChain as KnownChainId.AllChain
-  const toChain = info.toChain as KnownChainId.AllChain
 
   if (KnownChainId.isBitcoinChain(fromChain)) {
     if (KnownChainId.isStacksChain(toChain)) {

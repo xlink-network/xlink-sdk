@@ -1,13 +1,19 @@
 import { StacksNetwork } from "@stacks/network"
 import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn } from "clarity-codegen"
+import { fromCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
+import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
+import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
-import { props } from "../utils/promiseHelpers"
+import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { TransferProphet } from "../utils/feeRateHelpers"
+import { props } from "../utils/promiseHelpers"
+import { checkNever } from "../utils/typeHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 
 export const getBtc2StacksFeeInfo = async (contractCallInfo: {
   network: StacksNetwork
@@ -93,4 +99,47 @@ export const getStacks2BtcFeeInfo = async (contractCallInfo: {
     minAmount: BigNumber.isZero(resp.minFeeAmount) ? null : resp.minFeeAmount,
     maxAmount: null,
   }
+}
+
+export const isSupportedBitcoinRoute: IsSupportedFn = async route => {
+  if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
+    return false
+  }
+  if (
+    !KnownChainId.isBitcoinChain(route.fromChain) ||
+    !KnownTokenId.isBitcoinToken(route.fromToken)
+  ) {
+    return false
+  }
+  if (!KnownChainId.isKnownChain(route.toChain)) return false
+
+  if (KnownChainId.isBitcoinChain(route.toChain)) {
+    return false
+  }
+
+  if (KnownChainId.isStacksChain(route.toChain)) {
+    if (!KnownTokenId.isStacksToken(route.toToken)) return false
+
+    return (
+      route.fromToken === KnownTokenId.Bitcoin.BTC &&
+      route.toToken === KnownTokenId.Stacks.aBTC &&
+      stxTokenContractAddresses[route.toToken]?.[route.toChain] != null
+    )
+  }
+
+  if (KnownChainId.isEVMChain(route.toChain)) {
+    const toEVMToken = await fromCorrespondingStacksCurrency(
+      route.toChain,
+      KnownTokenId.Stacks.aBTC,
+    )
+    if (toEVMToken == null) return false
+
+    const info = await getEVMTokenContractInfo(route.toChain, toEVMToken)
+    if (info == null) return false
+
+    return toEVMToken === route.toToken
+  }
+
+  checkNever(route.toChain)
+  return false
 }

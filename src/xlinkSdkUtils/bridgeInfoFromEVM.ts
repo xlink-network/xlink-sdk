@@ -12,7 +12,7 @@ import {
 } from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { composeTransferProphet2 } from "../utils/feeRateHelpers"
-import { checkNever } from "../utils/typeHelpers"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { supportedRoutes } from "./bridgeFromEVM"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
@@ -37,12 +37,7 @@ export interface BridgeInfoFromEVMOutput {
 export async function bridgeInfoFromEVM(
   info: BridgeInfoFromEVMInput,
 ): Promise<BridgeInfoFromEVMOutput> {
-  const route = await supportedRoutes.pickLeftToRightRouteOrThrow(
-    info.fromChain,
-    info.toChain,
-    info.fromToken,
-    info.toToken,
-  )
+  const route = await supportedRoutes.checkRouteValid(info)
 
   if (KnownChainId.isEVMChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
@@ -88,7 +83,9 @@ export async function bridgeInfoFromEVM(
       checkNever(route.toChain)
     }
   } else {
-    checkNever(route.fromChain)
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    checkNever(route)
   }
 
   throw new UnsupportedBridgeRouteError(

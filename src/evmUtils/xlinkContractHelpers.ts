@@ -1,4 +1,4 @@
-import { Address, Client, isAddress } from "viem"
+import { Address, Client, isAddress, zeroAddress } from "viem"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
 import {
   KnownChainId,
@@ -14,6 +14,7 @@ import {
 import { readContract } from "viem/actions"
 import { bridgeConfigAbi } from "./contractAbi/bridgeConfig"
 import { EVMAddress } from "../xlinkSdkUtils/types"
+import pMemoize from "../utils/pMemoize"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 18
 export const numberFromSolidityContractNumber = (
@@ -79,6 +80,7 @@ export async function getEVMTokenContractInfo(
 
   const tokenContractAddress =
     addresses.onChainAddresses?.[tokenId] ?? addresses.localAddresses[tokenId]
+
   if (tokenContractAddress == null) return
 
   return {
@@ -113,14 +115,12 @@ async function getAllAddresses(chainId: KnownChainId.EVMChain): Promise<
     }
 > {
   const client = evmClients[chainId]
-  if (client == null) return
-
   const localAddresses = evmContractAddresses[chainId]
   const configContractAddress = localAddresses[EVMEndpointContract.BridgeConfig]
 
   let onChainAddresses: undefined | EVMOnChainAddresses
   if (configContractAddress != null) {
-    onChainAddresses = await getOnChainConfigs(client, configContractAddress)
+    onChainAddresses = await getOnChainConfigs(chainId, configContractAddress)
   }
 
   return {
@@ -129,10 +129,17 @@ async function getAllAddresses(chainId: KnownChainId.EVMChain): Promise<
     localAddresses,
   }
 }
-const getOnChainConfigs = async (
-  client: Client,
+
+const getOnChainConfigs: typeof _getOnChainConfigs = pMemoize(
+  _getOnChainConfigs as any,
+  { skipCache: true },
+)
+async function _getOnChainConfigs(
+  chain: KnownChainId.EVMChain,
   configContractAddress: Address,
-): Promise<EVMOnChainAddresses> => {
+): Promise<EVMOnChainAddresses> {
+  const client = evmClients[chain]
+
   const configs = await readContract(client, {
     abi: bridgeConfigAbi,
     address: configContractAddress,
@@ -155,25 +162,26 @@ const getOnChainConfigs = async (
 
   const EVMToken = KnownTokenId.EVM
   return {
-    [EVMEndpointContract.BridgeEndpoint]: maybeValue(configs[0]),
-    [EVMToken.aBTC]: maybeValue(configs[1]),
-    [EVMToken.ALEX]: maybeValue(configs[2]),
-    [EVMToken.vLiALEX]: maybeValue(configs[3]),
-    [EVMToken.vLiSTX]: maybeValue(configs[4]),
-    [EVMToken.USDT]: maybeValue(configs[5]),
+    [EVMEndpointContract.BridgeEndpoint]: maybeAddress(configs[0]),
+    [EVMToken.aBTC]: maybeAddress(configs[1]),
+    [EVMToken.ALEX]: maybeAddress(configs[2]),
+    [EVMToken.vLiALEX]: maybeAddress(configs[3]),
+    [EVMToken.vLiSTX]: maybeAddress(configs[4]),
+    [EVMToken.USDT]: maybeAddress(configs[5]),
     [client === evmClients[KnownChainId.EVM.BSC]
       ? EVMToken.BTCB
-      : EVMToken.WBTC]: maybeValue(configs[6]),
-    [EVMToken.LUNR]: maybeValue(configs[7]),
-    [EVMToken.SKO]: maybeValue(configs[8]),
-    [EVMToken.sUSDT]: maybeValue(configs[9]),
+      : EVMToken.WBTC]: maybeAddress(configs[6]),
+    [EVMToken.LUNR]: maybeAddress(configs[7]),
+    [EVMToken.SKO]: maybeAddress(configs[8]),
+    [EVMToken.sUSDT]: maybeAddress(configs[9]),
   }
-
-  function maybeValue(value: string | null): Address | undefined {
-    if (value == null) return undefined
-    if (value === "") return undefined
-    return isAddress(value) ? value : undefined
-  }
+}
+function maybeAddress(value: string | null): Address | undefined {
+  if (value == null) return undefined
+  if (value === "") return undefined
+  if (!isAddress(value)) return undefined
+  if (value === zeroAddress) return undefined
+  return value
 }
 /**
  * https://t.me/c/1599543687/57298

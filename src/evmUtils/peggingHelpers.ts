@@ -8,14 +8,19 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
+import { IsSupportedFn } from "../utils/buildSupportedRoutes"
+import { TransferProphet } from "../utils/feeRateHelpers"
 import { props } from "../utils/promiseHelpers"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types.internal"
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { bridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { bridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
-import { numberFromSolidityContractNumber } from "./xlinkContractHelpers"
-import { TransferProphet } from "../utils/feeRateHelpers"
-import { ChainToken, StacksContractAddress } from "../xlinkSdkUtils/types"
-import { KnownChainId, KnownTokenId } from "../utils/types.internal"
-import { assertExclude, checkNever } from "../utils/typeHelpers"
+import {
+  getEVMTokenContractInfo,
+  numberFromSolidityContractNumber,
+} from "./xlinkContractHelpers"
+import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 
 export const getEvm2StacksFeeInfo = async (
   stacksContractCallInfo: {
@@ -304,31 +309,58 @@ export async function toCorrespondingStacksCurrency(
   }
 }
 
-export async function isValidRoute(
-  from: ChainToken,
-  to: ChainToken,
-): Promise<boolean> {
-  if (from.chain === to.chain && from.token === to.token) {
+export const isSupportedEVMRoute: IsSupportedFn = async route => {
+  if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
     return false
   }
-
   if (
-    !KnownChainId.isEVMChain(from.chain) ||
-    !KnownChainId.isEVMChain(to.chain)
+    !KnownChainId.isEVMChain(route.fromChain) ||
+    !KnownTokenId.isEVMToken(route.fromToken)
   ) {
     return false
   }
+  if (!KnownChainId.isKnownChain(route.toChain)) return false
 
-  const transitStacksToken = await toCorrespondingStacksCurrency(
-    from.token as KnownTokenId.EVMToken,
+  const fromTokenInfo = await getEVMTokenContractInfo(
+    route.fromChain,
+    route.fromToken,
   )
-  if (transitStacksToken == null) return false
+  if (fromTokenInfo == null) return false
 
-  const toEVMToken = await fromCorrespondingStacksCurrency(
-    to.chain,
-    transitStacksToken,
-  )
-  if (toEVMToken == null) return false
+  if (KnownChainId.isStacksChain(route.toChain)) {
+    const stacksToken = await toCorrespondingStacksCurrency(route.fromToken)
+    if (stacksToken == null) return false
 
-  return toEVMToken === to.token
+    if (stxTokenContractAddresses[stacksToken]?.[route.toChain] == null) {
+      return false
+    }
+
+    return stacksToken === route.toToken
+  }
+
+  if (KnownChainId.isEVMChain(route.toChain)) {
+    const transitStacksToken = await toCorrespondingStacksCurrency(
+      route.fromToken,
+    )
+    if (transitStacksToken == null) return false
+
+    const toEVMToken = await fromCorrespondingStacksCurrency(
+      route.toChain,
+      transitStacksToken,
+    )
+    if (toEVMToken == null) return false
+
+    const toTokenInfo = await getEVMTokenContractInfo(route.toChain, toEVMToken)
+    if (toTokenInfo == null) return false
+
+    return toEVMToken === route.toToken
+  }
+
+  if (KnownChainId.isBitcoinChain(route.toChain)) {
+    const stacksToken = await toCorrespondingStacksCurrency(route.fromToken)
+    return stacksToken === KnownTokenId.Stacks.aBTC
+  }
+
+  checkNever(route.toChain)
+  return false
 }

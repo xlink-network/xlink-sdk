@@ -5,7 +5,7 @@ import {
   getStacksTokenContractInfo,
 } from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
-import { checkNever } from "../utils/typeHelpers"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types.internal"
 import { supportedRoutes } from "./bridgeFromStacks"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
@@ -31,12 +31,7 @@ export interface BridgeInfoFromStacksOutput {
 export async function bridgeInfoFromStacks(
   info: BridgeInfoFromStacksInput,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const route = await supportedRoutes.pickLeftToRightRouteOrThrow(
-    info.fromChain,
-    info.toChain,
-    info.fromToken,
-    info.toToken,
-  )
+  const route = await supportedRoutes.checkRouteValid(info)
 
   if (KnownChainId.isStacksChain(route.fromChain)) {
     if (KnownChainId.isBitcoinChain(route.toChain)) {
@@ -66,10 +61,13 @@ export async function bridgeInfoFromStacks(
         })
       }
     } else {
-      checkNever(route.toChain)
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.StacksChain>())
+      checkNever(route)
     }
   } else {
-    checkNever(route.fromChain)
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    checkNever(route)
   }
 
   throw new UnsupportedBridgeRouteError(

@@ -5,7 +5,10 @@ import {
   UnsupportedInputTypeError,
 } from "@c4/btc-utils"
 import * as btc from "@scure/btc-signer"
-import { InsufficientBalanceError, UnsupportedBitcoinInput } from "./errors"
+import {
+  InsufficientBitcoinBalanceError,
+  UnsupportedBitcoinInput,
+} from "./errors"
 import { max, sum } from "../utils/bigintHelpers"
 import {
   addressToScriptPubKey,
@@ -93,7 +96,7 @@ export async function prepareTransaction(txInfo: {
     // Check if selected UTXO satoshi amount has changed since last iteration
     // If it hasn't, there is insufficient balance
     if (newSelectedUTXOSatsInTotal < lastSelectedUTXOSatsInTotal) {
-      throw new InsufficientBalanceError()
+      throw new InsufficientBitcoinBalanceError()
     }
 
     lastSelectedUTXOSatsInTotal = newSelectedUTXOSatsInTotal
@@ -111,7 +114,7 @@ export async function prepareTransaction(txInfo: {
     loopTimes++
     if (loopTimes > 500) {
       // Exit after max 500 iterations
-      throw new InsufficientBalanceError()
+      throw new InsufficientBitcoinBalanceError()
     }
   }
 

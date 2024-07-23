@@ -32,8 +32,8 @@ import {
   ChainId,
   EVMAddress,
   StacksContractAddress,
-  SupportedToken,
 } from "./xlinkSdkUtils/types"
+import { GetSupportedRoutesFn } from "./utils/buildSupportedRoutes"
 
 export {
   BridgeFromBitcoinInput,
@@ -67,25 +67,12 @@ export {
 } from "./xlinkSdkUtils/timelockFromEVM"
 
 export class XLinkSDK {
-  async getSupportedTokens(
-    fromChain: ChainId,
-    toChain: ChainId,
-  ): Promise<SupportedToken[]> {
+  getSupportedRoutes: GetSupportedRoutesFn = async conditions => {
     const promises = [
       supportedRoutesFromStacks,
       supportedRoutesFromEVM,
       supportedRoutesFromBitcoin,
-    ].map(async rules => {
-      const result = await rules.getSupportedTokens(fromChain, toChain)
-
-      return result.map(res => ({
-        fromChain: res.fromChain,
-        fromToken: res.fromToken,
-        toChain: res.toChain,
-        toToken: res.toToken,
-      }))
-    })
-
+    ].map(async rules => rules.getSupportedRoutes(conditions))
     return (await Promise.all(promises)).flat()
   }
 

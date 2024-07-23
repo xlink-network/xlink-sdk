@@ -1,4 +1,6 @@
-export class InsufficientBalanceError extends Error {
+import { XLinkSDKErrorBase } from "../utils/errors"
+
+export class InsufficientBitcoinBalanceError extends XLinkSDKErrorBase {
   constructor(...args: ConstructorParameters<typeof Error>) {
     super(...args)
 
@@ -7,10 +9,10 @@ export class InsufficientBalanceError extends Error {
   }
 }
 
-export class UnsupportedBitcoinInput extends Error {
+export class UnsupportedBitcoinInput extends XLinkSDKErrorBase {
   constructor(
-    txid: string,
-    index: number,
+    public txid: string,
+    public index: number,
     ...args: ConstructorParameters<typeof Error>
   ) {
     super(...args)
