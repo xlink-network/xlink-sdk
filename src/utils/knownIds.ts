@@ -56,8 +56,8 @@ export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
 export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 
 export namespace KnownChainId {
-  export type AllChain = BitcoinChain | EVMChain | StacksChain
-  export function isKnownChain(value: ChainId): value is AllChain {
+  export type KnownChain = BitcoinChain | EVMChain | StacksChain
+  export function isKnownChain(value: ChainId): value is KnownChain {
     return isBitcoinChain(value) || isEVMChain(value) || isStacksChain(value)
   }
 
