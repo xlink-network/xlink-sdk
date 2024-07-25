@@ -5,7 +5,7 @@ import { TransferProphet } from "./types/TransferProphet"
 import { TransferProphetAggregated } from "./types/TransferProphet"
 
 export interface TransferProphetAppliedResult {
-  fee: BigNumber
+  feeAmount: BigNumber
   netAmount: BigNumber
 }
 
@@ -16,7 +16,7 @@ export const applyTransferProphets = (
   return reduce(
     (acc, transferProphet) =>
       concat(acc, [applyTransferProphet(transferProphet, last(acc).netAmount)]),
-    [{ fee: BigNumber.ZERO, netAmount: amount }],
+    [{ feeAmount: BigNumber.ZERO, netAmount: amount }],
     transferProphets,
   )
 }
@@ -25,15 +25,15 @@ export const applyTransferProphet = (
   transferProphet: TransferProphet,
   amount: BigNumber,
 ): TransferProphetAppliedResult => {
-  const fee = BigNumber.max([
+  const feeAmount = BigNumber.max([
     transferProphet.minFeeAmount,
     BigNumber.mul(transferProphet.feeRate, amount),
   ])
   const netAmount = BigNumber.max([
     BigNumber.ZERO,
-    BigNumber.minus(amount, fee),
+    BigNumber.minus(amount, feeAmount),
   ])
-  return { fee, netAmount }
+  return { feeAmount, netAmount }
 }
 
 export const composeTransferProphet2 = (

@@ -5,6 +5,7 @@ import {
 } from "../../xlinkSdkUtils/types"
 import { BigNumber } from "../BigNumber"
 import { KnownRoute } from "../buildSupportedRoutes"
+import { applyTransferProphet } from "../feeRateHelpers"
 import { OneOrMore } from "../typeHelpers"
 import { KnownChainId, KnownTokenId } from "./knownIds"
 
@@ -45,15 +46,18 @@ export function transformToPublicTransferProphet(
   transferProphet: TransferProphet,
   fromAmount: SDKNumber | BigNumber,
 ): PublicTransferProphet {
-  const feeAmount = BigNumber.mul(fromAmount, transferProphet.feeRate)
+  const result = applyTransferProphet(
+    transferProphet,
+    BigNumber.from(fromAmount),
+  )
 
   return {
     ...route,
     fromAmount: toSDKNumberOrUndefined(fromAmount),
-    toAmount: toSDKNumberOrUndefined(BigNumber.minus(fromAmount, feeAmount)),
+    toAmount: toSDKNumberOrUndefined(result.netAmount),
     isPaused: transferProphet.isPaused,
     feeToken: transferProphet.feeToken,
-    feeAmount: toSDKNumberOrUndefined(feeAmount),
+    feeAmount: toSDKNumberOrUndefined(result.feeAmount),
     feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
     minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
     minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
