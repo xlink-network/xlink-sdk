@@ -8,7 +8,7 @@ import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMTokens,
-} from "../utils/knownIds"
+} from "../utils/types/knownIds"
 import { EVMAddress, SDKNumber, toSDKNumberOrUndefined } from "./types"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"

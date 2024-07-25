@@ -1,11 +1,11 @@
 import { StacksNetwork } from "@stacks/network"
 import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
-import { contractAssignedChainIdFromBridgeChain } from "./crossContractDataMapping"
+import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { hasLength } from "../utils/arrayHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId } from "../utils/knownIds"
+import { KnownChainId } from "../utils/types/knownIds"
 import { executeReadonlyCallXLINK } from "./xlinkContractHelpers"
 
 export interface BridgeSwapRouteNode {
@@ -123,7 +123,7 @@ export async function createBridgeOrder_BitcoinToEVM(
       })) satisfies CallReadOnlyFunctionFn,
   }
 
-  const targetChainId = contractAssignedChainIdFromBridgeChain(info.targetChain)
+  const targetChainId = contractAssignedChainIdFromKnownChain(info.targetChain)
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(

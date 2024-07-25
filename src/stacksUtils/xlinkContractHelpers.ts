@@ -12,7 +12,7 @@ import {
 } from "../config"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { stxTokenContractAddresses } from "./stxContractAddresses"
 

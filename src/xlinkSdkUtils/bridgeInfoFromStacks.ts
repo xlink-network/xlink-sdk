@@ -1,16 +1,14 @@
 import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
-import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
-import {
-  getStacksContractCallInfo,
-  getStacksTokenContractInfo,
-} from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
-import { PublicTransferProphet } from "./types"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
+import {
+  PublicTransferProphetAggregated,
+  transformToPublicTransferProphet,
+} from "../utils/types/TransferProphet"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromStacks"
-import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
+import { ChainId, SDKNumber, TokenId } from "./types"
 
 export interface BridgeInfoFromStacksInput {
   fromChain: ChainId
@@ -20,9 +18,8 @@ export interface BridgeInfoFromStacksInput {
   amount: SDKNumber
 }
 
-export interface BridgeInfoFromStacksOutput extends PublicTransferProphet {
-  feeToken: TokenId
-}
+export interface BridgeInfoFromStacksOutput
+  extends PublicTransferProphetAggregated {}
 
 export async function bridgeInfoFromStacks(
   info: BridgeInfoFromStacksInput,
@@ -85,8 +82,8 @@ async function bridgeInfoFromStacks_toBitcoin(
     toToken: KnownTokenId.BitcoinToken
   },
 ): Promise<BridgeInfoFromStacksOutput> {
-  const contractCallInfo = getStacksContractCallInfo(info.fromChain)
-  if (contractCallInfo == null) {
+  const step1 = await getStacks2BtcFeeInfo(info)
+  if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -95,18 +92,9 @@ async function bridgeInfoFromStacks_toBitcoin(
     )
   }
 
-  const transferProphet = await getStacks2BtcFeeInfo({
-    network: contractCallInfo.network,
-    endpointDeployerAddress: contractCallInfo.deployerAddress,
-  })
-
   return {
-    isPaused: transferProphet.isPaused,
-    feeToken: info.fromToken as TokenId,
-    feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
-    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
+    ...transformToPublicTransferProphet(info, step1, info.amount),
+    transferProphets: [],
   }
 }
 
@@ -121,31 +109,8 @@ async function bridgeInfoFromStacks_toEVM(
     toToken: KnownTokenId.EVMToken
   },
 ): Promise<BridgeInfoFromStacksOutput> {
-  const contractCallInfo = getStacksContractCallInfo(info.fromChain)
-  const tokenContractInfo = getStacksTokenContractInfo(
-    info.fromChain,
-    info.fromToken,
-  )
-  if (contractCallInfo == null || tokenContractInfo == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
-
-  const transferProphet = await getStacks2EvmFeeInfo(
-    {
-      network: contractCallInfo.network,
-      endpointDeployerAddress: contractCallInfo.deployerAddress,
-    },
-    {
-      toChainId: contractAssignedChainIdFromBridgeChain(info.toChain),
-      stacksToken: tokenContractInfo,
-    },
-  )
-  if (transferProphet == null) {
+  const step1 = await getStacks2EvmFeeInfo(info)
+  if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -155,11 +120,7 @@ async function bridgeInfoFromStacks_toEVM(
   }
 
   return {
-    isPaused: transferProphet.isPaused,
-    feeToken: info.fromToken as TokenId,
-    feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
-    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
+    ...transformToPublicTransferProphet(info, step1, info.amount),
+    transferProphets: [],
   }
 }

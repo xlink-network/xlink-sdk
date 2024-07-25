@@ -1,40 +1,42 @@
-import { StacksNetwork } from "@stacks/network"
 import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
-import { Address, Client } from "viem"
 import { readContract } from "viem/actions"
+import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
+import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
+  getStacksContractCallInfo,
+  getStacksTokenContractInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
-import { TransferProphet } from "../utils/feeRateHelpers"
+import { TransferProphet } from "../utils/types/TransferProphet"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { props } from "../utils/promiseHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
-import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { bridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { bridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
-import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 
-export const getEvm2StacksFeeInfo = async (
-  stacksContractCallInfo: {
-    network: StacksNetwork
-    endpointDeployerAddress: string
-  },
-  evmContractCallInfo: {
-    client: Client
-    bridgeContractAddress: Address
-  },
-  tokenContractAddress: Address,
-): Promise<undefined | TransferProphet> => {
+export const getEvm2StacksFeeInfo = async (route: {
+  fromChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.EVMToken
+  toChain: KnownChainId.StacksChain
+  toToken: KnownTokenId.StacksToken
+}): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(route.toChain)
+  const evmContractCallInfo = await getEVMTokenContractInfo(
+    route.fromChain,
+    route.fromToken,
+  )
+  if (stacksContractCallInfo == null || evmContractCallInfo == null) return
+
   const executeOptions = {
-    deployerAddress: stacksContractCallInfo.endpointDeployerAddress,
+    deployerAddress: stacksContractCallInfo.deployerAddress,
     callReadOnlyFunction: (callOptions =>
       callReadOnlyFunction({
         ...callOptions,
@@ -42,25 +44,26 @@ export const getEvm2StacksFeeInfo = async (
       })) satisfies CallReadOnlyFunctionFn,
   }
 
-  const { client, bridgeContractAddress } = evmContractCallInfo
+  const { client, bridgeEndpointContractAddress, tokenContractAddress } =
+    evmContractCallInfo
 
   const registryAddr = await readContract(client, {
     abi: bridgeEndpointAbi,
-    address: bridgeContractAddress,
+    address: bridgeEndpointContractAddress,
     functionName: "registry",
   })
 
   const resp = await props({
     isApproved: readContract(client, {
       abi: bridgeRegistryAbi,
-      address: bridgeContractAddress,
+      address: bridgeEndpointContractAddress,
       functionName: "APPROVED_TOKEN",
-    }).then(token =>
+    }).then(key =>
       readContract(client, {
         abi: bridgeRegistryAbi,
         address: registryAddr,
         functionName: "hasRole",
-        args: [token, tokenContractAddress],
+        args: [key, tokenContractAddress],
       }),
     ),
     feeRate: readContract(client, {
@@ -104,28 +107,35 @@ export const getEvm2StacksFeeInfo = async (
   return {
     isPaused: resp.isPaused,
     feeRate: resp.feeRate,
+    feeToken: route.fromToken,
     minFeeAmount: resp.minFeeAmount,
     minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
     maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
   }
 }
 
-export const getStacks2EvmFeeInfo = async (
-  contractCallInfo: {
-    network: StacksNetwork
-    endpointDeployerAddress: string
-  },
-  info: {
-    toChainId: bigint
-    stacksToken: StacksContractAddress
-  },
-): Promise<undefined | TransferProphet> => {
+export const getStacks2EvmFeeInfo = async (route: {
+  fromChain: KnownChainId.StacksChain
+  fromToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.EVMChain
+  toToken: KnownTokenId.EVMToken
+}): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(route.fromChain)
+  const stacksTokenContractCallInfo = getStacksTokenContractInfo(
+    route.fromChain,
+    route.fromToken,
+  )
+  const toChainId = contractAssignedChainIdFromKnownChain(route.toChain)
+  if (stacksContractCallInfo == null || stacksTokenContractCallInfo == null) {
+    return
+  }
+
   const executeOptions = {
-    deployerAddress: contractCallInfo.endpointDeployerAddress,
+    deployerAddress: stacksContractCallInfo.deployerAddress,
     callReadOnlyFunction: (callOptions =>
       callReadOnlyFunction({
         ...callOptions,
-        network: contractCallInfo.network,
+        network: stacksContractCallInfo.network,
       })) satisfies CallReadOnlyFunctionFn,
   }
 
@@ -135,8 +145,8 @@ export const getStacks2EvmFeeInfo = async (
       "get-approved-pair-or-fail",
       {
         pair: {
-          token: `${info.stacksToken.deployerAddress}.${info.stacksToken.contractName}`,
-          "chain-id": info.toChainId,
+          token: `${stacksTokenContractCallInfo.deployerAddress}.${stacksTokenContractCallInfo.contractName}`,
+          "chain-id": toChainId,
         },
       },
       executeOptions,
@@ -174,6 +184,7 @@ export const getStacks2EvmFeeInfo = async (
 
   return {
     isPaused: tokenConf.isPaused || tokenConf.approved === false,
+    feeToken: route.fromToken,
     feeRate,
     minFeeAmount: minFee,
     minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,

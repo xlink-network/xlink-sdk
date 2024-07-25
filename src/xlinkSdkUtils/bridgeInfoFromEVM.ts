@@ -4,19 +4,17 @@ import {
   getStacks2EvmFeeInfo,
   toCorrespondingStacksCurrency,
 } from "../evmUtils/peggingHelpers"
-import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
-import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
-import {
-  getStacksContractCallInfo,
-  getStacksTokenContractInfo,
-} from "../stacksUtils/xlinkContractHelpers"
+import { KnownRoute } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { composeTransferProphet2 } from "../utils/feeRateHelpers"
-import { PublicTransferProphet } from "./types"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
+import {
+  PublicTransferProphetAggregated,
+  transformToPublicTransferProphet,
+} from "../utils/types/TransferProphet"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromEVM"
-import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
+import { ChainId, SDKNumber, TokenId } from "./types"
 
 export interface BridgeInfoFromEVMInput {
   fromChain: ChainId
@@ -26,9 +24,8 @@ export interface BridgeInfoFromEVMInput {
   amount: SDKNumber
 }
 
-export interface BridgeInfoFromEVMOutput extends PublicTransferProphet {
-  feeToken: TokenId
-}
+export interface BridgeInfoFromEVMOutput
+  extends PublicTransferProphetAggregated {}
 
 export async function bridgeInfoFromEVM(
   info: BridgeInfoFromEVMInput,
@@ -103,32 +100,8 @@ async function bridgeInfoFromEVM_toStacks(
     toToken: KnownTokenId.StacksToken
   },
 ): Promise<BridgeInfoFromEVMOutput> {
-  const evmContractCallInfo = await getEVMTokenContractInfo(
-    info.fromChain,
-    info.fromToken,
-  )
-  const stacksContractCallInfo = getStacksContractCallInfo(info.toChain)
-  if (evmContractCallInfo == null || stacksContractCallInfo == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
-
-  const transferProphet = await getEvm2StacksFeeInfo(
-    {
-      network: stacksContractCallInfo.network,
-      endpointDeployerAddress: stacksContractCallInfo.deployerAddress,
-    },
-    {
-      client: evmContractCallInfo.client,
-      bridgeContractAddress: evmContractCallInfo.bridgeEndpointContractAddress,
-    },
-    evmContractCallInfo.tokenContractAddress,
-  )
-  if (transferProphet == null) {
+  const step1 = await getEvm2StacksFeeInfo(info)
+  if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -138,12 +111,8 @@ async function bridgeInfoFromEVM_toStacks(
   }
 
   return {
-    isPaused: transferProphet.isPaused,
-    feeToken: info.fromToken as TokenId,
-    feeRate: toSDKNumberOrUndefined(transferProphet.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
-    minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
+    ...transformToPublicTransferProphet(info, step1, info.amount),
+    transferProphets: [],
   }
 }
 
@@ -158,15 +127,11 @@ async function bridgeInfoFromEVM_toBitcoin(
     toToken: KnownTokenId.BitcoinToken
   },
 ): Promise<BridgeInfoFromEVMOutput> {
-  const stacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
+  const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const stacksContractCallInfo = getStacksContractCallInfo(stacksChain)
-  const evmContractCallInfo = await getEVMTokenContractInfo(
-    info.fromChain,
-    info.fromToken,
-  )
-  if (evmContractCallInfo == null || stacksContractCallInfo == null) {
+  const transitStacksToken = await toCorrespondingStacksCurrency(info.fromToken)
+  if (transitStacksToken == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -175,25 +140,24 @@ async function bridgeInfoFromEVM_toBitcoin(
     )
   }
 
-  const [step1TransferProphet, step2TransferProphet] = await Promise.all([
-    getEvm2StacksFeeInfo(
-      {
-        network: stacksContractCallInfo.network,
-        endpointDeployerAddress: stacksContractCallInfo.deployerAddress,
-      },
-      {
-        client: evmContractCallInfo.client,
-        bridgeContractAddress:
-          evmContractCallInfo.bridgeEndpointContractAddress,
-      },
-      evmContractCallInfo.tokenContractAddress,
-    ),
-    getStacks2BtcFeeInfo({
-      network: stacksContractCallInfo.network,
-      endpointDeployerAddress: stacksContractCallInfo.deployerAddress,
-    }),
+  const step1Route: KnownRoute = {
+    fromChain: info.fromChain,
+    fromToken: info.fromToken,
+    toChain: transitStacksChain,
+    toToken: transitStacksToken,
+  }
+  const step2Route: KnownRoute = {
+    fromChain: transitStacksChain,
+    fromToken: transitStacksToken,
+    toChain: info.toChain,
+    toToken: info.toToken,
+  }
+
+  const [step1, step2] = await Promise.all([
+    getEvm2StacksFeeInfo(step1Route),
+    getStacks2BtcFeeInfo(step2Route),
   ])
-  if (step1TransferProphet == null) {
+  if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -202,22 +166,32 @@ async function bridgeInfoFromEVM_toBitcoin(
     )
   }
 
-  const composed = composeTransferProphet2(
-    step1TransferProphet,
-    step2TransferProphet,
+  const composed = composeTransferProphet2(step1, step2)
+
+  const step1TransferProphet = transformToPublicTransferProphet(
+    step1Route,
+    step1,
+    info.amount,
+  )
+  const step2TransferProphet = transformToPublicTransferProphet(
+    step2Route,
+    step2,
+    step1TransferProphet.toAmount,
+  )
+  const finalTransferProphet = transformToPublicTransferProphet(
+    {
+      fromChain: step1Route.fromChain,
+      fromToken: step1Route.fromToken,
+      toChain: step2Route.toChain,
+      toToken: step2Route.toToken,
+    },
+    composed,
+    info.amount,
   )
 
   return {
-    isPaused: composed.isPaused,
-    feeToken: info.fromToken as TokenId,
-    feeRate: toSDKNumberOrUndefined(composed.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(composed.minFeeAmount),
-    minBridgeAmount: toSDKNumberOrUndefined(composed.minBridgeAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxBridgeAmount),
-
-    // For debugging
-    // @ts-ignore
-    _transferProphets: [step1TransferProphet, step2TransferProphet],
+    ...finalTransferProphet,
+    transferProphets: [step1TransferProphet, step2TransferProphet],
   }
 }
 
@@ -232,23 +206,11 @@ async function bridgeInfoFromEVM_toEVM(
     toToken: KnownTokenId.EVMToken
   },
 ): Promise<BridgeInfoFromEVMOutput> {
-  const stacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
+  const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const evmContractCallInfo = await getEVMTokenContractInfo(
-    info.fromChain,
-    info.fromToken,
-  )
   const transitStacksToken = await toCorrespondingStacksCurrency(info.fromToken)
-  const transitStacksContractCallInfo =
-    transitStacksToken == null
-      ? undefined
-      : getStacksTokenContractInfo(stacksChain, transitStacksToken)
-  if (
-    evmContractCallInfo == null ||
-    transitStacksToken == null ||
-    transitStacksContractCallInfo == null
-  ) {
+  if (transitStacksToken == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -257,31 +219,24 @@ async function bridgeInfoFromEVM_toEVM(
     )
   }
 
-  const [step1TransferProphet, step2TransferProphet] = await Promise.all([
-    getEvm2StacksFeeInfo(
-      {
-        network: transitStacksContractCallInfo.network,
-        endpointDeployerAddress: transitStacksContractCallInfo.deployerAddress,
-      },
-      {
-        client: evmContractCallInfo.client,
-        bridgeContractAddress:
-          evmContractCallInfo.bridgeEndpointContractAddress,
-      },
-      evmContractCallInfo.tokenContractAddress,
-    ),
-    getStacks2EvmFeeInfo(
-      {
-        network: transitStacksContractCallInfo.network,
-        endpointDeployerAddress: transitStacksContractCallInfo.deployerAddress,
-      },
-      {
-        toChainId: contractAssignedChainIdFromBridgeChain(info.toChain),
-        stacksToken: transitStacksContractCallInfo,
-      },
-    ),
+  const step1Route: KnownRoute = {
+    fromChain: info.fromChain,
+    fromToken: info.fromToken,
+    toChain: transitStacksChain,
+    toToken: transitStacksToken,
+  }
+  const step2Route: KnownRoute = {
+    fromChain: transitStacksChain,
+    fromToken: transitStacksToken,
+    toChain: info.toChain,
+    toToken: info.toToken,
+  }
+
+  const [step1, step2] = await Promise.all([
+    getEvm2StacksFeeInfo(step1Route),
+    getStacks2EvmFeeInfo(step2Route),
   ])
-  if (step1TransferProphet == null || step2TransferProphet == null) {
+  if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -290,21 +245,31 @@ async function bridgeInfoFromEVM_toEVM(
     )
   }
 
-  const composed = composeTransferProphet2(
-    step1TransferProphet,
-    step2TransferProphet,
+  const composed = composeTransferProphet2(step1, step2)
+
+  const step1TransferProphet = transformToPublicTransferProphet(
+    step1Route,
+    step1,
+    info.amount,
+  )
+  const step2TransferProphet = transformToPublicTransferProphet(
+    step2Route,
+    step2,
+    step1TransferProphet.toAmount,
+  )
+  const finalTransferProphet = transformToPublicTransferProphet(
+    {
+      fromChain: step1Route.fromChain,
+      fromToken: step1Route.fromToken,
+      toChain: step2Route.toChain,
+      toToken: step2Route.toToken,
+    },
+    composed,
+    info.amount,
   )
 
   return {
-    isPaused: composed.isPaused,
-    feeToken: info.fromToken as TokenId,
-    feeRate: toSDKNumberOrUndefined(composed.feeRate),
-    minFeeAmount: toSDKNumberOrUndefined(composed.minFeeAmount),
-    minBridgeAmount: toSDKNumberOrUndefined(composed.minBridgeAmount),
-    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxBridgeAmount),
-
-    // For debugging
-    // @ts-ignore
-    _transferProphets: [step1TransferProphet, step2TransferProphet],
+    ...finalTransferProphet,
+    transferProphets: [step1TransferProphet, step2TransferProphet],
   }
 }

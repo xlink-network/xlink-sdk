@@ -1,4 +1,4 @@
-import { ChainId, TokenId } from "../xlinkSdkUtils/types"
+import { ChainId, TokenId } from "../../xlinkSdkUtils/types"
 
 const chainId = <const T extends string>(value: T): ChainId<T> => value as any
 const tokenId = <const T extends string>(value: T): TokenId<T> => value as any

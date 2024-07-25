@@ -4,7 +4,7 @@ import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMTokens,
-} from "../utils/knownIds"
+} from "../utils/types/knownIds"
 import {
   EVMEndpointContract,
   EVMOnChainAddresses,

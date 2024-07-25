@@ -1,6 +1,5 @@
 import { EVMEndpointContract } from "../evmUtils/evmContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
-import { TransferProphet } from "../utils/feeRateHelpers"
 
 type SDKBrandedLiteral<
   Type extends string,
@@ -23,7 +22,7 @@ export type SDKNumberifyNestly<T> =
     T[K]
 }
 export function toSDKNumberOrUndefined<
-  T extends null | undefined | number | BigNumber,
+  T extends null | undefined | SDKNumber | number | BigNumber,
 >(n: T): Exclude<T, number | BigNumber> | SDKNumber {
   if (n == null) return undefined as any
   return BigNumber.toString(n) as SDKNumber
@@ -34,11 +33,6 @@ export type EVMAddress = `0x${string}`
 export interface StacksContractAddress {
   deployerAddress: string
   contractName: string
-}
-
-export interface PublicTransferProphet
-  extends SDKNumberifyNestly<TransferProphet> {
-  feeToken: TokenId
 }
 
 export type PublicEVMContractType = typeof PublicEVMContractType.BridgeEndpoint

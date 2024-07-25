@@ -7,7 +7,7 @@ import {
   getEVMTokenContractInfo,
   numberToSolidityContractNumber,
 } from "../evmUtils/xlinkContractHelpers"
-import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
+import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import {
   buildSupportedRoutes,
   defineRoute,
@@ -19,7 +19,7 @@ import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMMainnetChains,
-} from "../utils/knownIds"
+} from "../utils/types/knownIds"
 import { ChainId, EVMAddress, SDKNumber, TokenId } from "./types"
 
 export const supportedRoutes = buildSupportedRoutes(
@@ -251,7 +251,7 @@ async function bridgeFromEVM_toBitcoinOrEVM(
       fromTokenContractAddress.tokenContractAddress,
       numberToSolidityContractNumber(info.amount),
       info.toAddress,
-      contractAssignedChainIdFromBridgeChain(info.fromChain),
+      contractAssignedChainIdFromKnownChain(info.fromChain),
     ],
   })
 

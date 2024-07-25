@@ -1,4 +1,13 @@
-export * from "./xlinkSdkUtils/types"
+export {
+  ChainId,
+  TokenId,
+  SDKNumber,
+  SDKNumberifyNestly,
+  toSDKNumberOrUndefined,
+  EVMAddress,
+  StacksContractAddress,
+  PublicEVMContractType as EVMContractType,
+} from "./xlinkSdkUtils/types"
 export * from "./XLinkSDK"
 export {
   BitcoinRecipient,
@@ -6,7 +15,7 @@ export {
 } from "./bitcoinUtils/prepareTransaction"
 export { TimeLockedAsset } from "./xlinkSdkUtils/timelockFromEVM"
 export {
-  PublicEVMContractType as EVMContractType,
   PublicTransferProphet as TransferProphet,
-} from "./xlinkSdkUtils/types"
-export { KnownChainId, KnownTokenId } from "./utils/knownIds"
+  PublicTransferProphetAggregated as TransferProphetAggregated,
+} from "./utils/types/TransferProphet"
+export { KnownChainId, KnownTokenId } from "./utils/types/knownIds"

@@ -1,20 +1,8 @@
 import { BigNumber } from "./BigNumber"
 import { concat, last, reduce } from "./arrayHelpers"
 import { OneOrMore } from "./typeHelpers"
-
-export type TransferProphetGroup<
-  T extends Readonly<TransferProphet[]> = OneOrMore<TransferProphet>,
-> = Omit<TransferProphet, "waitBlocks"> & {
-  transferProphets: T
-}
-
-export interface TransferProphet {
-  isPaused: boolean
-  feeRate: BigNumber
-  minFeeAmount: BigNumber
-  minBridgeAmount: null | BigNumber
-  maxBridgeAmount: null | BigNumber
-}
+import { TransferProphet } from "./types/TransferProphet"
+import { TransferProphetAggregated } from "./types/TransferProphet"
 
 export interface TransferProphetAppliedResult {
   fee: BigNumber
@@ -51,7 +39,7 @@ export const applyTransferProphet = (
 export const composeTransferProphet2 = (
   transferProphet1: TransferProphet,
   transferProphet2: TransferProphet,
-): TransferProphetGroup<[TransferProphet, TransferProphet]> => {
+): TransferProphetAggregated<[TransferProphet, TransferProphet]> => {
   const minFeeAmount = BigNumber.sum([
     transferProphet1.minFeeAmount,
     transferProphet2.minFeeAmount,
@@ -63,6 +51,7 @@ export const composeTransferProphet2 = (
 
   return {
     isPaused: transferProphet1.isPaused || transferProphet2.isPaused,
+    feeToken: transferProphet1.feeToken,
     feeRate: composeRates2(transferProphet1.feeRate, transferProphet2.feeRate),
     minFeeAmount: minFeeAmount,
     minBridgeAmount:

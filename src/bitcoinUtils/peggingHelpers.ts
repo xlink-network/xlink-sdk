@@ -1,4 +1,3 @@
-import { StacksNetwork } from "@stacks/network"
 import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn } from "clarity-codegen"
 import { fromCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
@@ -6,25 +5,31 @@ import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
+  getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
-import { TransferProphet } from "../utils/feeRateHelpers"
+import { TransferProphet } from "../utils/types/TransferProphet"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { props } from "../utils/promiseHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
 
-export const getBtc2StacksFeeInfo = async (contractCallInfo: {
-  network: StacksNetwork
-  endpointDeployerAddress: string
-}): Promise<TransferProphet> => {
+export const getBtc2StacksFeeInfo = async (route: {
+  fromChain: KnownChainId.BitcoinChain
+  fromToken: KnownTokenId.BitcoinToken
+  toChain: KnownChainId.StacksChain
+  toToken: KnownTokenId.StacksToken
+}): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(route.toChain)
+  if (stacksContractCallInfo == null) return
+
   const executeOptions = {
-    deployerAddress: contractCallInfo.endpointDeployerAddress,
+    deployerAddress: stacksContractCallInfo.deployerAddress,
     callReadOnlyFunction: (callOptions =>
       callReadOnlyFunction({
         ...callOptions,
-        network: contractCallInfo.network,
+        network: stacksContractCallInfo.network,
       })) satisfies CallReadOnlyFunctionFn,
   }
 
@@ -52,6 +57,7 @@ export const getBtc2StacksFeeInfo = async (contractCallInfo: {
   return {
     isPaused: resp.isPaused,
     feeRate: resp.feeRate,
+    feeToken: route.fromToken,
     minFeeAmount: resp.minFeeAmount,
     minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
       ? null
@@ -60,16 +66,21 @@ export const getBtc2StacksFeeInfo = async (contractCallInfo: {
   }
 }
 
-export const getStacks2BtcFeeInfo = async (contractCallInfo: {
-  network: StacksNetwork
-  endpointDeployerAddress: string
-}): Promise<TransferProphet> => {
+export const getStacks2BtcFeeInfo = async (route: {
+  fromChain: KnownChainId.StacksChain
+  fromToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.BitcoinChain
+  toToken: KnownTokenId.BitcoinToken
+}): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(route.fromChain)
+  if (stacksContractCallInfo == null) return
+
   const executeOptions = {
-    deployerAddress: contractCallInfo.endpointDeployerAddress,
+    deployerAddress: stacksContractCallInfo.deployerAddress,
     callReadOnlyFunction: (callOptions =>
       callReadOnlyFunction({
         ...callOptions,
-        network: contractCallInfo.network,
+        network: stacksContractCallInfo.network,
       })) satisfies CallReadOnlyFunctionFn,
   }
 
@@ -97,6 +108,7 @@ export const getStacks2BtcFeeInfo = async (contractCallInfo: {
   return {
     isPaused: resp.isPaused,
     feeRate: resp.feeRate,
+    feeToken: route.fromToken,
     minFeeAmount: resp.minFeeAmount,
     minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
       ? null

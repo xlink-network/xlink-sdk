@@ -5,7 +5,7 @@ import {
 } from "@stacks/transactions"
 import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
-import { contractAssignedChainIdFromBridgeChain } from "../stacksUtils/crossContractDataMapping"
+import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { StacksTransactionBroadcastError } from "../stacksUtils/errors"
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 import {
@@ -25,7 +25,7 @@ import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMMainnetChains,
-} from "../utils/knownIds"
+} from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 
 export const supportedRoutes = buildSupportedRoutes(
@@ -211,7 +211,7 @@ async function bridgeFromStacks_toEVM(
     {
       "token-trait": `${tokenContractInfo.deployerAddress}.${tokenContractInfo.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
-      "dest-chain-id": contractAssignedChainIdFromBridgeChain(info.toChain),
+      "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),
     },
     { deployerAddress: contractCallInfo.deployerAddress },

@@ -12,7 +12,7 @@ import {
   getStacksToken,
   getStacksTokenContractInfo,
 } from "./stacksUtils/xlinkContractHelpers"
-import { KnownChainId, KnownTokenId } from "./utils/knownIds"
+import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import {
   bridgeFromBitcoin,
   supportedRoutes as supportedRoutesFromBitcoin,

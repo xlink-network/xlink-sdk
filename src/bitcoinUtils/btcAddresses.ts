@@ -1,5 +1,5 @@
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId } from "../utils/knownIds"
+import { KnownChainId } from "../utils/types/knownIds"
 
 export interface BitcoinAddress {
   address: string

@@ -2,7 +2,7 @@ import {
   STACKS_CONTRACT_DEPLOYER_MAINNET,
   STACKS_CONTRACT_DEPLOYER_TESTNET,
 } from "../config"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 
 const xlinkContractsDeployerMainnet = STACKS_CONTRACT_DEPLOYER_MAINNET

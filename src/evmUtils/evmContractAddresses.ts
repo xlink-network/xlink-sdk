@@ -8,7 +8,7 @@ import {
   merlin,
   sepolia,
 } from "viem/chains"
-import { KnownChainId, KnownTokenId } from "../utils/knownIds"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import {
   ailayer,
   ailayerTestnet,
