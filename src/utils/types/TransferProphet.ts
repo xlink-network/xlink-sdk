@@ -4,8 +4,13 @@ import {
   toSDKNumberOrUndefined,
 } from "../../xlinkSdkUtils/types"
 import { BigNumber } from "../BigNumber"
+import { last } from "../arrayHelpers"
 import { KnownRoute } from "../buildSupportedRoutes"
-import { applyTransferProphet } from "../feeRateHelpers"
+import {
+  applyTransferProphet,
+  applyTransferProphets,
+  composeTransferProphets,
+} from "../feeRateHelpers"
 import { OneOrMore } from "../typeHelpers"
 import { KnownChainId, KnownTokenId } from "./knownIds"
 
@@ -36,15 +41,33 @@ export interface PublicTransferProphet
 }
 
 export interface PublicTransferProphetAggregated<
-  T extends PublicTransferProphet[] = PublicTransferProphet[],
+  T extends readonly PublicTransferProphet[] = readonly PublicTransferProphet[],
 > extends SDKNumberifyNestly<PublicTransferProphet> {
   transferProphets: T
 }
 
+export function transformFromPublicTransferProphet(
+  transferProphet: PublicTransferProphet,
+): TransferProphet {
+  return {
+    isPaused: transferProphet.isPaused,
+    feeToken: transferProphet.feeToken,
+    feeRate: BigNumber.from(transferProphet.feeRate),
+    minFeeAmount: BigNumber.from(transferProphet.minFeeAmount),
+    minBridgeAmount:
+      transferProphet.minBridgeAmount == null
+        ? null
+        : BigNumber.from(transferProphet.minBridgeAmount),
+    maxBridgeAmount:
+      transferProphet.maxBridgeAmount == null
+        ? null
+        : BigNumber.from(transferProphet.maxBridgeAmount),
+  }
+}
 export function transformToPublicTransferProphet(
   route: KnownRoute,
-  transferProphet: TransferProphet,
   fromAmount: SDKNumber | BigNumber,
+  transferProphet: TransferProphet,
 ): PublicTransferProphet {
   const result = applyTransferProphet(
     transferProphet,
@@ -62,5 +85,37 @@ export function transformToPublicTransferProphet(
     minFeeAmount: toSDKNumberOrUndefined(transferProphet.minFeeAmount),
     minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
     maxBridgeAmount: toSDKNumberOrUndefined(transferProphet.maxBridgeAmount),
+  }
+}
+
+export const transformToPublicTransferProphetAggregated2 = (
+  transferProphets: OneOrMore<PublicTransferProphet>,
+): PublicTransferProphetAggregated<OneOrMore<PublicTransferProphet>> => {
+  const firstTransferProphet = transferProphets[0]
+  const lastTransferProphet = last(transferProphets)
+
+  const steps = transferProphets.map(
+    transformFromPublicTransferProphet,
+  ) as any as OneOrMore<TransferProphet>
+  const composed = composeTransferProphets(steps)
+
+  const fromAmount = BigNumber.from(firstTransferProphet.fromAmount)
+  const applyResult = last(applyTransferProphets(steps, fromAmount))
+
+  return {
+    fromChain: firstTransferProphet.fromChain,
+    fromToken: firstTransferProphet.fromToken,
+    toChain: lastTransferProphet.toChain,
+    toToken: lastTransferProphet.toToken,
+    fromAmount: toSDKNumberOrUndefined(fromAmount),
+    toAmount: toSDKNumberOrUndefined(applyResult.netAmount),
+    feeToken: composed.feeToken,
+    feeAmount: toSDKNumberOrUndefined(applyResult.feeAmount),
+    isPaused: composed.isPaused,
+    feeRate: toSDKNumberOrUndefined(composed.feeRate),
+    minFeeAmount: toSDKNumberOrUndefined(composed.minFeeAmount),
+    minBridgeAmount: toSDKNumberOrUndefined(composed.minBridgeAmount),
+    maxBridgeAmount: toSDKNumberOrUndefined(composed.maxBridgeAmount),
+    transferProphets,
   }
 }

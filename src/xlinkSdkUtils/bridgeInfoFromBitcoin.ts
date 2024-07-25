@@ -2,11 +2,11 @@ import { getBtc2StacksFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
 import { KnownRoute } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
-import { composeTransferProphet2 } from "../utils/feeRateHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   PublicTransferProphetAggregated,
   transformToPublicTransferProphet,
+  transformToPublicTransferProphetAggregated2,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber } from "./types"
@@ -82,8 +82,8 @@ async function bridgeInfoFromBitcoin_toStacks(
     toToken: KnownTokenId.Stacks.aBTC,
   }
 
-  const step1FeeInfo = await getBtc2StacksFeeInfo(route)
-  if (step1FeeInfo == null) {
+  const step1 = await getBtc2StacksFeeInfo(route)
+  if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -92,7 +92,7 @@ async function bridgeInfoFromBitcoin_toStacks(
   }
 
   return {
-    ...transformToPublicTransferProphet(route, step1FeeInfo, info.amount),
+    ...transformToPublicTransferProphet(route, info.amount, step1),
     transferProphets: [],
   }
 }
@@ -133,31 +133,22 @@ async function bridgeInfoFromBitcoin_toEVM(
     )
   }
 
-  const composed = composeTransferProphet2(step1, step2)
-
   const step1TransferProphet = transformToPublicTransferProphet(
     step1Route,
-    step1,
     info.amount,
+    step1,
   )
   const step2TransferProphet = transformToPublicTransferProphet(
     step2Route,
-    step2,
     step1TransferProphet.toAmount,
-  )
-  const finalTransferProphet = transformToPublicTransferProphet(
-    {
-      fromChain: step1Route.fromChain,
-      fromToken: step1Route.fromToken,
-      toChain: step2Route.toChain,
-      toToken: step2Route.toToken,
-    },
-    composed,
-    info.amount,
+    step2,
   )
 
   return {
-    ...finalTransferProphet,
+    ...transformToPublicTransferProphetAggregated2([
+      step1TransferProphet,
+      step2TransferProphet,
+    ]),
     transferProphets: [step1TransferProphet, step2TransferProphet],
   }
 }

@@ -36,6 +36,22 @@ export const applyTransferProphet = (
   return { feeAmount, netAmount }
 }
 
+export const composeTransferProphets = (
+  transferProphets: readonly TransferProphet[],
+): TransferProphetAggregated<TransferProphet[]> => {
+  return reduce(
+    (res, transferProphet) => ({
+      ...composeTransferProphet2(res, transferProphet),
+      transferProphets: [...res.transferProphets, transferProphet],
+    }),
+    composeTransferProphet2(
+      transferProphets[0],
+      transferProphets[1],
+    ) as TransferProphetAggregated<TransferProphet[]>,
+    transferProphets.slice(2),
+  )
+}
+
 export const composeTransferProphet2 = (
   transferProphet1: TransferProphet,
   transferProphet2: TransferProphet,

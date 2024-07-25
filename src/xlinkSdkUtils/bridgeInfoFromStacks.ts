@@ -93,7 +93,7 @@ async function bridgeInfoFromStacks_toBitcoin(
   }
 
   return {
-    ...transformToPublicTransferProphet(info, step1, info.amount),
+    ...transformToPublicTransferProphet(info, info.amount, step1),
     transferProphets: [],
   }
 }
@@ -120,7 +120,7 @@ async function bridgeInfoFromStacks_toEVM(
   }
 
   return {
-    ...transformToPublicTransferProphet(info, step1, info.amount),
+    ...transformToPublicTransferProphet(info, info.amount, step1),
     transferProphets: [],
   }
 }
