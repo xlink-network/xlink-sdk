@@ -1,7 +1,6 @@
 import {
   SDKNumber,
   SDKNumberifyNestly,
-  TokenId,
   toSDKNumberOrUndefined,
 } from "../../xlinkSdkUtils/types"
 import { BigNumber } from "../BigNumber"
@@ -17,7 +16,7 @@ export type TransferProphetAggregated<
 
 export interface TransferProphet {
   isPaused: boolean
-  feeToken: TokenId
+  feeToken: KnownTokenId.KnownToken
   feeRate: BigNumber
   minFeeAmount: BigNumber
   minBridgeAmount: null | BigNumber
