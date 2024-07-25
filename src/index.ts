@@ -1,3 +1,5 @@
+export * from "./XLinkSDK"
+export * from "./utils/errors"
 export {
   ChainId,
   TokenId,
@@ -8,7 +10,6 @@ export {
   StacksContractAddress,
   PublicEVMContractType as EVMContractType,
 } from "./xlinkSdkUtils/types"
-export * from "./XLinkSDK"
 export {
   BitcoinRecipient,
   ReselectSpendableUTXOsFn,
