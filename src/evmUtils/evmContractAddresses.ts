@@ -6,6 +6,8 @@ import {
   coreDao,
   mainnet,
   merlin,
+  mode,
+  modeTestnet,
   sepolia,
 } from "viem/chains"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
@@ -74,6 +76,10 @@ export const evmClients: Record<EVMChain, Client> = {
     chain: ailayer,
     transport: http(),
   }),
+  [EVMChain.Mode]: createClient({
+    chain: mode,
+    transport: http(),
+  }),
 
   // testnet
   [EVMChain.Sepolia]: createClient({
@@ -110,6 +116,10 @@ export const evmClients: Record<EVMChain, Client> = {
   }),
   [EVMChain.AILayerTestnet]: createClient({
     chain: ailayerTestnet,
+    transport: http(),
+  }),
+  [EVMChain.ModeTestnet]: createClient({
+    chain: modeTestnet,
     transport: http(),
   }),
 }
@@ -240,6 +250,16 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.vLiALEX]: "0xcd5ED0B0b1e107D331833715932B4a596bFbA378",
     [EVMToken.vLiSTX]: "0x70727228DB8C7491bF0aD42C180dbf8D95B257e2",
   },
+  // https://t.me/c/1599543687/57644
+  [EVMChain.Mode]: {
+    [EVMEndpointContract.BridgeEndpoint]:
+      "0x79d1C91053baceced5C796aB8a765E4d5aB38e8a",
+    [EVMToken.aBTC]: "0x7A087e75807F2E5143C161a817E64dF6dC5EAFe0",
+    [EVMToken.ALEX]: "0xdfd0660032c2D0D38a9092a43d1669D6568cAF71",
+    [EVMToken.vLiALEX]: "0xcd5ED0B0b1e107D331833715932B4a596bFbA378",
+    [EVMToken.vLiSTX]: "0x70727228DB8C7491bF0aD42C180dbf8D95B257e2",
+    [EVMToken.sUSDT]: "0xA831a4E181F25D3B35949E582Ff27Cc44e703F37",
+  },
 
   // testnet
   [EVMChain.Sepolia]: {
@@ -261,4 +281,5 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
   [EVMChain.LorenzoTestnet]: {},
   [EVMChain.MerlinTestnet]: {},
   [EVMChain.AILayerTestnet]: {},
+  [EVMChain.ModeTestnet]: {},
 }

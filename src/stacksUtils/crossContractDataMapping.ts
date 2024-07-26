@@ -43,6 +43,9 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.AILayer:
     case KnownChainId.EVM.AILayerTestnet:
       return 9n
+    case KnownChainId.EVM.Mode:
+    case KnownChainId.EVM.ModeTestnet:
+      return 10n
     default:
       checkNever(chain)
       throw new UnsupportedChainError(chain)
@@ -113,6 +116,12 @@ export function contractAssignedChainIdToKnownChain(
   }
   assertExclude(resPossibilities, KnownChainId.EVM.AILayer)
   assertExclude(resPossibilities, KnownChainId.EVM.AILayerTestnet)
+
+  if (chainId === 10n) {
+    return [KnownChainId.EVM.Mode, KnownChainId.EVM.ModeTestnet]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Mode)
+  assertExclude(resPossibilities, KnownChainId.EVM.ModeTestnet)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)

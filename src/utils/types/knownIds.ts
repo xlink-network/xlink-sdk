@@ -1,4 +1,5 @@
 import { ChainId, TokenId } from "../../xlinkSdkUtils/types"
+import { checkNever } from "../typeHelpers"
 
 const chainId = <const T extends string>(value: T): ChainId<T> => value as any
 const tokenId = <const T extends string>(value: T): TokenId<T> => value as any
@@ -106,6 +107,10 @@ export namespace KnownChainId {
     // AILayer
     export const AILayer = chainId("evm-ailayer")
     export const AILayerTestnet = chainId("evm-ailayer-testnet")
+
+    // Mode
+    export const Mode = chainId("evm-mode")
+    export const ModeTestnet = chainId("evm-mode-testnet")
   }
 
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
@@ -133,6 +138,9 @@ export namespace KnownChainId {
   }
 }
 export const _allKnownBitcoinChains = Object.values(KnownChainId.Bitcoin)
+export const _allKnownEVMChains = Object.values(KnownChainId.EVM)
+export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
+
 export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Ethereum,
   KnownChainId.EVM.BSC,
@@ -143,6 +151,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Lorenzo,
   KnownChainId.EVM.Merlin,
   KnownChainId.EVM.AILayer,
+  KnownChainId.EVM.Mode,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
@@ -154,9 +163,12 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.LorenzoTestnet,
   KnownChainId.EVM.MerlinTestnet,
   KnownChainId.EVM.AILayerTestnet,
+  KnownChainId.EVM.ModeTestnet,
 ] as const
-export const _allKnownEVMChains = [
-  ..._allKnownEVMMainnetChains,
-  ..._allKnownEVMTestnetChains,
-] as const
-export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
+
+const _restEVMChain = null as Exclude<
+  (typeof _allKnownEVMChains)[number],
+  | (typeof _allKnownEVMMainnetChains)[number]
+  | (typeof _allKnownEVMTestnetChains)[number]
+>
+checkNever(_restEVMChain)

@@ -248,6 +248,8 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.MerlinTestnet:
       case EVMChain.AILayer:
       case EVMChain.AILayerTestnet:
+      case EVMChain.Mode:
+      case EVMChain.ModeTestnet:
         return EVMToken.sUSDT
       default:
         checkNever(toChain)
@@ -278,6 +280,8 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.MerlinTestnet:
       case EVMChain.AILayer:
       case EVMChain.AILayerTestnet:
+      case EVMChain.Mode:
+      case EVMChain.ModeTestnet:
         return EVMToken.aBTC
       default:
         checkNever(toChain)
