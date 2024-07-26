@@ -14,6 +14,7 @@ import { TransferProphet } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { props } from "../utils/promiseHelpers"
 import { checkNever } from "../utils/typeHelpers"
+import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (route: {
   fromChain: KnownChainId.BitcoinChain
@@ -128,6 +129,9 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async route => {
     return false
   }
   if (!KnownChainId.isKnownChain(route.toChain)) return false
+
+  const pegInAddress = getBTCPegInAddress(route.fromChain, route.toChain)
+  if (pegInAddress == null) return false
 
   if (KnownChainId.isBitcoinChain(route.toChain)) {
     return false

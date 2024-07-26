@@ -148,7 +148,7 @@ async function bridgeFromBitcoin_toStacks(
     toToken: KnownTokenId.StacksToken
   },
 ): Promise<BridgeFromBitcoinOutput> {
-  const pegInAddress = getBTCPegInAddress(info.fromChain)
+  const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const contractCallInfo = getStacksContractCallInfo(info.toChain)
   if (pegInAddress == null || contractCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
@@ -201,7 +201,7 @@ async function bridgeFromBitcoin_toEVM(
     toToken: KnownTokenId.EVMToken
   },
 ): Promise<BridgeFromBitcoinOutput> {
-  const pegInAddress = getBTCPegInAddress(info.fromChain)
+  const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet

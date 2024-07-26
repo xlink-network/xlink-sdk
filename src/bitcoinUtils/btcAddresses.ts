@@ -6,10 +6,12 @@ export interface BitcoinAddress {
 }
 
 export function getBTCPegInAddress(
-  network: KnownChainId.BitcoinChain,
+  fromChain: KnownChainId.BitcoinChain,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  toChain: KnownChainId.KnownChain,
 ): undefined | BitcoinAddress {
   let addr: undefined | string
-  switch (network) {
+  switch (fromChain) {
     case KnownChainId.Bitcoin.Mainnet:
       addr = "bc1pylrcm2ym9spaszyrwzhhzc2qf8c3xq65jgmd8udqtd5q73a2fulsztxqyy"
       break
@@ -17,7 +19,7 @@ export function getBTCPegInAddress(
       addr = "tb1qeprcndv9n8luumegjsnljjcf68e7ay62n5a667"
       break
     default:
-      checkNever(network)
+      checkNever(fromChain)
   }
 
   if (addr == null) return undefined
