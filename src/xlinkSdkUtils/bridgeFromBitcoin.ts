@@ -34,6 +34,7 @@ import {
   _allKnownEVMTestnetChains,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
+import { range } from "../utils/arrayHelpers"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -70,6 +71,11 @@ export const supportedRoutes = buildSupportedRoutes(
   },
 )
 
+export type BridgeFromBitcoinInput_signPsbtFn = (tx: {
+  psbt: Uint8Array
+  signInputs: number[]
+}) => Promise<{ psbt: Uint8Array }>
+
 export interface BridgeFromBitcoinInput {
   fromChain: ChainId
   toChain: ChainId
@@ -80,7 +86,7 @@ export interface BridgeFromBitcoinInput {
   amount: SDKNumber
   networkFeeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
-  signPsbt: (tx: { psbt: Uint8Array }) => Promise<{ psbt: Uint8Array }>
+  signPsbt: BridgeFromBitcoinInput_signPsbtFn
 }
 
 export interface BridgeFromBitcoinOutput {
@@ -273,6 +279,7 @@ async function constructBitcoinTransaction(
 
   const { psbt } = await info.signPsbt({
     psbt: tx.toPSBT(),
+    signInputs: range(0, tx.inputsLength),
   })
 
   const signedTx = btc.Transaction.fromPSBT(psbt, {

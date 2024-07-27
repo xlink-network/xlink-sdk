@@ -46,6 +46,7 @@ export {
 } from "./xlinkSdkUtils/bridgeInfoFromStacks"
 export {
   BridgeFromBitcoinInput,
+  BridgeFromBitcoinInput_signPsbtFn,
   BridgeFromBitcoinOutput,
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
 export {
