@@ -4,6 +4,7 @@ import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
 import { createTransaction } from "../bitcoinUtils/createTransaction"
 import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
+  BitcoinTransactionPrepareResult,
   ReselectSpendableUTXOsFn,
   prepareTransaction,
 } from "../bitcoinUtils/prepareTransaction"
@@ -83,7 +84,6 @@ export interface BridgeFromBitcoinInput {
 }
 
 export interface BridgeFromBitcoinOutput {
-  network: "mainnet" | "testnet"
   tx: string
 }
 
@@ -249,42 +249,18 @@ async function bridgeFromBitcoin_toEVM(
 }
 
 async function constructBitcoinTransaction(
-  info: Pick<
-    BridgeFromBitcoinInput,
-    "networkFeeRate" | "reselectSpendableUTXOs" | "signPsbt"
-  > & {
-    validateBridgeOrder: (
-      btcTx: Uint8Array,
-      swapRoute: BridgeSwapRoute_FromBitcoin,
-    ) => Promise<void>
-    fromChain: KnownChainId.BitcoinChain
-    fromAddress: string
-    fromAmount: string
-    opReturnData: Uint8Array
-    pegInAddress: string
-  },
+  info: PrepareBitcoinTransactionInput &
+    Pick<BridgeFromBitcoinInput, "signPsbt"> & {
+      validateBridgeOrder: (
+        btcTx: Uint8Array,
+        swapRoute: BridgeSwapRoute_FromBitcoin,
+      ) => Promise<void>
+    },
 ): Promise<BridgeFromBitcoinOutput> {
-  const bitcoinNetwork =
-    info.fromChain === KnownChainId.Bitcoin.Mainnet
-      ? btc.NETWORK
-      : btc.TEST_NETWORK
-
-  const txOptions = await prepareTransaction({
-    network: bitcoinNetwork,
-    recipients: [
-      {
-        address: info.pegInAddress,
-        satsAmount: bitcoinToSatoshi(info.fromAmount),
-      },
-    ],
-    changeAddress: info.fromAddress,
-    opReturnData: [info.opReturnData],
-    feeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-  })
+  const txOptions = await prepareBitcoinTransaction(info)
 
   const tx = createTransaction(
-    bitcoinNetwork,
+    txOptions.bitcoinNetwork,
     txOptions.inputs,
     txOptions.recipients.concat({
       address: info.fromAddress,
@@ -306,8 +282,48 @@ async function constructBitcoinTransaction(
   signedTx.finalize()
 
   return {
-    network:
-      info.fromChain === KnownChainId.Bitcoin.Mainnet ? "mainnet" : "testnet",
     tx: signedTx.hex,
+  }
+}
+
+export type PrepareBitcoinTransactionInput = Pick<
+  BridgeFromBitcoinInput,
+  "networkFeeRate" | "reselectSpendableUTXOs"
+> & {
+  fromChain: KnownChainId.BitcoinChain
+  fromAddress: string
+  fromAmount: string
+  opReturnData: Uint8Array
+  pegInAddress: string
+}
+export async function prepareBitcoinTransaction(
+  info: PrepareBitcoinTransactionInput,
+): Promise<
+  BitcoinTransactionPrepareResult & {
+    bitcoinNetwork: typeof btc.NETWORK
+  }
+> {
+  const bitcoinNetwork =
+    info.fromChain === KnownChainId.Bitcoin.Mainnet
+      ? btc.NETWORK
+      : btc.TEST_NETWORK
+
+  const result = await prepareTransaction({
+    network: bitcoinNetwork,
+    recipients: [
+      {
+        address: info.pegInAddress,
+        satsAmount: bitcoinToSatoshi(info.fromAmount),
+      },
+    ],
+    changeAddress: info.fromAddress,
+    opReturnData: [info.opReturnData],
+    feeRate: info.networkFeeRate,
+    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
+  })
+
+  return {
+    ...result,
+    bitcoinNetwork,
   }
 }

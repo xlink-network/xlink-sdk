@@ -26,6 +26,14 @@ export type ReselectSpendableUTXOsFn = (
   lastTimeSelectedUTXOs: UTXOSpendable[],
 ) => Promise<UTXOSpendable[]>
 
+export interface BitcoinTransactionPrepareResult {
+  inputs: Array<UTXOSpendable>
+  recipients: Array<BitcoinRecipient>
+  changeAmount: bigint
+  fee: bigint
+  estimatedVSize: number
+}
+
 export async function prepareTransaction(txInfo: {
   network: BitcoinNetwork
   recipients: Array<BitcoinRecipient>
@@ -34,12 +42,7 @@ export async function prepareTransaction(txInfo: {
   selectedUTXOs?: Array<UTXOSpendable>
   feeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
-}): Promise<{
-  inputs: Array<UTXOSpendable>
-  recipients: Array<BitcoinRecipient>
-  changeAmount: bigint
-  fee: bigint
-}> {
+}): Promise<BitcoinTransactionPrepareResult> {
   const {
     network,
     recipients,
@@ -82,8 +85,8 @@ export async function prepareTransaction(txInfo: {
   )
 
   let loopTimes = 0
-  while (lastSelectedUTXOSatsInTotal < satsToSend + calculatedFee) {
-    const newSatsToSend = satsToSend + calculatedFee
+  while (lastSelectedUTXOSatsInTotal < satsToSend + calculatedFee.fee) {
+    const newSatsToSend = satsToSend + calculatedFee.fee
 
     const newSelectedUTXOs = await reselectSpendableUTXOs(
       newSatsToSend,
@@ -123,7 +126,7 @@ export async function prepareTransaction(txInfo: {
     changeAddress,
   )
   const changeAmount =
-    lastSelectedUTXOSatsInTotal - sum([satsToSend, calculatedFee])
+    lastSelectedUTXOSatsInTotal - sum([satsToSend, calculatedFee.fee])
 
   let finalChangeAmount: bigint
   let finalFeeAmount: bigint
@@ -132,7 +135,7 @@ export async function prepareTransaction(txInfo: {
     finalFeeAmount = lastSelectedUTXOSatsInTotal - satsToSend
   } else {
     finalChangeAmount = changeAmount
-    finalFeeAmount = calculatedFee
+    finalFeeAmount = calculatedFee.fee
   }
 
   return {
@@ -140,6 +143,7 @@ export async function prepareTransaction(txInfo: {
     recipients: newRecipients,
     changeAmount: finalChangeAmount,
     fee: finalFeeAmount,
+    estimatedVSize: calculatedFee.estimatedVSize,
   }
 }
 
@@ -168,7 +172,10 @@ async function calculateFee(
   opReturnData: Uint8Array[],
   selectedUTXOs: Array<UTXOSpendable>,
   feeRate: bigint,
-): Promise<bigint> {
+): Promise<{
+  fee: bigint
+  estimatedVSize: number
+}> {
   const outputs: EstimationOutput[] = [
     ...recipientAddresses.map(r => ({
       scriptPubKey: addressToScriptPubKey(network, r),
@@ -179,16 +186,17 @@ async function calculateFee(
   ]
 
   try {
-    const txSize = BigInt(
-      Math.ceil(
-        estimateTransactionVSizeAfterSign({
-          inputs: selectedUTXOs,
-          outputs,
-        }),
-      ),
-    )
+    const vSize = estimateTransactionVSizeAfterSign({
+      inputs: selectedUTXOs,
+      outputs,
+    })
 
-    return max([feeRate * txSize, DEFAULT_MIN_RELAY_TX_FEE])
+    const txSize = BigInt(Math.ceil(vSize))
+
+    return {
+      estimatedVSize: vSize,
+      fee: max([feeRate * txSize, DEFAULT_MIN_RELAY_TX_FEE]),
+    }
   } catch (e) {
     if (e instanceof UnsupportedInputTypeError) {
       const input = e.cause as UTXOSpendable

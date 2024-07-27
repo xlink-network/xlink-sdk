@@ -15,6 +15,7 @@ export type SDKNumberifyNestly<T> =
   // prettier-ignore
   [K in keyof T]:
     number extends T[K] ? SDKNumber | Exclude<T[K], number> :
+    bigint extends T[K] ? SDKNumber | Exclude<T[K], bigint> :
     BigNumber extends T[K] ? SDKNumber | Exclude<T[K], BigNumber> :
     undefined extends T[K] ? undefined | SDKNumberifyNestly<Exclude<T[K], undefined>> :
     null extends T[K] ? null | SDKNumberifyNestly<Exclude<T[K], null>> :
@@ -22,8 +23,8 @@ export type SDKNumberifyNestly<T> =
     T[K]
 }
 export function toSDKNumberOrUndefined<
-  T extends null | undefined | SDKNumber | number | BigNumber,
->(n: T): Exclude<T, number | BigNumber> | SDKNumber {
+  T extends null | undefined | SDKNumber | number | bigint | BigNumber,
+>(n: T): Exclude<T, number | bigint | BigNumber> | SDKNumber {
   if (n == null) return undefined as any
   return BigNumber.toString(n) as SDKNumber
 }
