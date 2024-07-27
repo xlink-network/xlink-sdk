@@ -1,12 +1,7 @@
 import * as btc from "@scure/btc-signer"
-import {
-  broadcastTransaction,
-  deserializeTransaction,
-} from "@stacks/transactions"
 import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import { StacksTransactionBroadcastError } from "../stacksUtils/errors"
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 import {
   composeTxXLINK,
@@ -69,8 +64,8 @@ export interface BridgeFromStacksInput {
   toToken: TokenId
   toAddress: string
   amount: SDKNumber
-  signTransaction: (tx: ContractCallOptions) => Promise<{
-    transactionHex: string
+  sendTransaction: (tx: ContractCallOptions) => Promise<{
+    txid: string
   }>
 }
 
@@ -149,7 +144,7 @@ async function bridgeFromStacks_toBitcoin(
     )
   }
 
-  const { network: stacksNetwork, deployerAddress } = contractCallInfo
+  const { deployerAddress } = contractCallInfo
 
   const bitcoinNetwork =
     info.toChain === KnownChainId.Bitcoin.Mainnet
@@ -166,18 +161,7 @@ async function bridgeFromStacks_toBitcoin(
     { deployerAddress },
   )
 
-  const { transactionHex } = await info.signTransaction(options)
-
-  const broadcastResponse = await broadcastTransaction(
-    deserializeTransaction(transactionHex),
-    stacksNetwork,
-  )
-
-  if (broadcastResponse.error) {
-    throw new StacksTransactionBroadcastError(broadcastResponse)
-  }
-
-  return { txid: broadcastResponse.txid }
+  return await info.sendTransaction(options)
 }
 
 async function bridgeFromStacks_toEVM(
@@ -217,16 +201,5 @@ async function bridgeFromStacks_toEVM(
     { deployerAddress: contractCallInfo.deployerAddress },
   )
 
-  const { transactionHex } = await info.signTransaction(options)
-
-  const broadcastResponse = await broadcastTransaction(
-    deserializeTransaction(transactionHex),
-    contractCallInfo.network,
-  )
-
-  if (broadcastResponse.error) {
-    throw new StacksTransactionBroadcastError(broadcastResponse)
-  }
-
-  return { txid: broadcastResponse.txid }
+  return await info.sendTransaction(options)
 }

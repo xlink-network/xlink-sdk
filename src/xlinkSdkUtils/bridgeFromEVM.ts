@@ -1,5 +1,4 @@
-import { Hex, encodeFunctionData } from "viem"
-import { sendRawTransaction } from "viem/actions"
+import { encodeFunctionData } from "viem"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
@@ -99,13 +98,13 @@ export interface BridgeFromEVMInput {
   toToken: TokenId
   toAddress: string
   amount: SDKNumber
-  signTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
-    transactionHex: string
+  sendTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
+    txHash: string
   }>
 }
 
 export interface BridgeFromEVMOutput {
-  txid: string
+  txHash: string
 }
 
 export async function bridgeFromEVM(
@@ -206,16 +205,10 @@ async function bridgeFromEVM_toStacks(
     ],
   })
 
-  const { transactionHex } = await info.signTransaction({
+  return await info.sendTransaction({
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
   })
-
-  const txid = await sendRawTransaction(fromTokenContractAddress.client, {
-    serializedTransaction: transactionHex as Hex,
-  })
-
-  return { txid }
 }
 
 async function bridgeFromEVM_toBitcoinOrEVM(
@@ -255,14 +248,8 @@ async function bridgeFromEVM_toBitcoinOrEVM(
     ],
   })
 
-  const { transactionHex } = await info.signTransaction({
+  return await info.sendTransaction({
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
   })
-
-  const txid = await sendRawTransaction(fromTokenContractAddress.client, {
-    serializedTransaction: transactionHex as Hex,
-  })
-
-  return { txid }
 }
