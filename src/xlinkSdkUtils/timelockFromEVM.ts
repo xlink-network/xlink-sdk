@@ -1,5 +1,12 @@
-import { Client, Hex, encodeFunctionData, zeroAddress, zeroHash } from "viem"
-import { readContract, sendRawTransaction } from "viem/actions"
+import { Client, encodeFunctionData, zeroAddress, zeroHash } from "viem"
+import { readContract } from "viem/actions"
+import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
+import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
+import {
+  getEVMContractCallInfo,
+  getEVMTokenContractInfo,
+  numberFromSolidityContractNumber,
+} from "../evmUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import { UnsupportedChainError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
@@ -10,13 +17,6 @@ import {
   _allKnownEVMTokens,
 } from "../utils/types/knownIds"
 import { EVMAddress, SDKNumber, toSDKNumberOrUndefined } from "./types"
-import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
-import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
-import {
-  getEVMContractCallInfo,
-  getEVMTokenContractInfo,
-  numberFromSolidityContractNumber,
-} from "../evmUtils/xlinkContractHelpers"
 
 export interface TimeLockedAsset {
   id: string
@@ -109,12 +109,12 @@ export async function getTimeLockedAssetsFromEVM(
 export interface ClaimTimeLockedAssetsInput {
   chain: KnownChainId.EVMChain
   lockedAssetIds: string[]
-  signTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
-    transactionHex: string
+  sendTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
+    txHash: string
   }>
 }
 export interface ClaimTimeLockedAssetsOutput {
-  txid: string
+  txHash: string
 }
 export const claimTimeLockedAssetsFromEVM = async (
   input: ClaimTimeLockedAssetsInput,
@@ -131,14 +131,8 @@ export const claimTimeLockedAssetsFromEVM = async (
       ),
     ],
   })
-  const { transactionHex } = await input.signTransaction({
+  return await input.sendTransaction({
     to: info.timeLockContractAddress,
     data: decodeHex(functionData),
   })
-
-  const txid = await sendRawTransaction(info.client, {
-    serializedTransaction: transactionHex as Hex,
-  })
-
-  return { txid }
 }
