@@ -252,6 +252,9 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
   },
   // https://t.me/c/1599543687/57644
   [EVMChain.Mode]: {
+    // https://t.me/c/1599543687/57779
+    [EVMEndpointContract.BridgeConfig]:
+      "0xf99f62475F50BE59393dbdc148E6627E4E88Fc24",
     [EVMEndpointContract.BridgeEndpoint]:
       "0x79d1C91053baceced5C796aB8a765E4d5aB38e8a",
     [EVMToken.aBTC]: "0x7A087e75807F2E5143C161a817E64dF6dC5EAFe0",
