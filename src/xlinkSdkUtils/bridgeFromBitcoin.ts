@@ -288,7 +288,9 @@ async function constructBitcoinTransaction(
     allowUnknownInputs: true,
     allowUnknownOutputs: true,
   })
-  signedTx.finalize()
+  if (!signedTx.isFinal) {
+    signedTx.finalize()
+  }
 
   return {
     tx: signedTx.hex,
