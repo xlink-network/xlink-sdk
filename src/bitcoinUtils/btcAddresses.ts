@@ -1,8 +1,11 @@
+import { NETWORK, TEST_NETWORK } from "@scure/btc-signer"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId } from "../utils/types/knownIds"
+import { addressToScriptPubKey } from "./bitcoinHelpers"
 
 export interface BitcoinAddress {
   address: string
+  scriptPubKey: Uint8Array
 }
 
 export function getBTCPegInAddress(
@@ -24,7 +27,13 @@ export function getBTCPegInAddress(
 
   if (addr == null) return undefined
 
+  const script = addressToScriptPubKey(
+    fromChain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
+    addr,
+  )
+
   return {
     address: addr,
+    scriptPubKey: script,
   }
 }

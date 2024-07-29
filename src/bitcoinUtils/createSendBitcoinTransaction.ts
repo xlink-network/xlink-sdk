@@ -1,5 +1,5 @@
 import * as btc from "@scure/btc-signer"
-import { BitcoinNetwork, UTXOBasic } from "./bitcoinHelpers"
+import { UTXOBasic } from "./bitcoinHelpers"
 import { Recipient, createTransaction } from "./createTransaction"
 import { prepareTransaction } from "./prepareTransaction"
 import {
@@ -8,9 +8,8 @@ import {
 } from "./selectUTXOs"
 
 export async function createSendBitcoinTransaction(options: {
-  network: BitcoinNetwork
   recipients: Recipient[]
-  changeAddress: string
+  changeAddressScriptKey: Uint8Array
   opReturnData?: Uint8Array[]
   feeRate: bigint
   availableFeeUtxos: UTXOBasic[]
@@ -26,10 +25,9 @@ export async function createSendBitcoinTransaction(options: {
     changeAmount,
   } = await prepareTransaction({
     recipients: options.recipients,
-    changeAddress: options.changeAddress,
+    changeAddressScriptPubKey: options.changeAddressScriptKey,
     feeRate: options.feeRate,
     opReturnData,
-    network: options.network,
     reselectSpendableUTXOs: reselectSpendableUTXOsFactory(
       options.availableFeeUtxos,
       options.getUTXOSpendable,
@@ -37,13 +35,12 @@ export async function createSendBitcoinTransaction(options: {
   })
 
   const tx = createTransaction(
-    options.network,
     inputs,
     newRecipients.concat(
       changeAmount === 0n
         ? []
         : {
-            address: options.changeAddress,
+            addressScriptPubKey: options.changeAddressScriptKey,
             satsAmount: changeAmount,
           },
     ),

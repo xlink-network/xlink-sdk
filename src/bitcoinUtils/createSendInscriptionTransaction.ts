@@ -1,6 +1,6 @@
 import * as btc from "@scure/btc-signer"
-import { BitcoinNetwork, isSameUTXO, UTXOBasic } from "./bitcoinHelpers"
 import { isNotNull } from "../utils/typeHelpers"
+import { BitcoinNetwork, isSameUTXO, UTXOBasic } from "./bitcoinHelpers"
 import { createTransaction } from "./createTransaction"
 import { prepareTransaction } from "./prepareTransaction"
 import {
@@ -10,13 +10,13 @@ import {
 
 export interface InscriptionRecipient {
   inscriptionUtxo: UTXOBasic
-  address: string
+  addressScriptPubKey: Uint8Array
 }
 
 export async function createSendInscriptionTransaction(options: {
   network: BitcoinNetwork
   inscriptionRecipients: InscriptionRecipient[]
-  changeAddress: string
+  changeAddressScriptPubKey: Uint8Array
   opReturnData?: Uint8Array[]
   availableFeeUtxos: UTXOBasic[]
   feeRate: bigint
@@ -29,7 +29,7 @@ export async function createSendInscriptionTransaction(options: {
   const opReturnData = options.opReturnData ?? []
 
   const recipients = options.inscriptionRecipients.map(r => ({
-    address: r.address,
+    addressScriptPubKey: r.addressScriptPubKey,
     satsAmount: r.inscriptionUtxo.amount,
   }))
 
@@ -44,9 +44,8 @@ export async function createSendInscriptionTransaction(options: {
     recipients: newRecipients,
     changeAmount,
   } = await prepareTransaction({
-    network: options.network,
     recipients,
-    changeAddress: options.changeAddress,
+    changeAddressScriptPubKey: options.changeAddressScriptPubKey,
     opReturnData,
     feeRate: options.feeRate,
     selectedUTXOs,
@@ -59,13 +58,12 @@ export async function createSendInscriptionTransaction(options: {
   })
 
   const tx = createTransaction(
-    options.network,
     inputs,
     newRecipients.concat(
       changeAmount === 0n
         ? []
         : {
-            address: options.changeAddress,
+            addressScriptPubKey: options.changeAddressScriptPubKey,
             satsAmount: changeAmount,
           },
     ),

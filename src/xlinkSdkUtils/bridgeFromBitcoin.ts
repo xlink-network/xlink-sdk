@@ -83,6 +83,7 @@ export interface BridgeFromBitcoinInput {
   fromToken: TokenId
   toToken: TokenId
   fromAddress: string
+  fromAddressScriptPubKey: Uint8Array
   toAddress: string
   amount: SDKNumber
   networkFeeRate: bigint
@@ -191,10 +192,10 @@ async function bridgeFromBitcoin_toStacks(
     reselectSpendableUTXOs: info.reselectSpendableUTXOs,
     signPsbt: info.signPsbt,
     fromChain: info.fromChain,
-    fromAddress: info.fromAddress,
+    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
     fromAmount: info.amount,
     opReturnData,
-    pegInAddress: pegInAddress.address,
+    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 }
 
@@ -249,10 +250,10 @@ async function bridgeFromBitcoin_toEVM(
     reselectSpendableUTXOs: info.reselectSpendableUTXOs,
     signPsbt: info.signPsbt,
     fromChain: info.fromChain,
-    fromAddress: info.fromAddress,
+    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
     fromAmount: info.amount,
     opReturnData,
-    pegInAddress: pegInAddress.address,
+    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 }
 
@@ -268,10 +269,9 @@ async function constructBitcoinTransaction(
   const txOptions = await prepareBitcoinTransaction(info)
 
   const tx = createTransaction(
-    txOptions.bitcoinNetwork,
     txOptions.inputs,
     txOptions.recipients.concat({
-      address: info.fromAddress,
+      addressScriptPubKey: info.fromAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
     [info.opReturnData],
@@ -297,13 +297,12 @@ async function constructBitcoinTransaction(
 
 export type PrepareBitcoinTransactionInput = Pick<
   BridgeFromBitcoinInput,
-  "networkFeeRate" | "reselectSpendableUTXOs"
+  "networkFeeRate" | "reselectSpendableUTXOs" | "fromAddressScriptPubKey"
 > & {
   fromChain: KnownChainId.BitcoinChain
-  fromAddress: string
   fromAmount: string
   opReturnData: Uint8Array
-  pegInAddress: string
+  pegInAddressScriptPubKey: Uint8Array
 }
 export async function prepareBitcoinTransaction(
   info: PrepareBitcoinTransactionInput,
@@ -318,14 +317,13 @@ export async function prepareBitcoinTransaction(
       : btc.TEST_NETWORK
 
   const result = await prepareTransaction({
-    network: bitcoinNetwork,
     recipients: [
       {
-        address: info.pegInAddress,
+        addressScriptPubKey: info.pegInAddressScriptPubKey,
         satsAmount: bitcoinToSatoshi(info.fromAmount),
       },
     ],
-    changeAddress: info.fromAddress,
+    changeAddressScriptPubKey: info.fromAddressScriptPubKey,
     opReturnData: [info.opReturnData],
     feeRate: info.networkFeeRate,
     reselectSpendableUTXOs: info.reselectSpendableUTXOs,

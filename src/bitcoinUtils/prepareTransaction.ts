@@ -5,18 +5,13 @@ import {
   UnsupportedInputTypeError,
 } from "@c4/btc-utils"
 import * as btc from "@scure/btc-signer"
+import { max, sum } from "../utils/bigintHelpers"
+import { sumUTXO, UTXOSpendable } from "./bitcoinHelpers"
+import { Recipient as _Recipient } from "./createTransaction"
 import {
   InsufficientBitcoinBalanceError,
   UnsupportedBitcoinInput,
 } from "./errors"
-import { max, sum } from "../utils/bigintHelpers"
-import {
-  addressToScriptPubKey,
-  BitcoinNetwork,
-  sumUTXO,
-  UTXOSpendable,
-} from "./bitcoinHelpers"
-import { Recipient as _Recipient } from "./createTransaction"
 
 export type BitcoinRecipient = _Recipient
 
@@ -35,18 +30,16 @@ export interface BitcoinTransactionPrepareResult {
 }
 
 export async function prepareTransaction(txInfo: {
-  network: BitcoinNetwork
   recipients: Array<BitcoinRecipient>
-  changeAddress: string
+  changeAddressScriptPubKey: Uint8Array
   opReturnData?: Uint8Array[]
   selectedUTXOs?: Array<UTXOSpendable>
   feeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
 }): Promise<BitcoinTransactionPrepareResult> {
   const {
-    network,
     recipients,
-    changeAddress,
+    changeAddressScriptPubKey,
     opReturnData = [],
     selectedUTXOs = [],
     feeRate,
@@ -56,8 +49,7 @@ export async function prepareTransaction(txInfo: {
   const newRecipients = await Promise.all(
     recipients.map(async (r): Promise<_Recipient> => {
       const dustThreshold = await getOutputDustThresholdForOutput(
-        network,
-        r.address,
+        r.addressScriptPubKey,
       )
 
       return {
@@ -67,8 +59,8 @@ export async function prepareTransaction(txInfo: {
     }),
   )
   const newRecipientAddresses = newRecipients
-    .map(r => r.address)
-    .concat(changeAddress)
+    .map(r => r.addressScriptPubKey)
+    .concat(changeAddressScriptPubKey)
 
   const satsToSend = sum(newRecipients.map(r => r.satsAmount))
 
@@ -77,7 +69,6 @@ export async function prepareTransaction(txInfo: {
 
   // Calculate fee
   let calculatedFee = await calculateFee(
-    network,
     newRecipientAddresses,
     opReturnData,
     lastSelectedUTXOs,
@@ -107,7 +98,6 @@ export async function prepareTransaction(txInfo: {
 
     // Re-calculate fee
     calculatedFee = await calculateFee(
-      network,
       newRecipientAddresses,
       opReturnData,
       lastSelectedUTXOs,
@@ -122,8 +112,7 @@ export async function prepareTransaction(txInfo: {
   }
 
   const changeOutputDustThreshold = await getOutputDustThresholdForOutput(
-    network,
-    changeAddress,
+    changeAddressScriptPubKey,
   )
   const changeAmount =
     lastSelectedUTXOSatsInTotal - sum([satsToSend, calculatedFee.fee])
@@ -148,13 +137,12 @@ export async function prepareTransaction(txInfo: {
 }
 
 async function getOutputDustThresholdForOutput(
-  network: BitcoinNetwork,
-  outputAddress: string,
+  outputAddressScriptPubKey: Uint8Array,
 ): Promise<bigint> {
   return BigInt(
     Math.ceil(
       getOutputDustThreshold({
-        scriptPubKey: addressToScriptPubKey(network, outputAddress),
+        scriptPubKey: outputAddressScriptPubKey,
       }),
     ),
   )
@@ -167,8 +155,7 @@ async function getOutputDustThresholdForOutput(
 const DEFAULT_MIN_RELAY_TX_FEE = 1000n
 
 async function calculateFee(
-  network: BitcoinNetwork,
-  recipientAddresses: string[],
+  recipientAddressScriptPubKeys: Uint8Array[],
   opReturnData: Uint8Array[],
   selectedUTXOs: Array<UTXOSpendable>,
   feeRate: bigint,
@@ -177,8 +164,8 @@ async function calculateFee(
   estimatedVSize: number
 }> {
   const outputs: EstimationOutput[] = [
-    ...recipientAddresses.map(r => ({
-      scriptPubKey: addressToScriptPubKey(network, r),
+    ...recipientAddressScriptPubKeys.map(r => ({
+      scriptPubKey: r,
     })),
     ...opReturnData.map(data => ({
       scriptPubKey: btc.Script.encode(["RETURN", data]),

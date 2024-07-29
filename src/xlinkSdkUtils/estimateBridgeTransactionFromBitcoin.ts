@@ -21,6 +21,7 @@ export interface EstimateBridgeTransactionFromBitcoinInput {
   fromToken: TokenId
   toToken: TokenId
   fromAddress: string
+  fromAddressScriptPubKey: Uint8Array
   toAddress: string
   amount: SDKNumber
   networkFeeRate: bigint
@@ -120,10 +121,10 @@ async function estimateFromBitcoin_toStacks(
     networkFeeRate: info.networkFeeRate,
     reselectSpendableUTXOs: info.reselectSpendableUTXOs,
     fromChain: info.fromChain,
-    fromAddress: info.fromAddress,
+    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
     fromAmount: info.amount,
     opReturnData,
-    pegInAddress: pegInAddress.address,
+    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 
   return {
@@ -174,10 +175,10 @@ async function estimateFromBitcoin_toEVM(
     networkFeeRate: info.networkFeeRate,
     reselectSpendableUTXOs: info.reselectSpendableUTXOs,
     fromChain: info.fromChain,
-    fromAddress: info.fromAddress,
+    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
     fromAmount: info.amount,
     opReturnData,
-    pegInAddress: pegInAddress.address,
+    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 
   return {

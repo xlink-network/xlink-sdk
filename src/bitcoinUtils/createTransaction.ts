@@ -1,14 +1,13 @@
 import * as btc from "@scure/btc-signer"
 import { hasAny } from "../utils/arrayHelpers"
-import { BitcoinNetwork, UTXOSpendable } from "./bitcoinHelpers"
+import { UTXOSpendable } from "./bitcoinHelpers"
 
 export interface Recipient {
-  address: string
+  addressScriptPubKey: Uint8Array
   satsAmount: bigint
 }
 
 export function createTransaction(
-  network: BitcoinNetwork,
   inputUTXOs: Array<UTXOSpendable>,
   recipients: Array<Recipient>,
   opReturnData: Uint8Array[],
@@ -38,7 +37,10 @@ export function createTransaction(
   })
 
   recipients.forEach(recipient => {
-    tx.addOutputAddress(recipient.address, recipient.satsAmount, network)
+    tx.addOutput({
+      script: recipient.addressScriptPubKey,
+      amount: recipient.satsAmount,
+    })
   })
 
   if (hasAny(opReturnData)) {
