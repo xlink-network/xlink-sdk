@@ -15,6 +15,7 @@ import {
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromEVM"
 import { ChainId, SDKNumber, TokenId } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export interface BridgeInfoFromEVMInput {
   fromChain: ChainId
@@ -28,9 +29,10 @@ export interface BridgeInfoFromEVMOutput
   extends PublicTransferProphetAggregated {}
 
 export async function bridgeInfoFromEVM(
+  ctx: SDKGlobalContext,
   info: BridgeInfoFromEVMInput,
 ): Promise<BridgeInfoFromEVMOutput> {
-  const route = await supportedRoutes.checkRouteValid(info)
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
   if (KnownChainId.isEVMChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
@@ -38,7 +40,7 @@ export async function bridgeInfoFromEVM(
         KnownTokenId.isEVMToken(route.fromToken) &&
         KnownTokenId.isStacksToken(route.toToken)
       ) {
-        return bridgeInfoFromEVM_toStacks({
+        return bridgeInfoFromEVM_toStacks(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -51,7 +53,7 @@ export async function bridgeInfoFromEVM(
         KnownTokenId.isEVMToken(route.fromToken) &&
         KnownTokenId.isBitcoinToken(route.toToken)
       ) {
-        return bridgeInfoFromEVM_toBitcoin({
+        return bridgeInfoFromEVM_toBitcoin(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -64,7 +66,7 @@ export async function bridgeInfoFromEVM(
         KnownTokenId.isEVMToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeInfoFromEVM_toEVM({
+        return bridgeInfoFromEVM_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -90,6 +92,7 @@ export async function bridgeInfoFromEVM(
 }
 
 async function bridgeInfoFromEVM_toStacks(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromEVMInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -100,7 +103,7 @@ async function bridgeInfoFromEVM_toStacks(
     toToken: KnownTokenId.StacksToken
   },
 ): Promise<BridgeInfoFromEVMOutput> {
-  const step1 = await getEvm2StacksFeeInfo(info)
+  const step1 = await getEvm2StacksFeeInfo(ctx, info)
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -117,6 +120,7 @@ async function bridgeInfoFromEVM_toStacks(
 }
 
 async function bridgeInfoFromEVM_toBitcoin(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromEVMInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -154,7 +158,7 @@ async function bridgeInfoFromEVM_toBitcoin(
   }
 
   const [step1, step2] = await Promise.all([
-    getEvm2StacksFeeInfo(step1Route),
+    getEvm2StacksFeeInfo(ctx, step1Route),
     getStacks2BtcFeeInfo(step2Route),
   ])
   if (step1 == null || step2 == null) {
@@ -187,6 +191,7 @@ async function bridgeInfoFromEVM_toBitcoin(
 }
 
 async function bridgeInfoFromEVM_toEVM(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromEVMInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -224,7 +229,7 @@ async function bridgeInfoFromEVM_toEVM(
   }
 
   const [step1, step2] = await Promise.all([
-    getEvm2StacksFeeInfo(step1Route),
+    getEvm2StacksFeeInfo(ctx, step1Route),
     getStacks2EvmFeeInfo(step2Route),
   ])
   if (step1 == null || step2 == null) {

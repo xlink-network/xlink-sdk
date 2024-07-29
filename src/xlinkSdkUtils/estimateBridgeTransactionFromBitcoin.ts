@@ -13,6 +13,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { prepareBitcoinTransaction, supportedRoutes } from "./bridgeFromBitcoin"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export interface EstimateBridgeTransactionFromBitcoinInput {
   fromChain: ChainId
@@ -32,9 +33,10 @@ export interface EstimateBridgeTransactionFromBitcoinOutput {
 }
 
 export async function estimateBridgeTransactionFromBitcoin(
+  ctx: SDKGlobalContext,
   info: EstimateBridgeTransactionFromBitcoinInput,
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
-  const route = await supportedRoutes.checkRouteValid(info)
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
   if (KnownChainId.isBitcoinChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {

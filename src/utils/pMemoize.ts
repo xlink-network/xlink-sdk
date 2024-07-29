@@ -1,19 +1,18 @@
 import { UnboxPromise } from "./promiseHelpers"
 
-const keySeparator = `__$$__${Date.now()}__$$__`
-
-type SkipCacheFn<F extends (...args: readonly string[]) => Promise<any>> = (
-  args: string[],
+type SkipCacheFn<F extends (...args: readonly any[]) => Promise<any>> = (
+  args: Parameters<F>,
   value: UnboxPromise<ReturnType<F>>,
 ) => Promise<boolean>
 
 export default function pMemoize<
-  F extends (...args: readonly string[]) => Promise<any>,
+  F extends (...args: readonly any[]) => Promise<any>,
 >(
-  fn: F,
   options: {
+    cacheKey: (args: Parameters<F>) => string
     skipCache?: boolean | SkipCacheFn<F>
-  } = {},
+  },
+  fn: F,
 ): F {
   type CachedValue = Promise<Awaited<ReturnType<F>>> | Awaited<ReturnType<F>>
   const cache = new Map<string, CachedValue>()
@@ -25,8 +24,8 @@ export default function pMemoize<
         ? options.skipCache
         : async () => options.skipCache as boolean
 
-  return async function (...args: string[]) {
-    const key = args.join(keySeparator)
+  return async function (...args: Parameters<F>) {
+    const key = options.cacheKey(args)
 
     if (cache.has(key)) {
       return cache.get(key)!

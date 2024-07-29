@@ -21,15 +21,20 @@ import {
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 
-export const getEvm2StacksFeeInfo = async (route: {
-  fromChain: KnownChainId.EVMChain
-  fromToken: KnownTokenId.EVMToken
-  toChain: KnownChainId.StacksChain
-  toToken: KnownTokenId.StacksToken
-}): Promise<undefined | TransferProphet> => {
+export const getEvm2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: {
+    fromChain: KnownChainId.EVMChain
+    fromToken: KnownTokenId.EVMToken
+    toChain: KnownChainId.StacksChain
+    toToken: KnownTokenId.StacksToken
+  },
+): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(route.toChain)
   const evmContractCallInfo = await getEVMTokenContractInfo(
+    ctx,
     route.fromChain,
     route.fromToken,
   )
@@ -324,7 +329,7 @@ export async function toCorrespondingStacksCurrency(
   }
 }
 
-export const isSupportedEVMRoute: IsSupportedFn = async route => {
+export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
     return false
   }
@@ -337,6 +342,7 @@ export const isSupportedEVMRoute: IsSupportedFn = async route => {
   if (!KnownChainId.isKnownChain(route.toChain)) return false
 
   const fromTokenInfo = await getEVMTokenContractInfo(
+    ctx,
     route.fromChain,
     route.fromToken,
   )
@@ -365,7 +371,11 @@ export const isSupportedEVMRoute: IsSupportedFn = async route => {
     )
     if (toEVMToken == null) return false
 
-    const toTokenInfo = await getEVMTokenContractInfo(route.toChain, toEVMToken)
+    const toTokenInfo = await getEVMTokenContractInfo(
+      ctx,
+      route.toChain,
+      toEVMToken,
+    )
     if (toTokenInfo == null) return false
 
     return toEVMToken === route.toToken

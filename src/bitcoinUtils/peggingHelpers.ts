@@ -10,10 +10,10 @@ import {
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
-import { TransferProphet } from "../utils/types/TransferProphet"
-import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { props } from "../utils/promiseHelpers"
 import { checkNever } from "../utils/typeHelpers"
+import { TransferProphet } from "../utils/types/TransferProphet"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (route: {
@@ -118,7 +118,7 @@ export const getStacks2BtcFeeInfo = async (route: {
   }
 }
 
-export const isSupportedBitcoinRoute: IsSupportedFn = async route => {
+export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
     return false
   }
@@ -154,7 +154,7 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async route => {
     )
     if (toEVMToken == null) return false
 
-    const info = await getEVMTokenContractInfo(route.toChain, toEVMToken)
+    const info = await getEVMTokenContractInfo(ctx, route.toChain, toEVMToken)
     if (info == null) return false
 
     return toEVMToken === route.toToken

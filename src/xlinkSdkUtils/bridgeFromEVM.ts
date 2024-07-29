@@ -20,6 +20,7 @@ import {
   _allKnownEVMMainnetChains,
 } from "../utils/types/knownIds"
 import { ChainId, EVMAddress, SDKNumber, TokenId } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -108,9 +109,10 @@ export interface BridgeFromEVMOutput {
 }
 
 export async function bridgeFromEVM(
+  ctx: SDKGlobalContext,
   info: BridgeFromEVMInput,
 ): Promise<BridgeFromEVMOutput> {
-  const route = await supportedRoutes.checkRouteValid(info)
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
   if (KnownChainId.isEVMChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
@@ -118,7 +120,7 @@ export async function bridgeFromEVM(
         KnownTokenId.isEVMToken(route.fromToken) &&
         KnownTokenId.isStacksToken(route.toToken)
       ) {
-        return bridgeFromEVM_toStacks({
+        return bridgeFromEVM_toStacks(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -131,7 +133,7 @@ export async function bridgeFromEVM(
         KnownTokenId.isEVMToken(route.fromToken) &&
         KnownTokenId.isBitcoinToken(route.toToken)
       ) {
-        return bridgeFromEVM_toBitcoinOrEVM({
+        return bridgeFromEVM_toBitcoinOrEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -144,7 +146,7 @@ export async function bridgeFromEVM(
         KnownTokenId.isEVMToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeFromEVM_toBitcoinOrEVM({
+        return bridgeFromEVM_toBitcoinOrEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -170,6 +172,7 @@ export async function bridgeFromEVM(
 }
 
 async function bridgeFromEVM_toStacks(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeFromEVMInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -183,6 +186,7 @@ async function bridgeFromEVM_toStacks(
   const bridgeEndpointAddress =
     evmContractAddresses[info.fromChain].BridgeEndpoint
   const fromTokenContractAddress = await getEVMTokenContractInfo(
+    ctx,
     info.fromChain,
     info.fromToken,
   )
@@ -212,6 +216,7 @@ async function bridgeFromEVM_toStacks(
 }
 
 async function bridgeFromEVM_toBitcoinOrEVM(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeFromEVMInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -225,6 +230,7 @@ async function bridgeFromEVM_toBitcoinOrEVM(
   const bridgeEndpointAddress =
     evmContractAddresses[info.fromChain].BridgeEndpoint
   const fromTokenContractAddress = await getEVMTokenContractInfo(
+    ctx,
     info.fromChain,
     info.fromToken,
   )

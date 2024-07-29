@@ -17,6 +17,7 @@ import {
   _allKnownEVMTokens,
 } from "../utils/types/knownIds"
 import { EVMAddress, SDKNumber, toSDKNumberOrUndefined } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export interface TimeLockedAsset {
   id: string
@@ -27,6 +28,7 @@ export interface TimeLockedAsset {
 }
 
 const getTimeLockContractCallInfo = async (
+  ctx: SDKGlobalContext,
   chain: KnownChainId.EVMChain,
 ): Promise<
   | undefined
@@ -35,7 +37,7 @@ const getTimeLockContractCallInfo = async (
       timeLockContractAddress: EVMAddress
     }
 > => {
-  const info = await getEVMContractCallInfo(chain)
+  const info = await getEVMContractCallInfo(ctx, chain)
   if (info == null) return
 
   const timeLockContractAddress = await readContract(info.client, {
@@ -56,16 +58,17 @@ export interface GetTimeLockedAssetsOutput {
   assets: TimeLockedAsset[]
 }
 export async function getTimeLockedAssetsFromEVM(
+  ctx: SDKGlobalContext,
   input: GetTimeLockedAssetsInput,
 ): Promise<GetTimeLockedAssetsOutput> {
   const promises = input.chains.map(async chain => {
-    const timeLockCallInfo = await getTimeLockContractCallInfo(chain)
+    const timeLockCallInfo = await getTimeLockContractCallInfo(ctx, chain)
     if (timeLockCallInfo == null) return []
 
     const tokenCallInfos = (
       await Promise.all(
         _allKnownEVMTokens.map(token =>
-          getEVMTokenContractInfo(chain, token).then(info =>
+          getEVMTokenContractInfo(ctx, chain, token).then(info =>
             info == null ? info : { ...info, chain, token },
           ),
         ),
@@ -117,9 +120,10 @@ export interface ClaimTimeLockedAssetsOutput {
   txHash: string
 }
 export const claimTimeLockedAssetsFromEVM = async (
+  ctx: SDKGlobalContext,
   input: ClaimTimeLockedAssetsInput,
 ): Promise<undefined | ClaimTimeLockedAssetsOutput> => {
-  const info = await getTimeLockContractCallInfo(input.chain)
+  const info = await getTimeLockContractCallInfo(ctx, input.chain)
   if (info == null) throw new UnsupportedChainError(input.chain)
 
   const functionData = encodeFunctionData({

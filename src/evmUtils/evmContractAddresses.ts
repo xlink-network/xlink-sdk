@@ -1,32 +1,8 @@
-import { Address, Client, createClient, http } from "viem"
-import {
-  bob,
-  bsc,
-  bscTestnet,
-  coreDao,
-  mainnet,
-  merlin,
-  mode,
-  modeTestnet,
-  sepolia,
-} from "viem/chains"
+import { Address } from "viem"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import {
-  ailayer,
-  ailayerTestnet,
-  bitlayer,
-  bitlayerTestnet,
-  bobTestnet,
-  bsquared,
-  bsquaredTestnet,
-  coreDaoTestnet,
-  lorenzo,
-  lorenzoTestnet,
-  merlinTestnet,
-} from "./evmChainInfos"
 
-type EVMChain = KnownChainId.EVMChain
-const EVMChain = KnownChainId.EVM
+export type EVMChain = KnownChainId.EVMChain
+export const EVMChain = KnownChainId.EVM
 
 type EVMToken = KnownTokenId.EVMToken
 const EVMToken = KnownTokenId.EVM
@@ -37,91 +13,6 @@ export type EVMEndpointContract =
 export namespace EVMEndpointContract {
   export const BridgeEndpoint = "BridgeEndpoint"
   export const BridgeConfig = "BridgeConfig"
-}
-
-export const evmClients: Record<EVMChain, Client> = {
-  [EVMChain.Ethereum]: createClient({
-    chain: mainnet,
-    transport: http(),
-  }),
-  [EVMChain.BSC]: createClient({
-    chain: bsc,
-    transport: http(),
-  }),
-  [EVMChain.CoreDAO]: createClient({
-    chain: coreDao,
-    transport: http(),
-  }),
-  [EVMChain.Bsquared]: createClient({
-    chain: bsquared,
-    transport: http(),
-  }),
-  [EVMChain.BOB]: createClient({
-    chain: bob,
-    transport: http(),
-  }),
-  [EVMChain.Bitlayer]: createClient({
-    chain: bitlayer,
-    transport: http(),
-  }),
-  [EVMChain.Lorenzo]: createClient({
-    chain: lorenzo,
-    transport: http(),
-  }),
-  [EVMChain.Merlin]: createClient({
-    chain: merlin,
-    transport: http(),
-  }),
-  [EVMChain.AILayer]: createClient({
-    chain: ailayer,
-    transport: http(),
-  }),
-  [EVMChain.Mode]: createClient({
-    chain: mode,
-    transport: http(),
-  }),
-
-  // testnet
-  [EVMChain.Sepolia]: createClient({
-    chain: sepolia,
-    transport: http(),
-  }),
-  [EVMChain.BSCTestnet]: createClient({
-    chain: bscTestnet,
-    transport: http(),
-  }),
-  [EVMChain.CoreDAOTestnet]: createClient({
-    chain: coreDaoTestnet,
-    transport: http(),
-  }),
-  [EVMChain.BsquaredTestnet]: createClient({
-    chain: bsquaredTestnet,
-    transport: http(),
-  }),
-  [EVMChain.BOBTestnet]: createClient({
-    chain: bobTestnet,
-    transport: http(),
-  }),
-  [EVMChain.BitlayerTestnet]: createClient({
-    chain: bitlayerTestnet,
-    transport: http(),
-  }),
-  [EVMChain.LorenzoTestnet]: createClient({
-    chain: lorenzoTestnet,
-    transport: http(),
-  }),
-  [EVMChain.MerlinTestnet]: createClient({
-    chain: merlinTestnet,
-    transport: http(),
-  }),
-  [EVMChain.AILayerTestnet]: createClient({
-    chain: ailayerTestnet,
-    transport: http(),
-  }),
-  [EVMChain.ModeTestnet]: createClient({
-    chain: modeTestnet,
-    transport: http(),
-  }),
 }
 
 export type EVMOnChainAddresses = Partial<

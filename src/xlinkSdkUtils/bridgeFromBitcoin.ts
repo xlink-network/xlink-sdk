@@ -21,6 +21,7 @@ import {
   getStacksContractCallInfo,
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
+import { range } from "../utils/arrayHelpers"
 import {
   buildSupportedRoutes,
   defineRoute,
@@ -34,7 +35,7 @@ import {
   _allKnownEVMTestnetChains,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
-import { range } from "../utils/arrayHelpers"
+import { SDKGlobalContext } from "./types.internal"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -94,9 +95,10 @@ export interface BridgeFromBitcoinOutput {
 }
 
 export async function bridgeFromBitcoin(
+  ctx: SDKGlobalContext,
   info: BridgeFromBitcoinInput,
 ): Promise<BridgeFromBitcoinOutput> {
-  const route = await supportedRoutes.checkRouteValid(info)
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
   if (KnownChainId.isBitcoinChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {

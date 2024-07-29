@@ -1,5 +1,7 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
+import pMemoize from "./pMemoize"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
 export interface DefinedRoute {
@@ -78,38 +80,39 @@ export function defineRoute(
   return result
 }
 
-export type IsSupportedFn = (route: DefinedRoute) => Promise<boolean>
+export type IsSupportedFn = (
+  ctx: SDKGlobalContext,
+  route: DefinedRoute,
+) => Promise<boolean>
 const memoizedIsSupportedFactory = (
   isSupported: IsSupportedFn,
 ): IsSupportedFn => {
-  const cache = new Map<string, Promise<boolean>>()
-
-  return async route => {
-    const key = `${route.fromChain}-${route.toChain}-${route.fromToken}-${route.toToken}`
-
-    const cachedPromise = cache.get(key)
-    if (cachedPromise != null) return cachedPromise
-
-    const promise = isSupported(route).catch(err => {
-      const cachedPromise = cache.get(key)
-
-      if (cachedPromise === promise) {
-        cache.delete(key)
-      }
-
-      throw err
-    })
-    cache.set(key, promise)
-    return promise
-  }
+  return pMemoize(
+    {
+      cacheKey([, route]) {
+        return `${route.fromChain}:${route.fromToken}->${route.toChain}:${route.toToken}`
+      },
+      skipCache: true,
+    },
+    isSupported,
+  )
 }
 
-export type GetSupportedRoutesFn = (conditions?: {
+export interface GetSupportedRoutesFn_Conditions {
   fromChain?: ChainId
   toChain?: ChainId
   fromToken?: TokenId
   toToken?: TokenId
-}) => Promise<KnownRoute[]>
+}
+export type GetSupportedRoutesFn = (
+  ctx: SDKGlobalContext,
+  conditions?: GetSupportedRoutesFn_Conditions,
+) => Promise<KnownRoute[]>
+
+export type CheckRouteValidFn = (
+  ctx: SDKGlobalContext,
+  route: DefinedRoute,
+) => Promise<KnownRoute>
 
 export function buildSupportedRoutes(
   routes: DefinedRoute[],
@@ -118,13 +121,16 @@ export function buildSupportedRoutes(
   } = {},
 ): {
   getSupportedRoutes: GetSupportedRoutesFn
-  checkRouteValid(route: DefinedRoute): Promise<KnownRoute>
+  checkRouteValid: CheckRouteValidFn
 } {
   const isSupported = memoizedIsSupportedFactory(
     options.isSupported || (() => Promise.resolve(true)),
   )
 
-  const getSupportedRoutes: GetSupportedRoutesFn = async (conditions = {}) => {
+  const getSupportedRoutes: GetSupportedRoutesFn = async (
+    ctx,
+    conditions = {},
+  ) => {
     const filteredDefinitions = routes.filter(r => {
       if (
         conditions.fromChain != null &&
@@ -150,7 +156,7 @@ export function buildSupportedRoutes(
 
     const res = await Promise.all(
       filteredDefinitions.map(
-        async route => [await isSupported(route), route] as const,
+        async route => [await isSupported(ctx, route), route] as const,
       ),
     )
     return res
@@ -160,8 +166,8 @@ export function buildSupportedRoutes(
 
   return {
     getSupportedRoutes,
-    async checkRouteValid(route): Promise<KnownRoute> {
-      const isValid = await isSupported(route)
+    async checkRouteValid(ctx, route) {
+      const isValid = await isSupported(ctx, route)
 
       if (!isValid) {
         throw new UnsupportedBridgeRouteError(

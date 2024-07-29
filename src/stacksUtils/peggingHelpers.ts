@@ -4,7 +4,7 @@ import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 
-export const isSupportedStacksRoute: IsSupportedFn = async route => {
+export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
   if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
     return false
   }
@@ -34,7 +34,11 @@ export const isSupportedStacksRoute: IsSupportedFn = async route => {
     )
     if (toEVMToken == null) return false
 
-    const toTokenInfo = await getEVMTokenContractInfo(route.toChain, toEVMToken)
+    const toTokenInfo = await getEVMTokenContractInfo(
+      ctx,
+      route.toChain,
+      toEVMToken,
+    )
     if (toTokenInfo == null) return false
 
     return toEVMToken === route.toToken

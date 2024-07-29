@@ -9,6 +9,7 @@ import {
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromStacks"
 import { ChainId, SDKNumber, TokenId } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export interface BridgeInfoFromStacksInput {
   fromChain: ChainId
@@ -22,9 +23,10 @@ export interface BridgeInfoFromStacksOutput
   extends PublicTransferProphetAggregated {}
 
 export async function bridgeInfoFromStacks(
+  ctx: SDKGlobalContext,
   info: BridgeInfoFromStacksInput,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const route = await supportedRoutes.checkRouteValid(info)
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
   if (KnownChainId.isStacksChain(route.fromChain)) {
     if (KnownChainId.isBitcoinChain(route.toChain)) {

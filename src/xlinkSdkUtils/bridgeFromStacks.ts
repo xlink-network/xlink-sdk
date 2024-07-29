@@ -22,6 +22,7 @@ import {
   _allKnownEVMMainnetChains,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -74,9 +75,10 @@ export interface BridgeFromStacksOutput {
 }
 
 export async function bridgeFromStacks(
+  ctx: SDKGlobalContext,
   info: BridgeFromStacksInput,
 ): Promise<BridgeFromStacksOutput> {
-  const route = await supportedRoutes.checkRouteValid(info)
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
   if (KnownChainId.isStacksChain(route.fromChain)) {
     if (KnownChainId.isBitcoinChain(route.toChain)) {
