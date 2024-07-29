@@ -65,38 +65,55 @@ export const composeTransferProphet2 = (
     transferProphet1.feeRate,
   )
 
+  let minBridgeAmount: BigNumber | null = null
+  if (
+    BigNumber.isZero(minFeeAmount) /* min fee amount not set */ &&
+    transferProphet1.minBridgeAmount == null &&
+    transferProphet2.minBridgeAmount == null
+  ) {
+    minBridgeAmount = null
+  } else {
+    minBridgeAmount = BigNumber.max([
+      minFeeAmount,
+      transferProphet1.minBridgeAmount ?? 0,
+      transferProphet2.minBridgeAmount == null
+        ? 0
+        : BigNumber.mul(
+            transferProphet2.minBridgeAmount,
+            secondStepFeeAmountScaleRatio,
+          ),
+    ])
+  }
+
+  let maxBridgeAmount: BigNumber | null = null
+  if (
+    transferProphet1.maxBridgeAmount == null &&
+    transferProphet2.maxBridgeAmount == null
+  ) {
+    maxBridgeAmount = null
+  } else if (
+    transferProphet1.maxBridgeAmount != null &&
+    transferProphet2.maxBridgeAmount != null
+  ) {
+    maxBridgeAmount = BigNumber.min([
+      transferProphet1.maxBridgeAmount,
+      BigNumber.mul(
+        transferProphet2.maxBridgeAmount,
+        secondStepFeeAmountScaleRatio,
+      ),
+    ])
+  } else {
+    maxBridgeAmount =
+      transferProphet1.maxBridgeAmount ?? transferProphet2.maxBridgeAmount
+  }
+
   return {
     isPaused: transferProphet1.isPaused || transferProphet2.isPaused,
     feeToken: transferProphet1.feeToken,
     feeRate: composeRates2(transferProphet1.feeRate, transferProphet2.feeRate),
-    minFeeAmount: minFeeAmount,
-    minBridgeAmount:
-      transferProphet1.minBridgeAmount == null &&
-      transferProphet2.minBridgeAmount == null
-        ? null
-        : BigNumber.max([
-            minFeeAmount,
-            transferProphet1.minBridgeAmount ?? 0,
-            transferProphet2.minBridgeAmount == null
-              ? 0
-              : BigNumber.mul(
-                  transferProphet2.minBridgeAmount,
-                  secondStepFeeAmountScaleRatio,
-                ),
-          ]),
-    maxBridgeAmount:
-      transferProphet1.maxBridgeAmount == null &&
-      transferProphet2.maxBridgeAmount == null
-        ? null
-        : BigNumber.min([
-            transferProphet1.maxBridgeAmount ?? Infinity,
-            transferProphet2.maxBridgeAmount == null
-              ? Infinity
-              : BigNumber.mul(
-                  transferProphet2.maxBridgeAmount,
-                  secondStepFeeAmountScaleRatio,
-                ),
-          ]),
+    minFeeAmount,
+    minBridgeAmount,
+    maxBridgeAmount,
     transferProphets: [transferProphet1, transferProphet2],
   }
 }
