@@ -13,22 +13,44 @@ import {
 } from "./utils/buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import {
+  BridgeFromBitcoinInput,
+  BridgeFromBitcoinOutput,
   bridgeFromBitcoin,
   supportedRoutes as supportedRoutesFromBitcoin,
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
 import {
+  BridgeFromEVMInput,
+  BridgeFromEVMOutput,
   bridgeFromEVM,
   supportedRoutes as supportedRoutesFromEVM,
 } from "./xlinkSdkUtils/bridgeFromEVM"
 import {
+  BridgeFromStacksInput,
+  BridgeFromStacksOutput,
   bridgeFromStacks,
   supportedRoutes as supportedRoutesFromStacks,
 } from "./xlinkSdkUtils/bridgeFromStacks"
 import { bridgeInfoFromBitcoin } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
-import { bridgeInfoFromEVM } from "./xlinkSdkUtils/bridgeInfoFromEVM"
-import { bridgeInfoFromStacks } from "./xlinkSdkUtils/bridgeInfoFromStacks"
-import { estimateBridgeTransactionFromBitcoin } from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
 import {
+  BridgeInfoFromEVMInput,
+  BridgeInfoFromEVMOutput,
+  bridgeInfoFromEVM,
+} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+import {
+  BridgeInfoFromStacksInput,
+  BridgeInfoFromStacksOutput,
+  bridgeInfoFromStacks,
+} from "./xlinkSdkUtils/bridgeInfoFromStacks"
+import {
+  EstimateBridgeTransactionFromBitcoinInput,
+  EstimateBridgeTransactionFromBitcoinOutput,
+  estimateBridgeTransactionFromBitcoin,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
+import {
+  ClaimTimeLockedAssetsInput,
+  ClaimTimeLockedAssetsOutput,
+  GetTimeLockedAssetsInput,
+  GetTimeLockedAssetsOutput,
   claimTimeLockedAssetsFromEVM,
   getTimeLockedAssetsFromEVM,
 } from "./xlinkSdkUtils/timelockFromEVM"
@@ -98,11 +120,11 @@ let defaultConfig: XLinkSDKOptions = {
 }
 
 export class XLinkSDK {
-  private sdkContext: SDKGlobalContext
-
   static defaultConfig(options: XLinkSDKOptions): void {
     defaultConfig = options
   }
+
+  private sdkContext: SDKGlobalContext
 
   constructor(options: XLinkSDKOptions = {}) {
     const cacheEVMOnChainConfig =
@@ -131,8 +153,16 @@ export class XLinkSDK {
 
   stacksAddressFromStacksToken = stacksAddressFromStacksToken
   stacksAddressToStacksToken = stacksAddressToStacksToken
-  bridgeInfoFromStacks = bridgeInfoFromStacks
-  bridgeFromStacks = bridgeFromStacks
+  bridgeInfoFromStacks(
+    input: BridgeInfoFromStacksInput,
+  ): Promise<BridgeInfoFromStacksOutput> {
+    return bridgeInfoFromStacks(this.sdkContext, input)
+  }
+  bridgeFromStacks(
+    input: BridgeFromStacksInput,
+  ): Promise<BridgeFromStacksOutput> {
+    return bridgeFromStacks(this.sdkContext, input)
+  }
 
   async getEVMContractAddress(
     chain: ChainId,
@@ -161,14 +191,36 @@ export class XLinkSDK {
     if (!KnownChainId.isEVMChain(chain)) return
     return getEVMToken(this.sdkContext, chain, address)
   }
-  bridgeInfoFromEVM = bridgeInfoFromEVM
-  bridgeFromEVM = bridgeFromEVM
-  getTimeLockedAssetsFromEVM = getTimeLockedAssetsFromEVM
-  claimTimeLockedAssetsFromEVM = claimTimeLockedAssetsFromEVM
+  bridgeInfoFromEVM(
+    input: BridgeInfoFromEVMInput,
+  ): Promise<BridgeInfoFromEVMOutput> {
+    return bridgeInfoFromEVM(this.sdkContext, input)
+  }
+  bridgeFromEVM(input: BridgeFromEVMInput): Promise<BridgeFromEVMOutput> {
+    return bridgeFromEVM(this.sdkContext, input)
+  }
+  getTimeLockedAssetsFromEVM(
+    input: GetTimeLockedAssetsInput,
+  ): Promise<GetTimeLockedAssetsOutput> {
+    return getTimeLockedAssetsFromEVM(this.sdkContext, input)
+  }
+  claimTimeLockedAssetsFromEVM(
+    input: ClaimTimeLockedAssetsInput,
+  ): Promise<undefined | ClaimTimeLockedAssetsOutput> {
+    return claimTimeLockedAssetsFromEVM(this.sdkContext, input)
+  }
 
   bridgeInfoFromBitcoin = bridgeInfoFromBitcoin
-  estimateBridgeTransactionFromBitcoin = estimateBridgeTransactionFromBitcoin
-  bridgeFromBitcoin = bridgeFromBitcoin
+  estimateBridgeTransactionFromBitcoin(
+    input: EstimateBridgeTransactionFromBitcoinInput,
+  ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
+    return estimateBridgeTransactionFromBitcoin(this.sdkContext, input)
+  }
+  bridgeFromBitcoin(
+    input: BridgeFromBitcoinInput,
+  ): Promise<BridgeFromBitcoinOutput> {
+    return bridgeFromBitcoin(this.sdkContext, input)
+  }
 }
 
 async function stacksAddressFromStacksToken(
