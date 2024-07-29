@@ -345,10 +345,10 @@ interface Curry2<Args extends [any, any], Ret> {
 function curry2<Args extends [any, any], Ret>(
   fn: (...args: Args) => Ret,
 ): Curry2<Args, Ret> {
-  return ((a: Args[0], b?: Args[1]): Ret => {
+  return function (a: Args[0], b?: Args[1]): Ret {
     if (arguments.length > 1) {
       return (fn as any)(a, b)
     }
     return ((b: Args[1]): Ret => (fn as any)(a, b)) as any
-  }) as any
+  } as any
 }
