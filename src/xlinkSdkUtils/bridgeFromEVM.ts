@@ -254,7 +254,7 @@ async function bridgeFromEVM_toBitcoinOrEVM(
   if (KnownChainId.isBitcoinChain(info.toChain)) {
     if (info.toAddressScriptPubKey == null) {
       throw new InvalidMethodParametersError(
-        ["bridgeFromEVM (to Bitcoin)"],
+        ["XLinkSDK", "bridgeFromEVM (to Bitcoin)"],
         [
           {
             name: "toAddressScriptPubKey",
