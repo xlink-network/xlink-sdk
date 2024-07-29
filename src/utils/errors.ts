@@ -7,6 +7,20 @@ export class XLinkSDKErrorBase extends Error {
   }
 }
 
+export class InvalidMethodParametersError extends XLinkSDKErrorBase {
+  constructor(
+    public methodPath: string[],
+    public params: {
+      name: string
+      expected: string
+      received: string
+    }[],
+  ) {
+    super(`Invalid method parameters of method ${methodPath.join(".")}`)
+    this.name = "InvalidMethodParametersError"
+  }
+}
+
 export class UnsupportedBridgeRouteError extends XLinkSDKErrorBase {
   constructor(
     public fromChain: ChainId,

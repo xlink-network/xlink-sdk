@@ -1,4 +1,4 @@
-import { encodeFunctionData } from "viem"
+import { encodeFunctionData, toHex } from "viem"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
@@ -11,7 +11,10 @@ import {
   buildSupportedRoutes,
   defineRoute,
 } from "../utils/buildSupportedRoutes"
-import { UnsupportedBridgeRouteError } from "../utils/errors"
+import {
+  InvalidMethodParametersError,
+  UnsupportedBridgeRouteError,
+} from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
@@ -92,12 +95,16 @@ export const supportedRoutes = buildSupportedRoutes(
   },
 )
 
-export interface BridgeFromEVMInput {
+export type BridgeFromEVMInput = {
   fromChain: ChainId
   toChain: ChainId
   fromToken: TokenId
   toToken: TokenId
   toAddress: string
+  /**
+   * **Required** when `toChain` is one of bitcoin chains
+   */
+  toAddressScriptPubKey?: Uint8Array
   amount: SDKNumber
   sendTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
     txHash: string
@@ -243,13 +250,33 @@ async function bridgeFromEVM_toBitcoinOrEVM(
     )
   }
 
+  let finalToAddressHex: string
+  if (KnownChainId.isBitcoinChain(info.toChain)) {
+    if (info.toAddressScriptPubKey == null) {
+      throw new InvalidMethodParametersError(
+        ["bridgeFromEVM (to Bitcoin)"],
+        [
+          {
+            name: "toAddressScriptPubKey",
+            expected: "Uint8Array",
+            received: "undefined",
+          },
+        ],
+      )
+    }
+
+    finalToAddressHex = toHex(info.toAddressScriptPubKey)
+  } else {
+    finalToAddressHex = info.toAddress
+  }
+
   const functionData = await encodeFunctionData({
     abi: bridgeEndpointAbi,
     functionName: "transferToCross",
     args: [
       fromTokenContractAddress.tokenContractAddress,
       numberToSolidityContractNumber(info.amount),
-      info.toAddress,
+      finalToAddressHex,
       contractAssignedChainIdFromKnownChain(info.fromChain),
     ],
   })
