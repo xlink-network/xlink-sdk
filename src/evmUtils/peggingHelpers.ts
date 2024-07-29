@@ -61,7 +61,7 @@ export const getEvm2StacksFeeInfo = async (
   const resp = await props({
     isApproved: readContract(client, {
       abi: bridgeRegistryAbi,
-      address: bridgeEndpointContractAddress,
+      address: registryAddr,
       functionName: "APPROVED_TOKEN",
     }).then(key =>
       readContract(client, {
