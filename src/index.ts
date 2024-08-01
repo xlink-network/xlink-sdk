@@ -10,10 +10,6 @@ export {
   StacksContractAddress,
   PublicEVMContractType as EVMContractType,
 } from "./xlinkSdkUtils/types"
-export {
-  BitcoinRecipient,
-  ReselectSpendableUTXOsFn,
-} from "./bitcoinUtils/prepareTransaction"
 export { TimeLockedAsset } from "./xlinkSdkUtils/timelockFromEVM"
 export {
   PublicTransferProphet as TransferProphet,

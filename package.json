@@ -24,6 +24,11 @@
       "import": "./lib/index.mjs",
       "require": "./lib/index.js",
       "types": "./lib/index.d.ts"
+    },
+    "./bitcoinHelpers": {
+      "import": "./lib/bitcoinHelpers.mjs",
+      "require": "./lib/bitcoinHelpers.js",
+      "types": "./lib/bitcoinHelpers.d.ts"
     }
   },
   "scripts": {
