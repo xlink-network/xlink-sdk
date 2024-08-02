@@ -1,4 +1,10 @@
-export { EstimationInput } from "@c4/btc-utils"
+export {
+  EstimationInput,
+  estimateInputVSizeAfterSign,
+  estimateOutputVSizeAfterSign,
+  estimatePublicKeyScriptVSize,
+  estimateTransactionVSizeAfterSign,
+} from "@c4/btc-utils"
 export {
   UTXOBasic,
   UTXOConfirmed,
@@ -20,3 +26,4 @@ export {
   ReselectSpendableUTXOsFn,
   prepareTransaction,
 } from "./bitcoinUtils/prepareTransaction"
+export { createTransaction } from "./bitcoinUtils/createTransaction"
