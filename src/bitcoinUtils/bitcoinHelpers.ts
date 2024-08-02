@@ -1,6 +1,7 @@
 import type { EstimationInput } from "@c4/btc-utils"
-import { sum } from "../utils/bigintHelpers"
+import * as btc from "@scure/btc-signer"
 import { Address, OutScript } from "@scure/btc-signer"
+import { sum } from "../utils/bigintHelpers"
 import { BigNumber } from "../utils/BigNumber"
 
 export interface UTXOBasic {
@@ -47,4 +48,35 @@ export function bitcoinToSatoshi(bitcoinAmount: string): bigint {
 
 export function satoshiToBitcoin(satoshiAmount: bigint): string {
   return BigNumber.toString(BigNumber.leftMoveDecimals(8, satoshiAmount))
+}
+
+export function getP2TRInternalPublicKey_from_P2TR_publicKey(
+  network: BitcoinNetwork,
+  publicKey: Uint8Array,
+): Uint8Array {
+  const ecdsaPublicKeyLength = 33
+
+  if (publicKey.byteLength !== ecdsaPublicKeyLength) {
+    throw new Error("Invalid public key length")
+  }
+
+  return publicKey.slice(1)
+}
+
+export function getTapInternalKey_from_P2TR_publicKey(
+  network: BitcoinNetwork,
+  publicKey: Uint8Array,
+): Uint8Array {
+  return btc.p2tr(
+    getP2TRInternalPublicKey_from_P2TR_publicKey(network, publicKey),
+    undefined,
+    network,
+  ).tapInternalKey
+}
+
+export function getRedeemScript_from_P2SH_P2WPKH_publicKey(
+  network: BitcoinNetwork,
+  publicKey: Uint8Array,
+): Uint8Array {
+  return btc.p2sh(btc.p2wpkh(publicKey, network), network).redeemScript!
 }
