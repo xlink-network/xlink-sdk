@@ -22,8 +22,16 @@ import {
   KnownTokenId,
   _allKnownEVMMainnetChains,
 } from "../utils/types/knownIds"
-import { ChainId, EVMAddress, SDKNumber, TokenId } from "./types"
+import {
+  ChainId,
+  EVMAddress,
+  SDKNumber,
+  TokenId,
+  toSDKNumberOrUndefined,
+} from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { estimateGas } from "viem/actions"
+import { BigNumber } from "../utils/BigNumber"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -106,7 +114,11 @@ export type BridgeFromEVMInput = {
    */
   toAddressScriptPubKey?: Uint8Array
   amount: SDKNumber
-  sendTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
+  sendTransaction: (tx: {
+    to: EVMAddress
+    data: Uint8Array
+    recommendedGasLimit: SDKNumber
+  }) => Promise<{
     txHash: string
   }>
 }
@@ -192,12 +204,12 @@ async function bridgeFromEVM_toStacks(
 ): Promise<BridgeFromEVMOutput> {
   const bridgeEndpointAddress =
     evmContractAddresses[info.fromChain].BridgeEndpoint
-  const fromTokenContractAddress = await getEVMTokenContractInfo(
+  const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,
     info.fromToken,
   )
-  if (bridgeEndpointAddress == null || fromTokenContractAddress == null) {
+  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -210,15 +222,28 @@ async function bridgeFromEVM_toStacks(
     abi: bridgeEndpointAbi,
     functionName: "transferToWrap",
     args: [
-      fromTokenContractAddress.tokenContractAddress,
+      fromTokenContractInfo.tokenContractAddress,
       numberToSolidityContractNumber(info.amount),
       info.toAddress,
     ],
   })
 
+  const estimated = await estimateGas(fromTokenContractInfo.client, {
+    to: bridgeEndpointAddress,
+    data: functionData,
+  })
+    .then(n => BigNumber.mul(n, 1.2))
+    .catch(
+      // add a fallback in case estimate failed
+      () =>
+        // https://mainnet-explorer.ailayer.xyz/tx/0xa62dd8c3a6a3fe2dbc10b0847dcc0cae610c348a77b163134b87eb9563fd5f62
+        2 * 1e5,
+    )
+
   return await info.sendTransaction({
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
+    recommendedGasLimit: toSDKNumberOrUndefined(estimated),
   })
 }
 
@@ -236,12 +261,12 @@ async function bridgeFromEVM_toBitcoinOrEVM(
 ): Promise<BridgeFromEVMOutput> {
   const bridgeEndpointAddress =
     evmContractAddresses[info.fromChain].BridgeEndpoint
-  const fromTokenContractAddress = await getEVMTokenContractInfo(
+  const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,
     info.fromToken,
   )
-  if (bridgeEndpointAddress == null || fromTokenContractAddress == null) {
+  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -274,15 +299,28 @@ async function bridgeFromEVM_toBitcoinOrEVM(
     abi: bridgeEndpointAbi,
     functionName: "transferToCross",
     args: [
-      fromTokenContractAddress.tokenContractAddress,
+      fromTokenContractInfo.tokenContractAddress,
       numberToSolidityContractNumber(info.amount),
       finalToAddressHex,
       contractAssignedChainIdFromKnownChain(info.fromChain),
     ],
   })
 
+  const estimated = await estimateGas(fromTokenContractInfo.client, {
+    to: bridgeEndpointAddress,
+    data: functionData,
+  })
+    .then(n => BigNumber.mul(n, 1.2))
+    .catch(
+      // add a fallback in case estimate failed
+      () =>
+        // https://mainnet-explorer.ailayer.xyz/tx/0xa62dd8c3a6a3fe2dbc10b0847dcc0cae610c348a77b163134b87eb9563fd5f62
+        2 * 1e5,
+    )
+
   return await info.sendTransaction({
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
+    recommendedGasLimit: toSDKNumberOrUndefined(estimated),
   })
 }

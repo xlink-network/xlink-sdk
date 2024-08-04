@@ -1,5 +1,5 @@
 import { Client, encodeFunctionData, zeroAddress, zeroHash } from "viem"
-import { readContract } from "viem/actions"
+import { estimateGas, readContract } from "viem/actions"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
 import {
@@ -112,7 +112,11 @@ export async function getTimeLockedAssetsFromEVM(
 export interface ClaimTimeLockedAssetsInput {
   chain: KnownChainId.EVMChain
   lockedAssetIds: string[]
-  sendTransaction: (tx: { to: EVMAddress; data: Uint8Array }) => Promise<{
+  sendTransaction: (tx: {
+    to: EVMAddress
+    data: Uint8Array
+    recommendedGasLimit: SDKNumber
+  }) => Promise<{
     txHash: string
   }>
 }
@@ -135,8 +139,20 @@ export const claimTimeLockedAssetsFromEVM = async (
       ),
     ],
   })
+  const estimated = await estimateGas(info.client, {
+    to: info.timeLockContractAddress,
+    data: functionData,
+  })
+    .then(n => BigNumber.mul(n, 1.2))
+    .catch(
+      // add a fallback in case estimate failed
+      () =>
+        // https://bscscan.com/tx/0x28a81312ca7bc93e7ef07867c9906a41b251ea3ea630b0a4837bdb3066489b32
+        1 * 1e5,
+    )
   return await input.sendTransaction({
     to: info.timeLockContractAddress,
     data: decodeHex(functionData),
+    recommendedGasLimit: toSDKNumberOrUndefined(estimated),
   })
 }
