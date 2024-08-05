@@ -135,4 +135,15 @@ export const evmClients: Record<EVMChain, Client> = {
     transport: http(),
     batch: { multicall: true },
   }),
+
+  [EVMChain.XLayer]: createClient({
+    chain: mainnet,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+  [EVMChain.XLayerTestnet]: createClient({
+    chain: mainnet,
+    transport: http(),
+    batch: { multicall: true },
+  }),
 }

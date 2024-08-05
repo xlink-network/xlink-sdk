@@ -111,6 +111,10 @@ export namespace KnownChainId {
     // Mode
     export const Mode = chainId("evm-mode")
     export const ModeTestnet = chainId("evm-mode-testnet")
+
+    // X Layer
+    export const XLayer = chainId("evm-xlayer")
+    export const XLayerTestnet = chainId("evm-xlayer-testnet")
   }
 
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
@@ -152,6 +156,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Merlin,
   KnownChainId.EVM.AILayer,
   KnownChainId.EVM.Mode,
+  KnownChainId.EVM.XLayer,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
@@ -164,6 +169,7 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.MerlinTestnet,
   KnownChainId.EVM.AILayerTestnet,
   KnownChainId.EVM.ModeTestnet,
+  KnownChainId.EVM.XLayerTestnet,
 ] as const
 
 const _restEVMChain = null as Exclude<
