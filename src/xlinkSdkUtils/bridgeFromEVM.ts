@@ -302,7 +302,7 @@ async function bridgeFromEVM_toBitcoinOrEVM(
       fromTokenContractInfo.tokenContractAddress,
       numberToSolidityContractNumber(info.amount),
       finalToAddressHex,
-      contractAssignedChainIdFromKnownChain(info.fromChain),
+      contractAssignedChainIdFromKnownChain(info.toChain),
     ],
   })
 
