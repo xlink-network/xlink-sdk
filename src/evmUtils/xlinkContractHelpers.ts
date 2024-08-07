@@ -192,10 +192,11 @@ const _getOnChainConfigsImpl = pMemoize(
         ],
       ],
     }).catch(err => {
-      console.info(
-        `Failed to read ${chain} on-chain configs (${configContractAddress})`,
-        err,
+      console.groupCollapsed(
+        `Failed to read on-chain configs from ${configContractAddress} (${chain})`,
       )
+      console.debug(err)
+      console.groupEnd()
       return null
     })
 
