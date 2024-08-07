@@ -231,6 +231,7 @@ async function bridgeFromBitcoin_toEVM(
     },
     {
       targetChain: info.toChain,
+      fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
       receiverAddr: info.toAddress,
       swapSlippedAmount: numberToStacksContractNumber(info.amount),
       swapRoute: [],

@@ -45,7 +45,7 @@ export async function createBridgeOrder_BitcoinToStacks(
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-01",
+      "btc-peg-in-endpoint-v2-02",
       "create-order-0-or-fail",
       { order: receiverAddr },
       executeOptions,
@@ -106,6 +106,7 @@ export async function createBridgeOrder_BitcoinToEVM(
   },
   info: {
     targetChain: KnownChainId.EVMChain
+    fromBitcoinScriptPubKey: Uint8Array
     receiverAddr: string
     swapRoute: BridgeSwapRoute_FromBitcoin
     swapSlippedAmount?: bigint
@@ -127,11 +128,12 @@ export async function createBridgeOrder_BitcoinToEVM(
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-01",
+      "btc-peg-in-endpoint-v2-02",
       "create-order-cross-or-fail",
       {
         order: {
-          recipient: decodeHex(receiverAddr),
+          from: info.fromBitcoinScriptPubKey,
+          to: decodeHex(receiverAddr),
           "chain-id": targetChainId,
         },
       },

@@ -11,8 +11,8 @@ listT,
 noneT
 } from "../smartContractHelpers/codegenImport"
 
-export const btcPegInEndpointV201 = defineContract({
-"btc-peg-in-endpoint-v2-01": {
+export const btcPegInEndpointV202 = defineContract({
+"btc-peg-in-endpoint-v2-02": {
   callback: {
     input: [
       { name: 'sender', type: principalT },
@@ -84,7 +84,7 @@ export const btcPegInEndpointV201 = defineContract({
     input: [
       {
         name: 'order',
-        type: tupleT({ 'chain-id': uintT, recipient: bufferT }, )
+        type: tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT }, )
       }
     ],
     output: responseSimpleT(bufferT, ),
@@ -97,7 +97,7 @@ export const btcPegInEndpointV201 = defineContract({
   },
   'decode-order-cross-or-fail': {
     input: [ { name: 'order-script', type: bufferT } ],
-    output: responseSimpleT(tupleT({ 'chain-id': uintT, recipient: bufferT }, ), ),
+    output: responseSimpleT(tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT }, ), ),
     mode: 'readonly'
   },
   'extract-tx-ins-outs': {
@@ -150,7 +150,7 @@ export const btcPegInEndpointV201 = defineContract({
     output: responseSimpleT(tupleT({
       'amount-net': uintT,
       fee: uintT,
-      'order-details': tupleT({ 'chain-id': uintT, recipient: bufferT }, )
+      'order-details': tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT }, )
     }, ), ),
     mode: 'readonly'
   },

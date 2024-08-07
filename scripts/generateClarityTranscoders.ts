@@ -6,8 +6,7 @@ import { STACKS_CONTRACT_DEPLOYER_MAINNET, STACKS_MAINNET } from "../src/config"
     STACKS_MAINNET.coreApiUrl,
     STACKS_CONTRACT_DEPLOYER_MAINNET,
     [
-      "btc-bridge-registry-v2-01",
-      "btc-peg-in-endpoint-v2-01",
+      "btc-peg-in-endpoint-v2-02",
       "btc-peg-out-endpoint-v2-01",
       "cross-bridge-registry-v2-01",
       "cross-peg-in-endpoint-v2-01",

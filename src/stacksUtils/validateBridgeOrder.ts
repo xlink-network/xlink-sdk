@@ -30,7 +30,7 @@ export async function validateBridgeOrder_BitcoinToStacks(
 
   if (hasLength(swapRoute, 0)) {
     resp = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-01",
+      "btc-peg-in-endpoint-v2-02",
       "validate-tx-0",
       {
         tx: btcTx,
@@ -114,7 +114,7 @@ export async function validateBridgeOrder_BitcoinToEVM(
 
   if (hasLength(swapRoute, 0)) {
     resp = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-01",
+      "btc-peg-in-endpoint-v2-02",
       "validate-tx-cross",
       {
         tx: btcTx,
