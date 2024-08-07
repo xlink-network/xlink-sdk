@@ -191,7 +191,17 @@ const _getOnChainConfigsImpl = pMemoize(
           ONCHAIN_CONFIG_KEY.TOKEN_SUSDT,
         ],
       ],
+    }).catch(err => {
+      console.info(
+        `Failed to read ${chain} on-chain configs (${configContractAddress})`,
+        err,
+      )
+      return null
     })
+
+    if (configs == null) {
+      return {}
+    }
 
     const EVMToken = KnownTokenId.EVM
     return {
