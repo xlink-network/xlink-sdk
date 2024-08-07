@@ -44,6 +44,12 @@ const getTimeLockContractCallInfo = async (
     abi: bridgeEndpointAbi,
     address: info.bridgeEndpointContractAddress,
     functionName: "timeLock",
+  }).catch(err => {
+    console.info(
+      `Get ${chain} timeLock contract address from ${info.bridgeEndpointContractAddress} failed`,
+      err,
+    )
+    return zeroAddress
   })
   if (timeLockContractAddress === zeroAddress) return
 
