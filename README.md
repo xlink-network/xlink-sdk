@@ -1,5 +1,15 @@
 # xlink-sdk
 
+## Roadmap
+
+- [x] Bitcoin <> EVM
+- [x] Bitcoin <> Stacks
+- [ ] Runes <> Stacks
+- [ ] BRC-20 <> Stacks
+- [x] EVM <> EVM
+- [x] EVM <> Bitcoin
+- [x] EVM <> Stacks
+
 ## How to install the privately published package from GitHub Package Registry
 
 1. Follow the guide [Authenticating to GitHub Packages](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry#authenticating-to-github-packages) to create a personal access token
