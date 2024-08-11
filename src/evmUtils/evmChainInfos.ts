@@ -264,3 +264,26 @@ export const ailayerTestnet = defineChain({
   },
   testnet: true,
 })
+
+export const bisonTestnet = defineChain({
+  id: 2648,
+  name: "Bison Testnet",
+  nativeCurrency: {
+    name: "BTC",
+    symbol: "BTC",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://testnet-rpc.ailayer.xyz"],
+      webSocket: ["wss://testnet-rpc.ailayer.xyz"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "AILayer Testnet Explorer",
+      url: "https://testnet-explorer.ailayer.xyz",
+    },
+  },
+  testnet: true,
+})
