@@ -16,7 +16,7 @@ export function getBTCPegInAddress(
   let addr: undefined | string
   switch (fromChain) {
     case KnownChainId.Bitcoin.Mainnet:
-      addr = "bc1pylrcm2ym9spaszyrwzhhzc2qf8c3xq65jgmd8udqtd5q73a2fulsztxqyy"
+      addr = "bc1q9hs56nskqsxmgend4w0823lmef33sux6p8rzlp"
       break
     case KnownChainId.Bitcoin.Testnet:
       addr = "tb1qeprcndv9n8luumegjsnljjcf68e7ay62n5a667"
