@@ -86,12 +86,11 @@ export const getStacksTokenContractInfo = (
     return undefined
   }
 
-  const { deployerAddress, network } = contractCallInfo
+  const { network } = contractCallInfo
 
   return {
     ...stxTokenContractAddresses[tokenId]![chainId],
     network,
-    deployerAddress,
   }
 }
 
