@@ -1,3 +1,4 @@
+import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
 import {
   getEVMContractCallInfo,
   getEVMToken,
@@ -210,6 +211,14 @@ export class XLinkSDK {
     return claimTimeLockedAssetsFromEVM(this.sdkContext, input)
   }
 
+  async bitcoinReceiverAddress(
+    fromChain: ChainId,
+    toChain: ChainId,
+  ): Promise<undefined | { address: string; scriptPubKey: Uint8Array }> {
+    if (!KnownChainId.isBitcoinChain(fromChain)) return
+    if (!KnownChainId.isKnownChain(toChain)) return
+    return getBTCPegInAddress(fromChain, toChain)
+  }
   bridgeInfoFromBitcoin = bridgeInfoFromBitcoin
   estimateBridgeTransactionFromBitcoin(
     input: EstimateBridgeTransactionFromBitcoinInput,
