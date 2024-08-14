@@ -27,6 +27,7 @@ import {
   defineRoute,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
+import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   KnownChainId,
@@ -278,8 +279,6 @@ async function constructBitcoinTransaction(
     [info.opReturnData],
   )
 
-  await info.validateBridgeOrder(tx.toBytes(true, true), [])
-
   const { psbt } = await info.signPsbt({
     psbt: tx.toPSBT(),
     signInputs: range(0, tx.inputsLength),
@@ -293,8 +292,12 @@ async function constructBitcoinTransaction(
     signedTx.finalize()
   }
 
+  const hex = signedTx.hex
+
+  await info.validateBridgeOrder(decodeHex(hex), [])
+
   return {
-    tx: signedTx.hex,
+    tx: hex,
   }
 }
 
