@@ -5,8 +5,20 @@ XLink is designed to facilitate the transfer of digital tokens between different
 
 XLinkSDK allows users to interact with XLink. It can be used in backend environments as well as in browsers and mobile applications. The SDK enables bidirectional transfer of coins/tokens between Bitcoin, Stacks, and various EVM including Bitcoin Layer 2s networks. Also, provides information on transfer fees, route planning, transaction size calculations and implements security features for safe transfers.
 
+## Roadmap
+
+- [x] Bitcoin <> EVM
+- [x] Bitcoin <> Stacks
+- [ ] Runes <> Stacks
+- [ ] BRC-20 <> Stacks
+- [x] EVM <> EVM
+- [x] EVM <> Bitcoin
+- [x] EVM <> Stacks
+
 ## Installation
+
 ### Prerequisites
+
 Ensure you have the following installed:
 - [Node.js](https://nodejs.org/en)
 - [pnpm](https://pnpm.io/)
