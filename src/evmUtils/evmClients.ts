@@ -1,4 +1,4 @@
-import { Client, createClient, http } from "viem"
+import { Client, createClient, fallback, http } from "viem"
 import {
   bob,
   bsc,
@@ -9,6 +9,8 @@ import {
   mode,
   modeTestnet,
   sepolia,
+  xLayer,
+  xLayerTestnet,
 } from "viem/chains"
 import {
   ailayer,
@@ -137,12 +139,12 @@ export const evmClients: Record<EVMChain, Client> = {
   }),
 
   [EVMChain.XLayer]: createClient({
-    chain: mainnet,
-    transport: http(),
+    chain: xLayer,
+    transport: fallback([http(), http("https://xlayerrpc.okx.com")]),
     batch: { multicall: true },
   }),
   [EVMChain.XLayerTestnet]: createClient({
-    chain: mainnet,
+    chain: xLayerTestnet,
     transport: http(),
     batch: { multicall: true },
   }),
