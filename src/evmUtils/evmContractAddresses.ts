@@ -182,12 +182,4 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.aBTC]: "0x391c193a3268aA0A93D76EAc85B88985b5CB92da",
     [EVMToken.ALEX]: "0xd74aE62e92f0EB0D3DF986387D61f3f09E0f1954",
   },
-  [EVMChain.BsquaredTestnet]: {},
-  [EVMChain.BOBTestnet]: {},
-  [EVMChain.BitlayerTestnet]: {},
-  [EVMChain.LorenzoTestnet]: {},
-  [EVMChain.MerlinTestnet]: {},
-  [EVMChain.AILayerTestnet]: {},
-  [EVMChain.ModeTestnet]: {},
-  [EVMChain.XLayerTestnet]: {},
 }

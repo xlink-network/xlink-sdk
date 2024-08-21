@@ -86,35 +86,35 @@ export namespace KnownChainId {
 
     // B2 Bsquared
     export const Bsquared = chainId("evm-bsquared")
-    export const BsquaredTestnet = chainId("evm-bsquared-testnet")
+    // export const BsquaredTestnet = chainId("evm-bsquared-testnet")
 
     // BOB
     export const BOB = chainId("evm-bob")
-    export const BOBTestnet = chainId("evm-bob-testnet")
+    // export const BOBTestnet = chainId("evm-bob-testnet")
 
     // Bitlayer
     export const Bitlayer = chainId("evm-bitlayer")
-    export const BitlayerTestnet = chainId("evm-bitlayer-testnet")
+    // export const BitlayerTestnet = chainId("evm-bitlayer-testnet")
 
     // Lorenzo
     export const Lorenzo = chainId("evm-lorenzo")
-    export const LorenzoTestnet = chainId("evm-lorenzo-testnet")
+    // export const LorenzoTestnet = chainId("evm-lorenzo-testnet")
 
     // Merlin
     export const Merlin = chainId("evm-merlin")
-    export const MerlinTestnet = chainId("evm-merlin-testnet")
+    // export const MerlinTestnet = chainId("evm-merlin-testnet")
 
     // AILayer
     export const AILayer = chainId("evm-ailayer")
-    export const AILayerTestnet = chainId("evm-ailayer-testnet")
+    // export const AILayerTestnet = chainId("evm-ailayer-testnet")
 
     // Mode
     export const Mode = chainId("evm-mode")
-    export const ModeTestnet = chainId("evm-mode-testnet")
+    // export const ModeTestnet = chainId("evm-mode-testnet")
 
     // X Layer
     export const XLayer = chainId("evm-xlayer")
-    export const XLayerTestnet = chainId("evm-xlayer-testnet")
+    // export const XLayerTestnet = chainId("evm-xlayer-testnet")
   }
 
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
@@ -162,14 +162,6 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
   KnownChainId.EVM.BSCTestnet,
   KnownChainId.EVM.CoreDAOTestnet,
-  KnownChainId.EVM.BsquaredTestnet,
-  KnownChainId.EVM.BOBTestnet,
-  KnownChainId.EVM.BitlayerTestnet,
-  KnownChainId.EVM.LorenzoTestnet,
-  KnownChainId.EVM.MerlinTestnet,
-  KnownChainId.EVM.AILayerTestnet,
-  KnownChainId.EVM.ModeTestnet,
-  KnownChainId.EVM.XLayerTestnet,
 ] as const
 
 const _restEVMChain = null as Exclude<

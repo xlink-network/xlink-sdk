@@ -7,23 +7,15 @@ import {
   mainnet,
   merlin,
   mode,
-  modeTestnet,
   sepolia,
   xLayer,
-  xLayerTestnet,
 } from "viem/chains"
 import {
   ailayer,
-  ailayerTestnet,
   bitlayer,
-  bitlayerTestnet,
-  bobTestnet,
   bsquared,
-  bsquaredTestnet,
   coreDaoTestnet,
   lorenzo,
-  lorenzoTestnet,
-  merlinTestnet,
 } from "./evmChainInfos"
 import { EVMChain } from "./evmContractAddresses"
 
@@ -66,19 +58,9 @@ export const evmClients: Record<EVMChain, Client> = {
     transport: http(),
     batch: { multicall: true },
   }),
-  [EVMChain.BsquaredTestnet]: createClient({
-    chain: bsquaredTestnet,
-    transport: http(),
-    batch: { multicall: true },
-  }),
 
   [EVMChain.BOB]: createClient({
     chain: bob,
-    transport: http(),
-    batch: { multicall: true },
-  }),
-  [EVMChain.BOBTestnet]: createClient({
-    chain: bobTestnet,
     transport: http(),
     batch: { multicall: true },
   }),
@@ -88,19 +70,9 @@ export const evmClients: Record<EVMChain, Client> = {
     transport: http(),
     batch: { multicall: true },
   }),
-  [EVMChain.BitlayerTestnet]: createClient({
-    chain: bitlayerTestnet,
-    transport: http(),
-    batch: { multicall: true },
-  }),
 
   [EVMChain.Lorenzo]: createClient({
     chain: lorenzo,
-    transport: http(),
-    batch: { multicall: true },
-  }),
-  [EVMChain.LorenzoTestnet]: createClient({
-    chain: lorenzoTestnet,
     transport: http(),
     batch: { multicall: true },
   }),
@@ -110,19 +82,9 @@ export const evmClients: Record<EVMChain, Client> = {
     transport: http(),
     batch: { multicall: true },
   }),
-  [EVMChain.MerlinTestnet]: createClient({
-    chain: merlinTestnet,
-    transport: http(),
-    batch: { multicall: true },
-  }),
 
   [EVMChain.AILayer]: createClient({
     chain: ailayer,
-    transport: http(),
-    batch: { multicall: true },
-  }),
-  [EVMChain.AILayerTestnet]: createClient({
-    chain: ailayerTestnet,
     transport: http(),
     batch: { multicall: true },
   }),
@@ -132,20 +94,10 @@ export const evmClients: Record<EVMChain, Client> = {
     transport: http(),
     batch: { multicall: true },
   }),
-  [EVMChain.ModeTestnet]: createClient({
-    chain: modeTestnet,
-    transport: http(),
-    batch: { multicall: true },
-  }),
 
   [EVMChain.XLayer]: createClient({
     chain: xLayer,
     transport: fallback([http(), http("https://xlayerrpc.okx.com")]),
-    batch: { multicall: true },
-  }),
-  [EVMChain.XLayerTestnet]: createClient({
-    chain: xLayerTestnet,
-    transport: http(),
     batch: { multicall: true },
   }),
 }
