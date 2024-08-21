@@ -1,11 +1,4 @@
 export {
-  EstimationInput,
-  estimateInputVSizeAfterSign,
-  estimateOutputVSizeAfterSign,
-  estimatePublicKeyScriptVSize,
-  estimateTransactionVSizeAfterSign,
-} from "@c4/btc-utils"
-export {
   UTXOBasic,
   UTXOConfirmed,
   UTXOSpendable,
