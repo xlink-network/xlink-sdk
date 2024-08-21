@@ -1,0 +1,2 @@
+@xlink-network:registry=https://registry.npmjs.org/
+//registry.npmjs.org/:_authToken=${NPM_KEY}
