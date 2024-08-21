@@ -49,6 +49,9 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.XLayer:
       // case KnownChainId.EVM.XLayerTestnet:
       return 11n
+    case KnownChainId.EVM.Arbitrum:
+      // case KnownChainId.EVM.ArbitrumTestnet:
+      return 12n
     default:
       checkNever(chain)
       throw new UnsupportedChainError(chain)
@@ -131,6 +134,11 @@ export function contractAssignedChainIdToKnownChain(
   }
   assertExclude(resPossibilities, KnownChainId.EVM.XLayer)
   // assertExclude(resPossibilities, KnownChainId.EVM.XLayerTestnet)
+
+  if (chainId === 12n) {
+    return [KnownChainId.EVM.Arbitrum]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Arbitrum)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)

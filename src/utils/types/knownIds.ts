@@ -115,6 +115,10 @@ export namespace KnownChainId {
     // X Layer
     export const XLayer = chainId("evm-xlayer")
     // export const XLayerTestnet = chainId("evm-xlayer-testnet")
+
+    // Aribitrum
+    export const Arbitrum = chainId("evm-arbitrum")
+    // export const ArbitrumTestnet = chainId("evm-arbitrum-testnet")
   }
 
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
@@ -157,6 +161,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.AILayer,
   KnownChainId.EVM.Mode,
   KnownChainId.EVM.XLayer,
+  KnownChainId.EVM.Arbitrum,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,

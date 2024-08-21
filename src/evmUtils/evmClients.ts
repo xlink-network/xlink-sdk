@@ -1,5 +1,6 @@
 import { Client, createClient, fallback, http } from "viem"
 import {
+  arbitrum,
   bob,
   bsc,
   bscTestnet,
@@ -98,6 +99,12 @@ export const evmClients: Record<EVMChain, Client> = {
   [EVMChain.XLayer]: createClient({
     chain: xLayer,
     transport: fallback([http(), http("https://xlayerrpc.okx.com")]),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.Arbitrum]: createClient({
+    chain: arbitrum,
+    transport: http(),
     batch: { multicall: true },
   }),
 }
