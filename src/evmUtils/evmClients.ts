@@ -20,7 +20,7 @@ import {
 } from "./evmChainInfos"
 import { EVMChain } from "./evmContractAddresses"
 
-export const evmClients: Record<EVMChain, Client> = {
+export const defaultEvmClients: Record<EVMChain, Client> = {
   [EVMChain.Ethereum]: createClient({
     chain: mainnet,
     transport: http(),

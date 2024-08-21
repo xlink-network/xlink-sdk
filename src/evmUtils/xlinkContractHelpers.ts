@@ -1,21 +1,19 @@
 import { Address, Client, isAddress, zeroAddress } from "viem"
+import { readContract } from "viem/actions"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
 import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMTokens,
 } from "../utils/types/knownIds"
+import { EVMAddress } from "../xlinkSdkUtils/types"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { bridgeConfigAbi } from "./contractAbi/bridgeConfig"
 import {
   EVMEndpointContract,
   EVMOnChainAddresses,
   evmContractAddresses,
 } from "./evmContractAddresses"
-import { evmClients } from "./evmClients"
-import { readContract } from "viem/actions"
-import { bridgeConfigAbi } from "./contractAbi/bridgeConfig"
-import { EVMAddress } from "../xlinkSdkUtils/types"
-import pMemoize from "../utils/pMemoize"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 18
 export const numberFromSolidityContractNumber = (
@@ -121,7 +119,7 @@ async function getAllAddresses(
       localAddresses: EVMOnChainAddresses
     }
 > {
-  const client = evmClients[chainId]
+  const client = sdkContext.evm.viemClients[chainId]
   const localAddresses = evmContractAddresses[chainId]
   const configContractAddress = localAddresses[EVMEndpointContract.BridgeConfig]
 
@@ -146,81 +144,83 @@ const getOnChainConfigs = async (
   chain: KnownChainId.EVMChain,
   configContractAddress: Address,
 ): Promise<EVMOnChainAddresses> => {
-  const cache = sdkContext.evm?.onChainConfigCache
+  const cache = sdkContext.evm.onChainConfigCache
   const cacheKey = `${chain}:${configContractAddress}`
 
   if (cache != null) {
-    const cached = cache.get(cacheKey)
-    if (cached != null) return cached
+    const cachedPromise = cache.get(cacheKey)
+    if (cachedPromise != null) return cachedPromise
   }
 
-  const result = await _getOnChainConfigsImpl(chain, configContractAddress)
+  const client = sdkContext.evm.viemClients[chain]
+  const promise = _getOnChainConfigsImpl(
+    client,
+    chain,
+    configContractAddress,
+  ).finally(() => {
+    queueMicrotask(() => {
+      if (cache != null && promise === cache.get(cacheKey)) {
+        cache.delete(cacheKey)
+      }
+    })
+  })
   if (cache != null) {
-    cache.set(cacheKey, result)
+    cache.set(cacheKey, promise)
   }
-  return result
+  return promise
 }
 
-const _getOnChainConfigsImpl = pMemoize(
-  {
-    skipCache: true,
-    cacheKey: ([chain, configContractAddress]) =>
-      `${chain}:${configContractAddress}`,
-  },
-  async (
-    chain: KnownChainId.EVMChain,
-    configContractAddress: Address,
-  ): Promise<EVMOnChainAddresses> => {
-    const client = evmClients[chain]
-
-    const configs = await readContract(client, {
-      abi: bridgeConfigAbi,
-      address: configContractAddress,
-      functionName: "getConfigs",
-      args: [
-        [
-          ONCHAIN_CONFIG_KEY.ENDPOINT,
-          ONCHAIN_CONFIG_KEY.TOKEN_ABTC,
-          ONCHAIN_CONFIG_KEY.TOKEN_ALEX,
-          ONCHAIN_CONFIG_KEY.TOKEN_ATALEX,
-          ONCHAIN_CONFIG_KEY.TOKEN_LISTX,
-          ONCHAIN_CONFIG_KEY.TOKEN_USDT,
-          ONCHAIN_CONFIG_KEY.TOKEN_BTC,
-          ONCHAIN_CONFIG_KEY.TOKEN_LUNR,
-          ONCHAIN_CONFIG_KEY.TOKEN_SKO,
-          ONCHAIN_CONFIG_KEY.TOKEN_SUSDT,
-        ],
+const _getOnChainConfigsImpl = async (
+  client: Client,
+  chain: KnownChainId.EVMChain,
+  configContractAddress: Address,
+): Promise<EVMOnChainAddresses> => {
+  const configs = await readContract(client, {
+    abi: bridgeConfigAbi,
+    address: configContractAddress,
+    functionName: "getConfigs",
+    args: [
+      [
+        ONCHAIN_CONFIG_KEY.ENDPOINT,
+        ONCHAIN_CONFIG_KEY.TOKEN_ABTC,
+        ONCHAIN_CONFIG_KEY.TOKEN_ALEX,
+        ONCHAIN_CONFIG_KEY.TOKEN_ATALEX,
+        ONCHAIN_CONFIG_KEY.TOKEN_LISTX,
+        ONCHAIN_CONFIG_KEY.TOKEN_USDT,
+        ONCHAIN_CONFIG_KEY.TOKEN_BTC,
+        ONCHAIN_CONFIG_KEY.TOKEN_LUNR,
+        ONCHAIN_CONFIG_KEY.TOKEN_SKO,
+        ONCHAIN_CONFIG_KEY.TOKEN_SUSDT,
       ],
-    }).catch(err => {
-      console.groupCollapsed(
-        `Failed to read on-chain configs from ${configContractAddress} (${chain})`,
-      )
-      console.debug(err)
-      console.groupEnd()
-      return null
-    })
+    ],
+  }).catch(err => {
+    console.groupCollapsed(
+      `Failed to read on-chain configs from ${configContractAddress} (${chain})`,
+    )
+    console.debug(err)
+    console.groupEnd()
+    return null
+  })
 
-    if (configs == null) {
-      return {}
-    }
+  if (configs == null) {
+    return {}
+  }
 
-    const EVMToken = KnownTokenId.EVM
-    return {
-      [EVMEndpointContract.BridgeEndpoint]: maybeAddress(configs[0]),
-      [EVMToken.aBTC]: maybeAddress(configs[1]),
-      [EVMToken.ALEX]: maybeAddress(configs[2]),
-      [EVMToken.vLiALEX]: maybeAddress(configs[3]),
-      [EVMToken.vLiSTX]: maybeAddress(configs[4]),
-      [EVMToken.USDT]: maybeAddress(configs[5]),
-      [client === evmClients[KnownChainId.EVM.BSC]
-        ? EVMToken.BTCB
-        : EVMToken.WBTC]: maybeAddress(configs[6]),
-      [EVMToken.LUNR]: maybeAddress(configs[7]),
-      [EVMToken.SKO]: maybeAddress(configs[8]),
-      [EVMToken.sUSDT]: maybeAddress(configs[9]),
-    }
-  },
-)
+  const EVMToken = KnownTokenId.EVM
+  return {
+    [EVMEndpointContract.BridgeEndpoint]: maybeAddress(configs[0]),
+    [EVMToken.aBTC]: maybeAddress(configs[1]),
+    [EVMToken.ALEX]: maybeAddress(configs[2]),
+    [EVMToken.vLiALEX]: maybeAddress(configs[3]),
+    [EVMToken.vLiSTX]: maybeAddress(configs[4]),
+    [EVMToken.USDT]: maybeAddress(configs[5]),
+    [chain === KnownChainId.EVM.BSC ? EVMToken.BTCB : EVMToken.WBTC]:
+      maybeAddress(configs[6]),
+    [EVMToken.LUNR]: maybeAddress(configs[7]),
+    [EVMToken.SKO]: maybeAddress(configs[8]),
+    [EVMToken.sUSDT]: maybeAddress(configs[9]),
+  }
+}
 function maybeAddress(value: string | null): Address | undefined {
   if (value == null) return undefined
   if (value === "") return undefined
