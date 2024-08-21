@@ -1,0 +1,3 @@
+export NPM_CONFIG_USERCONFIG="$PWD"/.npmrc.private
+export NPM_CONFIG_ACCESS=restricted
+export GITHUB_NPM_KEY=
