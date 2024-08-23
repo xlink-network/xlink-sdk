@@ -242,21 +242,23 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.CoreDAO:
       case EVMChain.CoreDAOTestnet:
       case EVMChain.Bsquared:
-      case EVMChain.BsquaredTestnet:
+      // case EVMChain.BsquaredTestnet:
       case EVMChain.BOB:
-      case EVMChain.BOBTestnet:
+      // case EVMChain.BOBTestnet:
       case EVMChain.Bitlayer:
-      case EVMChain.BitlayerTestnet:
+      // case EVMChain.BitlayerTestnet:
       case EVMChain.Lorenzo:
-      case EVMChain.LorenzoTestnet:
+      // case EVMChain.LorenzoTestnet:
       case EVMChain.Merlin:
-      case EVMChain.MerlinTestnet:
+      // case EVMChain.MerlinTestnet:
       case EVMChain.AILayer:
-      case EVMChain.AILayerTestnet:
+      // case EVMChain.AILayerTestnet:
       case EVMChain.Mode:
-      case EVMChain.ModeTestnet:
+      // case EVMChain.ModeTestnet:
       case EVMChain.XLayer:
-      case EVMChain.XLayerTestnet:
+      // case EVMChain.XLayerTestnet:
+      case EVMChain.Arbitrum:
+        // case EVMChain.ArbitrumTestnet:
         return EVMToken.sUSDT
       default:
         checkNever(toChain)
@@ -276,21 +278,23 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.CoreDAO:
       case EVMChain.CoreDAOTestnet:
       case EVMChain.Bsquared:
-      case EVMChain.BsquaredTestnet:
+      // case EVMChain.BsquaredTestnet:
       case EVMChain.BOB:
-      case EVMChain.BOBTestnet:
+      // case EVMChain.BOBTestnet:
       case EVMChain.Bitlayer:
-      case EVMChain.BitlayerTestnet:
+      // case EVMChain.BitlayerTestnet:
       case EVMChain.Lorenzo:
-      case EVMChain.LorenzoTestnet:
+      // case EVMChain.LorenzoTestnet:
       case EVMChain.Merlin:
-      case EVMChain.MerlinTestnet:
+      // case EVMChain.MerlinTestnet:
       case EVMChain.AILayer:
-      case EVMChain.AILayerTestnet:
+      // case EVMChain.AILayerTestnet:
       case EVMChain.Mode:
-      case EVMChain.ModeTestnet:
+      // case EVMChain.ModeTestnet:
       case EVMChain.XLayer:
-      case EVMChain.XLayerTestnet:
+      // case EVMChain.XLayerTestnet:
+      case EVMChain.Arbitrum:
+        // case EVMChain.ArbitrumTestnet:
         return EVMToken.aBTC
       default:
         checkNever(toChain)

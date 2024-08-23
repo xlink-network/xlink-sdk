@@ -167,6 +167,18 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.vLiSTX]: "0x70727228DB8C7491bF0aD42C180dbf8D95B257e2",
     [EVMToken.sUSDT]: "0xA831a4E181F25D3B35949E582Ff27Cc44e703F37",
   },
+  // https://t.me/c/1599543687/58824
+  [EVMChain.Arbitrum]: {
+    [EVMEndpointContract.BridgeConfig]:
+      "0xf99f62475F50BE59393dbdc148E6627E4E88Fc24",
+    [EVMEndpointContract.BridgeEndpoint]:
+      "0x79d1C91053baceced5C796aB8a765E4d5aB38e8a",
+    [EVMToken.aBTC]: "0x7A087e75807F2E5143C161a817E64dF6dC5EAFe0",
+    [EVMToken.ALEX]: "0xdfd0660032c2D0D38a9092a43d1669D6568cAF71",
+    [EVMToken.vLiALEX]: "0xcd5ED0B0b1e107D331833715932B4a596bFbA378",
+    [EVMToken.vLiSTX]: "0x70727228DB8C7491bF0aD42C180dbf8D95B257e2",
+    [EVMToken.sUSDT]: "0xA831a4E181F25D3B35949E582Ff27Cc44e703F37",
+  },
 
   // testnet
   [EVMChain.Sepolia]: {
@@ -182,12 +194,4 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.aBTC]: "0x391c193a3268aA0A93D76EAc85B88985b5CB92da",
     [EVMToken.ALEX]: "0xd74aE62e92f0EB0D3DF986387D61f3f09E0f1954",
   },
-  [EVMChain.BsquaredTestnet]: {},
-  [EVMChain.BOBTestnet]: {},
-  [EVMChain.BitlayerTestnet]: {},
-  [EVMChain.LorenzoTestnet]: {},
-  [EVMChain.MerlinTestnet]: {},
-  [EVMChain.AILayerTestnet]: {},
-  [EVMChain.ModeTestnet]: {},
-  [EVMChain.XLayerTestnet]: {},
 }

@@ -130,49 +130,49 @@ export namespace KnownChainId {
     /** Represents the Bsquared mainnet chain ID. */
     export const Bsquared = chainId("evm-bsquared")
     /** Represents the Bsquared testnet chain ID. */
-    export const BsquaredTestnet = chainId("evm-bsquared-testnet")
+    // export const BsquaredTestnet = chainId("evm-bsquared-testnet")
 
     // BOB
     /** Represents the BOB mainnet chain ID. */
     export const BOB = chainId("evm-bob")
     /** Represents the BOB testnet chain ID. */
-    export const BOBTestnet = chainId("evm-bob-testnet")
+    // export const BOBTestnet = chainId("evm-bob-testnet")
 
     // Bitlayer
     /** Represents the Bitlayer mainnet chain ID. */
     export const Bitlayer = chainId("evm-bitlayer")
     /** Represents the Bitlayer testnet chain ID. */
-    export const BitlayerTestnet = chainId("evm-bitlayer-testnet")
+    // export const BitlayerTestnet = chainId("evm-bitlayer-testnet")
 
     // Lorenzo
     /** Represents the Lorenzo mainnet chain ID. */
     export const Lorenzo = chainId("evm-lorenzo")
     /** Represents the Lorenzo testnet chain ID. */
-    export const LorenzoTestnet = chainId("evm-lorenzo-testnet")
+    // export const LorenzoTestnet = chainId("evm-lorenzo-testnet")
 
     // Merlin
     /** Represents the Merlin mainnet chain ID. */
     export const Merlin = chainId("evm-merlin")
     /** Represents the Merlin testnet chain ID. */
-    export const MerlinTestnet = chainId("evm-merlin-testnet")
+    // export const MerlinTestnet = chainId("evm-merlin-testnet")
 
     // AILayer
     /** Represents the AILayer mainnet chain ID. */
     export const AILayer = chainId("evm-ailayer")
     /** Represents the AILayer testnet chain ID. */
-    export const AILayerTestnet = chainId("evm-ailayer-testnet")
+    // export const AILayerTestnet = chainId("evm-ailayer-testnet")
 
     // Mode
     /** Represents the Mode mainnet chain ID. */
     export const Mode = chainId("evm-mode")
     /** Represents the Mode testnet chain ID. */
-    export const ModeTestnet = chainId("evm-mode-testnet")
+    // export const ModeTestnet = chainId("evm-mode-testnet")
 
     // X Layer
     /** Represents the XLayer mainnet chain ID. */
     export const XLayer = chainId("evm-xlayer")
     /** Represents the XLayer testnet chain ID. */
-    export const XLayerTestnet = chainId("evm-xlayer-testnet")
+    // export const XLayerTestnet = chainId("evm-xlayer-testnet")
   }
 
   /** Represents a mainnet EVM-compatible blockchain network. */
@@ -221,19 +221,12 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.AILayer,
   KnownChainId.EVM.Mode,
   KnownChainId.EVM.XLayer,
+  KnownChainId.EVM.Arbitrum,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
   KnownChainId.EVM.BSCTestnet,
   KnownChainId.EVM.CoreDAOTestnet,
-  KnownChainId.EVM.BsquaredTestnet,
-  KnownChainId.EVM.BOBTestnet,
-  KnownChainId.EVM.BitlayerTestnet,
-  KnownChainId.EVM.LorenzoTestnet,
-  KnownChainId.EVM.MerlinTestnet,
-  KnownChainId.EVM.AILayerTestnet,
-  KnownChainId.EVM.ModeTestnet,
-  KnownChainId.EVM.XLayerTestnet,
 ] as const
 
 const _restEVMChain = null as Exclude<

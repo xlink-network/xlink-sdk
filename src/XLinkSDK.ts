@@ -1,3 +1,4 @@
+import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
 import {
   getEVMContractCallInfo,
@@ -62,6 +63,7 @@ import {
   StacksContractAddress,
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+import { defaultEvmClients } from "./evmUtils/evmClients"
 
 export {
   BridgeFromBitcoinInput,
@@ -110,6 +112,11 @@ export interface XLinkSDKOptions {
      * @default true
      */
     cacheOnChainConfig?: boolean
+
+    /**
+     * @default undefined
+     */
+    viemClients?: Record<KnownChainId.EVMChain, Client>
   }
 }
 
@@ -136,6 +143,10 @@ export class XLinkSDK {
         enableMulticall:
           options.evm?.enableMulticall ?? defaultConfig.evm?.enableMulticall,
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
+        viemClients: {
+          ...defaultEvmClients,
+          ...options.evm?.viemClients,
+        },
       },
     }
   }
