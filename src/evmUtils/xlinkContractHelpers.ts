@@ -157,12 +157,13 @@ const getOnChainConfigs = async (
     client,
     chain,
     configContractAddress,
-  ).finally(() => {
+  ).catch(err => {
     queueMicrotask(() => {
       if (cache != null && promise === cache.get(cacheKey)) {
         cache.delete(cacheKey)
       }
     })
+    throw err
   })
   if (cache != null) {
     cache.set(cacheKey, promise)
