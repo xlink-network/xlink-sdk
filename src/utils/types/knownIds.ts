@@ -173,6 +173,10 @@ export namespace KnownChainId {
     export const XLayer = chainId("evm-xlayer")
     /** Represents the XLayer testnet chain ID. */
     // export const XLayerTestnet = chainId("evm-xlayer-testnet")
+    // Arbitrum
+    /** Represents the Arbitrum mainnet chain ID. */
+    export const Arbitrum = chainId("evm-arbitrum")
+    // export const ArbitrumTestnet = chainId("evm-arbitrum-testnet")
   }
 
   /** Represents a mainnet EVM-compatible blockchain network. */
