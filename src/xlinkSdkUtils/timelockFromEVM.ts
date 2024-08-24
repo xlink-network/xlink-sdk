@@ -40,18 +40,20 @@ const getTimeLockContractCallInfo = async (
   const info = await getEVMContractCallInfo(ctx, chain)
   if (info == null) return
 
-  const timeLockContractAddress = await readContract(info.client, {
-    abi: bridgeEndpointAbi,
-    address: info.bridgeEndpointContractAddress,
-    functionName: "timeLock",
-  }).catch(err => {
-    console.groupCollapsed(
-      `Failed to read timeLock contract address from ${info.bridgeEndpointContractAddress} (${chain})`,
-    )
-    console.debug(err)
-    console.groupEnd()
-    return zeroAddress
-  })
+  const timeLockContractAddress =
+    info.timeLockContractAddress ??
+    (await readContract(info.client, {
+      abi: bridgeEndpointAbi,
+      address: info.bridgeEndpointContractAddress,
+      functionName: "timeLock",
+    }).catch(err => {
+      console.groupCollapsed(
+        `Failed to read timeLock contract address from ${info.bridgeEndpointContractAddress} (${chain})`,
+      )
+      console.debug(err)
+      console.groupEnd()
+      return zeroAddress
+    }))
   if (timeLockContractAddress === zeroAddress) return
 
   return { client: info.client, timeLockContractAddress }
