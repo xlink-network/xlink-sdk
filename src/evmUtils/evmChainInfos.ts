@@ -1,5 +1,5 @@
 import { defineChain } from "viem"
-import { xLayer as _xLayer } from "viem/chains"
+import { bob as _bob, merlin as _merlin, xLayer as _xLayer } from "viem/chains"
 
 export const coreDaoTestnet = defineChain({
   id: 1115,
@@ -77,29 +77,7 @@ export const bsquaredTestnet = defineChain({
 })
 
 export const bob = defineChain({
-  id: 60808,
-  name: "BOB",
-  nativeCurrency: {
-    name: "ETH",
-    symbol: "ETH",
-    decimals: 18,
-  },
-  contracts: {
-    multicall3: {
-      address: "0xdDD23AA52834827EC12b0a6CC85def569915f568",
-      blockCreated: 5_813_148,
-    },
-  },
-  rpcUrls: {
-    default: { http: ["https://rpc.gobob.xyz/"] },
-  },
-  blockExplorers: {
-    default: {
-      name: "BOB Explorer",
-      url: "https://explorer.gobob.xyz",
-    },
-  },
-  testnet: false,
+  ..._bob,
 })
 export const bobTestnet = defineChain({
   id: 111,
@@ -212,30 +190,14 @@ export const lorenzoTestnet = defineChain({
 })
 
 export const merlin = defineChain({
-  id: 4200,
-  name: "Merlin",
-  nativeCurrency: {
-    name: "BTC",
-    symbol: "BTC",
-    decimals: 18,
-  },
+  ..._merlin,
   contracts: {
+    ..._merlin.contracts,
     multicall3: {
       address: "0x13caE7bc3C7F02FF64cB17076F289467fB133e04",
       blockCreated: 12_377_144,
     },
   },
-  rpcUrls: {
-    default: { http: ["https://rpc.merlinchain.io"] },
-    blockpi: { http: ["https://merlin.blockpi.network/v1/rpc/public"] },
-  },
-  blockExplorers: {
-    default: {
-      name: "Merlin Explorer",
-      url: "https://scan.merlinchain.io",
-    },
-  },
-  testnet: false,
 })
 export const merlinTestnet = defineChain({
   id: 686868,
