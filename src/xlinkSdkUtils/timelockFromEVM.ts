@@ -82,33 +82,40 @@ export async function getTimeLockedAssetsFromEVM(
       )
     ).filter(isNotNull)
 
-    const results: TimeLockedAsset[] = []
-    for (const info of tokenCallInfos) {
-      const agreementId = await readContract(timeLockCallInfo.client, {
-        abi: bridgeTimeLockAbi,
-        address: timeLockCallInfo.timeLockContractAddress,
-        functionName: "agreementsByUser",
-        args: [input.walletAddress, 0, info.tokenContractAddress, zeroHash],
-      })
-      if (agreementId === 0n) continue
-
-      const agreement = await readContract(timeLockCallInfo.client, {
-        abi: bridgeTimeLockAbi,
-        address: timeLockCallInfo.timeLockContractAddress,
-        functionName: "agreements",
-        args: [agreementId],
-      })
-      results.push({
-        id: String(agreementId),
-        chain: info.chain,
-        token: info.token,
-        amount: toSDKNumberOrUndefined(
-          numberFromSolidityContractNumber(agreement[0]),
+    const agreements = (
+      await Promise.all(
+        tokenCallInfos.map(info =>
+          readContract(timeLockCallInfo.client, {
+            abi: bridgeTimeLockAbi,
+            address: timeLockCallInfo.timeLockContractAddress,
+            functionName: "agreementsByUser",
+            args: [input.walletAddress, 0, info.tokenContractAddress, zeroHash],
+          }).then(agreementId =>
+            agreementId === 0n ? [] : [{ agreementId, info }],
+          ),
         ),
-        releaseTime: new Date(agreement[6] * 1000),
-      })
-    }
-    return results
+      )
+    ).flat()
+
+    return Promise.all(
+      agreements.map(async ({ agreementId, info }) => {
+        const agreement = await readContract(timeLockCallInfo.client, {
+          abi: bridgeTimeLockAbi,
+          address: timeLockCallInfo.timeLockContractAddress,
+          functionName: "agreements",
+          args: [agreementId],
+        })
+        return {
+          id: String(agreementId),
+          chain: info.chain,
+          token: info.token,
+          amount: toSDKNumberOrUndefined(
+            numberFromSolidityContractNumber(agreement[0]),
+          ),
+          releaseTime: new Date(agreement[6] * 1000),
+        }
+      }),
+    )
   })
 
   return {
