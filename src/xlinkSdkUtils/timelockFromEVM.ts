@@ -1,4 +1,4 @@
-import { Client, encodeFunctionData, zeroAddress, zeroHash } from "viem"
+import { Client, encodeFunctionData, zeroAddress } from "viem"
 import { estimateGas, readContract } from "viem/actions"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
@@ -91,7 +91,7 @@ export async function getTimeLockedAssetsFromEVM(
             abi: bridgeTimeLockAbi,
             address: timeLockCallInfo.timeLockContractAddress,
             functionName: "agreementsByUser",
-            args: [input.walletAddress, 0, info.tokenContractAddress, zeroHash],
+            args: [input.walletAddress, 0, info.tokenContractAddress, "0x"],
           }).then(agreementId =>
             agreementId === 0n ? [] : [{ agreementId, info }],
           ),
