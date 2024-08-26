@@ -43,6 +43,8 @@ export async function getEVMContractCallInfo(
   | {
       client: Client
       bridgeEndpointContractAddress: Address
+      registryContractAddress?: Address
+      timeLockContractAddress?: Address
     }
 > {
   const addresses = await getAllAddresses(sdkContext, chainId)
@@ -53,9 +55,18 @@ export async function getEVMContractCallInfo(
     addresses.localAddresses[EVMEndpointContract.BridgeEndpoint]
   if (bridgeEndpointContractAddress == null) return
 
+  const registryContractAddress =
+    addresses.onChainAddresses?.[EVMEndpointContract.Registry] ??
+    addresses.localAddresses[EVMEndpointContract.Registry]
+  const timeLockContractAddress =
+    addresses.onChainAddresses?.[EVMEndpointContract.TimeLock] ??
+    addresses.localAddresses[EVMEndpointContract.TimeLock]
+
   return {
     client: addresses.client,
     bridgeEndpointContractAddress,
+    registryContractAddress,
+    timeLockContractAddress,
   }
 }
 
@@ -67,17 +78,11 @@ export async function getEVMTokenContractInfo(
   | undefined
   | {
       client: Client
-      bridgeEndpointContractAddress: Address
       tokenContractAddress: Address
     }
 > {
   const addresses = await getAllAddresses(sdkContext, chainId)
   if (addresses == null) return
-
-  const bridgeEndpointContractAddress =
-    addresses.onChainAddresses?.[EVMEndpointContract.BridgeEndpoint] ??
-    addresses.localAddresses[EVMEndpointContract.BridgeEndpoint]
-  if (bridgeEndpointContractAddress == null) return
 
   const tokenContractAddress =
     addresses.onChainAddresses?.[tokenId] ?? addresses.localAddresses[tokenId]
@@ -86,7 +91,6 @@ export async function getEVMTokenContractInfo(
 
   return {
     client: addresses.client,
-    bridgeEndpointContractAddress,
     tokenContractAddress,
   }
 }
@@ -157,12 +161,13 @@ const getOnChainConfigs = async (
     client,
     chain,
     configContractAddress,
-  ).finally(() => {
+  ).catch(err => {
     queueMicrotask(() => {
       if (cache != null && promise === cache.get(cacheKey)) {
         cache.delete(cacheKey)
       }
     })
+    throw err
   })
   if (cache != null) {
     cache.set(cacheKey, promise)
@@ -182,6 +187,8 @@ const _getOnChainConfigsImpl = async (
     args: [
       [
         ONCHAIN_CONFIG_KEY.ENDPOINT,
+        ONCHAIN_CONFIG_KEY.REGISTRY,
+        ONCHAIN_CONFIG_KEY.TIMELOCK,
         ONCHAIN_CONFIG_KEY.TOKEN_ABTC,
         ONCHAIN_CONFIG_KEY.TOKEN_ALEX,
         ONCHAIN_CONFIG_KEY.TOKEN_ATALEX,
@@ -209,16 +216,18 @@ const _getOnChainConfigsImpl = async (
   const EVMToken = KnownTokenId.EVM
   return {
     [EVMEndpointContract.BridgeEndpoint]: maybeAddress(configs[0]),
-    [EVMToken.aBTC]: maybeAddress(configs[1]),
-    [EVMToken.ALEX]: maybeAddress(configs[2]),
-    [EVMToken.vLiALEX]: maybeAddress(configs[3]),
-    [EVMToken.vLiSTX]: maybeAddress(configs[4]),
-    [EVMToken.USDT]: maybeAddress(configs[5]),
+    [EVMEndpointContract.Registry]: maybeAddress(configs[1]),
+    [EVMEndpointContract.TimeLock]: maybeAddress(configs[2]),
+    [EVMToken.aBTC]: maybeAddress(configs[3]),
+    [EVMToken.ALEX]: maybeAddress(configs[4]),
+    [EVMToken.vLiALEX]: maybeAddress(configs[5]),
+    [EVMToken.vLiSTX]: maybeAddress(configs[6]),
+    [EVMToken.USDT]: maybeAddress(configs[7]),
     [chain === KnownChainId.EVM.BSC ? EVMToken.BTCB : EVMToken.WBTC]:
-      maybeAddress(configs[6]),
-    [EVMToken.LUNR]: maybeAddress(configs[7]),
-    [EVMToken.SKO]: maybeAddress(configs[8]),
-    [EVMToken.sUSDT]: maybeAddress(configs[9]),
+      maybeAddress(configs[8]),
+    [EVMToken.LUNR]: maybeAddress(configs[9]),
+    [EVMToken.SKO]: maybeAddress(configs[10]),
+    [EVMToken.sUSDT]: maybeAddress(configs[11]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {

@@ -9,7 +9,6 @@ import {
   merlin,
   mode,
   sepolia,
-  xLayer,
 } from "viem/chains"
 import {
   ailayer,
@@ -17,6 +16,7 @@ import {
   bsquared,
   coreDaoTestnet,
   lorenzo,
+  xLayer,
 } from "./evmChainInfos"
 import { EVMChain } from "./evmContractAddresses"
 

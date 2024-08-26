@@ -1,4 +1,4 @@
-import { Client, encodeFunctionData, zeroAddress, zeroHash } from "viem"
+import { Client, encodeFunctionData, zeroAddress } from "viem"
 import { estimateGas, readContract } from "viem/actions"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
@@ -40,18 +40,20 @@ const getTimeLockContractCallInfo = async (
   const info = await getEVMContractCallInfo(ctx, chain)
   if (info == null) return
 
-  const timeLockContractAddress = await readContract(info.client, {
-    abi: bridgeEndpointAbi,
-    address: info.bridgeEndpointContractAddress,
-    functionName: "timeLock",
-  }).catch(err => {
-    console.groupCollapsed(
-      `Failed to read timeLock contract address from ${info.bridgeEndpointContractAddress} (${chain})`,
-    )
-    console.debug(err)
-    console.groupEnd()
-    return zeroAddress
-  })
+  const timeLockContractAddress =
+    info.timeLockContractAddress ??
+    (await readContract(info.client, {
+      abi: bridgeEndpointAbi,
+      address: info.bridgeEndpointContractAddress,
+      functionName: "timeLock",
+    }).catch(err => {
+      console.groupCollapsed(
+        `Failed to read timeLock contract address from ${info.bridgeEndpointContractAddress} (${chain})`,
+      )
+      console.debug(err)
+      console.groupEnd()
+      return zeroAddress
+    }))
   if (timeLockContractAddress === zeroAddress) return
 
   return { client: info.client, timeLockContractAddress }
@@ -82,33 +84,40 @@ export async function getTimeLockedAssetsFromEVM(
       )
     ).filter(isNotNull)
 
-    const results: TimeLockedAsset[] = []
-    for (const info of tokenCallInfos) {
-      const agreementId = await readContract(timeLockCallInfo.client, {
-        abi: bridgeTimeLockAbi,
-        address: timeLockCallInfo.timeLockContractAddress,
-        functionName: "agreementsByUser",
-        args: [input.walletAddress, 0, info.tokenContractAddress, zeroHash],
-      })
-      if (agreementId === 0n) continue
-
-      const agreement = await readContract(timeLockCallInfo.client, {
-        abi: bridgeTimeLockAbi,
-        address: timeLockCallInfo.timeLockContractAddress,
-        functionName: "agreements",
-        args: [agreementId],
-      })
-      results.push({
-        id: String(agreementId),
-        chain: info.chain,
-        token: info.token,
-        amount: toSDKNumberOrUndefined(
-          numberFromSolidityContractNumber(agreement[0]),
+    const agreements = (
+      await Promise.all(
+        tokenCallInfos.map(info =>
+          readContract(timeLockCallInfo.client, {
+            abi: bridgeTimeLockAbi,
+            address: timeLockCallInfo.timeLockContractAddress,
+            functionName: "agreementsByUser",
+            args: [input.walletAddress, 0, info.tokenContractAddress, "0x"],
+          }).then(agreementId =>
+            agreementId === 0n ? [] : [{ agreementId, info }],
+          ),
         ),
-        releaseTime: new Date(agreement[6] * 1000),
-      })
-    }
-    return results
+      )
+    ).flat()
+
+    return Promise.all(
+      agreements.map(async ({ agreementId, info }) => {
+        const agreement = await readContract(timeLockCallInfo.client, {
+          abi: bridgeTimeLockAbi,
+          address: timeLockCallInfo.timeLockContractAddress,
+          functionName: "agreements",
+          args: [agreementId],
+        })
+        return {
+          id: String(agreementId),
+          chain: info.chain,
+          token: info.token,
+          amount: toSDKNumberOrUndefined(
+            numberFromSolidityContractNumber(agreement[0]),
+          ),
+          releaseTime: new Date(agreement[6] * 1000),
+        }
+      }),
+    )
   })
 
   return {
