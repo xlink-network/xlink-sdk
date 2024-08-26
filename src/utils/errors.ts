@@ -1,5 +1,6 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 
+/** Extends the Error class and serves as the base for all custom errors within the SDK. */
 export class XLinkSDKErrorBase extends Error {
   constructor(...args: ConstructorParameters<typeof Error>) {
     super(...args)
@@ -7,6 +8,7 @@ export class XLinkSDKErrorBase extends Error {
   }
 }
 
+/** It is thrown when a method in the SDK receives invalid parameters. */
 export class InvalidMethodParametersError extends XLinkSDKErrorBase {
   constructor(
     public methodPath: string[],
@@ -21,6 +23,7 @@ export class InvalidMethodParametersError extends XLinkSDKErrorBase {
   }
 }
 
+/** It is thrown when an attempt is made to bridge tokens between unsupported chains in the SDK. */
 export class UnsupportedBridgeRouteError extends XLinkSDKErrorBase {
   constructor(
     public fromChain: ChainId,
@@ -35,12 +38,14 @@ export class UnsupportedBridgeRouteError extends XLinkSDKErrorBase {
   }
 }
 
+/** It is thrown when a method in the SDK receives an unknown chain. */
 export class UnsupportedChainError extends XLinkSDKErrorBase {
   constructor(public chain: ChainId) {
     super(`Unsupported chain: ${chain}`)
     this.name = "UnsupportedChainError"
   }
 }
+/** It is thrown when a smart contract is assigned an unknown or unsupported chain ID. */
 export class UnsupportedContractAssignedChainIdError extends XLinkSDKErrorBase {
   constructor(public chainId: bigint) {
     super(`Unsupported smart contract assigned chain id: ${chainId}`)
