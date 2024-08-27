@@ -34,7 +34,8 @@
   "scripts": {
     "gen:stacksContract": "rm -rf generated/smartContract && mkdir -p generated/smartContract && tsx ./scripts/generateClarityTranscoders.ts",
     "gen": "pnpm run gen:stacksContract",
-    "docs": "npx typedoc src/index.ts",
+    "docs": "typedoc",
+    "docs:watch": "typedoc --watch",
     "build": "pnpm run gen && rm -rf lib && tsup-node --sourcemap --dts -d lib --format cjs,esm src",
     "prepare": "pnpm run build",
     "test": "vitest --exclude lib"
