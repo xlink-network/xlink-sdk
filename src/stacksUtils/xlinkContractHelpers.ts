@@ -4,17 +4,16 @@ import {
   executeReadonlyCallFactory,
 } from "clarity-codegen"
 import { xlinkContracts } from "../../generated/smartContract/contracts_xlink"
-import {
-  STACKS_CONTRACT_DEPLOYER_MAINNET,
-  STACKS_CONTRACT_DEPLOYER_TESTNET,
-  STACKS_MAINNET,
-  STACKS_TESTNET,
-} from "../config"
+import { STACKS_MAINNET, STACKS_TESTNET } from "../config"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
-import { stxTokenContractAddresses } from "./stxContractAddresses"
+import {
+  stxTokenContractAddresses,
+  xlinkContractsDeployerMainnet,
+  xlinkContractsDeployerTestnet,
+} from "./stxContractAddresses"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
 export const numberFromStacksContractNumber = (
@@ -53,13 +52,13 @@ export const getStacksContractCallInfo = (
     } => {
   if (chainId === KnownChainId.Stacks.Mainnet) {
     return {
-      deployerAddress: STACKS_CONTRACT_DEPLOYER_MAINNET,
+      deployerAddress: xlinkContractsDeployerMainnet,
       network: STACKS_MAINNET,
     }
   }
   if (chainId === KnownChainId.Stacks.Testnet) {
     return {
-      deployerAddress: STACKS_CONTRACT_DEPLOYER_TESTNET,
+      deployerAddress: xlinkContractsDeployerTestnet,
       network: STACKS_TESTNET,
     }
   }

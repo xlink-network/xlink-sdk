@@ -18,6 +18,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { bridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { bridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
+  getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
@@ -33,12 +34,19 @@ export const getEvm2StacksFeeInfo = async (
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(route.toChain)
-  const evmContractCallInfo = await getEVMTokenContractInfo(
+  const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
+  const evmTokenContractCallInfo = await getEVMTokenContractInfo(
     ctx,
     route.fromChain,
     route.fromToken,
   )
-  if (stacksContractCallInfo == null || evmContractCallInfo == null) return
+  if (
+    stacksContractCallInfo == null ||
+    evmContractCallInfo == null ||
+    evmTokenContractCallInfo == null
+  ) {
+    return
+  }
 
   const executeOptions = {
     deployerAddress: stacksContractCallInfo.deployerAddress,
@@ -49,14 +57,15 @@ export const getEvm2StacksFeeInfo = async (
       })) satisfies CallReadOnlyFunctionFn,
   }
 
-  const { client, bridgeEndpointContractAddress, tokenContractAddress } =
-    evmContractCallInfo
+  const { client, tokenContractAddress } = evmTokenContractCallInfo
 
-  const registryAddr = await readContract(client, {
-    abi: bridgeEndpointAbi,
-    address: bridgeEndpointContractAddress,
-    functionName: "registry",
-  })
+  const registryAddr =
+    evmContractCallInfo.registryContractAddress ??
+    (await readContract(client, {
+      abi: bridgeEndpointAbi,
+      address: evmContractCallInfo.bridgeEndpointContractAddress,
+      functionName: "registry",
+    }))
 
   const resp = await props({
     isApproved: readContract(client, {

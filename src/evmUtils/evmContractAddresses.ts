@@ -10,9 +10,13 @@ const EVMToken = KnownTokenId.EVM
 export type EVMEndpointContract =
   | typeof EVMEndpointContract.BridgeEndpoint
   | typeof EVMEndpointContract.BridgeConfig
+  | typeof EVMEndpointContract.TimeLock
+  | typeof EVMEndpointContract.Registry
 export namespace EVMEndpointContract {
   export const BridgeEndpoint = "BridgeEndpoint"
   export const BridgeConfig = "BridgeConfig"
+  export const TimeLock = "TimeLock"
+  export const Registry = "Registry"
 }
 
 export type EVMOnChainAddresses = Partial<

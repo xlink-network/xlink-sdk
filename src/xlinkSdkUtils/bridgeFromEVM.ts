@@ -1,6 +1,9 @@
 import { encodeFunctionData, toHex } from "viem"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
-import { evmContractAddresses } from "../evmUtils/evmContractAddresses"
+import {
+  evmContractAddresses,
+  EVMEndpointContract,
+} from "../evmUtils/evmContractAddresses"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
 import {
   getEVMTokenContractInfo,
@@ -203,7 +206,7 @@ async function bridgeFromEVM_toStacks(
   },
 ): Promise<BridgeFromEVMOutput> {
   const bridgeEndpointAddress =
-    evmContractAddresses[info.fromChain].BridgeEndpoint
+    evmContractAddresses[info.fromChain][EVMEndpointContract.BridgeEndpoint]
   const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,
@@ -260,7 +263,7 @@ async function bridgeFromEVM_toBitcoinOrEVM(
   },
 ): Promise<BridgeFromEVMOutput> {
   const bridgeEndpointAddress =
-    evmContractAddresses[info.fromChain].BridgeEndpoint
+    evmContractAddresses[info.fromChain][EVMEndpointContract.BridgeEndpoint]
   const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,

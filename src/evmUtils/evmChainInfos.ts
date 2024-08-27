@@ -1,4 +1,5 @@
 import { defineChain } from "viem"
+import { bob as _bob, merlin as _merlin, xLayer as _xLayer } from "viem/chains"
 
 export const coreDaoTestnet = defineChain({
   id: 1115,
@@ -7,6 +8,12 @@ export const coreDaoTestnet = defineChain({
     name: "CORE",
     symbol: "CORE",
     decimals: 18,
+  },
+  contracts: {
+    multicall3: {
+      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      blockCreated: 15_979_981,
+    },
   },
   rpcUrls: {
     default: { http: ["https://rpc.test.btcs.network"] },
@@ -27,6 +34,12 @@ export const bsquared = defineChain({
     name: "BTC",
     symbol: "BTC",
     decimals: 18,
+  },
+  contracts: {
+    multicall3: {
+      address: "0x648cB32CCc0253fd2D811c506F969c1611Eaa82f",
+      blockCreated: 5_662_185,
+    },
   },
   rpcUrls: {
     default: { http: ["https://rpc.bsquared.network"] },
@@ -64,23 +77,7 @@ export const bsquaredTestnet = defineChain({
 })
 
 export const bob = defineChain({
-  id: 60808,
-  name: "BOB",
-  nativeCurrency: {
-    name: "ETH",
-    symbol: "ETH",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: { http: ["https://rpc.gobob.xyz/"] },
-  },
-  blockExplorers: {
-    default: {
-      name: "BOB Explorer",
-      url: "https://explorer.gobob.xyz",
-    },
-  },
-  testnet: false,
+  ..._bob,
 })
 export const bobTestnet = defineChain({
   id: 111,
@@ -109,6 +106,12 @@ export const bitlayer = defineChain({
     name: "BTC",
     symbol: "BTC",
     decimals: 18,
+  },
+  contracts: {
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+      blockCreated: 3_225_645,
+    },
   },
   rpcUrls: {
     default: { http: ["https://rpc.bitlayer.org"] },
@@ -149,6 +152,12 @@ export const lorenzo = defineChain({
     symbol: "stBTC",
     decimals: 18,
   },
+  contracts: {
+    multicall3: {
+      address: "0x756e73C560Aeeb310b127F214e11e03139FC8f0a",
+      blockCreated: 2_490_478,
+    },
+  },
   rpcUrls: {
     default: { http: ["https://rpc.lorenzo-protocol.xyz"] },
   },
@@ -181,24 +190,14 @@ export const lorenzoTestnet = defineChain({
 })
 
 export const merlin = defineChain({
-  id: 4200,
-  name: "Merlin",
-  nativeCurrency: {
-    name: "BTC",
-    symbol: "BTC",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: { http: ["https://rpc.merlinchain.io"] },
-    blockpi: { http: ["https://merlin.blockpi.network/v1/rpc/public"] },
-  },
-  blockExplorers: {
-    default: {
-      name: "Merlin Explorer",
-      url: "https://scan.merlinchain.io",
+  ..._merlin,
+  contracts: {
+    ..._merlin.contracts,
+    multicall3: {
+      address: "0x13caE7bc3C7F02FF64cB17076F289467fB133e04",
+      blockCreated: 12_377_144,
     },
   },
-  testnet: false,
 })
 export const merlinTestnet = defineChain({
   id: 686868,
@@ -207,6 +206,12 @@ export const merlinTestnet = defineChain({
     name: "BTC",
     symbol: "BTC",
     decimals: 18,
+  },
+  contracts: {
+    multicall3: {
+      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      blockCreated: 4_632_260,
+    },
   },
   rpcUrls: {
     default: { http: ["https://testnet-rpc.merlinchain.io"] },
@@ -227,6 +232,12 @@ export const ailayer = defineChain({
     name: "BTC",
     symbol: "BTC",
     decimals: 18,
+  },
+  contracts: {
+    multicall3: {
+      address: "0x8BDc1E8149E7259833f8776CAfDa5c55Cfb8Bbd9",
+      blockCreated: 4_351_314,
+    },
   },
   rpcUrls: {
     default: {
@@ -263,4 +274,15 @@ export const ailayerTestnet = defineChain({
     },
   },
   testnet: true,
+})
+
+export const xLayer = defineChain({
+  ..._xLayer,
+  contracts: {
+    ..._xLayer.contracts,
+    multicall3: {
+      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
+      blockCreated: 47_416,
+    },
+  },
 })
