@@ -217,3 +217,182 @@ Possible exceptions: None. The function returns `undefined` if the chainId or ad
 - `UnsupportedChainError`: It is thrown when a method in the SDK receives an unknown chain.
 - `UnsupportedContractAssignedChainIdError`: It is thrown when a smart contract is assigned an unknown or unsupported chain ID.
 - `XLinkSDKErrorBase`: Extends the Error class and serves as the base for all custom errors within the SDK.
+
+### USE CASES
+
+Create an instance of the SDK with default options
+```typescript
+const xlinkSdk = new XLinkSDK();
+```
+#### Available Methods:
+1. `getSupportedRoutes()`
+```typescript
+const routes = await xlinkSdk.getSupportedRoutes({
+    fromChain: "evm-ethereum",
+    toChain: "stacks-mainnet",
+    fromToken: "evm-usdt",
+    toToken: "stx-susdt",
+});
+```
+
+2. `bridgeInfoFromStacks()`
+```typescript
+const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({    
+    fromChain: "stacks-mainnet",
+    toChain: "evm-ethereum",
+    fromToken: "stx-susdt",
+    toToken: "evm-usdt",
+    amount: 100,
+});
+console.log("Bridge Info:", bridgeInfo);
+```
+
+3. `bridgeFromStacks()`
+```typescript
+const result = await xlinkSdk.bridgeFromStacks({ 
+    fromChain: "stacks-mainnet",
+    toChain: "evm-ethereum",
+    fromToken: "stx-susdt",
+    toToken: "evm-usdt",
+    toAddress: "0x...",
+    amount: 10,
+    sendTransaction: async (tx: ContractCallOptions) => Promise<{txid: string}>  {
+    // this implementation is for use the bridge from Stacks mainnet network..
+    // you need to have one implementation for each different network
+    // also this is fixed to use node-library and you'll need the user key
+    const network = StacksMainnet();
+    const transaction = await makeContractCall({
+        contractAddress: options.contractAddress,
+        contractName: options.contractName,
+        functionName: options.functionName,
+        functionArgs: options.functionArgs,
+        // this not required if sendTransaction is from a wallet, but required when using from node
+        senderKey: /* here we need to pass the sender address private key in order to sign the transaction */
+        //validateWithAbi: true,
+        network,
+        postConditions: options.postConditions,
+        anchorMode: options.anchorMode,
+    });
+    const broadcastResponse = await broadcastTransaction(transaction, network);
+    return broadcastResponse.txid;
+    } 
+});
+console.log("Transaction ID:", result.txid);
+```
+
+4. `getEVMContractAddress()`
+```typescript
+const contractAddress = await xlinkSdk.getEVMContractAddress(
+    "evm-bsc",
+    "BridgeEndpoint"
+);
+console.log("Contract Address:", contractAddress);
+```
+
+5. `evmAddressFromEVMToken()`
+```typescript
+const address = await xlinkSdk.evmAddressFromEVMToken(
+    "evm-ethereum",
+    "evm-usdt"
+);
+console.log("EVM Address:", address);
+```
+
+6. `evmAddressToEVMToken()`
+```typescript
+const tokenId = await xlinkSdk.evmAddressToEVMToken(
+    "evm-coredao",
+    "0x..."
+);
+console.log("Token ID:", tokenId);
+```
+
+7. `bridgeInfoFromEVM()`
+```typescript
+const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
+    fromChain: "evm-ethereum",
+    toChain: "stacks-mainnet",
+    fromToken: "evm-usdt",
+    toToken: "stx-susdt",
+    amount: 100,
+});
+console.log("Bridge Info:", bridgeInfo);
+```
+8. `bridgeFromEVM()`
+```typescript
+const result = await xlinkSdk.bridgeFromEVM({
+    fromChain: "evm-ethereum",
+    toChain: "stacks-mainnet",
+    fromToken: "evm-usdt",
+    toToken: "stx-susdt",
+    toAddress: "0x...",
+    amount: 10,
+    sendTransaction: // TODO 
+});
+console.log("Transaction ID:", result.txHash);
+```
+
+9. `getTimeLockedAssetsFromEVM()`
+```typescript
+const timeLockedAssets = await xlinkSdk.getTimeLockedAssetsFromEVM({
+    walletAddress: "0x...",
+    chains: ["evm-bitlayer", "evm-lorenzo"],
+});
+console.log("Time-Locked Assets:", timeLockedAssets);
+```
+
+10. `claimTimeLockedAssetsFromEVM()`
+```typescript
+const claimResult = await xlinkSdk.claimTimeLockedAssetsFromEVM({
+    chain: "evm-ethereum",
+    lockedAssetIds: ["asset-id-1", "asset-id-2"],
+    sendTransaction: // TODO 
+});
+console.log("Claim Transaction Hash:", claimResult?.txHash);
+```
+
+11. `bridgeInfoFromBitcoin()`
+```typescript
+const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
+    fromChain: "bitcoin-mainnet",
+    toChain: "evm-ethereum",
+    amount: 1,
+});
+console.log("Bridge Info:", bridgeInfo);
+```
+
+12. `estimateBridgeTransactionFromBitcoin()`
+```typescript
+const estimate = await xlinkSdk.estimateBridgeTransactionFromBitcoin({
+    fromChain: "bitcoin-mainnet",
+    toChain: "evm-ethereum",
+    fromToken: "btc-btc",
+    toToken: "evm-wbtc",
+    fromAddress: "bitcoin address",
+    fromAddressScriptPubKey: scriptPubKey,
+    toAddress: "0x...",
+    amount: 1,
+    networkFeeRate: 10n,
+    reselectSpendableUTXOs: // TODO
+});
+console.log("Estimated Fee:", estimate.fee);
+console.log("Estimated vSize:", estimate.estimatedVSize);
+```
+
+13. `bridgeFromBitcoin()`
+```typescript
+const result = await xlinkSdk.bridgeFromBitcoin({
+    fromChain: "bitcoin-mainnet",
+    toChain: "evm-ethereum",
+    fromToken: "btc-btc",
+    toToken: "evm-wbtc",
+    fromAddress: "bitcoin address",
+    fromAddressScriptPubKey: scriptPubKey,
+    toAddress: "0x...",
+    amount: 1,
+    networkFeeRate: 10n,
+    reselectSpendableUTXOs: // TODO
+    signPsbt: // TODO
+});
+console.log("Transaction ID:", result.tx);
+```

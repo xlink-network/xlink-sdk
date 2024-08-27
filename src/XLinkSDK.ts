@@ -198,8 +198,6 @@ export class XLinkSDK {
    * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
    * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
    * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
-   * - `transferProphets: PublicTransferProphet[]` - An array of objects containing additional details about the transfer,
-   *    such as fees, minimum and maximum bridge amounts, and whether the transfer route is paused.
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -220,7 +218,7 @@ export class XLinkSDK {
    * - `toToken: TokenId` - The token expected on the destination chain.
    * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
-   * - `sendTransaction: TODO.
+   * - `sendTransaction: // TODO.
    *
    * @returns A promise that resolves with the transaction ID (`txid`) of the bridging operation.
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
@@ -288,6 +286,28 @@ export class XLinkSDK {
     return getEVMToken(this.sdkContext, chain, address)
   }
 
+  /**
+   * This function provides detailed information about token transfers from an EVM-compatible blockchain to other supported
+   * blockchain networks, including Stacks, Bitcoin, and other EVM-compatible chains. It verifies the validity of the transfer
+   * route and retrieves bridge information based on the destination chain and tokens.
+   * @param input - An object containing the input parameters required for retrieving bridge information:
+   * - `fromChain: ChainId` - The ID of the source blockchain (Stacks in this case).
+   * - `toChain: ChainId` - The ID of the destination blockchain (Bitcoin, EVM-compatible chains, etc.).
+   * - `fromToken: TokenId` - The token being transferred from the Stacks network.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `amount: SDKNumber` - The amount of tokens involved in the transfer.
+   *
+   * @returns A promise that resolves with an object containing detailed information about the token transfer, including:
+   * - `fromChain: KnownChainId.KnownChain` - The source blockchain.
+   * - `fromToken: KnownTokenId.KnownToken` - The token being transferred from the Stacks network.
+   * - `toChain: KnownChainId.KnownChain` - The destination blockchain.
+   * - `toToken: KnownTokenId.KnownToken` - The token expected on the destination chain.
+   * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
+   * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
+   * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
+   * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
+   * chains or tokens is unsupported.
+   */
   bridgeInfoFromEVM(
     input: BridgeInfoFromEVMInput,
   ): Promise<BridgeInfoFromEVMOutput> {
@@ -306,7 +326,7 @@ export class XLinkSDK {
    * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `toAddressScriptPubKey?: Uint8Array` - The script public key for the `toAddress`, required when the destination is a Bitcoin chain.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
-   * - `sendTransaction: TODO.
+   * - `sendTransaction: // TODO.
    *
    * @returns A promise that resolves with the transaction hash (`txHash`) of the bridging operation.
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
@@ -346,7 +366,7 @@ export class XLinkSDK {
    * @param input - An object containing the input parameters required for claiming time-locked assets:
    * - `chain: KnownChainId.EVMChain` - The ID of the EVM-compatible blockchain where the assets are locked.
    * - `lockedAssetIds: string[]` - An array of IDs representing the locked assets to be claimed.
-   * - `sendTransaction: TODO.
+   * - `sendTransaction: // TODO.
    *
    * @returns A promise that resolves with the transaction hash (`txHash`) of the claiming operation, or `undefined` if the operation fails.
    * @throws UnsupportedChainError - If the provided EVM chain is unsupported or invalid.
@@ -383,8 +403,6 @@ export class XLinkSDK {
    * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
    * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
    * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
-   * - `transferProphets: PublicTransferProphet[]` - An array of objects containing additional details about the transfer,
-   *    such as fees, minimum and maximum bridge amounts, and whether the transfer route is paused.
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains is unsupported.
    */
@@ -403,7 +421,7 @@ export class XLinkSDK {
    * - `toAddress: string` - The destination address on the target blockchain.
    * - `amount: SDKNumber` - The amount of tokens to be transferred.
    * - `networkFeeRate: bigint` - The fee rate for the Bitcoin network.
-   * - `reselectSpendableUTXOs: ReselectSpendableUTXOsFn` - A function to reselect the spendable UTXOs.
+   * - `reselectSpendableUTXOs: // TODO.
    *
    * @returns A promise that resolves with an object containing the estimated transaction details:
    * - `fee: SDKNumber` - The estimated transaction fee.
