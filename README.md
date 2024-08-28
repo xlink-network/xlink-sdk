@@ -68,7 +68,7 @@ const theSdk = new XLinkSDK();
 
 For detailed API documentation, including a full list of available methods and their usage, please refer to:
 
-[SDK API Documentation](https://docs-typedoc.xlink-sdk.pages.dev/classes/XLinkSDK.XLinkSDK)
+[Latest version SDK API Documentation](https://releases-latest.xlink-sdk.pages.dev/)
 
 ### USE CASES
 
