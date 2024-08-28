@@ -7,7 +7,13 @@ type SDKBrandedLiteral<
   T extends string | number,
 > = `${T} (XLinkSDK ${Type})`
 
+/**
+ * Represents a unique identifier for a blockchain network.
+ */
 export type ChainId<T extends string = string> = SDKBrandedLiteral<"ChainId", T>
+/**
+ * Represents a unique identifier for a cryptocurrency token.
+ */
 export type TokenId<T extends string = string> = SDKBrandedLiteral<"TokenId", T>
 
 export type SDKNumber = SDKBrandedLiteral<"number", string>
@@ -57,7 +63,18 @@ export interface StacksContractAddress {
   contractName: string
 }
 
+/**
+ * Represents the type of public EVM contracts that are accessible through the SDK.
+ * The `PublicEVMContractType` is tied to the specific `BridgeEndpoint` contract type defined
+ * in the `EVMEndpointContract` namespace.
+ */
 export type PublicEVMContractType = typeof PublicEVMContractType.BridgeEndpoint
+/**
+ * A namespace that defines the public contract types available in the SDK for EVM-compatible blockchains.
+ * This namespace currently includes only the `BridgeEndpoint` contract type, which corresponds to
+ * the main contract used for bridging assets across EVM-compatible blockchains.
+ */
 export namespace PublicEVMContractType {
+  /** Represents the bridge endpoint contract type in an EVM-compatible blockchain. */
   export const BridgeEndpoint = EVMEndpointContract.BridgeEndpoint
 }

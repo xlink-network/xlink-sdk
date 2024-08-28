@@ -34,6 +34,7 @@
   "scripts": {
     "gen:stacksContract": "rm -rf generated/smartContract && mkdir -p generated/smartContract && tsx ./scripts/generateClarityTranscoders.ts",
     "gen": "pnpm run gen:stacksContract",
+    "docs": "npx typedoc src/index.ts",
     "build": "pnpm run gen && rm -rf lib && tsup-node --sourcemap --dts -d lib --format cjs,esm src",
     "prepare": "pnpm run build",
     "test": "vitest --exclude lib"
@@ -57,6 +58,7 @@
     "prettier": "^3.2.5",
     "tsup": "^8.0.2",
     "tsx": "^4.7.2",
+    "typedoc": "^0.26.6",
     "typescript": "^5.4.5",
     "viem": "^2.15.1",
     "vitest": "^1.4.0"

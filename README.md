@@ -60,160 +60,124 @@ Note: Users can transfer between different coins/tokens, not just the same token
 
 
 ### XLink SDK
-
 The `XLinkSDK` object contains the most important functions of this library, all grouped together. To create it:
 
 ```typescript
 const theSdk = new XLinkSDK();
 ```
 
-These functions are part of the `XLinkSDK` object:
+For detailed API documentation, including a full list of available methods and their usage, please refer to:
 
-#### bridgeFromBitcoin
+[SDK API Documentation](https://docs-typedoc.xlink-sdk.pages.dev/classes/XLinkSDK.XLinkSDK)
 
-This function facilitates the transfer of tokens from the Bitcoin network to other supported blockchain networks. It checks the validity of the route and then calls the appropriate bridging function based on the destination chain.
+### USE CASES
 
+Create an instance of the SDK with default options
 ```typescript
-bridgeFromBitcoin(input: BridgeFromBitcoinInput): Promise<BridgeFromBitcoinOutput> 
+import{ XLinkSDK } from '@xlink-project/xlink-sdk/src';
+
+const xlinkSdk = new XLinkSDK();
+```
+1. Bridge from Stacks
+```typescript
+import { BridgeInfoFromStacksInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeInfoFromStacks';
+import { BridgeFromStacksInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeFromStacks';
+import { KnownChainId, KnownTokenId } from '@xlink-project/xlink-sdk/src/utils/types/knownIds';
+
+// Get bridge info
+const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({    
+    fromChain: KnownChainId.Stacks.Mainnet,
+    toChain: KnownChainId.EVM.Ethereum,
+    fromToken: KnownTokenId.Stacks.sUSDT,
+    toToken: KnownTokenId.EVM.USDT,
+    amount: 100,
+} as BridgeInfoFromStacksInput);
+console.log("Bridge Info:", bridgeInfo);
+
+// Perform the bridge operation
+const result = await xlinkSdk.bridgeFromStacks({ 
+    fromChain: KnownChainId.Stacks.Mainnet,
+    toChain: KnownChainId.EVM.Ethereum,
+    fromToken: KnownTokenId.Stacks.sUSDT,
+    toToken: KnownTokenId.EVM.USDT,
+    toAddress: "0x...",
+    amount: 10,
+    sendTransaction: async (tx: ContractCallOptions) => {
+        // Implementation for sending transaction from Stacks mainnet
+        const network = new StacksMainnet();
+        const transaction = await makeContractCall({
+            contractAddress: tx.contractAddress,
+            contractName: tx.contractName,
+            functionName: tx.functionName,
+            functionArgs: tx.functionArgs,
+            senderKey: /* sender address private key */,
+            network,
+            postConditions: tx.postConditions,
+            anchorMode: tx.anchorMode,
+        });
+        const broadcastResponse = await broadcastTransaction(transaction, network);
+        return broadcastResponse.txid;
+    } 
+} as BridgeFromStacksInput);
+console.log("Transaction ID:", result.txid);
 ```
 
-Possible exceptions: `UnsupportedBridgeRouteError`.
-
-#### bridgeFromEVM
-
-This function facilitates the transfer of tokens from an EVM-compatible blockchain to other supported blockchain networks, including Stacks, Bitcoin, and other EVM-compatible chains. It validates the route and calls the appropriate bridging function based on the destination chain and tokens involved.
+2. Bridge from EVM
 ```typescript
-bridgeFromEVM(input: BridgeFromEVMInput): Promise<BridgeFromEVMOutput>
-```
-Possible exceptions: `UnsupportedBridgeRouteError`.
+import { BridgeInfoFromEVMInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeInfoFromEVM';
+import { BridgeFromEVMInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeFromEVM';
+import { KnownChainId, KnownTokenId } from '@xlink-project/xlink-sdk/src/utils/types/knownIds';
 
-#### bridgeFromStacks
-This function facilitates the transfer of tokens from the Stacks network to other supported blockchain networks, including Bitcoin and EVM-compatible chains. It validates the route and calls the appropriate bridging function based on the destination chain and tokens involved.
-```typescript
-bridgeFromStacks(input: BridgeFromStacksInput): Promise<BridgeFromStacksOutput>
-```
-Possible exceptions: `UnsupportedBridgeRouteError`.
+// Get bridge info
+const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
+    fromChain: KnownChainId.EVM.Ethereum,
+    toChain: KnownChainId.Stacks.Mainnet,
+    fromToken: KnownTokenId.EVM.USDT,
+    toToken: KnownTokenId.Stacks.sUSDT,
+    amount: 100,
+} as BridgeInfoFromEVMInput);
+console.log("Bridge Info:", bridgeInfo);
 
-#### bridgeInfoFromBitcoin
-
-This function provides detailed information about token transfers from the Bitcoin network to other supported blockchain networks, including Stacks and EVM-compatible chains. It verifies the validity of the transfer route and retrieves bridge information based on the destination chain.
-
-```typescript
-const bridgeInfoFromBitcoin = async (info: BridgeInfoFromBitcoinInput): Promise<BridgeInfoFromBitcoinOutput>
-```
-Possible exceptions: `UnsupportedBridgeRouteError`.
-
-#### bridgeInfoFromEVM
-
-This function provides detailed information about token transfers from an EVM-compatible blockchain to other supported blockchain networks, including Stacks, Bitcoin, and other EVM-compatible chains. It verifies the validity of the transfer route and retrieves bridge information based on the destination chain and tokens.
-
-```typescript
-bridgeInfoFromEVM(input: BridgeInfoFromEVMInput): Promise<BridgeInfoFromEVMOutput> 
-```
-Possible exceptions: `UnsupportedBridgeRouteError`.
-
-#### bridgeInfoFromStacks
-
-This function provides detailed information about token transfers from the Stacks network to other supported blockchain networks, including Bitcoin and EVM-compatible chains. It verifies the validity of the transfer route and retrieves bridge information based on the destination chain and tokens.
-
-```typescript
-bridgeInfoFromStacks(input: BridgeInfoFromStacksInput): Promise<BridgeInfoFromStacksOutput>
-```
-Possible exceptions: `UnsupportedBridgeRouteError`.
-
-#### claimTimeLockedAssetsFromEVM
-
-This function facilitates the claiming of time-locked assets on EVM-compatible chains. It uses smart contract functions to execute the release of locked assets based on predefined conditions.
-
-```typescript
-claimTimeLockedAssetsFromEVM(input: ClaimTimeLockedAssetsInput): Promise<undefined | ClaimTimeLockedAssetsOutput> 
+// Perform the bridge operation
+const result = await xlinkSdk.bridgeFromEVM({
+    fromChain: KnownChainId.EVM.Ethereum,
+    toChain: KnownChainId.Stacks.Mainnet,
+    fromToken: KnownTokenId.EVM.USDT,
+    toToken: KnownTokenId.Stacks.sUSDT,
+    toAddress: "0x...",
+    amount: 10,
+    sendTransaction: // Implementation for sending transaction from EVM chain
+} as BridgeFromEVMInput);
+console.log("Transaction ID:", result.txHash);
 ```
 
-Possible exceptions: `UnsupportedChainError`.
-
-#### getTimeLockedAssetsFromEVM
-
-This function retrieves a list of time-locked assets for a given wallet address across multiple EVM-compatible blockchain networks. It queries smart contracts to find and return information about the assets that are currently locked in time-based agreements.
-
+3. Bridge from Bitcoin
 ```typescript
-getTimeLockedAssetsFromEVM(input: GetTimeLockedAssetsInput): Promise<GetTimeLockedAssetsOutput> 
+import { BridgeInfoFromBitcoinInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeInfoFromBitcoin';
+import { BridgeFromBitcoinInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeFromBitcoin';
+import { KnownChainId, KnownTokenId } from '@xlink-project/xlink-sdk/src/utils/types/knownIds';
+
+// Get bridge info
+const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
+    fromChain: KnownChainId.Bitcoin.Mainnet,
+    toChain: KnownChainId.EVM.Ethereum,
+    amount: 1,
+} as BridgeInfoFromBitcoinInput);
+console.log("Bridge Info:", bridgeInfo);
+
+// Perform the bridge operation
+const result = await xlinkSdk.bridgeFromBitcoin({
+    fromChain: KnownChainId.Bitcoin.Mainnet,
+    toChain: KnownChainId.EVM.Ethereum,
+    fromToken: KnownTokenId.Bitcoin.BTC,
+    toToken: KnownTokenId.EVM.WBTC,
+    fromAddress: "bitcoin address",
+    fromAddressScriptPubKey: scriptPubKey,
+    toAddress: "0x...",
+    amount: 1,
+    networkFeeRate: 10n,
+    reselectSpendableUTXOs: // Implementation for reselect UTXOs
+    signPsbt: // Implementation for signing PSBT
+} as BridgeFromBitcoinInput);
+console.log("Transaction ID:", result.tx);
 ```
-
-Possible exceptions: `UnsupportedChainError`.
-
-#### estimateBridgeTransactionFromBitcoin
-
-This function estimates the transaction fee and vSize for move or swap tokens from the Bitcoin network to other supported blockchain networks, including Stacks and EVM-compatible chains.
-```typescript
-estimateBridgeTransactionFromBitcoin(input: EstimateBridgeTransactionFromBitcoinInput): Promise<EstimateBridgeTransactionFromBitcoinOutput> 
-```
-
-Possible exceptions: `UnsupportedBridgeRouteError`
-
-#### evmAddressFromEVMToken
-
-This function retrieves the contract address of a specific token on a given EVM-compatible blockchain.
-
-```typescript
-async evmAddressFromEVMToken(chain: ChainId, token: KnownTokenId.EVMToken): Promise<undefined | EVMAddress>
-```
-
-Possible exceptions: None. The function returns `undefined` if the chain is not EVM-compatible or if the contract address cannot be retrieved.
-
-#### evmAddressToEVMToken 
-
-This function maps a given contract address on an EVM-compatible blockchain to its corresponding known token ID.
-
-```typescript
-async evmAddressToEVMToken(chain: ChainId, address: EVMAddress): Promise<undefined | KnownTokenId.EVMToken>
-```
-
-Possible exceptions: None. The function returns `undefined` if the chain is not EVM-compatible or if the address cannot be matched.
-
-#### getEVMContractAddress
-
-This function retrieves the contract address of a specific type of contract (e.g., a bridge endpoint) on a given EVM-compatible blockchain.
-
-```typescript
-async getEVMContractAddress(chain: ChainId, contractType: PublicEVMContractType): Promise<undefined | EVMAddress>
-```
-
-Possible exceptions: None. The function returns `undefined` if the chain is not EVM-compatible or if the address cannot be matched.
-
-#### getSupportedRoutes
-
-This function retrieves the list of supported routes for token transfers between blockchain networks, filtered based on optional conditions. It aggregates the results from different blockchain networks (Stacks, EVM, Bitcoin) to return a list of possible routes.
-
-```typescript
-async getSupportedRoutes(conditions?: GetSupportedRoutesFn_Conditions): Promise<KnownRoute[]> 
-```
-
-Possible exceptions: None.
-
-#### stacksAddressFromStacksToken
-
-This function retrieves the contract address associated with a specific token on the Stacks blockchain. 
-
-```typescript
-async function stacksAddressFromStacksToken(chain: ChainId, token: KnownTokenId.StacksToken): Promise<undefined | StacksContractAddress>
-```
-Possible exceptions: None. The function returns `undefined` if the chainId or token is not valid.
-
-#### stacksAddressToStacksToken
-
-This function maps a given Stacks contract address to its corresponding known token ID.
-
-```typescript
-async function stacksAddressToStacksToken(chain: ChainId, address: StacksContractAddress): Promise<undefined | KnownTokenId.StacksToken>
-```
-
-Possible exceptions: None. The function returns `undefined` if the chainId or address is not valid.
-
-
-### Errors
-
-- `InvalidMethodParametersError`: It is thrown when a method in the SDK receives invalid parameters.
-- `UnsupportedBridgeRouteError`: It is thrown when an attempt is made to bridge tokens between unsupported chains in the SDK.
-- `UnsupportedChainError`: It is thrown when a method in the SDK receives an unknown chain.
-- `UnsupportedContractAssignedChainIdError`: It is thrown when a smart contract is assigned an unknown or unsupported chain ID.
-- `XLinkSDKErrorBase`: Extends the Error class and serves as the base for all custom errors within the SDK.
