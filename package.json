@@ -2,7 +2,7 @@
   "name": "@xlink-network/xlink-sdk",
   "version": "0.2.0-8",
   "description": "XLINK js SDK",
-  "packageManager": "pnpm@9.6.0",
+  "packageManager": "pnpm@9.9.0",
   "keywords": [
     "bitcoin",
     "ethereum",
@@ -10,7 +10,7 @@
     "XLINK",
     "alexlab"
   ],
-  "repository": "github:alexgo-io/xlink-sdk",
+  "repository": "github:xlink-network/xlink-sdk",
   "author": "c4605 <yuntao@alexgo.io>",
   "license": "MIT",
   "files": [
