@@ -52,6 +52,9 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.Arbitrum:
       // case KnownChainId.EVM.ArbitrumTestnet:
       return 12n
+    case KnownChainId.EVM.Aurora:
+      // case KnownChainId.EVM.AuroraTestnet:
+      return 13n
     default:
       checkNever(chain)
       throw new UnsupportedChainError(chain)
@@ -139,6 +142,12 @@ export function contractAssignedChainIdToKnownChain(
     return [KnownChainId.EVM.Arbitrum]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Arbitrum)
+
+  if (chainId === 13n) {
+    return [KnownChainId.EVM.Aurora]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Aurora)
+  // assertExclude(resPossibilities, KnownChainId.EVM.AuroraTestnet)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)

@@ -242,6 +242,7 @@ export async function fromCorrespondingStacksCurrency(
   assertExclude(restEVMTokenPossibilities, EVMToken.vLiALEX)
 
   if (stacksToken === StacksToken.sUSDT) {
+    // prettier-ignore
     switch (toChain) {
       case EVMChain.Ethereum:
       case EVMChain.Sepolia:
@@ -267,7 +268,9 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.XLayer:
       // case EVMChain.XLayerTestnet:
       case EVMChain.Arbitrum:
-        // case EVMChain.ArbitrumTestnet:
+      // case EVMChain.ArbitrumTestnet:
+      case EVMChain.Aurora:
+      // case EVMChain.AuroraTestnet:
         return EVMToken.sUSDT
       default:
         checkNever(toChain)
@@ -277,6 +280,7 @@ export async function fromCorrespondingStacksCurrency(
   assertExclude(restEVMTokenPossibilities, EVMToken.sUSDT)
 
   if (stacksToken === StacksToken.aBTC) {
+    // prettier-ignore
     switch (toChain) {
       case EVMChain.Ethereum:
       case EVMChain.Sepolia:
@@ -303,7 +307,9 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.XLayer:
       // case EVMChain.XLayerTestnet:
       case EVMChain.Arbitrum:
-        // case EVMChain.ArbitrumTestnet:
+      // case EVMChain.ArbitrumTestnet:
+      case EVMChain.Aurora:
+      // case EVMChain.AuroraTestnet:
         return EVMToken.aBTC
       default:
         checkNever(toChain)
