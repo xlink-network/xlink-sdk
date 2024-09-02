@@ -210,4 +210,18 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.aBTC]: "0x391c193a3268aA0A93D76EAc85B88985b5CB92da",
     [EVMToken.ALEX]: "0xd74aE62e92f0EB0D3DF986387D61f3f09E0f1954",
   },
+  [EVMChain.BisonTestnet]: {
+    [EVMEndpointContract.BridgeEndpoint]:
+      "0xf9dFCEDf0D4eCe3c9F7CD2F3C0c70556EfAA1665",
+    [EVMToken.sUSDT]: "0x8EcfD0a81c2965d16b78e86b8E4Dc71D0109e0e1",
+    [EVMToken.aBTC]: "0xC64DC7855F0FC571578D6226C058798AE86DCb77",
+    [EVMToken.ALEX]: "0x6c74Bc8c54114b8Fed89686cC345eBCd838Fa0b9",
+  },
+  [EVMChain.BitboyTestnet]: {
+    [EVMEndpointContract.BridgeEndpoint]:
+      "0x3114671EefE856B32851DF4bc5b6278d5A74b86b",
+    [EVMToken.sUSDT]: "0x0d05e721F127AF25bDa0FE8836F1A2127028ad01",
+    [EVMToken.aBTC]: "0xEf33A9Afa67bad73b8df4beBD4C5Adc678D70528",
+    [EVMToken.ALEX]: "0x1DcD5BE312cc70c1e86218D2aC86EDDf79a851E4",
+  },
 }

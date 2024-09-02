@@ -183,6 +183,16 @@ export namespace KnownChainId {
     /** Represents the Aurora mainnet chain ID. */
     export const Aurora = chainId("evm-aurora")
     // export const AuroraTestnet = chainId("evm-aurora-testnet")
+
+    // Bison
+    /** Represents the Bison mainnet chain ID. */
+    // export const Bison = chainId("evm-bison")
+    export const BisonTestnet = chainId("evm-bison-testnet")
+
+    // Bitboy
+    /** Represents the Bitboy mainnet chain ID. */
+    // export const Bitboy = chainId("evm-bitboy")
+    export const BitboyTestnet = chainId("evm-bitboy-testnet")
   }
 
   /** Represents a mainnet EVM-compatible blockchain network. */
@@ -238,6 +248,8 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
   KnownChainId.EVM.BSCTestnet,
   KnownChainId.EVM.CoreDAOTestnet,
+  KnownChainId.EVM.BisonTestnet,
+  KnownChainId.EVM.BitboyTestnet,
 ] as const
 
 const _restEVMChain = null as Exclude<

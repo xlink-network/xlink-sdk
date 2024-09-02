@@ -26,34 +26,26 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.CoreDAOTestnet:
       return 3n
     case KnownChainId.EVM.Bsquared:
-      // case KnownChainId.EVM.BsquaredTestnet:
       return 4n
     case KnownChainId.EVM.BOB:
-      // case KnownChainId.EVM.BOBTestnet:
+    case KnownChainId.EVM.BisonTestnet:
       return 5n
     case KnownChainId.EVM.Bitlayer:
-      // case KnownChainId.EVM.BitlayerTestnet:
+    case KnownChainId.EVM.BitboyTestnet:
       return 6n
     case KnownChainId.EVM.Lorenzo:
-      // case KnownChainId.EVM.LorenzoTestnet:
       return 7n
     case KnownChainId.EVM.Merlin:
-      // case KnownChainId.EVM.MerlinTestnet:
       return 8n
     case KnownChainId.EVM.AILayer:
-      // case KnownChainId.EVM.AILayerTestnet:
       return 9n
     case KnownChainId.EVM.Mode:
-      // case KnownChainId.EVM.ModeTestnet:
       return 10n
     case KnownChainId.EVM.XLayer:
-      // case KnownChainId.EVM.XLayerTestnet:
       return 11n
     case KnownChainId.EVM.Arbitrum:
-      // case KnownChainId.EVM.ArbitrumTestnet:
       return 12n
     case KnownChainId.EVM.Aurora:
-      // case KnownChainId.EVM.AuroraTestnet:
       return 13n
     default:
       checkNever(chain)
@@ -97,16 +89,16 @@ export function contractAssignedChainIdToKnownChain(
   // assertExclude(resPossibilities, KnownChainId.EVM.BsquaredTestnet)
 
   if (chainId === 5n) {
-    return [KnownChainId.EVM.BOB]
+    return [KnownChainId.EVM.BOB, KnownChainId.EVM.BisonTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.BOB)
-  // assertExclude(resPossibilities, KnownChainId.EVM.BOBTestnet)
+  assertExclude(resPossibilities, KnownChainId.EVM.BisonTestnet)
 
   if (chainId === 6n) {
-    return [KnownChainId.EVM.Bitlayer]
+    return [KnownChainId.EVM.Bitlayer, KnownChainId.EVM.BitboyTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Bitlayer)
-  // assertExclude(resPossibilities, KnownChainId.EVM.BitlayerTestnet)
+  assertExclude(resPossibilities, KnownChainId.EVM.BitboyTestnet)
 
   if (chainId === 7n) {
     return [KnownChainId.EVM.Lorenzo]

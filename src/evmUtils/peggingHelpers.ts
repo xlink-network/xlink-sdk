@@ -271,6 +271,8 @@ export async function fromCorrespondingStacksCurrency(
       // case EVMChain.ArbitrumTestnet:
       case EVMChain.Aurora:
       // case EVMChain.AuroraTestnet:
+      case EVMChain.BisonTestnet:
+      case EVMChain.BitboyTestnet:
         return EVMToken.sUSDT
       default:
         checkNever(toChain)
@@ -310,6 +312,8 @@ export async function fromCorrespondingStacksCurrency(
       // case EVMChain.ArbitrumTestnet:
       case EVMChain.Aurora:
       // case EVMChain.AuroraTestnet:
+      case EVMChain.BisonTestnet:
+      case EVMChain.BitboyTestnet:
         return EVMToken.aBTC
       default:
         checkNever(toChain)

@@ -13,6 +13,8 @@ import {
 } from "viem/chains"
 import {
   ailayer,
+  bisonTestnet,
+  bitboyTestnet,
   bitlayer,
   bsquared,
   coreDaoTestnet,
@@ -111,6 +113,18 @@ export const defaultEvmClients: Record<EVMChain, Client> = {
 
   [EVMChain.Aurora]: createClient({
     chain: aurora,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.BisonTestnet]: createClient({
+    chain: bisonTestnet,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.BitboyTestnet]: createClient({
+    chain: bitboyTestnet,
     transport: http(),
     batch: { multicall: true },
   }),
