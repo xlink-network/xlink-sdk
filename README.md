@@ -59,7 +59,7 @@ The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies
 Note: Users can transfer between different coins/tokens, not just the same token on different blockchains. For example, it's possible to convert BTC to WBTC when moving from Bitcoin to an EVM network.
 
 ### XLink SDK
-The [`XLinkSDK`](https://docs-typedoc.xlink-sdk.pages.dev/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
+The [`XLinkSDK`](https://releases-latest.xlink-sdk.pages.dev/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
 
 ```typescript
 const theSdk = new XLinkSDK();
@@ -67,7 +67,7 @@ const theSdk = new XLinkSDK();
 
 For detailed API documentation, including a full list of available methods and their usage, please refer to:
 
-[SDK API Documentation](https://docs-typedoc.xlink-sdk.pages.dev/classes/XLinkSDK.XLinkSDK)
+[SDK API Documentation](https://releases-latest.xlink-sdk.pages.dev)
 
 ### Use Cases
 
