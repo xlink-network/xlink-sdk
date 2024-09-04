@@ -164,7 +164,7 @@ export const claimTimeLockedAssetsFromEVM = async (
       // add a fallback in case estimate failed
       () =>
         // https://bscscan.com/tx/0x28a81312ca7bc93e7ef07867c9906a41b251ea3ea630b0a4837bdb3066489b32
-        1 * 1e5,
+        1 * 1e6,
     )
   return await input.sendTransaction({
     to: info.timeLockContractAddress,

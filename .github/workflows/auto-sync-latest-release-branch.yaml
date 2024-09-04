@@ -1,0 +1,21 @@
+name: Auto sync latest release branch
+
+on:
+   push:
+     branches:
+       - master
+       - releases/*
+
+jobs:
+  build_and_preview:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Sync git history
+        shell: bash
+        run: ./scripts/syncLatestReleaseBranch.sh
