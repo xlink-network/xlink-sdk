@@ -26,7 +26,7 @@ Ensure you have the following installed:
 ### Installation
 To install the XLink SDK, use the following command:
 ```bash
-pnpm install @xlink-project/xlink-sdk
+pnpm install @xlink-network/xlink-sdk
 ```
 
 ## XLink SDK API
@@ -36,11 +36,11 @@ pnpm install @xlink-project/xlink-sdk
 
 The `KnownChainId` namespace encapsulates types and utility functions to validate blockchain networks supported by the SDK. It ensures that only recognized chain IDs across Bitcoin, EVM-compatible chains, and Stacks are used.
 
-| Namespace| mainnet | testnet |
-| -------- | -------- | -------- |
-| Bitcoin  | `Mainnet`   | `Testnet`     |
-| Stacks   | `Mainnet`   | `Testnet`     |
-| EVM   | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`,  `Merlin`, `AILayer`, `Mode`| `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BsquaredTestnet`, `BOBTestnet`, `BitlayerTestnet`, `LorenzoTestnet`, `MerlinTestnet`, `AILayerTestnet`, `ModeTestnet`     |
+| Namespace | mainnet                                                                                              | testnet                                                                                                                                                           |
+|-----------|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bitcoin   | `Mainnet`                                                                                            | `Testnet`                                                                                                                                                         |
+| Stacks    | `Mainnet`                                                                                            | `Testnet`                                                                                                                                                         |
+| EVM       | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`,  `Merlin`, `AILayer`, `Mode` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BsquaredTestnet`, `BOBTestnet`, `BitlayerTestnet`, `LorenzoTestnet`, `MerlinTestnet`, `AILayerTestnet`, `ModeTestnet` |
 
 #### KnownTokenId
 
@@ -48,19 +48,18 @@ The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies
 
 ##### Namespaces
 
-| Namespace | Token |
-| -------- | -------- |
-| `Bitcoin`   | `BTC`     |
-| `Stacks`   | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX` |
-| `EVM`   | `USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX`|
+| Namespace  | Token                                                                               |
+|------------|-------------------------------------------------------------------------------------|
+| `Bitcoin`  | `BTC`                                                                               |
+| `Stacks`   | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`                       |
+| `EVM`      | `USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX` |
 
 **Future Support**: Support for Runes and BR20 tokens on the Bitcoin network is planned for a future update. 
 
 Note: Users can transfer between different coins/tokens, not just the same token on different blockchains. For example, it's possible to convert BTC to WBTC when moving from Bitcoin to an EVM network.
 
-
 ### XLink SDK
-The `XLinkSDK` object contains the most important functions of this library, all grouped together. To create it:
+The [`XLinkSDK`](/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
 
 ```typescript
 const theSdk = new XLinkSDK();
@@ -68,21 +67,24 @@ const theSdk = new XLinkSDK();
 
 For detailed API documentation, including a full list of available methods and their usage, please refer to:
 
-[Latest version SDK API Documentation](https://releases-latest.xlink-sdk.pages.dev/)
+[SDK API Documentation](https://releases-latest.xlink-sdk.pages.dev)
 
-### USE CASES
+### Use Cases
 
 Create an instance of the SDK with default options
 ```typescript
-import{ XLinkSDK } from '@xlink-project/xlink-sdk/src';
-
+import{ XLinkSDK } from '@xlink-network/xlink-sdk';
 const xlinkSdk = new XLinkSDK();
 ```
+
 1. Bridge from Stacks
 ```typescript
-import { BridgeInfoFromStacksInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeInfoFromStacks';
-import { BridgeFromStacksInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeFromStacks';
-import { KnownChainId, KnownTokenId } from '@xlink-project/xlink-sdk/src/utils/types/knownIds';
+import{ 
+    BridgeInfoFromStacksInput, 
+    BridgeFromStacksInput,
+    KnownChainId,
+    KnownTokenId, 
+} from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({    
@@ -124,9 +126,12 @@ console.log("Transaction ID:", result.txid);
 
 2. Bridge from EVM
 ```typescript
-import { BridgeInfoFromEVMInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeInfoFromEVM';
-import { BridgeFromEVMInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeFromEVM';
-import { KnownChainId, KnownTokenId } from '@xlink-project/xlink-sdk/src/utils/types/knownIds';
+import { 
+    BridgeInfoFromEVMInput,
+    BridgeFromEVMInput,
+    KnownChainId,
+    KnownTokenId,
+} from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
@@ -153,9 +158,12 @@ console.log("Transaction ID:", result.txHash);
 
 3. Bridge from Bitcoin
 ```typescript
-import { BridgeInfoFromBitcoinInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeInfoFromBitcoin';
-import { BridgeFromBitcoinInput } from '@xlink-project/xlink-sdk/src/xlinkSdkUtils/bridgeFromBitcoin';
-import { KnownChainId, KnownTokenId } from '@xlink-project/xlink-sdk/src/utils/types/knownIds';
+import { 
+    BridgeInfoFromBitcoinInput,
+    BridgeFromBitcoinInput,
+    KnownChainId,
+    KnownTokenId,
+} from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
