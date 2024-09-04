@@ -36,11 +36,11 @@ pnpm install @xlink-network/xlink-sdk
 
 The `KnownChainId` namespace encapsulates types and utility functions to validate blockchain networks supported by the SDK. It ensures that only recognized chain IDs across Bitcoin, EVM-compatible chains, and Stacks are used.
 
-| Namespace| mainnet | testnet |
-| -------- | -------- | -------- |
-| Bitcoin  | `Mainnet`   | `Testnet`     |
-| Stacks   | `Mainnet`   | `Testnet`     |
-| EVM   | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`,  `Merlin`, `AILayer`, `Mode`| `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BsquaredTestnet`, `BOBTestnet`, `BitlayerTestnet`, `LorenzoTestnet`, `MerlinTestnet`, `AILayerTestnet`, `ModeTestnet`     |
+| Namespace | mainnet                                                                                              | testnet                                                                                                                                                           |
+|-----------|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Bitcoin   | `Mainnet`                                                                                            | `Testnet`                                                                                                                                                         |
+| Stacks    | `Mainnet`                                                                                            | `Testnet`                                                                                                                                                         |
+| EVM       | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`,  `Merlin`, `AILayer`, `Mode` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BsquaredTestnet`, `BOBTestnet`, `BitlayerTestnet`, `LorenzoTestnet`, `MerlinTestnet`, `AILayerTestnet`, `ModeTestnet` |
 
 #### KnownTokenId
 
@@ -48,18 +48,18 @@ The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies
 
 ##### Namespaces
 
-| Namespace | Token |
-| -------- | -------- |
-| `Bitcoin`   | `BTC`     |
-| `Stacks`   | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX` |
-| `EVM`   | `USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX`|
+| Namespace  | Token                                                                               |
+|------------|-------------------------------------------------------------------------------------|
+| `Bitcoin`  | `BTC`                                                                               |
+| `Stacks`   | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`                       |
+| `EVM`      | `USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX` |
 
 **Future Support**: Support for Runes and BR20 tokens on the Bitcoin network is planned for a future update. 
 
 Note: Users can transfer between different coins/tokens, not just the same token on different blockchains. For example, it's possible to convert BTC to WBTC when moving from Bitcoin to an EVM network.
 
 ### XLink SDK
-The [`XLinkSDK`](https://releases-latest.xlink-sdk.pages.dev/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
+The [`XLinkSDK`](/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
 
 ```typescript
 const theSdk = new XLinkSDK();
@@ -76,6 +76,7 @@ Create an instance of the SDK with default options
 import{ XLinkSDK } from '@xlink-network/xlink-sdk';
 const xlinkSdk = new XLinkSDK();
 ```
+
 1. Bridge from Stacks
 ```typescript
 import{ 
