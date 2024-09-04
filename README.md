@@ -78,9 +78,12 @@ const xlinkSdk = new XLinkSDK();
 ```
 1. Bridge from Stacks
 ```typescript
-import { BridgeInfoFromStacksInput } from '@xlink-network/xlink-sdk/xlinkSdkUtils/bridgeInfoFromStacks';
-import { BridgeFromStacksInput } from '@xlink-network/xlink-sdk/xlinkSdkUtils/bridgeFromStacks';
-import { KnownChainId, KnownTokenId } from '@xlink-network/xlink-sdk/utils/types/knownIds';
+import{ 
+    BridgeInfoFromStacksInput, 
+    BridgeFromStacksInput,
+    KnownChainId,
+    KnownTokenId, 
+} from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({    
@@ -122,9 +125,12 @@ console.log("Transaction ID:", result.txid);
 
 2. Bridge from EVM
 ```typescript
-import { BridgeInfoFromEVMInput } from '@xlink-network/xlink-sdk/xlinkSdkUtils/bridgeInfoFromEVM';
-import { BridgeFromEVMInput } from '@xlink-network/xlink-sdk/xlinkSdkUtils/bridgeFromEVM';
-import { KnownChainId, KnownTokenId } from '@xlink-network/xlink-sdk/utils/types/knownIds';
+import { 
+    BridgeInfoFromEVMInput,
+    BridgeFromEVMInput,
+    KnownChainId,
+    KnownTokenId,
+} from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
@@ -151,9 +157,12 @@ console.log("Transaction ID:", result.txHash);
 
 3. Bridge from Bitcoin
 ```typescript
-import { BridgeInfoFromBitcoinInput } from '@xlink-network/xlink-sdk/xlinkSdkUtils/bridgeInfoFromBitcoin';
-import { BridgeFromBitcoinInput } from '@xlink-network/xlink-sdk/xlinkSdkUtils/bridgeFromBitcoin';
-import { KnownChainId, KnownTokenId } from '@xlink-network/xlink-sdk/utils/types/knownIds';
+import { 
+    BridgeInfoFromBitcoinInput,
+    BridgeFromBitcoinInput,
+    KnownChainId,
+    KnownTokenId,
+} from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
