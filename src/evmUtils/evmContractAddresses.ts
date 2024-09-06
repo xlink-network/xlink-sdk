@@ -199,16 +199,9 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
   // testnet
   [EVMChain.Sepolia]: {
     [EVMEndpointContract.BridgeEndpoint]:
-      "0x4d7d8BA7BC171578367a785f7E1eAd79Dab84825",
-    [EVMToken.WBTC]: "0x9CE827b04cD5f0c20dC1ac5621120204b348B4cD",
-    [EVMToken.ALEX]: "0x564e0DAd09B0e227409A703326698b68C238374b",
-  },
-  [EVMChain.BSCTestnet]: {},
-  [EVMChain.CoreDAOTestnet]: {
-    [EVMEndpointContract.BridgeEndpoint]:
-      "0x78cFEbF19Cfd950A434ec3008eDE746DA45EF096",
-    [EVMToken.aBTC]: "0x391c193a3268aA0A93D76EAc85B88985b5CB92da",
-    [EVMToken.ALEX]: "0xd74aE62e92f0EB0D3DF986387D61f3f09E0f1954",
+      "0x27c2Ad8da9487AD17970a57D32972BD707B700A2",
+    [EVMToken.WBTC]: "0xE1a512f9D89fdDcD2105Df4dB32ede4bc2ade33B",
+    [EVMToken.ALEX]: "0xA1c1f6D111339E26c9Fe61256c4751F539b40bd6",
   },
   [EVMChain.BisonTestnet]: {
     [EVMEndpointContract.BridgeEndpoint]:
