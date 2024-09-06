@@ -203,6 +203,8 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.WBTC]: "0xE1a512f9D89fdDcD2105Df4dB32ede4bc2ade33B",
     [EVMToken.ALEX]: "0xA1c1f6D111339E26c9Fe61256c4751F539b40bd6",
   },
+  [EVMChain.BSCTestnet]: {},
+  [EVMChain.CoreDAOTestnet]: {},
   [EVMChain.BisonTestnet]: {
     [EVMEndpointContract.BridgeEndpoint]:
       "0xf9dFCEDf0D4eCe3c9F7CD2F3C0c70556EfAA1665",
