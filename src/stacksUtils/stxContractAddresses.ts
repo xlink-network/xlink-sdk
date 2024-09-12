@@ -90,4 +90,14 @@ export const stxTokenContractAddresses: Record<
       contractName: "token-wvlialex",
     },
   },
+  [KnownTokenId.Stacks.uBTC]: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: "SP673Z4BPB4R73359K9HE55F2X91V5BJTN5SXZ5T",
+      contractName: "token-ubtc",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+      contractName: "token-ubtc",
+    },
+  },
 }
