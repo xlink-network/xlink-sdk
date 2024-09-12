@@ -198,6 +198,8 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_LUNR,
         ONCHAIN_CONFIG_KEY.TOKEN_SKO,
         ONCHAIN_CONFIG_KEY.TOKEN_SUSDT,
+        ONCHAIN_CONFIG_KEY.TOKEN_UBTC,
+        ONCHAIN_CONFIG_KEY.TOKEN_WUBTC,
       ],
     ],
   }).catch(err => {
@@ -228,6 +230,8 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.LUNR]: maybeAddress(configs[9]),
     [EVMToken.SKO]: maybeAddress(configs[10]),
     [EVMToken.sUSDT]: maybeAddress(configs[11]),
+    [EVMToken.uBTC]: maybeAddress(configs[12]),
+    [EVMToken.wuBTC]: maybeAddress(configs[13]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -237,10 +241,11 @@ function maybeAddress(value: string | null): Address | undefined {
   if (value === zeroAddress) return undefined
   return value
 }
-/**
- * https://t.me/c/1599543687/57298
- */
+
 enum ONCHAIN_CONFIG_KEY {
+  /**
+   * https://t.me/c/1599543687/57298
+   */
   ENDPOINT = "ENDPOINT",
   REGISTRY = "REGISTRY",
   TOKEN_ABTC = "TOKEN_ABTC",
@@ -258,4 +263,8 @@ enum ONCHAIN_CONFIG_KEY {
   MIGRATE_BOB = "MIGRATE_BOB",
   MIGRATE_BOB_L2 = "MIGRATE_BOB_L2",
   MIGRATE_BOB_L2_S = "MIGRATE_BOB_L2_S",
+
+  // https://github.com/xlink-network/xlink/pull/299/commits/22b23c9ff3ea65eeb7c632db4255afe803f97fef#diff-8302902f9863ee3c7928a0fa6eb6ca22edd10f5553708459cdd072c1ea3ef696
+  TOKEN_UBTC = "TOKEN_UBTC",
+  TOKEN_WUBTC = "TOKEN_WUBTC",
 }

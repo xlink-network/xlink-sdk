@@ -323,6 +323,36 @@ export async function fromCorrespondingStacksCurrency(
   assertExclude(restEVMTokenPossibilities, EVMToken.WBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.BTCB)
 
+  if (stacksToken === StacksToken.uBTC) {
+    switch (toChain) {
+      case EVMChain.Bsquared:
+        return EVMToken.uBTC
+      case EVMChain.Ethereum:
+      case EVMChain.Sepolia:
+      case EVMChain.BSC:
+      case EVMChain.BSCTestnet:
+      case EVMChain.CoreDAO:
+      case EVMChain.CoreDAOTestnet:
+      case EVMChain.BOB:
+      case EVMChain.Bitlayer:
+      case EVMChain.Lorenzo:
+      case EVMChain.Merlin:
+      case EVMChain.AILayer:
+      case EVMChain.Mode:
+      case EVMChain.XLayer:
+      case EVMChain.Arbitrum:
+      case EVMChain.Aurora:
+      case EVMChain.BisonTestnet:
+      case EVMChain.BitboyTestnet:
+        return EVMToken.wuBTC
+      default:
+        checkNever(toChain)
+    }
+  }
+  assertExclude(restEVMTokenPossibilities, EVMToken.uBTC)
+  assertExclude(restEVMTokenPossibilities, EVMToken.wuBTC)
+
+  checkNever(restEVMTokenPossibilities)
   checkNever(restEVMTokenPossibilities)
   return undefined
 }
@@ -350,6 +380,9 @@ export async function toCorrespondingStacksCurrency(
     case EVMToken.WBTC:
     case EVMToken.aBTC:
       return StacksToken.aBTC
+    case EVMToken.uBTC:
+    case EVMToken.wuBTC:
+      return StacksToken.uBTC
     default:
       checkNever(evmToken)
       return

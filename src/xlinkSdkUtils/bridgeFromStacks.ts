@@ -48,6 +48,8 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
         [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
         [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
+        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
+        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
       ],
     ),
 

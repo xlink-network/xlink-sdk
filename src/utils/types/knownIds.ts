@@ -50,6 +50,8 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("evm-vlistx")
     /** Represents the vLiALEX token ID on EVM-compatible blockchains. */
     export const vLiALEX = tokenId("evm-vlialex")
+    export const uBTC = tokenId("evm-ubtc")
+    export const wuBTC = tokenId("evm-wubtc")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
@@ -73,6 +75,7 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("stx-vlistx")
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
     export const vLiALEX = tokenId("stx-vlialex")
+    export const uBTC = tokenId("stx-ubtc")
   }
   /** This type includes all known tokens on the Stacks blockchain. */
   export type StacksToken = (typeof _allKnownStacksTokens)[number]

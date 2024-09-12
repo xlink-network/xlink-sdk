@@ -78,6 +78,8 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.vLiSTX]: "0x70727228DB8C7491bF0aD42C180dbf8D95B257e2",
     // https://github.com/xlink-network/xlink/blob/87aaca8ef74dea59a322eb31c92311d2aa25d6bb/packages/libs/commons/src/lib/utils/config.ts#L216
     [EVMToken.vLiALEX]: "0xcd5ED0B0b1e107D331833715932B4a596bFbA378",
+    // https://t.me/c/1599543687/59542
+    [EVMToken.uBTC]: "0x796e4D53067FF374B89b2Ac101ce0c1f72ccaAc2",
   },
   // https://t.me/c/1599543687/54380
   [EVMChain.BOB]: {
@@ -133,6 +135,8 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMToken.ALEX]: "0x1c5aC43f0b30462C5dDEB1A2152E639BbDFe38eA",
     [EVMToken.vLiSTX]: "0x4CeFE0F8FcEa50c982AAbF766e67F2B0e7845542",
     [EVMToken.vLiALEX]: "0x822278fb6ece06667AE5207D0af12a7F60CDf13A",
+    // https://t.me/c/1599543687/59542
+    [EVMToken.wuBTC]: "0xd0d1b59CA62cE194E882455Fd36632d6277b192a",
   },
   // https://t.me/c/1599543687/57439
   [EVMChain.AILayer]: {
