@@ -7,12 +7,14 @@ import {
   bscTestnet,
   coreDao,
   mainnet,
+  manta,
   merlin,
   mode,
   sepolia,
 } from "viem/chains"
 import {
   ailayer,
+  berachainTestnet,
   bisonTestnet,
   bitboyTestnet,
   bitlayer,
@@ -125,6 +127,18 @@ export const defaultEvmClients: Record<EVMChain, Client> = {
 
   [EVMChain.BitboyTestnet]: createClient({
     chain: bitboyTestnet,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.Manta]: createClient({
+    chain: manta,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.BeraTestnet]: createClient({
+    chain: berachainTestnet,
     transport: http(),
     batch: { multicall: true },
   }),

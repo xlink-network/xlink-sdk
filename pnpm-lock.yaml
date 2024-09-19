@@ -41,8 +41,8 @@ importers:
         specifier: ^7.5.0
         version: 7.17.0(eslint@8.57.0)(typescript@5.5.4)
       big.js:
-        specifier: ^6.2.1
-        version: 6.2.1
+        specifier: ^6.2.2
+        version: 6.2.2
       eslint:
         specifier: ^8.57.0
         version: 8.57.0
@@ -56,7 +56,7 @@ importers:
         specifier: ^3.2.5
         version: 3.3.3
       tsup:
-        specifier: ^8.0.2
+        specifier: ^8.2.3
         version: 8.2.3(postcss@8.4.40)(tsx@4.16.2)(typescript@5.5.4)(yaml@2.5.0)
       tsx:
         specifier: ^4.7.2
@@ -819,8 +819,8 @@ packages:
   base-x@4.0.0:
     resolution: {integrity: sha512-FuwxlW4H5kh37X/oW59pwTzzTKRzfrrQwhmyspRM7swOEZcHtDZSCt45U6oKgtuFE+WYPblePMVIPR4RZrh/hw==}
 
-  big.js@6.2.1:
-    resolution: {integrity: sha512-bCtHMwL9LeDIozFn+oNhhFoq+yQ3BNdnsLSASUxLciOb1vgvpHsIO1dsENiGMgbb4SkP5TrzWzRiLddn8ahVOQ==}
+  big.js@6.2.2:
+    resolution: {integrity: sha512-y/ie+Faknx7sZA5MfGA2xKlu0GDv8RWrXGsmlteyJQ2lvoKv9GBK/fpRMc2qlSoBAgNxrixICFCBefIq8WCQpQ==}
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -2511,7 +2511,7 @@ snapshots:
 
   base-x@4.0.0: {}
 
-  big.js@6.2.1: {}
+  big.js@6.2.2: {}
 
   binary-extensions@2.3.0: {}
 
