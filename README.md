@@ -56,8 +56,6 @@ The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies
 
 **Future Support**: Support for Runes and BR20 tokens on the Bitcoin network is planned for a future update. 
 
-Note: Users can transfer between different coins/tokens, not just the same token on different blockchains. For example, it's possible to convert BTC to WBTC when moving from Bitcoin to an EVM network.
-
 ### XLink SDK
 The [`XLinkSDK`](/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
 
