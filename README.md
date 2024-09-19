@@ -48,11 +48,11 @@ The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies
 
 ##### Namespaces
 
-| Namespace  | Token                                                                               |
-|------------|-------------------------------------------------------------------------------------|
-| `Bitcoin`  | `BTC`                                                                               |
-| `Stacks`   | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`                       |
-| `EVM`      | `USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX` |
+| Namespace  | Token                                                                                                |
+|------------|------------------------------------------------------------------------------------------------------|
+| `Bitcoin`  | `BTC`                                                                                                |
+| `Stacks`   | `ALEX`, `aBTC`, `sLUNR`, `sSKO`, `sUSDT`, `uBTC`, `vLiALEX`, `vLiSTX`                                |    
+| `EVM`      | `ALEX`, `aBTC`, `BTCB`, `LUNR`, `SKO`, `sUSDT`, `uBTC`, `USDT`, `vLiALEX`, `vLiSTX`, `WBTC`, `wuBTC` |
 
 **Future Support**: Support for Runes and BR20 tokens on the Bitcoin network is planned for a future update. 
 
