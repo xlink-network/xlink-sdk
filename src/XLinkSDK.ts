@@ -106,11 +106,6 @@ export interface XLinkSDKOptions {
     /**
      * @default true
      */
-    enableMulticall?: boolean
-
-    /**
-     * @default true
-     */
     cacheOnChainConfig?: boolean
 
     /**
@@ -122,7 +117,6 @@ export interface XLinkSDKOptions {
 
 let defaultConfig: XLinkSDKOptions = {
   evm: {
-    enableMulticall: true,
     cacheOnChainConfig: true,
   },
 }
@@ -140,8 +134,6 @@ export class XLinkSDK {
 
     this.sdkContext = {
       evm: {
-        enableMulticall:
-          options.evm?.enableMulticall ?? defaultConfig.evm?.enableMulticall,
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
         viemClients: {
           ...defaultEvmClients,
