@@ -1,15 +1,14 @@
 import { encodeFunctionData, toHex } from "viem"
+import { estimateGas } from "viem/actions"
 import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
-import {
-  evmContractAddresses,
-  EVMEndpointContract,
-} from "../evmUtils/evmContractAddresses"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
 import {
+  getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberToSolidityContractNumber,
 } from "../evmUtils/xlinkContractHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
+import { BigNumber } from "../utils/BigNumber"
 import {
   buildSupportedRoutes,
   defineRoute,
@@ -21,9 +20,9 @@ import {
 import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
+  _allKnownEVMMainnetChains,
   KnownChainId,
   KnownTokenId,
-  _allKnownEVMMainnetChains,
 } from "../utils/types/knownIds"
 import {
   ChainId,
@@ -33,8 +32,6 @@ import {
   toSDKNumberOrUndefined,
 } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { estimateGas } from "viem/actions"
-import { BigNumber } from "../utils/BigNumber"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -212,8 +209,8 @@ async function bridgeFromEVM_toStacks(
     toToken: KnownTokenId.StacksToken
   },
 ): Promise<BridgeFromEVMOutput> {
-  const bridgeEndpointAddress =
-    evmContractAddresses[info.fromChain][EVMEndpointContract.BridgeEndpoint]
+  const { bridgeEndpointContractAddress: bridgeEndpointAddress } =
+    (await getEVMContractCallInfo(ctx, info.fromChain)) ?? {}
   const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,
@@ -269,8 +266,8 @@ async function bridgeFromEVM_toBitcoinOrEVM(
     toToken: KnownTokenId.BitcoinToken | KnownTokenId.EVMToken
   },
 ): Promise<BridgeFromEVMOutput> {
-  const bridgeEndpointAddress =
-    evmContractAddresses[info.fromChain][EVMEndpointContract.BridgeEndpoint]
+  const { bridgeEndpointContractAddress: bridgeEndpointAddress } =
+    (await getEVMContractCallInfo(ctx, info.fromChain)) ?? {}
   const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,
