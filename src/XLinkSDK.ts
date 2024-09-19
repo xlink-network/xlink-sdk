@@ -218,7 +218,7 @@ export class XLinkSDK {
    * - `toToken: TokenId` - The token expected on the destination chain.
    * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
-   * - `sendTransaction: // TODO.
+   * - `sendTransaction` - // Implementation for sending transaction from Stacks mainnet.
    *
    * @returns A promise that resolves with the transaction ID (`txid`) of the bridging operation.
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
@@ -326,7 +326,7 @@ export class XLinkSDK {
    * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `toAddressScriptPubKey?: Uint8Array` - The script public key for the `toAddress`, required when the destination is a Bitcoin chain.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
-   * - `sendTransaction: // TODO.
+   * - `sendTransaction` - // Implementation for sending transaction from EVM chain.
    *
    * @returns A promise that resolves with the transaction hash (`txHash`) of the bridging operation.
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
@@ -366,7 +366,7 @@ export class XLinkSDK {
    * @param input - An object containing the input parameters required for claiming time-locked assets:
    * - `chain: KnownChainId.EVMChain` - The ID of the EVM-compatible blockchain where the assets are locked.
    * - `lockedAssetIds: string[]` - An array of IDs representing the locked assets to be claimed.
-   * - `sendTransaction: // TODO.
+   * - `sendTransaction` - // Implementation for sending transaction from EVM chain.
    *
    * @returns A promise that resolves with the transaction hash (`txHash`) of the claiming operation, or `undefined` if the operation fails.
    * @throws UnsupportedChainError - If the provided EVM chain is unsupported or invalid.
@@ -421,7 +421,7 @@ export class XLinkSDK {
    * - `toAddress: string` - The destination address on the target blockchain.
    * - `amount: SDKNumber` - The amount of tokens to be transferred.
    * - `networkFeeRate: bigint` - The fee rate for the Bitcoin network.
-   * - `reselectSpendableUTXOs: // TODO.
+   * - `reselectSpendableUTXOs` - // Implementation for reselect UTXOs.
    *
    * @returns A promise that resolves with an object containing the estimated transaction details:
    * - `fee: SDKNumber` - The estimated transaction fee.
