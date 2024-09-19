@@ -65,6 +65,7 @@ export interface BridgeFromStacksInput {
   toChain: ChainId
   fromToken: TokenId
   toToken: TokenId
+  fromAddress: string
   toAddress: string
   amount: SDKNumber
   sendTransaction: (tx: ContractCallOptions) => Promise<{

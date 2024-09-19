@@ -127,8 +127,10 @@ export async function getTimeLockedAssetsFromEVM(
 
 export interface ClaimTimeLockedAssetsInput {
   chain: KnownChainId.EVMChain
+  walletAddress: EVMAddress
   lockedAssetIds: string[]
   sendTransaction: (tx: {
+    from: EVMAddress
     to: EVMAddress
     data: Uint8Array
     recommendedGasLimit: SDKNumber
@@ -156,10 +158,11 @@ export const claimTimeLockedAssetsFromEVM = async (
     ],
   })
   const estimated = await estimateGas(info.client, {
+    account: input.walletAddress,
     to: info.timeLockContractAddress,
     data: functionData,
   })
-    .then(n => BigNumber.mul(n, 1.2))
+    .then(n => BigNumber.round({ precision: 0 }, BigNumber.mul(n, 1.2)))
     .catch(
       // add a fallback in case estimate failed
       () =>
@@ -167,6 +170,7 @@ export const claimTimeLockedAssetsFromEVM = async (
         1 * 1e6,
     )
   return await input.sendTransaction({
+    from: input.walletAddress,
     to: info.timeLockContractAddress,
     data: decodeHex(functionData),
     recommendedGasLimit: toSDKNumberOrUndefined(estimated),

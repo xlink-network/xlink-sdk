@@ -115,6 +115,7 @@ export type BridgeFromEVMInput = {
   toChain: ChainId
   fromToken: TokenId
   toToken: TokenId
+  fromAddress: EVMAddress
   toAddress: string
   /**
    * **Required** when `toChain` is one of bitcoin chains
@@ -122,6 +123,7 @@ export type BridgeFromEVMInput = {
   toAddressScriptPubKey?: Uint8Array
   amount: SDKNumber
   sendTransaction: (tx: {
+    from: EVMAddress
     to: EVMAddress
     data: Uint8Array
     recommendedGasLimit: SDKNumber
@@ -236,16 +238,18 @@ async function bridgeFromEVM_toStacks(
   })
 
   const estimated = await estimateGas(fromTokenContractInfo.client, {
+    account: info.fromAddress,
     to: bridgeEndpointAddress,
     data: functionData,
   })
-    .then(n => BigNumber.mul(n, 1.2))
+    .then(n => BigNumber.round({ precision: 0 }, BigNumber.mul(n, 1.2)))
     .catch(
       // add a fallback in case estimate failed
       () => 5 * 1e5,
     )
 
   return await info.sendTransaction({
+    from: info.fromAddress,
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
     recommendedGasLimit: toSDKNumberOrUndefined(estimated),
@@ -312,18 +316,20 @@ async function bridgeFromEVM_toBitcoinOrEVM(
   })
 
   const estimated = await estimateGas(fromTokenContractInfo.client, {
+    account: info.fromAddress,
     to: bridgeEndpointAddress,
     data: functionData,
   })
-    .then(n => BigNumber.mul(n, 1.2))
+    .then(n => BigNumber.round({ precision: 0 }, BigNumber.mul(n, 1.2)))
     .catch(
       // add a fallback in case estimate failed
       () =>
         // https://mainnet-explorer.ailayer.xyz/tx/0xa62dd8c3a6a3fe2dbc10b0847dcc0cae610c348a77b163134b87eb9563fd5f62
-        2 * 1e5,
+        5 * 1e5,
     )
 
   return await info.sendTransaction({
+    from: info.fromAddress,
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
     recommendedGasLimit: toSDKNumberOrUndefined(estimated),

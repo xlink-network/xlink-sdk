@@ -208,6 +208,7 @@ export class XLinkSDK {
    * - `toChain: ChainId` - The ID of the destination blockchain (Bitcoin, EVM, etc.).
    * - `fromToken: TokenId` - The token being transferred from the source chain.
    * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The sender's address on the source chain.
    * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
    * - `sendTransaction` - // Implementation for sending transaction from Stacks mainnet.
@@ -315,6 +316,7 @@ export class XLinkSDK {
    * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, Bitcoin, or another EVM-compatible chain).
    * - `fromToken: TokenId` - The token being transferred from the EVM-compatible blockchain.
    * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The sender's address on the source chain.
    * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `toAddressScriptPubKey?: Uint8Array` - The script public key for the `toAddress`, required when the destination is a Bitcoin chain.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
