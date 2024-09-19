@@ -242,9 +242,7 @@ async function bridgeFromEVM_toStacks(
     .then(n => BigNumber.mul(n, 1.2))
     .catch(
       // add a fallback in case estimate failed
-      () =>
-        // https://mainnet-explorer.ailayer.xyz/tx/0xa62dd8c3a6a3fe2dbc10b0847dcc0cae610c348a77b163134b87eb9563fd5f62
-        2 * 1e5,
+      () => 5 * 1e5,
     )
 
   return await info.sendTransaction({
