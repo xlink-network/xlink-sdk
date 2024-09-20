@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { BigNumber, BigNumberSource } from "../BigNumber"
+import { BigNumber, BigNumberSource } from "./BigNumber"
 
 describe("BigNumber", () => {
   describe("isEven", () => {
