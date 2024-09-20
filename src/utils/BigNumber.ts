@@ -22,12 +22,16 @@ export namespace BigNumber {
   export const roundUp = "ROUND_UP"
   export const roundDown = "ROUND_DOWN"
   export const roundHalf = "ROUND_HALF"
+  export const roundHalfEven = "ROUND_HALF_EVEN"
   export type RoundingMode =
     | typeof roundUp
     | typeof roundDown
     | typeof roundHalf
+    | typeof roundHalfEven
 
-  const translateRoundingMode = (roundingMode: RoundingMode): dn.Rounding => {
+  const translateToDnumRoundingMode = (
+    roundingMode: typeof roundUp | typeof roundDown | typeof roundHalf,
+  ): dn.Rounding => {
     switch (roundingMode) {
       case roundUp:
         return "ROUND_UP"
@@ -59,6 +63,51 @@ export namespace BigNumber {
     return fromImpl(toImpl(value as any))
   }
 
+  export const isEven = (value: BigNumberSource): boolean => {
+    const dnum = toImpl(value)
+    return dnum[0] % 2n === 0n
+  }
+
+  export const round = curry2(
+    (
+      options: {
+        precision?: number
+        roundingMode?: RoundingMode
+      },
+      value: BigNumberSource,
+    ): BigNumber => {
+      const precision = options.precision ?? 0
+      const roundingMode = options.roundingMode ?? defaultRoundingMode
+
+      if (roundingMode === roundHalfEven) {
+        const dnum = toImpl(value)
+        const intLength = getIntegerLength(value)
+        const finalLength = intLength + precision
+
+        const numStr = String(dnum[0])
+        const prevNum = numStr[finalLength - 1]
+        const currNum = numStr[finalLength]
+
+        // prettier-ignore
+        const roundingMode: dn.Rounding =
+          currNum !== "5" ? "ROUND_HALF" :
+          Number(prevNum) % 2 === 0 ? "ROUND_DOWN" : "ROUND_UP"
+
+        return fromImpl(
+          dn.setDecimals(toImpl(value), precision, {
+            rounding: roundingMode,
+          }),
+        )
+      }
+
+      return fromImpl(
+        dn.setDecimals(toImpl(value), precision, {
+          rounding: translateToDnumRoundingMode(roundingMode),
+        }),
+      )
+    },
+  )
+
   export const toString = (value: BigNumberSource): string => {
     return dn.toString(toImpl(value))
   }
@@ -75,13 +124,7 @@ export namespace BigNumber {
       value: BigNumberSource,
     ): bigint => {
       return BigInt(
-        toFixed(
-          {
-            precision: 0,
-            roundingMode: options.roundingMode ?? defaultRoundingMode,
-          },
-          toImpl(value),
-        ),
+        toFixed({ precision: 0, roundingMode: options.roundingMode }, value),
       )
     },
   )
@@ -94,12 +137,7 @@ export namespace BigNumber {
       },
       value: BigNumberSource,
     ): string => {
-      return dn.toString(toImpl(value), {
-        digits: options.precision,
-        decimalsRounding: translateRoundingMode(
-          options.roundingMode ?? defaultRoundingMode,
-        ),
-      })
+      return toString(round(options, value))
     },
   )
 
@@ -146,14 +184,25 @@ export namespace BigNumber {
   )
 
   export const getPrecision = (value: BigNumberSource): number => {
-    const dnum = toImpl(value)
-    return String(dnum[1]).length
+    return toImpl(value)[1]
   }
 
   export const getIntegerLength = (value: BigNumberSource): number => {
     const dnum = toImpl(value)
-    return String(dnum[0]).length
+    return String(dnum[0]).length - dnum[1]
   }
+
+  export const getDecimalPart = curry2(
+    (
+      options: { precision: number },
+      value: BigNumberSource,
+    ): undefined | string => {
+      const dnum = toImpl(value)
+      const decimalLength = getPrecision(value)
+      const decimalPart = String(dnum[0]).slice(-decimalLength)
+      return decimalPart.slice(0, options.precision)
+    },
+  )
 
   export const leftMoveDecimals = curry2(
     (distance: number, value: BigNumberSource): BigNumber =>
@@ -177,28 +226,6 @@ export namespace BigNumber {
 
       // distance === 0
       return from(value)
-    },
-  )
-
-  export const getDecimalPart = curry2(
-    (
-      options: { precision: number },
-      value: BigNumberSource,
-    ): undefined | string => {
-      /**
-       * `toString` will return `"1e-8"` in some case, so we choose `toFixed` here
-       */
-      const formatted = toFixed(
-        {
-          precision: Math.min(getPrecision(value), options.precision),
-          roundingMode: roundDown,
-        },
-        value,
-      )
-
-      const [, decimals] = formatted.split(".")
-      if (decimals == null) return undefined
-      return decimals
     },
   )
 
@@ -250,25 +277,6 @@ export namespace BigNumber {
 
     return fromImpl(res)
   })
-
-  export const round = curry2(
-    (
-      options: {
-        precision?: number
-        roundingMode?: RoundingMode
-      },
-      value: BigNumberSource,
-    ): BigNumber => {
-      return fromImpl(
-        dn.round(toImpl(value), {
-          decimals: options.precision,
-          rounding: translateRoundingMode(
-            options.roundingMode ?? defaultRoundingMode,
-          ),
-        }),
-      )
-    },
-  )
 
   export const ascend = curry2(
     (a: BigNumberSource, b: BigNumberSource): -1 | 0 | 1 =>
