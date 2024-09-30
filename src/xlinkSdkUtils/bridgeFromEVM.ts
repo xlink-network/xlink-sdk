@@ -1,4 +1,4 @@
-import { encodeFunctionData, parseAbi, toHex, zeroAddress } from "viem"
+import { encodeFunctionData, parseAbi, toHex } from "viem"
 import { estimateGas } from "viem/actions"
 import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
@@ -204,8 +204,9 @@ export async function bridgeFromEVM(
 }
 
 const sendMessageAbi = parseAbi([
-  "function cross(uint256,address,address)",
-  "function wrap(string to)",
+  "function cross(uint256 destChainId, address destToken, address destAddress) pure returns (uint256)",
+  "function wrap(string to) pure returns (uint256)",
+  "function transferToBTC(string to) pure returns (uint256)",
 ])
 
 async function bridgeFromEVM_toStacks(
@@ -315,12 +316,8 @@ async function bridgeFromEVM_toBitcoin(
 
   const message = await encodeFunctionData({
     abi: sendMessageAbi,
-    functionName: "cross",
-    args: [
-      contractAssignedChainIdFromKnownChain(info.toChain),
-      zeroAddress,
-      toAddressHex,
-    ],
+    functionName: "transferToBTC",
+    args: [toAddressHex],
   })
   const functionData = await encodeFunctionData({
     abi: BridgeEndpointAbi,
