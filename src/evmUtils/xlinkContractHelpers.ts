@@ -8,7 +8,7 @@ import {
 } from "../utils/types/knownIds"
 import { EVMAddress } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
-import { bridgeConfigAbi } from "./contractAbi/bridgeConfig"
+import { BridgeConfigAbi } from "./contractAbi/bridgeConfig"
 import {
   EVMEndpointContract,
   EVMOnChainAddresses,
@@ -112,7 +112,7 @@ export async function getEVMToken(
   )
 }
 
-async function getAllAddresses(
+export async function getAllAddresses(
   sdkContext: SDKGlobalContext,
   chainId: KnownChainId.EVMChain,
 ): Promise<
@@ -126,6 +126,8 @@ async function getAllAddresses(
   const client = sdkContext.evm.viemClients[chainId]
   const localAddresses = evmContractAddresses[chainId]
   const configContractAddress = localAddresses[EVMEndpointContract.BridgeConfig]
+
+  if (client == null) return
 
   let onChainAddresses: undefined | EVMOnChainAddresses
   if (configContractAddress != null) {
@@ -147,7 +149,7 @@ const getOnChainConfigs = async (
   sdkContext: SDKGlobalContext,
   chain: KnownChainId.EVMChain,
   configContractAddress: Address,
-): Promise<EVMOnChainAddresses> => {
+): Promise<undefined | EVMOnChainAddresses> => {
   const cache = sdkContext.evm.onChainConfigCache
   const cacheKey = `${chain}:${configContractAddress}`
 
@@ -157,6 +159,8 @@ const getOnChainConfigs = async (
   }
 
   const client = sdkContext.evm.viemClients[chain]
+  if (client == null) return
+
   const promise = _getOnChainConfigsImpl(
     client,
     chain,
@@ -181,7 +185,7 @@ const _getOnChainConfigsImpl = async (
   configContractAddress: Address,
 ): Promise<EVMOnChainAddresses> => {
   const configs = await readContract(client, {
-    abi: bridgeConfigAbi,
+    abi: BridgeConfigAbi,
     address: configContractAddress,
     functionName: "getConfigs",
     args: [

@@ -1,7 +1,7 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
-import pMemoize from "./pMemoize"
+import { pMemoize } from "./pMemoize"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
 export interface DefinedRoute {
@@ -11,52 +11,65 @@ export interface DefinedRoute {
   toToken: TokenId
 }
 
+export type KnownRoute_FromStacks_ToBitcoin = {
+  fromChain: KnownChainId.StacksChain
+  toChain: KnownChainId.BitcoinChain
+  fromToken: KnownTokenId.StacksToken
+  toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromStacks_ToEVM = {
+  fromChain: KnownChainId.StacksChain
+  toChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.StacksToken
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromStacks =
+  | KnownRoute_FromStacks_ToBitcoin
+  | KnownRoute_FromStacks_ToEVM
+
+export type KnownRoute_FromBitcoin_ToStacks = {
+  fromChain: KnownChainId.BitcoinChain
+  toChain: KnownChainId.StacksChain
+  fromToken: KnownTokenId.BitcoinToken
+  toToken: KnownTokenId.StacksToken
+}
+export type KnownRoute_FromBitcoin_ToEVM = {
+  fromChain: KnownChainId.BitcoinChain
+  toChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.BitcoinToken
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromBitcoin =
+  | KnownRoute_FromBitcoin_ToStacks
+  | KnownRoute_FromBitcoin_ToEVM
+
+export type KnownRoute_FromEVM_ToStacks = {
+  fromChain: KnownChainId.EVMChain
+  toChain: KnownChainId.StacksChain
+  fromToken: KnownTokenId.EVMToken
+  toToken: KnownTokenId.StacksToken
+}
+export type KnownRoute_FromEVM_ToBitcoin = {
+  fromChain: KnownChainId.EVMChain
+  toChain: KnownChainId.BitcoinChain
+  fromToken: KnownTokenId.EVMToken
+  toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromEVM_ToEVM = {
+  fromChain: KnownChainId.EVMChain
+  toChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.EVMToken
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromEVM =
+  | KnownRoute_FromEVM_ToStacks
+  | KnownRoute_FromEVM_ToBitcoin
+  | KnownRoute_FromEVM_ToEVM
+
 export type KnownRoute =
-  // from Stacks
-  | {
-      fromChain: KnownChainId.StacksChain
-      toChain: KnownChainId.BitcoinChain
-      fromToken: KnownTokenId.StacksToken
-      toToken: KnownTokenId.BitcoinToken
-    }
-  | {
-      fromChain: KnownChainId.StacksChain
-      toChain: KnownChainId.EVMChain
-      fromToken: KnownTokenId.StacksToken
-      toToken: KnownTokenId.EVMToken
-    }
-  // from Bitcoin
-  | {
-      fromChain: KnownChainId.BitcoinChain
-      toChain: KnownChainId.StacksChain
-      fromToken: KnownTokenId.BitcoinToken
-      toToken: KnownTokenId.StacksToken
-    }
-  | {
-      fromChain: KnownChainId.BitcoinChain
-      toChain: KnownChainId.EVMChain
-      fromToken: KnownTokenId.BitcoinToken
-      toToken: KnownTokenId.EVMToken
-    }
-  // from EVM
-  | {
-      fromChain: KnownChainId.EVMChain
-      toChain: KnownChainId.BitcoinChain
-      fromToken: KnownTokenId.EVMToken
-      toToken: KnownTokenId.BitcoinToken
-    }
-  | {
-      fromChain: KnownChainId.EVMChain
-      toChain: KnownChainId.StacksChain
-      fromToken: KnownTokenId.EVMToken
-      toToken: KnownTokenId.StacksToken
-    }
-  | {
-      fromChain: KnownChainId.EVMChain
-      toChain: KnownChainId.EVMChain
-      fromToken: KnownTokenId.EVMToken
-      toToken: KnownTokenId.EVMToken
-    }
+  | KnownRoute_FromStacks
+  | KnownRoute_FromBitcoin
+  | KnownRoute_FromEVM
 
 export function defineRoute(
   chainPairs: [fromChains: ChainId[], toChains: ChainId[]],

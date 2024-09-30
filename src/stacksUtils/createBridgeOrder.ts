@@ -5,8 +5,15 @@ import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMappin
 import { hasLength } from "../utils/arrayHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId } from "../utils/types/knownIds"
-import { executeReadonlyCallXLINK } from "./xlinkContractHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
+import {
+  executeReadonlyCallXLINK,
+  getStacksTokenContractInfo,
+} from "./xlinkContractHelpers"
+import { toCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
+import { getTerminatingStacksTokenContractAddress } from "./stxContractAddresses"
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
+import { c32addressDecode } from "c32check"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -26,11 +33,13 @@ export async function createBridgeOrder_BitcoinToStacks(
     network: StacksNetwork
   },
   info: {
+    targetToken: KnownTokenId.StacksToken
+    fromBitcoinScriptPubKey: Uint8Array
     receiverAddr: string
     swapRoute: BridgeSwapRoute_FromBitcoin
     swapSlippedAmount?: bigint
   },
-): Promise<{ data: Uint8Array }> {
+): Promise<undefined | { data: Uint8Array }> {
   let data: undefined | Uint8Array
 
   const { swapRoute, receiverAddr /*, swapSlippedAmount = 0n */ } = info
@@ -43,55 +52,33 @@ export async function createBridgeOrder_BitcoinToStacks(
       })) satisfies CallReadOnlyFunctionFn,
   }
 
+  const targetTokenContractInfo = getStacksTokenContractInfo(
+    contractCallInfo.network.isMainnet()
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    info.targetToken,
+  )
+  if (targetTokenContractInfo == null) {
+    return undefined
+  }
+
+  const toStacksAddressParsed = c32addressDecode(receiverAddr)
+
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
-      "create-order-0-or-fail",
-      { order: receiverAddr },
+      "btc-peg-in-endpoint-v2-03",
+      "create-order-cross-or-fail",
+      {
+        order: {
+          from: info.fromBitcoinScriptPubKey,
+          to: decodeHex(toStacksAddressParsed[1]),
+          "chain-id": undefined,
+          token: `${targetTokenContractInfo.deployerAddress}.${targetTokenContractInfo.contractName}`,
+          "token-out": `${targetTokenContractInfo.deployerAddress}.${targetTokenContractInfo.contractName}`,
+        },
+      },
       executeOptions,
     ).then(unwrapResponse)
-    // } else if (swapRoute.length === 1) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-peg-in-endpoint-v2-01",
-    //     "create-order-1-or-fail",
-    //     {
-    //       order: {
-    //         "pool-id": swapRoute[0].poolId,
-    //         "min-dy": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 2) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-peg-in-endpoint-v2-01",
-    //     "create-order-2-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "min-dz": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 3) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-bridge-endpoint-v1-11",
-    //     "create-order-3-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "pool3-id": swapRoute[2].poolId,
-    //         "min-dw": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
   } else {
     checkNever(swapRoute)
   }
@@ -106,12 +93,19 @@ export async function createBridgeOrder_BitcoinToEVM(
   },
   info: {
     targetChain: KnownChainId.EVMChain
+    targetToken: KnownTokenId.EVMToken
     fromBitcoinScriptPubKey: Uint8Array
     receiverAddr: string
     swapRoute: BridgeSwapRoute_FromBitcoin
     swapSlippedAmount?: bigint
   },
-): Promise<{ data: Uint8Array }> {
+): Promise<
+  | undefined
+  | {
+      terminatingStacksToken: StacksContractAddress
+      data: Uint8Array
+    }
+> {
   let data: undefined | Uint8Array
 
   const { swapRoute, receiverAddr /*, swapSlippedAmount = 0n */ } = info
@@ -126,64 +120,54 @@ export async function createBridgeOrder_BitcoinToEVM(
 
   const targetChainId = contractAssignedChainIdFromKnownChain(info.targetChain)
 
+  const intermediateFromStacksToken = await toCorrespondingStacksCurrency(
+    info.targetToken,
+  )
+  if (intermediateFromStacksToken == null) return undefined
+  const intermediateFromStacksTokenAddress = getStacksTokenContractInfo(
+    contractCallInfo.network.isMainnet()
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    intermediateFromStacksToken,
+  )
+  if (intermediateFromStacksTokenAddress == null) {
+    return undefined
+  }
+
+  const intermediateToStacksTokenAddress =
+    getTerminatingStacksTokenContractAddress(
+      contractCallInfo.network.isMainnet()
+        ? KnownChainId.Stacks.Mainnet
+        : KnownChainId.Stacks.Testnet,
+      intermediateFromStacksToken,
+      info.targetChain,
+      info.targetToken,
+    ) ?? intermediateFromStacksTokenAddress
+
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "create-order-cross-or-fail",
       {
         order: {
           from: info.fromBitcoinScriptPubKey,
           to: decodeHex(receiverAddr),
           "chain-id": targetChainId,
+          token: `${intermediateFromStacksTokenAddress.deployerAddress}.${intermediateFromStacksTokenAddress.contractName}`,
+          "token-out": `${intermediateToStacksTokenAddress.deployerAddress}.${intermediateToStacksTokenAddress.contractName}`,
         },
       },
       executeOptions,
     ).then(unwrapResponse)
-    // } else if (swapRoute.length === 1) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "cross-peg-in-endpoint-v2-01",
-    //     "create-order-1-or-fail",
-    //     {
-    //       order: {
-    //         "pool-id": swapRoute[0].poolId,
-    //         "min-dy": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 2) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "cross-peg-in-endpoint-v2-01",
-    //     "create-order-2-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "min-dz": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 3) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-bridge-endpoint-v1-11",
-    //     "create-order-3-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "pool3-id": swapRoute[2].poolId,
-    //         "min-dw": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
   } else {
     checkNever(swapRoute)
   }
 
-  return { data: data! }
+  return {
+    terminatingStacksToken: {
+      deployerAddress: intermediateToStacksTokenAddress.deployerAddress,
+      contractName: intermediateToStacksTokenAddress.contractName,
+    },
+    data: data!,
+  }
 }

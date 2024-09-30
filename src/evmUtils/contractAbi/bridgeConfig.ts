@@ -1,4 +1,4 @@
-export const bridgeConfigAbi = [
+export const BridgeConfigAbi = [
   {
     anonymous: false,
     inputs: [
@@ -19,23 +19,53 @@ export const bridgeConfigAbi = [
     type: "event",
   },
   {
-    inputs: [{ internalType: "string", name: "", type: "string" }],
+    inputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
     name: "config",
-    outputs: [{ internalType: "string", name: "", type: "string" }],
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
     stateMutability: "view",
     type: "function",
   },
   {
-    inputs: [{ internalType: "string[]", name: "keys", type: "string[]" }],
+    inputs: [
+      {
+        internalType: "string[]",
+        name: "keys",
+        type: "string[]",
+      },
+    ],
     name: "getConfigs",
-    outputs: [{ internalType: "string[]", name: "", type: "string[]" }],
+    outputs: [
+      {
+        internalType: "string[]",
+        name: "",
+        type: "string[]",
+      },
+    ],
     stateMutability: "view",
     type: "function",
   },
   {
     inputs: [],
     name: "owner",
-    outputs: [{ internalType: "address", name: "", type: "address" }],
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
     stateMutability: "view",
     type: "function",
   },
@@ -48,8 +78,16 @@ export const bridgeConfigAbi = [
   },
   {
     inputs: [
-      { internalType: "string[]", name: "keys", type: "string[]" },
-      { internalType: "string[]", name: "values", type: "string[]" },
+      {
+        internalType: "string[]",
+        name: "keys",
+        type: "string[]",
+      },
+      {
+        internalType: "string[]",
+        name: "values",
+        type: "string[]",
+      },
     ],
     name: "setConfigs",
     outputs: [],
@@ -57,7 +95,13 @@ export const bridgeConfigAbi = [
     type: "function",
   },
   {
-    inputs: [{ internalType: "address", name: "newOwner", type: "address" }],
+    inputs: [
+      {
+        internalType: "address",
+        name: "newOwner",
+        type: "address",
+      },
+    ],
     name: "transferOwnership",
     outputs: [],
     stateMutability: "nonpayable",

@@ -1,13 +1,9 @@
-import { UnboxPromise } from "./promiseHelpers"
-
 type SkipCacheFn<F extends (...args: readonly any[]) => Promise<any>> = (
   args: Parameters<F>,
-  value: UnboxPromise<ReturnType<F>>,
+  value: Awaited<ReturnType<F>>,
 ) => Promise<boolean>
 
-export default function pMemoize<
-  F extends (...args: readonly any[]) => Promise<any>,
->(
+export function pMemoize<F extends (...args: readonly any[]) => Promise<any>>(
   options: {
     cacheKey: (args: Parameters<F>) => string
     skipCache?: boolean | SkipCacheFn<F>

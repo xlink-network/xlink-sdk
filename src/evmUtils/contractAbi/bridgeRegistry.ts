@@ -1,9 +1,9 @@
-export const bridgeRegistryAbi = [
+export const BridgeRegistryAbi = [
   {
     inputs: [
       {
-        internalType: "contract MultisigWallet",
-        name: "owner",
+        internalType: "address",
+        name: "_owner",
         type: "address",
       },
       {
@@ -276,6 +276,19 @@ export const bridgeRegistryAbi = [
   {
     inputs: [],
     name: "MAX_REQUIRED_VALIDATORS",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "MIN_REQUIRED_VALIDATORS",
     outputs: [
       {
         internalType: "uint256",

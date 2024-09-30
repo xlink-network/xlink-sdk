@@ -16,6 +16,48 @@ export const legacyAlexContractDeployerMainnet =
 export const legacyAlexContractDeployerTestnet =
   "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC"
 
+export const stxAlternativeTokenContractAddresses = {
+  wbtc: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsDeployerMainnet,
+      contractName: "token-wbtc",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+      contractName: "token-wbtc",
+    },
+  },
+  btcb: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsDeployerMainnet,
+      contractName: "token-btcb",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+      contractName: "token-btcb",
+    },
+  },
+} satisfies Record<
+  string,
+  Record<KnownChainId.StacksChain, StacksContractAddress>
+>
+export const getTerminatingStacksTokenContractAddress = (
+  fromStacksChain: KnownChainId.StacksChain,
+  fromStacksToken: KnownTokenId.StacksToken,
+  toEVMChain: KnownChainId.EVMChain,
+  toEVMToken: KnownTokenId.EVMToken,
+): undefined | StacksContractAddress => {
+  if (fromStacksToken === KnownTokenId.Stacks.aBTC) {
+    if (toEVMToken === KnownTokenId.EVM.WBTC) {
+      return stxAlternativeTokenContractAddresses.wbtc[fromStacksChain]
+    }
+    if (toEVMToken === KnownTokenId.EVM.BTCB) {
+      return stxAlternativeTokenContractAddresses.btcb[fromStacksChain]
+    }
+  }
+  return undefined
+}
+
 export const stxTokenContractAddresses: Record<
   KnownTokenId.StacksToken,
   Record<KnownChainId.StacksChain, StacksContractAddress>

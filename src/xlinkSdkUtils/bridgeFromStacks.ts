@@ -12,6 +12,8 @@ import {
 import {
   buildSupportedRoutes,
   defineRoute,
+  KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_FromStacks_ToEVM,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
@@ -20,9 +22,11 @@ import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMMainnetChains,
+  _allKnownEVMTestnetChains,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { getTerminatingStacksTokenContractAddress } from "../stacksUtils/stxContractAddresses"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -54,6 +58,31 @@ export const supportedRoutes = buildSupportedRoutes(
     ),
 
     // from testnet
+    ...defineRoute(
+      // to Bitcoin
+      [[KnownChainId.Stacks.Testnet], [KnownChainId.Bitcoin.Testnet]],
+      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
+    ),
+    ...defineRoute(
+      // to rest EVM chains
+      [[KnownChainId.Stacks.Testnet], [..._allKnownEVMTestnetChains]],
+      [
+        // BTCs
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
+        // USDTs
+        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
+        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
+        // others
+        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
+        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
+        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
+        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
+        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
+        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
+      ],
+    ),
   ],
   {
     isSupported: isSupportedStacksRoute,
@@ -132,12 +161,8 @@ async function bridgeFromStacks_toBitcoin(
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.StacksChain
-    toChain: KnownChainId.BitcoinChain
-    fromToken: KnownTokenId.StacksToken
-    toToken: KnownTokenId.BitcoinToken
-  },
+  > &
+    KnownRoute_FromStacks_ToBitcoin,
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(info.fromChain)
   if (!contractCallInfo) {
@@ -173,19 +198,15 @@ async function bridgeFromStacks_toEVM(
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.StacksChain
-    toChain: KnownChainId.EVMChain
-    fromToken: KnownTokenId.StacksToken
-    toToken: KnownTokenId.EVMToken
-  },
+  > &
+    KnownRoute_FromStacks_ToEVM,
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(info.fromChain)
-  const tokenContractInfo = getStacksTokenContractInfo(
+  const fromTokenContractInfo = getStacksTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )
-  if (contractCallInfo == null || tokenContractInfo == null) {
+  if (contractCallInfo == null || fromTokenContractInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -194,11 +215,19 @@ async function bridgeFromStacks_toEVM(
     )
   }
 
+  const terminatingTokenContractAddress =
+    getTerminatingStacksTokenContractAddress(
+      info.fromChain,
+      info.fromToken,
+      info.toChain,
+      info.toToken,
+    ) ?? fromTokenContractInfo
+
   const options = composeTxXLINK(
     "cross-peg-out-endpoint-v2-01",
     "transfer-to-unwrap",
     {
-      "token-trait": `${tokenContractInfo.deployerAddress}.${tokenContractInfo.contractName}`,
+      "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),

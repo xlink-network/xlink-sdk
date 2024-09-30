@@ -105,26 +105,31 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToStacks(
+  const createdOrder = await createBridgeOrder_BitcoinToStacks(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
     },
     {
+      targetToken: info.toToken,
+      fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
       receiverAddr: info.toAddress,
       swapSlippedAmount: numberToStacksContractNumber(info.amount),
       swapRoute: [],
     },
   )
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
 
   const resp = await prepareBitcoinTransaction({
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    ...info,
+    orderData: createdOrder.data,
+    pegInAddress,
   })
 
   return {
@@ -158,28 +163,32 @@ async function estimateFromBitcoin_toEVM(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToEVM(
+  const createdOrder = await createBridgeOrder_BitcoinToEVM(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
     },
     {
       targetChain: info.toChain,
+      targetToken: info.toToken,
       fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
       receiverAddr: info.toAddress,
       swapSlippedAmount: numberToStacksContractNumber(info.amount),
       swapRoute: [],
     },
   )
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
 
   const resp = await prepareBitcoinTransaction({
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    ...info,
+    orderData: createdOrder.data,
+    pegInAddress,
   })
 
   return {

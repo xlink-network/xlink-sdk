@@ -69,13 +69,7 @@ export const getStacksContractCallInfo = (
 export const getStacksTokenContractInfo = (
   chainId: KnownChainId.StacksChain,
   tokenId: KnownTokenId.StacksToken,
-):
-  | undefined
-  | {
-      network: StacksNetwork
-      deployerAddress: string
-      contractName: string
-    } => {
+): undefined | (StacksContractAddress & { network: StacksNetwork }) => {
   const contractCallInfo = getStacksContractCallInfo(chainId)
 
   if (
