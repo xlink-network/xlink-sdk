@@ -96,6 +96,7 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
   },
   [EVMChain.Linea]: {
     // https://t.me/c/1599543687/61611
+    // https://t.me/c/1599543687/61873
     // https://t.me/c/1599543687/61734
     [EVMEndpointContract.BridgeConfig]:
       "0xf99f62475F50BE59393dbdc148E6627E4E88Fc24",
@@ -103,13 +104,14 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
 
   // testnet
   [EVMChain.Sepolia]: {
-    [EVMEndpointContract.BridgeEndpoint]:
-      "0x27c2Ad8da9487AD17970a57D32972BD707B700A2",
-    [EVMToken.WBTC]: "0xE1a512f9D89fdDcD2105Df4dB32ede4bc2ade33B",
-    [EVMToken.ALEX]: "0xA1c1f6D111339E26c9Fe61256c4751F539b40bd6",
+    [EVMEndpointContract.BridgeConfig]:
+      "0xE76e9e28ab8f7974F8bA24e4d83f9550BFe08d21",
   },
   [EVMChain.BSCTestnet]: {},
-  [EVMChain.CoreDAOTestnet]: {},
+  [EVMChain.CoreDAOTestnet]: {
+    [EVMEndpointContract.BridgeConfig]:
+      "0xdbe8BBA9C95140bc4F5e3480Fe6a958Cd1C7E6CC",
+  },
   [EVMChain.BisonTestnet]: {
     [EVMEndpointContract.BridgeEndpoint]:
       "0xf9dFCEDf0D4eCe3c9F7CD2F3C0c70556EfAA1665",
@@ -126,8 +128,8 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
   },
   [EVMChain.BeraTestnet]: {
     // https://t.me/c/1599543687/60509
-    [EVMEndpointContract.BridgeConfig]:
-      "0xBa175fDaB00e7FCF603f43bE8f68dB7f4de9f3A9",
+    // [EVMEndpointContract.BridgeConfig]:
+    //   "0xBa175fDaB00e7FCF603f43bE8f68dB7f4de9f3A9",
     // https://t.me/c/1599543687/60499
     [EVMEndpointContract.Registry]:
       "0x6c74Bc8c54114b8Fed89686cC345eBCd838Fa0b9",

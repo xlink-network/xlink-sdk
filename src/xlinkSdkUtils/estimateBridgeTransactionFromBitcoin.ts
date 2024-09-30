@@ -4,10 +4,7 @@ import {
   createBridgeOrder_BitcoinToEVM,
   createBridgeOrder_BitcoinToStacks,
 } from "../stacksUtils/createBridgeOrder"
-import {
-  getStacksContractCallInfo,
-  numberToStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
+import { numberToStacksContractNumber } from "../stacksUtils/xlinkContractHelpers"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
@@ -96,8 +93,7 @@ async function estimateFromBitcoin_toStacks(
   },
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  const contractCallInfo = getStacksContractCallInfo(info.toChain)
-  if (pegInAddress == null || contractCallInfo == null) {
+  if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -105,26 +101,27 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToStacks(
-    {
-      network: contractCallInfo.network,
-      endpointDeployerAddress: contractCallInfo.deployerAddress,
-    },
-    {
-      receiverAddr: info.toAddress,
-      swapSlippedAmount: numberToStacksContractNumber(info.amount),
-      swapRoute: [],
-    },
-  )
+  const createdOrder = await createBridgeOrder_BitcoinToStacks({
+    fromChain: info.fromChain,
+    fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
+    toChain: info.toChain,
+    toToken: info.toToken,
+    toStacksAddress: info.toAddress,
+    swapSlippedAmount: numberToStacksContractNumber(info.amount),
+    swapRoute: [],
+  })
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
 
   const resp = await prepareBitcoinTransaction({
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    ...info,
+    orderData: createdOrder.data,
+    pegInAddress,
   })
 
   return {
@@ -145,12 +142,7 @@ async function estimateFromBitcoin_toEVM(
   },
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  const contractCallInfo = getStacksContractCallInfo(
-    info.fromChain === KnownChainId.Bitcoin.Mainnet
-      ? KnownChainId.Stacks.Mainnet
-      : KnownChainId.Stacks.Testnet,
-  )
-  if (pegInAddress == null || contractCallInfo == null) {
+  if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -158,28 +150,27 @@ async function estimateFromBitcoin_toEVM(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToEVM(
-    {
-      network: contractCallInfo.network,
-      endpointDeployerAddress: contractCallInfo.deployerAddress,
-    },
-    {
-      targetChain: info.toChain,
-      fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
-      receiverAddr: info.toAddress,
-      swapSlippedAmount: numberToStacksContractNumber(info.amount),
-      swapRoute: [],
-    },
-  )
+  const createdOrder = await createBridgeOrder_BitcoinToEVM({
+    fromChain: info.fromChain,
+    toChain: info.toChain,
+    toToken: info.toToken,
+    fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
+    toEVMAddress: info.toAddress,
+    swapSlippedAmount: numberToStacksContractNumber(info.amount),
+    swapRoute: [],
+  })
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
 
   const resp = await prepareBitcoinTransaction({
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    ...info,
+    orderData: createdOrder.data,
+    pegInAddress,
   })
 
   return {

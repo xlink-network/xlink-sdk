@@ -30,8 +30,12 @@ async function print(matchers: {
     if (matchers.chain.length === 0 && matchers.token.length === 0) return true
 
     return (
-      matchers.chain.some(c => route.fromChain.includes(c)) ||
-      matchers.token.some(t => route.fromToken.includes(t))
+      matchers.chain.some(
+        c => route.fromChain.includes(c) || route.toChain.includes(c),
+      ) ||
+      matchers.token.some(
+        t => route.fromToken.includes(t) || route.toToken.includes(t),
+      )
     )
   }
 }

@@ -41,6 +41,12 @@ export function addressToScriptPubKey(
   const addr = Address(network).decode(address)
   return OutScript.encode(addr)
 }
+export function scriptPubKeyToAddress(
+  network: BitcoinNetwork,
+  output: Uint8Array,
+): string {
+  return Address(network).encode(OutScript.decode(output))
+}
 
 export function bitcoinToSatoshi(bitcoinAmount: string): bigint {
   return BigNumber.toBigInt({}, BigNumber.rightMoveDecimals(8, bitcoinAmount))

@@ -8,6 +8,32 @@ export class XLinkSDKErrorBase extends Error {
   }
 }
 
+export class StacksAddressVersionNotSupportedError extends XLinkSDKErrorBase {
+  constructor(
+    public address: string,
+    public versionName: string,
+  ) {
+    super(`Stacks address ${address} version not supported: ${versionName}`)
+    this.name = "StacksAddressVersionNotSupportedError"
+  }
+}
+
+export class TooFrequentlyError extends XLinkSDKErrorBase {
+  constructor(
+    public methodPath: string[],
+    public retryAfter?: number,
+    options?: ErrorConstructorOptions,
+  ) {
+    super(
+      `Call method ${methodPath.join(".")} too frequently` + retryAfter == null
+        ? ""
+        : `, retry after ${retryAfter} seconds`,
+      options,
+    )
+    this.name = "TooFrequentlyError"
+  }
+}
+
 /** It is thrown when a method in the SDK receives invalid parameters. */
 export class InvalidMethodParametersError extends XLinkSDKErrorBase {
   constructor(

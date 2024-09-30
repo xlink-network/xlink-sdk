@@ -15,6 +15,6 @@ export interface SDKGlobalContext {
       string,
       Promise<EVMOnChainAddresses>
     >
-    viemClients: Record<KnownChainId.EVMChain, Client>
+    viemClients: Partial<Record<KnownChainId.EVMChain, Client>>
   }
 }

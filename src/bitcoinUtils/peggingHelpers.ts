@@ -1,6 +1,6 @@
 import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn } from "clarity-codegen"
-import { fromCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
+import { fromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
 import {
@@ -9,20 +9,29 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
-import { IsSupportedFn } from "../utils/buildSupportedRoutes"
+import {
+  IsSupportedFn,
+  KnownRoute_FromBitcoin_ToStacks,
+  KnownRoute_FromStacks_ToBitcoin,
+} from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
-import { checkNever } from "../utils/typeHelpers"
+import { checkNever, isNotNull } from "../utils/typeHelpers"
 import { TransferProphet } from "../utils/types/TransferProphet"
-import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
+import {
+  _allNoLongerSupportedEVMChains,
+  KnownChainId,
+  KnownTokenId,
+} from "../utils/types/knownIds"
 import { getBTCPegInAddress } from "./btcAddresses"
+import { hasAny } from "../utils/arrayHelpers"
 
-export const getBtc2StacksFeeInfo = async (route: {
-  fromChain: KnownChainId.BitcoinChain
-  fromToken: KnownTokenId.BitcoinToken
-  toChain: KnownChainId.StacksChain
-  toToken: KnownTokenId.StacksToken
-}): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(route.toChain)
+export const getBtc2StacksFeeInfo = async (
+  route: KnownRoute_FromBitcoin_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(
+    route.toChain,
+    "btc-peg-in-endpoint",
+  )
   if (stacksContractCallInfo == null) return
 
   const executeOptions = {
@@ -36,19 +45,19 @@ export const getBtc2StacksFeeInfo = async (route: {
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "is-peg-in-paused",
       {},
       executeOptions,
     ),
     feeRate: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "get-peg-in-fee",
       {},
       executeOptions,
     ).then(numberFromStacksContractNumber),
     minFeeAmount: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "get-peg-in-min-fee",
       {},
       executeOptions,
@@ -67,13 +76,13 @@ export const getBtc2StacksFeeInfo = async (route: {
   }
 }
 
-export const getStacks2BtcFeeInfo = async (route: {
-  fromChain: KnownChainId.StacksChain
-  fromToken: KnownTokenId.StacksToken
-  toChain: KnownChainId.BitcoinChain
-  toToken: KnownTokenId.BitcoinToken
-}): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(route.fromChain)
+export const getStacks2BtcFeeInfo = async (
+  route: KnownRoute_FromStacks_ToBitcoin,
+): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    "btc-peg-out-endpoint",
+  )
   if (stacksContractCallInfo == null) return
 
   const executeOptions = {
@@ -119,47 +128,57 @@ export const getStacks2BtcFeeInfo = async (route: {
 }
 
 export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
-  if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
+  const { fromChain, toChain, fromToken, toToken } = route
+
+  if (fromChain === toChain && fromToken === toToken) {
     return false
   }
+
+  if (_allNoLongerSupportedEVMChains.includes(fromChain)) return false
+  if (_allNoLongerSupportedEVMChains.includes(toChain)) return false
+
   if (
-    !KnownChainId.isBitcoinChain(route.fromChain) ||
-    !KnownTokenId.isBitcoinToken(route.fromToken)
+    !KnownChainId.isBitcoinChain(fromChain) ||
+    !KnownTokenId.isBitcoinToken(fromToken)
   ) {
     return false
   }
-  if (!KnownChainId.isKnownChain(route.toChain)) return false
+  if (!KnownChainId.isKnownChain(toChain)) return false
 
-  const pegInAddress = getBTCPegInAddress(route.fromChain, route.toChain)
+  const pegInAddress = getBTCPegInAddress(fromChain, toChain)
   if (pegInAddress == null) return false
 
-  if (KnownChainId.isBitcoinChain(route.toChain)) {
+  if (KnownChainId.isBitcoinChain(toChain)) {
     return false
   }
 
-  if (KnownChainId.isStacksChain(route.toChain)) {
-    if (!KnownTokenId.isStacksToken(route.toToken)) return false
+  if (KnownChainId.isStacksChain(toChain)) {
+    if (!KnownTokenId.isStacksToken(toToken)) return false
 
     return (
-      route.fromToken === KnownTokenId.Bitcoin.BTC &&
-      route.toToken === KnownTokenId.Stacks.aBTC &&
-      stxTokenContractAddresses[route.toToken]?.[route.toChain] != null
+      fromToken === KnownTokenId.Bitcoin.BTC &&
+      toToken === KnownTokenId.Stacks.aBTC &&
+      stxTokenContractAddresses[toToken]?.[toChain] != null
     )
   }
 
-  if (KnownChainId.isEVMChain(route.toChain)) {
-    const toEVMToken = await fromCorrespondingStacksCurrency(
-      route.toChain,
+  if (KnownChainId.isEVMChain(toChain)) {
+    const toEVMTokens = await fromCorrespondingStacksToken(
+      toChain,
       KnownTokenId.Stacks.aBTC,
     )
-    if (toEVMToken == null) return false
+    if (!hasAny(toEVMTokens)) return false
 
-    const info = await getEVMTokenContractInfo(ctx, route.toChain, toEVMToken)
-    if (info == null) return false
+    const infos = (
+      await Promise.all(
+        toEVMTokens.map(token => getEVMTokenContractInfo(ctx, toChain, token)),
+      )
+    ).filter(isNotNull)
+    if (!hasAny(infos)) return false
 
-    return toEVMToken === route.toToken
+    return toEVMTokens.includes(toToken as any)
   }
 
-  checkNever(route.toChain)
+  checkNever(toChain)
   return false
 }

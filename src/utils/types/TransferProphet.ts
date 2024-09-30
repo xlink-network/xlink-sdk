@@ -100,7 +100,7 @@ export const transformToPublicTransferProphetAggregated2 = (
   const composed = composeTransferProphets(steps)
 
   const fromAmount = BigNumber.from(firstTransferProphet.fromAmount)
-  const applyResult = last(applyTransferProphets(steps, fromAmount))
+  const applyResult = applyTransferProphets(steps, fromAmount)
 
   return {
     fromChain: firstTransferProphet.fromChain,
@@ -108,9 +108,11 @@ export const transformToPublicTransferProphetAggregated2 = (
     toChain: lastTransferProphet.toChain,
     toToken: lastTransferProphet.toToken,
     fromAmount: toSDKNumberOrUndefined(fromAmount),
-    toAmount: toSDKNumberOrUndefined(applyResult.netAmount),
+    toAmount: toSDKNumberOrUndefined(last(applyResult).netAmount),
     feeToken: composed.feeToken,
-    feeAmount: toSDKNumberOrUndefined(applyResult.feeAmount),
+    feeAmount: toSDKNumberOrUndefined(
+      BigNumber.sum(applyResult.map(r => r.feeAmount)),
+    ),
     isPaused: composed.isPaused,
     feeRate: toSDKNumberOrUndefined(composed.feeRate),
     minFeeAmount: toSDKNumberOrUndefined(composed.minFeeAmount),

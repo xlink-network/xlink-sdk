@@ -1,5 +1,9 @@
 import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
+import {
+  KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_FromStacks_ToEVM,
+} from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
@@ -77,12 +81,8 @@ async function bridgeInfoFromStacks_toBitcoin(
   info: Omit<
     BridgeInfoFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.StacksChain
-    toChain: KnownChainId.BitcoinChain
-    fromToken: KnownTokenId.StacksToken
-    toToken: KnownTokenId.BitcoinToken
-  },
+  > &
+    KnownRoute_FromStacks_ToBitcoin,
 ): Promise<BridgeInfoFromStacksOutput> {
   const step1 = await getStacks2BtcFeeInfo(info)
   if (step1 == null) {
@@ -104,12 +104,8 @@ async function bridgeInfoFromStacks_toEVM(
   info: Omit<
     BridgeInfoFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.StacksChain
-    toChain: KnownChainId.EVMChain
-    fromToken: KnownTokenId.StacksToken
-    toToken: KnownTokenId.EVMToken
-  },
+  > &
+    KnownRoute_FromStacks_ToEVM,
 ): Promise<BridgeInfoFromStacksOutput> {
   const step1 = await getStacks2EvmFeeInfo(info)
   if (step1 == null) {

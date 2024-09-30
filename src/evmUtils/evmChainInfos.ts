@@ -287,51 +287,51 @@ export const xLayer = defineChain({
   },
 })
 
-export const bisonTestnet = defineChain({
-  id: 24767,
-  name: "Bison Testnet",
-  nativeCurrency: {
-    name: "Wrapped Bitcoin",
-    symbol: "WBTC",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["http://3.87.45.216:12345"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Bison Explorer",
-      url: "http://3.87.45.216/",
-      apiUrl: "",
-    },
-  },
-  testnet: true,
-})
+// export const bisonTestnet = defineChain({
+//   id: 24767,
+//   name: "Bison Testnet",
+//   nativeCurrency: {
+//     name: "Wrapped Bitcoin",
+//     symbol: "WBTC",
+//     decimals: 18,
+//   },
+//   rpcUrls: {
+//     default: {
+//       http: ["http://3.87.45.216:12345"],
+//     },
+//   },
+//   blockExplorers: {
+//     default: {
+//       name: "Bison Explorer",
+//       url: "http://3.87.45.216/",
+//       apiUrl: "",
+//     },
+//   },
+//   testnet: true,
+// })
 
-export const bitboyTestnet = defineChain({
-  id: 34765,
-  name: "Bitboy Testnet",
-  nativeCurrency: {
-    name: "Bitboy Testnet",
-    symbol: "BTT",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["http://54.165.133.116:12345"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Bitboy Testnet Explorer",
-      url: "http://54.84.174.158",
-      apiUrl: "",
-    },
-  },
-  testnet: true,
-})
+// export const bitboyTestnet = defineChain({
+//   id: 34765,
+//   name: "Bitboy Testnet",
+//   nativeCurrency: {
+//     name: "Bitboy Testnet",
+//     symbol: "BTT",
+//     decimals: 18,
+//   },
+//   rpcUrls: {
+//     default: {
+//       http: ["http://54.165.133.116:12345"],
+//     },
+//   },
+//   blockExplorers: {
+//     default: {
+//       name: "Bitboy Testnet Explorer",
+//       url: "http://54.84.174.158",
+//       apiUrl: "",
+//     },
+//   },
+//   testnet: true,
+// })
 
 export const berachainTestnet = defineChain({
   id: 80084,

@@ -1,49 +1,57 @@
-import { fromCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
+import { fromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
+import { hasAny } from "../utils/arrayHelpers"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
-import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
+import { checkNever, isNotNull } from "../utils/typeHelpers"
+import {
+  _allNoLongerSupportedEVMChains,
+  KnownChainId,
+  KnownTokenId,
+} from "../utils/types/knownIds"
 
 export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
-  if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
+  const { fromChain, toChain, fromToken, toToken } = route
+
+  if (fromChain === toChain && fromToken === toToken) {
     return false
   }
+
+  if (_allNoLongerSupportedEVMChains.includes(fromChain)) return false
+  if (_allNoLongerSupportedEVMChains.includes(toChain)) return false
+
   if (
-    !KnownChainId.isStacksChain(route.fromChain) ||
-    !KnownTokenId.isStacksToken(route.fromToken)
+    !KnownChainId.isStacksChain(fromChain) ||
+    !KnownTokenId.isStacksToken(fromToken)
   ) {
     return false
   }
-  if (!KnownChainId.isKnownChain(route.toChain)) return false
+  if (!KnownChainId.isKnownChain(toChain)) return false
 
-  if (KnownChainId.isStacksChain(route.toChain)) {
+  if (KnownChainId.isStacksChain(toChain)) {
     return false
   }
 
-  if (KnownChainId.isBitcoinChain(route.toChain)) {
+  if (KnownChainId.isBitcoinChain(toChain)) {
     return (
-      route.fromToken === KnownTokenId.Stacks.aBTC &&
-      route.toToken === KnownTokenId.Bitcoin.BTC
+      fromToken === KnownTokenId.Stacks.aBTC &&
+      toToken === KnownTokenId.Bitcoin.BTC
     )
   }
 
-  if (KnownChainId.isEVMChain(route.toChain)) {
-    const toEVMToken = await fromCorrespondingStacksCurrency(
-      route.toChain,
-      route.fromToken,
-    )
-    if (toEVMToken == null) return false
+  if (KnownChainId.isEVMChain(toChain)) {
+    const toEVMTokens = await fromCorrespondingStacksToken(toChain, fromToken)
+    if (!hasAny(toEVMTokens)) return false
 
-    const toTokenInfo = await getEVMTokenContractInfo(
-      ctx,
-      route.toChain,
-      toEVMToken,
-    )
-    if (toTokenInfo == null) return false
+    const toTokenInfos = (
+      await Promise.all(
+        toEVMTokens.map(token => getEVMTokenContractInfo(ctx, toChain, token)),
+      )
+    ).filter(isNotNull)
+    if (!hasAny(toTokenInfos)) return false
 
-    return toEVMToken === route.toToken
+    return toEVMTokens.includes(toToken as any)
   }
 
-  checkNever(route.toChain)
+  checkNever(toChain)
   return false
 }

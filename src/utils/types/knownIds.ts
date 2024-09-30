@@ -275,6 +275,9 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.BitboyTestnet,
   KnownChainId.EVM.BeraTestnet,
 ] as const
+export const _allNoLongerSupportedEVMChains: ChainId[] = [
+  KnownChainId.EVM.Lorenzo,
+]
 
 const _restEVMChain = null as Exclude<
   (typeof _allKnownEVMChains)[number],

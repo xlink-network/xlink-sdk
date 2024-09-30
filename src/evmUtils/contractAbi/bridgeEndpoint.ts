@@ -1,9 +1,9 @@
-export const bridgeEndpointAbi = [
+export const BridgeEndpointAbi = [
   {
     inputs: [
       {
-        internalType: "contract MultisigWallet",
-        name: "owner",
+        internalType: "address",
+        name: "_owner",
         type: "address",
       },
       {
@@ -19,6 +19,16 @@ export const bridgeEndpointAbi = [
       {
         internalType: "address",
         name: "_registry",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_pegInAddress",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_timeLock",
         type: "address",
       },
     ],
@@ -78,6 +88,19 @@ export const bridgeEndpointAbi = [
     inputs: [
       {
         indexed: true,
+        internalType: "bytes32",
+        name: "orderHash",
+        type: "bytes32",
+      },
+    ],
+    name: "FinalizeUnwrapEvent",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
         internalType: "address",
         name: "previousOwner",
         type: "address",
@@ -116,6 +139,68 @@ export const bridgeEndpointAbi = [
       },
     ],
     name: "RemoveAllowlistEvent",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "payload",
+        type: "bytes",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
+    ],
+    name: "SendMessageEvent",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "from",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "fee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "payload",
+        type: "bytes",
+      },
+    ],
+    name: "SendMessageWithTokenEvent",
     type: "event",
   },
   {
@@ -167,196 +252,6 @@ export const bridgeEndpointAbi = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "settle",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "destChainId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-    ],
-    name: "TransferToCrossEvent",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "settle",
-        type: "string",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "poolId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "minAmountOut",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "destChainId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-    ],
-    name: "TransferToCrossSwapEvent",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "settle",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "launchId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-    ],
-    name: "TransferToLaunchpadEvent",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "settle",
-        type: "string",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "poolId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "minAmountOut",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-    ],
-    name: "TransferToSwapEvent",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: false,
         internalType: "bytes32",
         name: "orderHash",
@@ -388,43 +283,6 @@ export const bridgeEndpointAbi = [
       },
     ],
     name: "TransferToUnwrapEvent",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "from",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "settle",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "fee",
-        type: "uint256",
-      },
-    ],
-    name: "TransferToWrapEvent",
     type: "event",
   },
   {
@@ -544,6 +402,19 @@ export const bridgeEndpointAbi = [
   {
     inputs: [
       {
+        internalType: "bytes32[]",
+        name: "orderHash",
+        type: "bytes32[]",
+      },
+    ],
+    name: "finalizeUnwrap",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "bytes32",
         name: "structHash",
         type: "bytes32",
@@ -609,6 +480,19 @@ export const bridgeEndpointAbi = [
   },
   {
     inputs: [],
+    name: "pegInAddress",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "registry",
     outputs: [
       {
@@ -636,6 +520,42 @@ export const bridgeEndpointAbi = [
   {
     inputs: [],
     name: "renounceOwnership",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes",
+        name: "payload",
+        type: "bytes",
+      },
+    ],
+    name: "sendMessage",
+    outputs: [],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "token",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        internalType: "bytes",
+        name: "payload",
+        type: "bytes",
+      },
+    ],
+    name: "sendMessageWithToken",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -750,133 +670,6 @@ export const bridgeEndpointAbi = [
         type: "address",
       },
       {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "settleData",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "destChainId",
-        type: "uint256",
-      },
-    ],
-    name: "transferToCross",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "settleData",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "poolId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "minAmountOut",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "destChainId",
-        type: "uint256",
-      },
-    ],
-    name: "transferToCrossSwap",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "settleData",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "launchId",
-        type: "uint256",
-      },
-    ],
-    name: "transferToLaunchpad",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "amount",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "settleData",
-        type: "string",
-      },
-      {
-        internalType: "uint256",
-        name: "poolId",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "minAmountOut",
-        type: "uint256",
-      },
-    ],
-    name: "transferToSwap",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "token",
-        type: "address",
-      },
-      {
         internalType: "address",
         name: "recipient",
         type: "address",
@@ -920,7 +713,27 @@ export const bridgeEndpointAbi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "unpause",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    name: "unwrapSent",
+    outputs: [
+      {
+        internalType: "address",
+        name: "recipient",
+        type: "address",
+      },
       {
         internalType: "address",
         name: "token",
@@ -932,21 +745,12 @@ export const bridgeEndpointAbi = [
         type: "uint256",
       },
       {
-        internalType: "string",
-        name: "settleData",
-        type: "string",
+        internalType: "bool",
+        name: "sent",
+        type: "bool",
       },
     ],
-    name: "transferToWrap",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "unpause",
-    outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
     type: "function",
   },
 ] as const

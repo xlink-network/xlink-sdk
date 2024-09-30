@@ -1,6 +1,10 @@
 import { getBtc2StacksFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
-import { KnownRoute } from "../utils/buildSupportedRoutes"
+import {
+  KnownRoute,
+  KnownRoute_FromBitcoin_ToEVM,
+  KnownRoute_FromBitcoin_ToStacks,
+} from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
@@ -9,11 +13,15 @@ import {
   transformToPublicTransferProphetAggregated2,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { ChainId, SDKNumber } from "./types"
+import { supportedRoutes } from "./bridgeFromBitcoin"
+import { ChainId, SDKNumber, TokenId } from "./types"
+import { SDKGlobalContext } from "./types.internal"
 
 export interface BridgeInfoFromBitcoinInput {
   fromChain: ChainId
   toChain: ChainId
+  fromToken: TokenId
+  toToken: TokenId
   amount: SDKNumber
 }
 
@@ -21,87 +29,85 @@ export interface BridgeInfoFromBitcoinOutput
   extends PublicTransferProphetAggregated {}
 
 export const bridgeInfoFromBitcoin = async (
+  ctx: SDKGlobalContext,
   info: BridgeInfoFromBitcoinInput,
 ): Promise<BridgeInfoFromBitcoinOutput> => {
-  const fromChain = info.fromChain
-  const toChain = info.toChain
+  const route = await supportedRoutes.checkRouteValid(ctx, info)
 
-  if (
-    !KnownChainId.isKnownChain(fromChain) ||
-    !KnownChainId.isKnownChain(toChain)
-  ) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      KnownTokenId.Bitcoin.BTC,
-    )
-  }
-
-  if (KnownChainId.isBitcoinChain(fromChain)) {
-    if (KnownChainId.isStacksChain(toChain)) {
-      return bridgeInfoFromBitcoin_toStacks({
-        ...info,
-        fromChain: fromChain,
-        toChain: toChain,
-      })
+  if (KnownChainId.isBitcoinChain(route.fromChain)) {
+    if (KnownChainId.isStacksChain(route.toChain)) {
+      if (
+        KnownTokenId.isBitcoinToken(route.fromToken) &&
+        KnownTokenId.isStacksToken(route.toToken)
+      ) {
+        return bridgeInfoFromBitcoin_toStacks({
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isEVMChain(route.toChain)) {
+      if (
+        KnownTokenId.isBitcoinToken(route.fromToken) &&
+        KnownTokenId.isEVMToken(route.toToken)
+      ) {
+        return bridgeInfoFromBitcoin_toEVM({
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else {
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
+      checkNever(route)
     }
-
-    if (KnownChainId.isEVMChain(toChain)) {
-      return bridgeInfoFromBitcoin_toEVM({
-        ...info,
-        fromChain: fromChain,
-        toChain: toChain,
-      })
-    }
-
-    assertExclude(toChain, assertExclude.i<KnownChainId.BitcoinChain>())
-    checkNever(toChain)
   } else {
-    assertExclude(fromChain, assertExclude.i<KnownChainId.StacksChain>())
-    assertExclude(fromChain, assertExclude.i<KnownChainId.EVMChain>())
-    checkNever(fromChain)
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
+    checkNever(route)
   }
 
   throw new UnsupportedBridgeRouteError(
     info.fromChain,
     info.toChain,
-    KnownTokenId.Bitcoin.BTC,
+    info.fromToken,
+    info.toToken,
   )
 }
 
 async function bridgeInfoFromBitcoin_toStacks(
-  info: Omit<BridgeInfoFromBitcoinInput, "fromChain" | "toChain"> & {
-    fromChain: KnownChainId.BitcoinChain
-    toChain: KnownChainId.StacksChain
-  },
+  info: Omit<
+    BridgeInfoFromBitcoinInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeInfoFromBitcoinOutput> {
-  const route: KnownRoute = {
-    fromChain: info.fromChain,
-    fromToken: KnownTokenId.Bitcoin.BTC,
-    toChain: info.toChain,
-    toToken: KnownTokenId.Stacks.aBTC,
-  }
-
-  const step1 = await getBtc2StacksFeeInfo(route)
+  const step1 = await getBtc2StacksFeeInfo(info)
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
   return {
-    ...transformToPublicTransferProphet(route, info.amount, step1),
+    ...transformToPublicTransferProphet(info, info.amount, step1),
     transferProphets: [],
   }
 }
 
 async function bridgeInfoFromBitcoin_toEVM(
-  info: Omit<BridgeInfoFromBitcoinInput, "fromChain" | "toChain"> & {
-    fromChain: KnownChainId.BitcoinChain
-    toChain: KnownChainId.EVMChain
-  },
+  info: Omit<
+    BridgeInfoFromBitcoinInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    KnownRoute_FromBitcoin_ToEVM,
 ): Promise<BridgeInfoFromBitcoinOutput> {
   const transitStacksChainId =
     info.fromChain === KnownChainId.Bitcoin.Mainnet
@@ -118,7 +124,7 @@ async function bridgeInfoFromBitcoin_toEVM(
     fromChain: transitStacksChainId,
     fromToken: KnownTokenId.Stacks.aBTC,
     toChain: info.toChain,
-    toToken: KnownTokenId.EVM.WBTC,
+    toToken: info.toToken,
   }
 
   const [step1, step2] = await Promise.all([
@@ -129,7 +135,8 @@ async function bridgeInfoFromBitcoin_toEVM(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
