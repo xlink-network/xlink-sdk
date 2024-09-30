@@ -12,6 +12,8 @@ import {
 import {
   buildSupportedRoutes,
   defineRoute,
+  KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_FromStacks_ToEVM,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
@@ -23,6 +25,7 @@ import {
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { getStacksAlternativeFromTokenContractAddress } from "../stacksUtils/stxContractAddresses"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -132,12 +135,8 @@ async function bridgeFromStacks_toBitcoin(
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.StacksChain
-    toChain: KnownChainId.BitcoinChain
-    fromToken: KnownTokenId.StacksToken
-    toToken: KnownTokenId.BitcoinToken
-  },
+  > &
+    KnownRoute_FromStacks_ToBitcoin,
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(info.fromChain)
   if (!contractCallInfo) {
@@ -173,19 +172,15 @@ async function bridgeFromStacks_toEVM(
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.StacksChain
-    toChain: KnownChainId.EVMChain
-    fromToken: KnownTokenId.StacksToken
-    toToken: KnownTokenId.EVMToken
-  },
+  > &
+    KnownRoute_FromStacks_ToEVM,
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(info.fromChain)
-  const tokenContractInfo = getStacksTokenContractInfo(
+  const fromTokenContractInfo = getStacksTokenContractInfo(
     info.fromChain,
     info.fromToken,
   )
-  if (contractCallInfo == null || tokenContractInfo == null) {
+  if (contractCallInfo == null || fromTokenContractInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -194,11 +189,18 @@ async function bridgeFromStacks_toEVM(
     )
   }
 
+  const finalTokenContractAddress =
+    getStacksAlternativeFromTokenContractAddress(
+      info.fromChain,
+      info.fromToken,
+      info.toChain,
+    ) ?? fromTokenContractInfo
+
   const options = composeTxXLINK(
     "cross-peg-out-endpoint-v2-01",
     "transfer-to-unwrap",
     {
-      "token-trait": `${tokenContractInfo.deployerAddress}.${tokenContractInfo.contractName}`,
+      "token-trait": `${finalTokenContractAddress.deployerAddress}.${finalTokenContractAddress.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),

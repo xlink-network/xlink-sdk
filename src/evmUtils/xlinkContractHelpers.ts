@@ -8,7 +8,7 @@ import {
 } from "../utils/types/knownIds"
 import { EVMAddress } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
-import { bridgeConfigAbi } from "./contractAbi/bridgeConfig"
+import { BridgeConfigAbi } from "./contractAbi/bridgeConfig"
 import {
   EVMEndpointContract,
   EVMOnChainAddresses,
@@ -181,7 +181,7 @@ const _getOnChainConfigsImpl = async (
   configContractAddress: Address,
 ): Promise<EVMOnChainAddresses> => {
   const configs = await readContract(client, {
-    abi: bridgeConfigAbi,
+    abi: BridgeConfigAbi,
     address: configContractAddress,
     functionName: "getConfigs",
     args: [

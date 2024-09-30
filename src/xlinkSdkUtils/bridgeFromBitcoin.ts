@@ -25,6 +25,8 @@ import { range } from "../utils/arrayHelpers"
 import {
   buildSupportedRoutes,
   defineRoute,
+  KnownRoute_FromBitcoin_ToEVM,
+  KnownRoute_FromBitcoin_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
@@ -151,12 +153,8 @@ async function bridgeFromBitcoin_toStacks(
   info: Omit<
     BridgeFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.BitcoinChain
-    toChain: KnownChainId.StacksChain
-    fromToken: KnownTokenId.BitcoinToken
-    toToken: KnownTokenId.StacksToken
-  },
+  > &
+    KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeFromBitcoinOutput> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const contractCallInfo = getStacksContractCallInfo(info.toChain)
@@ -204,12 +202,8 @@ async function bridgeFromBitcoin_toEVM(
   info: Omit<
     BridgeFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
-  > & {
-    fromChain: KnownChainId.BitcoinChain
-    toChain: KnownChainId.EVMChain
-    fromToken: KnownTokenId.BitcoinToken
-    toToken: KnownTokenId.EVMToken
-  },
+  > &
+    KnownRoute_FromBitcoin_ToEVM,
 ): Promise<BridgeFromBitcoinOutput> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const contractCallInfo = getStacksContractCallInfo(

@@ -16,6 +16,50 @@ export const legacyAlexContractDeployerMainnet =
 export const legacyAlexContractDeployerTestnet =
   "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC"
 
+export const stxAlternativeTokenContractAddresses = {
+  wbtc: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9",
+      contractName: "token-wbtc",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC",
+      contractName: "token-wbtc",
+    },
+  },
+  btcb: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9",
+      contractName: "token-btcb",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC",
+      contractName: "token-btcb",
+    },
+  },
+}
+export const getStacksAlternativeFromTokenContractAddress = (
+  fromStacksChain: KnownChainId.StacksChain,
+  fromStacksToken: KnownTokenId.StacksToken,
+  toEVMChain: KnownChainId.EVMChain,
+): undefined | StacksContractAddress => {
+  if (fromStacksToken === KnownTokenId.Stacks.aBTC) {
+    if (
+      toEVMChain === KnownChainId.EVM.Ethereum ||
+      toEVMChain === KnownChainId.EVM.Sepolia
+    ) {
+      return stxAlternativeTokenContractAddresses.wbtc[fromStacksChain]
+    }
+    if (
+      toEVMChain === KnownChainId.EVM.BSC ||
+      toEVMChain === KnownChainId.EVM.BSCTestnet
+    ) {
+      return stxAlternativeTokenContractAddresses.btcb[fromStacksChain]
+    }
+  }
+  return undefined
+}
+
 export const stxTokenContractAddresses: Record<
   KnownTokenId.StacksToken,
   Record<KnownChainId.StacksChain, StacksContractAddress>

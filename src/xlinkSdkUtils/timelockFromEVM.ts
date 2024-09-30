@@ -1,7 +1,7 @@
 import { Client, encodeFunctionData, zeroAddress } from "viem"
 import { estimateGas, readContract } from "viem/actions"
-import { bridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
-import { bridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
+import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
+import { BridgeTimeLockAbi } from "../evmUtils/contractAbi/bridgeTimeLock"
 import {
   getEVMContractCallInfo,
   getEVMTokenContractInfo,
@@ -43,7 +43,7 @@ const getTimeLockContractCallInfo = async (
   const timeLockContractAddress =
     info.timeLockContractAddress ??
     (await readContract(info.client, {
-      abi: bridgeEndpointAbi,
+      abi: BridgeEndpointAbi,
       address: info.bridgeEndpointContractAddress,
       functionName: "timeLock",
     }).catch(err => {
@@ -88,7 +88,7 @@ export async function getTimeLockedAssetsFromEVM(
       await Promise.all(
         tokenCallInfos.map(info =>
           readContract(timeLockCallInfo.client, {
-            abi: bridgeTimeLockAbi,
+            abi: BridgeTimeLockAbi,
             address: timeLockCallInfo.timeLockContractAddress,
             functionName: "agreementsByUser",
             args: [input.walletAddress, 0, info.tokenContractAddress, "0x"],
@@ -102,7 +102,7 @@ export async function getTimeLockedAssetsFromEVM(
     return Promise.all(
       agreements.map(async ({ agreementId, info }) => {
         const agreement = await readContract(timeLockCallInfo.client, {
-          abi: bridgeTimeLockAbi,
+          abi: BridgeTimeLockAbi,
           address: timeLockCallInfo.timeLockContractAddress,
           functionName: "agreements",
           args: [agreementId],
@@ -149,7 +149,7 @@ export const claimTimeLockedAssetsFromEVM = async (
   if (info == null) throw new UnsupportedChainError(input.chain)
 
   const functionData = encodeFunctionData({
-    abi: bridgeTimeLockAbi,
+    abi: BridgeTimeLockAbi,
     functionName: "claim",
     args: [
       input.lockedAssetIds.map(id =>

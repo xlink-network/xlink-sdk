@@ -14,15 +14,16 @@ import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { TransferProphet } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { props } from "../utils/promiseHelpers"
-import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { bridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
-import { bridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
+import { assertExclude, checkNever, isNotNull } from "../utils/typeHelpers"
+import { BridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
+import { BridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
   getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { hasAny } from "../utils/arrayHelpers"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
@@ -62,44 +63,44 @@ export const getEvm2StacksFeeInfo = async (
   const registryAddr =
     evmContractCallInfo.registryContractAddress ??
     (await readContract(client, {
-      abi: bridgeEndpointAbi,
+      abi: BridgeEndpointAbi,
       address: evmContractCallInfo.bridgeEndpointContractAddress,
       functionName: "registry",
     }))
 
   const resp = await props({
     isApproved: readContract(client, {
-      abi: bridgeRegistryAbi,
+      abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "APPROVED_TOKEN",
     }).then(key =>
       readContract(client, {
-        abi: bridgeRegistryAbi,
+        abi: BridgeRegistryAbi,
         address: registryAddr,
         functionName: "hasRole",
         args: [key, tokenContractAddress],
       }),
     ),
     feeRate: readContract(client, {
-      abi: bridgeRegistryAbi,
+      abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "feePctPerToken",
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
     minFeeAmount: readContract(client, {
-      abi: bridgeRegistryAbi,
+      abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "minFeePerToken",
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
     minAmount: readContract(client, {
-      abi: bridgeRegistryAbi,
+      abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "minAmountPerToken",
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
     maxAmount: readContract(client, {
-      abi: bridgeRegistryAbi,
+      abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "maxAmountPerToken",
       args: [tokenContractAddress],
@@ -209,7 +210,7 @@ export const getStacks2EvmFeeInfo = async (route: {
 export async function fromCorrespondingStacksCurrency(
   toChain: KnownChainId.EVMChain,
   stacksToken: KnownTokenId.StacksToken,
-): Promise<undefined | KnownTokenId.EVMToken> {
+): Promise<KnownTokenId.EVMToken[]> {
   const EVMChain = KnownChainId.EVM
   const EVMToken = KnownTokenId.EVM
   const StacksToken = KnownTokenId.Stacks
@@ -217,27 +218,27 @@ export async function fromCorrespondingStacksCurrency(
   const restEVMTokenPossibilities = assertExclude.i<KnownTokenId.EVMToken>()
 
   if (stacksToken === StacksToken.sLUNR) {
-    return EVMToken.LUNR
+    return [EVMToken.LUNR]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.LUNR)
 
   if (stacksToken === StacksToken.ALEX) {
-    return EVMToken.ALEX
+    return [EVMToken.ALEX]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.ALEX)
 
   if (stacksToken === StacksToken.sSKO) {
-    return EVMToken.SKO
+    return [EVMToken.SKO]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.SKO)
 
   if (stacksToken === StacksToken.vLiSTX) {
-    return EVMToken.vLiSTX
+    return [EVMToken.vLiSTX]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.vLiSTX)
 
   if (stacksToken === StacksToken.vLiALEX) {
-    return EVMToken.vLiALEX
+    return [EVMToken.vLiALEX]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.vLiALEX)
 
@@ -248,7 +249,7 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.Sepolia:
       case EVMChain.BSC:
       case EVMChain.BSCTestnet:
-        return EVMToken.USDT
+        return [EVMToken.USDT]
       case EVMChain.CoreDAO:
       case EVMChain.CoreDAOTestnet:
       case EVMChain.Bsquared:
@@ -275,7 +276,7 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.BitboyTestnet:
       case EVMChain.Manta:
       case EVMChain.BeraTestnet:
-        return EVMToken.sUSDT
+        return [EVMToken.sUSDT]
       default:
         checkNever(toChain)
     }
@@ -289,9 +290,9 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.Ethereum:
       case EVMChain.Sepolia:
       case EVMChain.BSCTestnet:
-        return EVMToken.WBTC
+        return [EVMToken.WBTC, EVMToken.aBTC]
       case EVMChain.BSC:
-        return EVMToken.BTCB
+        return [EVMToken.BTCB, EVMToken.aBTC]
       case EVMChain.CoreDAO:
       case EVMChain.CoreDAOTestnet:
       case EVMChain.Bsquared:
@@ -318,7 +319,7 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.BitboyTestnet:
       case EVMChain.Manta:
       case EVMChain.BeraTestnet:
-        return EVMToken.aBTC
+        return [EVMToken.aBTC]
       default:
         checkNever(toChain)
     }
@@ -330,7 +331,7 @@ export async function fromCorrespondingStacksCurrency(
   if (stacksToken === StacksToken.uBTC) {
     switch (toChain) {
       case EVMChain.Bsquared:
-        return EVMToken.uBTC
+        return [EVMToken.uBTC]
       case EVMChain.Ethereum:
       case EVMChain.Sepolia:
       case EVMChain.BSC:
@@ -350,7 +351,7 @@ export async function fromCorrespondingStacksCurrency(
       case EVMChain.BitboyTestnet:
       case EVMChain.Manta:
       case EVMChain.BeraTestnet:
-        return EVMToken.wuBTC
+        return [EVMToken.wuBTC]
       default:
         checkNever(toChain)
     }
@@ -360,7 +361,7 @@ export async function fromCorrespondingStacksCurrency(
 
   checkNever(restEVMTokenPossibilities)
   checkNever(restEVMTokenPossibilities)
-  return undefined
+  return []
 }
 export async function toCorrespondingStacksCurrency(
   evmToken: KnownTokenId.EVMToken,
@@ -396,62 +397,55 @@ export async function toCorrespondingStacksCurrency(
 }
 
 export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
-  if (route.fromChain === route.toChain && route.fromToken === route.toToken) {
+  const { fromChain, fromToken, toChain, toToken } = route
+  if (fromChain === toChain && fromToken === toToken) {
     return false
   }
   if (
-    !KnownChainId.isEVMChain(route.fromChain) ||
-    !KnownTokenId.isEVMToken(route.fromToken)
+    !KnownChainId.isEVMChain(fromChain) ||
+    !KnownTokenId.isEVMToken(fromToken)
   ) {
     return false
   }
-  if (!KnownChainId.isKnownChain(route.toChain)) return false
+  if (!KnownChainId.isKnownChain(toChain)) return false
 
-  const fromTokenInfo = await getEVMTokenContractInfo(
-    ctx,
-    route.fromChain,
-    route.fromToken,
-  )
+  const fromTokenInfo = await getEVMTokenContractInfo(ctx, fromChain, fromToken)
   if (fromTokenInfo == null) return false
 
-  if (KnownChainId.isStacksChain(route.toChain)) {
-    const stacksToken = await toCorrespondingStacksCurrency(route.fromToken)
+  if (KnownChainId.isStacksChain(toChain)) {
+    const stacksToken = await toCorrespondingStacksCurrency(fromToken)
     if (stacksToken == null) return false
 
-    if (stxTokenContractAddresses[stacksToken]?.[route.toChain] == null) {
+    if (stxTokenContractAddresses[stacksToken]?.[toChain] == null) {
       return false
     }
 
-    return stacksToken === route.toToken
+    return stacksToken === toToken
   }
 
-  if (KnownChainId.isEVMChain(route.toChain)) {
-    const transitStacksToken = await toCorrespondingStacksCurrency(
-      route.fromToken,
-    )
+  if (KnownChainId.isEVMChain(toChain)) {
+    const transitStacksToken = await toCorrespondingStacksCurrency(fromToken)
     if (transitStacksToken == null) return false
 
-    const toEVMToken = await fromCorrespondingStacksCurrency(
-      route.toChain,
+    const toEVMTokens = await fromCorrespondingStacksCurrency(
+      toChain,
       transitStacksToken,
     )
-    if (toEVMToken == null) return false
+    if (!hasAny(toEVMTokens)) return false
 
-    const toTokenInfo = await getEVMTokenContractInfo(
-      ctx,
-      route.toChain,
-      toEVMToken,
-    )
-    if (toTokenInfo == null) return false
+    const toTokenInfos = await Promise.all(
+      toEVMTokens.map(token => getEVMTokenContractInfo(ctx, toChain, token)),
+    ).then(infos => infos.filter(isNotNull))
+    if (!hasAny(toTokenInfos)) return false
 
-    return toEVMToken === route.toToken
+    return toEVMTokens.includes(toToken as any)
   }
 
-  if (KnownChainId.isBitcoinChain(route.toChain)) {
-    const stacksToken = await toCorrespondingStacksCurrency(route.fromToken)
+  if (KnownChainId.isBitcoinChain(toChain)) {
+    const stacksToken = await toCorrespondingStacksCurrency(fromToken)
     return stacksToken === KnownTokenId.Stacks.aBTC
   }
 
-  checkNever(route.toChain)
+  checkNever(toChain)
   return false
 }

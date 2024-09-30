@@ -1,8 +1,8 @@
-export const bridgeTimeLockAbi = [
+export const BridgeTimeLockAbi = [
   {
     inputs: [
       {
-        internalType: "contract MultisigWallet",
+        internalType: "address",
         name: "_owner",
         type: "address",
       },
