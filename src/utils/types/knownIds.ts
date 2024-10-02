@@ -196,6 +196,18 @@ export namespace KnownChainId {
     /** Represents the Bitboy mainnet chain ID. */
     // export const Bitboy = chainId("evm-bitboy")
     export const BitboyTestnet = chainId("evm-bitboy-testnet")
+
+    // Manta
+    /** Represents the Manta mainnet chain ID. */
+    export const Manta = chainId("evm-manta")
+    /** Represents the Manta testnet chain ID. */
+    // export const MantaTestnet = chainId("evm-manta-testnet")
+
+    // Bera
+    /** Represents the Bera mainnet chain ID. */
+    // export const Bera = chainId("evm-bera")
+    /** Represents the Bera testnet chain ID. */
+    export const BeraTestnet = chainId("evm-bera-testnet")
   }
 
   /** Represents a mainnet EVM-compatible blockchain network. */
@@ -246,6 +258,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.XLayer,
   KnownChainId.EVM.Arbitrum,
   KnownChainId.EVM.Aurora,
+  KnownChainId.EVM.Manta,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
@@ -253,6 +266,7 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.CoreDAOTestnet,
   KnownChainId.EVM.BisonTestnet,
   KnownChainId.EVM.BitboyTestnet,
+  KnownChainId.EVM.BeraTestnet,
 ] as const
 
 const _restEVMChain = null as Exclude<

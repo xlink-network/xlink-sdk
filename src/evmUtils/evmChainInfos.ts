@@ -307,6 +307,7 @@ export const bisonTestnet = defineChain({
       apiUrl: "",
     },
   },
+  testnet: true,
 })
 
 export const bitboyTestnet = defineChain({
@@ -329,4 +330,28 @@ export const bitboyTestnet = defineChain({
       apiUrl: "",
     },
   },
+  testnet: true,
+})
+
+export const berachainTestnet = defineChain({
+  id: 80084,
+  name: "Berachain Bartio",
+  nativeCurrency: {
+    decimals: 18,
+    name: "BERA Token",
+    symbol: "BERA",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://api.routescan.io/v2/network/testnet/evm/80084/etherscan"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Berachain Bartio Testnet Explorer",
+      url: "https://bartio.beratrail.io/",
+      apiUrl: "",
+    },
+  },
+  testnet: true,
 })

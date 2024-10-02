@@ -34,6 +34,7 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.BitboyTestnet:
       return 6n
     case KnownChainId.EVM.Lorenzo:
+    case KnownChainId.EVM.BeraTestnet:
       return 7n
     case KnownChainId.EVM.Merlin:
       return 8n
@@ -47,6 +48,8 @@ export function contractAssignedChainIdFromKnownChain(
       return 12n
     case KnownChainId.EVM.Aurora:
       return 13n
+    case KnownChainId.EVM.Manta:
+      return 14n
     default:
       checkNever(chain)
       throw new UnsupportedChainError(chain)
@@ -101,34 +104,30 @@ export function contractAssignedChainIdToKnownChain(
   assertExclude(resPossibilities, KnownChainId.EVM.BitboyTestnet)
 
   if (chainId === 7n) {
-    return [KnownChainId.EVM.Lorenzo]
+    return [KnownChainId.EVM.Lorenzo, KnownChainId.EVM.BeraTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Lorenzo)
-  // assertExclude(resPossibilities, KnownChainId.EVM.LorenzoTestnet)
+  assertExclude(resPossibilities, KnownChainId.EVM.BeraTestnet)
 
   if (chainId === 8n) {
     return [KnownChainId.EVM.Merlin]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Merlin)
-  // assertExclude(resPossibilities, KnownChainId.EVM.MerlinTestnet)
 
   if (chainId === 9n) {
     return [KnownChainId.EVM.AILayer]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.AILayer)
-  // assertExclude(resPossibilities, KnownChainId.EVM.AILayerTestnet)
 
   if (chainId === 10n) {
     return [KnownChainId.EVM.Mode]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Mode)
-  // assertExclude(resPossibilities, KnownChainId.EVM.ModeTestnet)
 
   if (chainId === 11n) {
     return [KnownChainId.EVM.XLayer]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.XLayer)
-  // assertExclude(resPossibilities, KnownChainId.EVM.XLayerTestnet)
 
   if (chainId === 12n) {
     return [KnownChainId.EVM.Arbitrum]
@@ -139,7 +138,11 @@ export function contractAssignedChainIdToKnownChain(
     return [KnownChainId.EVM.Aurora]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Aurora)
-  // assertExclude(resPossibilities, KnownChainId.EVM.AuroraTestnet)
+
+  if (chainId === 14n) {
+    return [KnownChainId.EVM.Manta]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Manta)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)
