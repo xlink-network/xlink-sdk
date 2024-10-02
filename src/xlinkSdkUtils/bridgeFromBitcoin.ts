@@ -92,10 +92,13 @@ export interface BridgeFromBitcoinInput {
   networkFeeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
   signPsbt: BridgeFromBitcoinInput_signPsbtFn
+  sendTransaction: (tx: { hex: string }) => Promise<{
+    txid: string
+  }>
 }
 
 export interface BridgeFromBitcoinOutput {
-  tx: string
+  txid: string
 }
 
 export async function bridgeFromBitcoin(
@@ -178,7 +181,7 @@ async function bridgeFromBitcoin_toStacks(
     },
   )
 
-  return constructBitcoinTransaction({
+  const tx = await constructBitcoinTransaction({
     validateBridgeOrder: (btcTx, swapRoute) =>
       validateBridgeOrder_BitcoinToStacks(
         {
@@ -196,6 +199,8 @@ async function bridgeFromBitcoin_toStacks(
     opReturnData,
     pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
+
+  return info.sendTransaction({ hex: tx.hex })
 }
 
 async function bridgeFromBitcoin_toEVM(
@@ -233,7 +238,7 @@ async function bridgeFromBitcoin_toEVM(
     },
   )
 
-  return constructBitcoinTransaction({
+  const tx = await constructBitcoinTransaction({
     validateBridgeOrder: (btcTx, swapRoute) =>
       validateBridgeOrder_BitcoinToEVM(
         {
@@ -251,6 +256,8 @@ async function bridgeFromBitcoin_toEVM(
     opReturnData,
     pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
+
+  return info.sendTransaction({ hex: tx.hex })
 }
 
 async function constructBitcoinTransaction(
@@ -261,7 +268,7 @@ async function constructBitcoinTransaction(
         swapRoute: BridgeSwapRoute_FromBitcoin,
       ) => Promise<void>
     },
-): Promise<BridgeFromBitcoinOutput> {
+): Promise<{ hex: string }> {
   const txOptions = await prepareBitcoinTransaction(info)
 
   const tx = createTransaction(
@@ -291,7 +298,7 @@ async function constructBitcoinTransaction(
   await info.validateBridgeOrder(decodeHex(hex), [])
 
   return {
-    tx: hex,
+    hex: hex,
   }
 }
 
