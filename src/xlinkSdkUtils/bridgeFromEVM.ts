@@ -25,6 +25,7 @@ import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   _allKnownEVMMainnetChains,
+  _allKnownEVMTestnetChains,
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
@@ -108,6 +109,72 @@ export const supportedRoutes = buildSupportedRoutes(
     ),
 
     // from testnet
+    ...defineRoute(
+      // to Bitcoin
+      [[..._allKnownEVMTestnetChains], [KnownChainId.Bitcoin.Testnet]],
+      [
+        [KnownTokenId.EVM.WBTC, KnownTokenId.Bitcoin.BTC],
+        [KnownTokenId.EVM.BTCB, KnownTokenId.Bitcoin.BTC],
+        [KnownTokenId.EVM.aBTC, KnownTokenId.Bitcoin.BTC],
+      ],
+    ),
+    ...defineRoute(
+      // to Stacks
+      [[..._allKnownEVMTestnetChains], [KnownChainId.Stacks.Testnet]],
+      [
+        // BTCs
+        [KnownTokenId.EVM.WBTC, KnownTokenId.Stacks.aBTC],
+        [KnownTokenId.EVM.BTCB, KnownTokenId.Stacks.aBTC],
+        [KnownTokenId.EVM.aBTC, KnownTokenId.Stacks.aBTC],
+        // USDTs
+        [KnownTokenId.EVM.USDT, KnownTokenId.Stacks.sUSDT],
+        [KnownTokenId.EVM.sUSDT, KnownTokenId.Stacks.sUSDT],
+        // others
+        [KnownTokenId.EVM.SKO, KnownTokenId.Stacks.sSKO],
+        [KnownTokenId.EVM.ALEX, KnownTokenId.Stacks.ALEX],
+        [KnownTokenId.EVM.vLiSTX, KnownTokenId.Stacks.vLiSTX],
+        [KnownTokenId.EVM.vLiALEX, KnownTokenId.Stacks.vLiALEX],
+        [KnownTokenId.EVM.uBTC, KnownTokenId.Stacks.uBTC],
+        [KnownTokenId.EVM.wuBTC, KnownTokenId.Stacks.uBTC],
+      ],
+    ),
+    ...defineRoute(
+      // to EVM
+      [[..._allKnownEVMTestnetChains], [..._allKnownEVMTestnetChains]],
+      [
+        // BTCs
+        [KnownTokenId.EVM.WBTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.EVM.BTCB, KnownTokenId.EVM.WBTC],
+
+        [KnownTokenId.EVM.WBTC, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.EVM.aBTC, KnownTokenId.EVM.WBTC],
+
+        [KnownTokenId.EVM.BTCB, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.EVM.aBTC, KnownTokenId.EVM.BTCB],
+
+        [KnownTokenId.EVM.WBTC, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.EVM.BTCB, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.EVM.aBTC, KnownTokenId.EVM.aBTC],
+
+        // USDTs
+        [KnownTokenId.EVM.sUSDT, KnownTokenId.EVM.USDT],
+        [KnownTokenId.EVM.USDT, KnownTokenId.EVM.sUSDT],
+
+        [KnownTokenId.EVM.USDT, KnownTokenId.EVM.USDT],
+        [KnownTokenId.EVM.sUSDT, KnownTokenId.EVM.sUSDT],
+
+        // others
+        [KnownTokenId.EVM.SKO, KnownTokenId.EVM.SKO],
+        [KnownTokenId.EVM.ALEX, KnownTokenId.EVM.ALEX],
+        [KnownTokenId.EVM.vLiSTX, KnownTokenId.EVM.vLiSTX],
+        [KnownTokenId.EVM.vLiALEX, KnownTokenId.EVM.vLiALEX],
+
+        [KnownTokenId.EVM.uBTC, KnownTokenId.EVM.uBTC],
+        [KnownTokenId.EVM.wuBTC, KnownTokenId.EVM.wuBTC],
+        [KnownTokenId.EVM.uBTC, KnownTokenId.EVM.wuBTC],
+        [KnownTokenId.EVM.wuBTC, KnownTokenId.EVM.uBTC],
+      ],
+    ),
   ],
   {
     isSupported: isSupportedEVMRoute,

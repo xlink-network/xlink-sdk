@@ -112,7 +112,7 @@ export async function getEVMToken(
   )
 }
 
-async function getAllAddresses(
+export async function getAllAddresses(
   sdkContext: SDKGlobalContext,
   chainId: KnownChainId.EVMChain,
 ): Promise<

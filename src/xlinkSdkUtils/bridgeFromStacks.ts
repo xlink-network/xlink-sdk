@@ -22,6 +22,7 @@ import {
   KnownChainId,
   KnownTokenId,
   _allKnownEVMMainnetChains,
+  _allKnownEVMTestnetChains,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
@@ -57,6 +58,31 @@ export const supportedRoutes = buildSupportedRoutes(
     ),
 
     // from testnet
+    ...defineRoute(
+      // to Bitcoin
+      [[KnownChainId.Stacks.Testnet], [KnownChainId.Bitcoin.Testnet]],
+      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
+    ),
+    ...defineRoute(
+      // to rest EVM chains
+      [[KnownChainId.Stacks.Testnet], [..._allKnownEVMTestnetChains]],
+      [
+        // BTCs
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
+        // USDTs
+        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
+        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
+        // others
+        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
+        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
+        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
+        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
+        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
+        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
+      ],
+    ),
   ],
   {
     isSupported: isSupportedStacksRoute,
