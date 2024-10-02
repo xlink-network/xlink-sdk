@@ -204,9 +204,9 @@ export async function bridgeFromEVM(
 }
 
 const sendMessageAbi = parseAbi([
-  "function cross(uint256 destChainId, address destToken, address destAddress) pure returns (uint256)",
-  "function wrap(string to) pure returns (uint256)",
-  "function transferToBTC(string to) pure returns (uint256)",
+  "function transferToEVM(uint256 destChainId, address destToken, address destAddress) pure returns (uint256)",
+  "function transferToStacks(string calldata to) pure returns (uint256)",
+  "function transferToBTC(bytes calldata btcAddress) pure returns (uint256)",
 ])
 
 async function bridgeFromEVM_toStacks(
@@ -243,7 +243,7 @@ async function bridgeFromEVM_toStacks(
 
   const message = await encodeFunctionData({
     abi: sendMessageAbi,
-    functionName: "wrap",
+    functionName: "transferToStacks",
     args: [info.toAddress],
   })
   const functionData = await encodeFunctionData({
@@ -385,7 +385,7 @@ async function bridgeFromEVM_toEVM(
 
   const message = await encodeFunctionData({
     abi: sendMessageAbi,
-    functionName: "cross",
+    functionName: "transferToEVM",
     args: [
       contractAssignedChainIdFromKnownChain(info.toChain),
       toTokenContractInfo.tokenContractAddress,
