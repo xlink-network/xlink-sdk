@@ -42,17 +42,20 @@ export const getStacksAlternativeFromTokenContractAddress = (
   fromStacksChain: KnownChainId.StacksChain,
   fromStacksToken: KnownTokenId.StacksToken,
   toEVMChain: KnownChainId.EVMChain,
+  toEVMTokens: KnownTokenId.EVMToken,
 ): undefined | StacksContractAddress => {
   if (fromStacksToken === KnownTokenId.Stacks.aBTC) {
     if (
-      toEVMChain === KnownChainId.EVM.Ethereum ||
-      toEVMChain === KnownChainId.EVM.Sepolia
+      (toEVMChain === KnownChainId.EVM.Ethereum ||
+        toEVMChain === KnownChainId.EVM.Sepolia) &&
+      toEVMTokens === KnownTokenId.EVM.WBTC
     ) {
       return stxAlternativeTokenContractAddresses.wbtc[fromStacksChain]
     }
     if (
-      toEVMChain === KnownChainId.EVM.BSC ||
-      toEVMChain === KnownChainId.EVM.BSCTestnet
+      (toEVMChain === KnownChainId.EVM.BSC ||
+        toEVMChain === KnownChainId.EVM.BSCTestnet) &&
+      toEVMTokens === KnownTokenId.EVM.BTCB
     ) {
       return stxAlternativeTokenContractAddresses.btcb[fromStacksChain]
     }

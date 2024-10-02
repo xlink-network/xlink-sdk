@@ -220,6 +220,7 @@ async function bridgeFromStacks_toEVM(
       info.fromChain,
       info.fromToken,
       info.toChain,
+      info.toToken,
     ) ?? fromTokenContractInfo
 
   const options = composeTxXLINK(
