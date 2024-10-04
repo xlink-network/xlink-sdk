@@ -66,6 +66,10 @@ import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
 import { defaultEvmClients } from "./evmUtils/evmClients"
 
 export {
+  GetSupportedRoutesFn_Conditions,
+  KnownRoute,
+} from "./utils/buildSupportedRoutes"
+export {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinInput_signPsbtFn,
   BridgeFromBitcoinOutput,
