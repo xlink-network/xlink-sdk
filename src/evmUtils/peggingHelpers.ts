@@ -211,7 +211,6 @@ export async function fromCorrespondingStacksCurrency(
   toChain: KnownChainId.EVMChain,
   stacksToken: KnownTokenId.StacksToken,
 ): Promise<KnownTokenId.EVMToken[]> {
-  const EVMChain = KnownChainId.EVM
   const EVMToken = KnownTokenId.EVM
   const StacksToken = KnownTokenId.Stacks
 
@@ -243,118 +242,20 @@ export async function fromCorrespondingStacksCurrency(
   assertExclude(restEVMTokenPossibilities, EVMToken.vLiALEX)
 
   if (stacksToken === StacksToken.sUSDT) {
-    // prettier-ignore
-    switch (toChain) {
-      case EVMChain.Ethereum:
-      case EVMChain.Sepolia:
-      case EVMChain.BSC:
-      case EVMChain.BSCTestnet:
-        return [EVMToken.USDT]
-      case EVMChain.CoreDAO:
-      case EVMChain.CoreDAOTestnet:
-      case EVMChain.Bsquared:
-      // case EVMChain.BsquaredTestnet:
-      case EVMChain.BOB:
-      // case EVMChain.BOBTestnet:
-      case EVMChain.Bitlayer:
-      // case EVMChain.BitlayerTestnet:
-      case EVMChain.Lorenzo:
-      // case EVMChain.LorenzoTestnet:
-      case EVMChain.Merlin:
-      // case EVMChain.MerlinTestnet:
-      case EVMChain.AILayer:
-      // case EVMChain.AILayerTestnet:
-      case EVMChain.Mode:
-      // case EVMChain.ModeTestnet:
-      case EVMChain.XLayer:
-      // case EVMChain.XLayerTestnet:
-      case EVMChain.Arbitrum:
-      // case EVMChain.ArbitrumTestnet:
-      case EVMChain.Aurora:
-      // case EVMChain.AuroraTestnet:
-      case EVMChain.BisonTestnet:
-      case EVMChain.BitboyTestnet:
-      case EVMChain.Manta:
-      case EVMChain.BeraTestnet:
-        return [EVMToken.sUSDT]
-      default:
-        checkNever(toChain)
-    }
+    return [EVMToken.USDT, EVMToken.sUSDT]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.USDT)
   assertExclude(restEVMTokenPossibilities, EVMToken.sUSDT)
 
   if (stacksToken === StacksToken.aBTC) {
-    // prettier-ignore
-    switch (toChain) {
-      case EVMChain.Ethereum:
-      case EVMChain.Sepolia:
-      case EVMChain.BSCTestnet:
-        return [EVMToken.WBTC, EVMToken.aBTC]
-      case EVMChain.BSC:
-        return [EVMToken.BTCB, EVMToken.aBTC]
-      case EVMChain.CoreDAO:
-      case EVMChain.CoreDAOTestnet:
-      case EVMChain.Bsquared:
-      // case EVMChain.BsquaredTestnet:
-      case EVMChain.BOB:
-      // case EVMChain.BOBTestnet:
-      case EVMChain.Bitlayer:
-      // case EVMChain.BitlayerTestnet:
-      case EVMChain.Lorenzo:
-      // case EVMChain.LorenzoTestnet:
-      case EVMChain.Merlin:
-      // case EVMChain.MerlinTestnet:
-      case EVMChain.AILayer:
-      // case EVMChain.AILayerTestnet:
-      case EVMChain.Mode:
-      // case EVMChain.ModeTestnet:
-      case EVMChain.XLayer:
-      // case EVMChain.XLayerTestnet:
-      case EVMChain.Arbitrum:
-      // case EVMChain.ArbitrumTestnet:
-      case EVMChain.Aurora:
-      // case EVMChain.AuroraTestnet:
-      case EVMChain.BisonTestnet:
-      case EVMChain.BitboyTestnet:
-      case EVMChain.Manta:
-      case EVMChain.BeraTestnet:
-        return [EVMToken.aBTC]
-      default:
-        checkNever(toChain)
-    }
+    return [EVMToken.WBTC, EVMToken.BTCB, EVMToken.aBTC]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.aBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.WBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.BTCB)
 
   if (stacksToken === StacksToken.uBTC) {
-    switch (toChain) {
-      case EVMChain.Bsquared:
-        return [EVMToken.uBTC]
-      case EVMChain.Ethereum:
-      case EVMChain.Sepolia:
-      case EVMChain.BSC:
-      case EVMChain.BSCTestnet:
-      case EVMChain.CoreDAO:
-      case EVMChain.CoreDAOTestnet:
-      case EVMChain.BOB:
-      case EVMChain.Bitlayer:
-      case EVMChain.Lorenzo:
-      case EVMChain.Merlin:
-      case EVMChain.AILayer:
-      case EVMChain.Mode:
-      case EVMChain.XLayer:
-      case EVMChain.Arbitrum:
-      case EVMChain.Aurora:
-      case EVMChain.BisonTestnet:
-      case EVMChain.BitboyTestnet:
-      case EVMChain.Manta:
-      case EVMChain.BeraTestnet:
-        return [EVMToken.wuBTC]
-      default:
-        checkNever(toChain)
-    }
+    return [EVMToken.uBTC, EVMToken.wuBTC]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.uBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.wuBTC)
