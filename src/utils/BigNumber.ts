@@ -1,56 +1,38 @@
-import * as dn from "dnum"
+import { Big, BigSource } from "big.js"
 import { OneOrMore } from "./typeHelpers"
 
-export type BigNumberSource = number | bigint | string | BigNumber | dn.Dnum
+export type BigNumberSource = number | bigint | string | Big | BigNumber
 
-const DECIMAL_PLACES = 18 + 2
-
-const toImpl = (num: BigNumberSource): dn.Dnum => {
-  if (BigNumber.isBigNumber(num) || dn.isDnum(num)) {
-    return num as any
+const toBig = (num: BigNumberSource): Big => {
+  if (num instanceof Big) {
+    return num
   }
 
-  return dn.from(num)
+  return new Big(num as BigSource)
 }
 
-const fromImpl = (num: dn.Dnum): BigNumber => {
+const fromBig = (num: Big): BigNumber => {
   return num as unknown as BigNumber
 }
 
-export type BigNumber = object & {
+export type BigNumber = Omit<Big, keyof Big> & {
   ___B: "BigNumber"
 }
 export namespace BigNumber {
-  export const roundUp = "ROUND_UP"
-  export const roundDown = "ROUND_DOWN"
-  export const roundHalf = "ROUND_HALF"
-  export const roundHalfEven = "ROUND_HALF_EVEN"
+  export const { roundUp, roundDown, roundHalfUp, roundHalfEven } = Big
   export type RoundingMode =
     | typeof roundUp
     | typeof roundDown
-    | typeof roundHalf
+    | typeof roundHalfUp
     | typeof roundHalfEven
 
-  const translateToDnumRoundingMode = (
-    roundingMode: typeof roundUp | typeof roundDown | typeof roundHalf,
-  ): dn.Rounding => {
-    switch (roundingMode) {
-      case roundUp:
-        return "ROUND_UP"
-      case roundDown:
-        return "ROUND_DOWN"
-      case roundHalf:
-        return "ROUND_HALF"
-    }
-  }
-
-  let defaultRoundingMode: RoundingMode = roundHalf
+  let defaultRoundingMode: RoundingMode = roundHalfUp
   export const setDefaultRoundingMode = (roundingMode: RoundingMode): void => {
     defaultRoundingMode = roundingMode
   }
 
   export const isBigNumber = (num: any): num is BigNumber => {
-    return dn.isDnum(num)
+    return num instanceof Big
   }
 
   export const safeFrom = (value: BigNumberSource): undefined | BigNumber => {
@@ -62,60 +44,15 @@ export namespace BigNumber {
   }
 
   export const from = (value: BigNumberSource): BigNumber => {
-    return fromImpl(toImpl(value as any))
+    return fromBig(toBig(value as any))
   }
-
-  export const isEven = (value: BigNumberSource): boolean => {
-    const dnum = toImpl(value)
-    return dnum[0] % 2n === 0n
-  }
-
-  export const round = curry2(
-    (
-      options: {
-        precision?: number
-        roundingMode?: RoundingMode
-      },
-      value: BigNumberSource,
-    ): BigNumber => {
-      const precision = options.precision ?? 0
-      const roundingMode = options.roundingMode ?? defaultRoundingMode
-
-      if (roundingMode === roundHalfEven) {
-        const dnum = toImpl(value)
-        const intLength = getIntegerLength(value)
-        const finalLength = intLength + precision
-
-        const numStr = String(dnum[0])
-        const prevNum = numStr[finalLength - 1]
-        const currNum = numStr[finalLength]
-
-        // prettier-ignore
-        const roundingMode: dn.Rounding =
-          currNum !== "5" ? "ROUND_HALF" :
-          Number(prevNum) % 2 === 0 ? "ROUND_DOWN" : "ROUND_UP"
-
-        return fromImpl(
-          dn.setDecimals(toImpl(value), precision, {
-            rounding: roundingMode,
-          }),
-        )
-      }
-
-      return fromImpl(
-        dn.setDecimals(toImpl(value), precision, {
-          rounding: translateToDnumRoundingMode(roundingMode),
-        }),
-      )
-    },
-  )
 
   export const toString = (value: BigNumberSource): string => {
-    return dn.toString(toImpl(value))
+    return toBig(value).toString()
   }
 
   export const toNumber = (value: BigNumberSource): number => {
-    return dn.toNumber(toImpl(value))
+    return toBig(value).toNumber()
   }
 
   export const toBigInt = curry2(
@@ -126,7 +63,13 @@ export namespace BigNumber {
       value: BigNumberSource,
     ): bigint => {
       return BigInt(
-        toFixed({ precision: 0, roundingMode: options.roundingMode }, value),
+        toFixed(
+          {
+            precision: 0,
+            roundingMode: options.roundingMode ?? defaultRoundingMode,
+          },
+          toBig(value),
+        ),
       )
     },
   )
@@ -139,72 +82,96 @@ export namespace BigNumber {
       },
       value: BigNumberSource,
     ): string => {
-      return toString(round(options, value))
+      return toBig(value).toFixed(
+        options.precision,
+        options.roundingMode ?? defaultRoundingMode,
+      )
+    },
+  )
+
+  export const toExponential = curry2(
+    (
+      options: {
+        precision?: number
+        roundingMode?: RoundingMode
+      },
+      value: BigNumberSource,
+    ): string => {
+      return toBig(value).toExponential(
+        options.precision,
+        options.roundingMode ?? defaultRoundingMode,
+      )
     },
   )
 
   export const isNegative = (value: BigNumberSource): boolean => {
-    return isLt(value, 0)
+    return toBig(value).lt(0)
   }
 
   export const isGtZero = (value: BigNumberSource): boolean => {
-    return isGt(value, 0)
+    return toBig(value).gt(0)
   }
 
   export const isZero = (value: BigNumberSource): boolean => {
-    return isEq(value, 0)
+    return toBig(value).eq(0)
   }
-
-  export const isGte = curry2(
-    (value: BigNumberSource, a: BigNumberSource): boolean => {
-      return isGt(value, a) || isEq(value, a)
-    },
-  )
-
-  export const isLte = curry2(
-    (value: BigNumberSource, a: BigNumberSource): boolean => {
-      return isLt(value, a) || isEq(value, a)
-    },
-  )
 
   export const isEq = curry2(
     (value: BigNumberSource, a: BigNumberSource): boolean => {
-      return dn.eq(toImpl(value), toImpl(a))
+      return toBig(value).eq(toBig(a))
     },
   )
 
   export const isGt = curry2(
     (value: BigNumberSource, a: BigNumberSource): boolean => {
-      return dn.gt(toImpl(value), toImpl(a))
+      return toBig(value).gt(toBig(a))
+    },
+  )
+
+  export const isGte = curry2(
+    (value: BigNumberSource, a: BigNumberSource): boolean => {
+      return toBig(value).gte(toBig(a))
     },
   )
 
   export const isLt = curry2(
     (value: BigNumberSource, a: BigNumberSource): boolean => {
-      return dn.lt(toImpl(value), toImpl(a))
+      return toBig(value).lt(toBig(a))
+    },
+  )
+
+  export const isLte = curry2(
+    (value: BigNumberSource, a: BigNumberSource): boolean => {
+      return toBig(value).lte(toBig(a))
+    },
+  )
+
+  export const setPrecision = curry2(
+    (
+      options: {
+        precision?: number
+        roundingMode?: RoundingMode
+      },
+      value: BigNumberSource,
+    ): BigNumber => {
+      return fromBig(
+        toBig(
+          toBig(value).toPrecision(
+            options.precision,
+            options.roundingMode ?? defaultRoundingMode,
+          ),
+        ),
+      )
     },
   )
 
   export const getPrecision = (value: BigNumberSource): number => {
-    return toImpl(value)[1]
+    return toBig(value).c.length - (toBig(value).e + 1)
   }
 
   export const getIntegerLength = (value: BigNumberSource): number => {
-    const dnum = toImpl(value)
-    return String(dnum[0]).length - dnum[1]
+    return toBig(value).e + 1
   }
-
-  export const getDecimalPart = curry2(
-    (
-      options: { precision: number },
-      value: BigNumberSource,
-    ): undefined | string => {
-      const dnum = toImpl(value)
-      const decimalLength = getPrecision(value)
-      const decimalPart = String(dnum[0]).slice(-decimalLength)
-      return decimalPart.slice(0, options.precision)
-    },
-  )
 
   export const leftMoveDecimals = curry2(
     (distance: number, value: BigNumberSource): BigNumber =>
@@ -219,11 +186,11 @@ export namespace BigNumber {
   export const moveDecimals = curry2(
     (options: { distance: number }, value: BigNumberSource): BigNumber => {
       if (options.distance > 0) {
-        return div(value, 10 ** options.distance)
+        return fromBig(toBig(value).div(10 ** options.distance))
       }
 
       if (options.distance < 0) {
-        return mul(value, 10 ** -options.distance)
+        return fromBig(toBig(value).mul(10 ** -options.distance))
       }
 
       // distance === 0
@@ -231,58 +198,99 @@ export namespace BigNumber {
     },
   )
 
+  export const getDecimalPart = curry2(
+    (
+      options: { precision: number },
+      value: BigNumberSource,
+    ): undefined | string => {
+      /**
+       * `toString` will return `"1e-8"` in some case, so we choose `toFixed` here
+       */
+      const formatted = toFixed(
+        {
+          precision: Math.min(getPrecision(value), options.precision),
+          roundingMode: roundDown,
+        },
+        value,
+      )
+
+      const [, decimals] = formatted.split(".")
+      if (decimals == null) return undefined
+      return decimals
+    },
+  )
+
   export const abs = (value: BigNumberSource): BigNumber => {
-    return fromImpl(dn.abs(toImpl(value)))
+    return fromBig(toBig(value).abs())
   }
 
   export const neg = (value: BigNumberSource): BigNumber => {
-    const dnum = toImpl(value)
+    return fromBig(toBig(value).neg())
+  }
 
-    const negated: [value: dn.Value, decimals: dn.Decimals] =
-      dnum.slice() as any
-    negated[0] = -negated[0]
-
-    return fromImpl(negated)
+  export const sqrt = (value: BigNumberSource): BigNumber => {
+    return fromBig(toBig(value).sqrt())
   }
 
   export const add = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
-      return fromImpl(dn.add(toImpl(value), toImpl(a)))
+      return fromBig(toBig(value).add(toBig(a)))
     },
   )
 
   export const minus = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
-      return fromImpl(dn.sub(toImpl(value), toImpl(a)))
+      return fromBig(toBig(value).minus(toBig(a)))
     },
   )
 
   export const mul = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
-      return fromImpl(
-        dn.mul(toImpl(value), toImpl(a), { decimals: DECIMAL_PLACES }),
-      )
+      return fromBig(toBig(value).mul(toBig(a)))
     },
   )
 
   export const div = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
-      return fromImpl(
-        dn.div(toImpl(value), toImpl(a), { decimals: DECIMAL_PLACES }),
-      )
+      return fromBig(toBig(value).div(toBig(a)))
     },
   )
 
   export const pow = curry2((value: BigNumberSource, a: number): BigNumber => {
-    let res = from(value)
-
-    const powTarget = value
-    for (let i = 1; i < a; i++) {
-      res = mul(res, powTarget)
-    }
-
-    return res
+    return fromBig(toBig(value).pow(a))
   })
+
+  export const round = curry2(
+    (
+      options: {
+        precision?: number
+        roundingMode?: RoundingMode
+      },
+      value: BigNumberSource,
+    ): BigNumber => {
+      return fromBig(
+        toBig(value).round(
+          options.precision,
+          options.roundingMode ?? defaultRoundingMode,
+        ),
+      )
+    },
+  )
+
+  export const toPrecision = curry2(
+    (
+      options: {
+        precision?: number
+        roundingMode?: RoundingMode
+      },
+      value: BigNumberSource,
+    ): string => {
+      return toBig(value).toPrecision(
+        options.precision,
+        options.roundingMode ?? defaultRoundingMode,
+      )
+    },
+  )
 
   export const ascend = curry2(
     (a: BigNumberSource, b: BigNumberSource): -1 | 0 | 1 =>
@@ -298,7 +306,7 @@ export namespace BigNumber {
     comparator: (a: BigNumber, b: BigNumber) => -1 | 0 | 1,
     numbers: readonly BigNumberSource[],
   ): BigNumber[] => {
-    const _numbers = numbers.map(a => fromImpl(toImpl(a)))
+    const _numbers = numbers.map(a => fromBig(toBig(a)))
     _numbers.sort(comparator)
     return _numbers
   }
@@ -323,7 +331,7 @@ export namespace BigNumber {
 
   export const sum = (numbers: BigNumberSource[]): BigNumber => {
     return numbers
-      .map(n => fromImpl(toImpl(n)))
+      .map(n => fromBig(toBig(n)))
       .reduce((acc, n) => add(acc, n), ZERO)
   }
 
