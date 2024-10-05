@@ -29,6 +29,11 @@
       "import": "./lib/bitcoinHelpers.mjs",
       "require": "./lib/bitcoinHelpers.js",
       "types": "./lib/bitcoinHelpers.d.ts"
+    },
+    "./lowlevelUnstableInfos": {
+      "import": "./lib/lowlevelUnstableInfos.mjs",
+      "require": "./lib/lowlevelUnstableInfos.js",
+      "types": "./lib/lowlevelUnstableInfos.d.ts"
     }
   },
   "scripts": {
