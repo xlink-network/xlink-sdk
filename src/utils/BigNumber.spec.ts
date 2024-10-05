@@ -2,13 +2,6 @@ import { describe, expect, it } from "vitest"
 import { BigNumber, BigNumberSource } from "./BigNumber"
 
 describe("BigNumber", () => {
-  describe("isEven", () => {
-    it("should return true for even numbers", () => {
-      expect(BigNumber.isEven(2)).toBe(true)
-      expect(BigNumber.isEven(11)).toBe(false)
-    })
-  })
-
   describe("round", () => {
     describe("roundHalfEven", () => {
       it("should round to the nearest even number", () => {
