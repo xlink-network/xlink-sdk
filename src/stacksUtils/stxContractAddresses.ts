@@ -19,21 +19,21 @@ export const legacyAlexContractDeployerTestnet =
 export const stxAlternativeTokenContractAddresses = {
   wbtc: {
     [KnownChainId.Stacks.Mainnet]: {
-      deployerAddress: "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9",
+      deployerAddress: xlinkContractsDeployerMainnet,
       contractName: "token-wbtc",
     },
     [KnownChainId.Stacks.Testnet]: {
-      deployerAddress: "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC",
+      deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-wbtc",
     },
   },
   btcb: {
     [KnownChainId.Stacks.Mainnet]: {
-      deployerAddress: "SP3K8BC0PPEVCV7NZ6QSRWPQ2JE9E5B6N3PA0KBR9",
+      deployerAddress: xlinkContractsDeployerMainnet,
       contractName: "token-btcb",
     },
     [KnownChainId.Stacks.Testnet]: {
-      deployerAddress: "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC",
+      deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-btcb",
     },
   },
