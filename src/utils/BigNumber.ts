@@ -3,6 +3,8 @@ import { OneOrMore } from "./typeHelpers"
 
 export type BigNumberSource = number | bigint | string | BigNumber | dn.Dnum
 
+const DECIMAL_PLACES = 18 + 2
+
 const toImpl = (num: BigNumberSource): dn.Dnum => {
   if (BigNumber.isBigNumber(num) || dn.isDnum(num)) {
     return num as any
@@ -257,25 +259,29 @@ export namespace BigNumber {
 
   export const mul = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
-      return fromImpl(dn.mul(toImpl(value), toImpl(a)))
+      return fromImpl(
+        dn.mul(toImpl(value), toImpl(a), { decimals: DECIMAL_PLACES }),
+      )
     },
   )
 
   export const div = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
-      return fromImpl(dn.div(toImpl(value), toImpl(a)))
+      return fromImpl(
+        dn.div(toImpl(value), toImpl(a), { decimals: DECIMAL_PLACES }),
+      )
     },
   )
 
   export const pow = curry2((value: BigNumberSource, a: number): BigNumber => {
-    let res = toImpl(value)
+    let res = from(value)
 
-    const powTarget = toImpl(value)
+    const powTarget = value
     for (let i = 1; i < a; i++) {
-      res = dn.mul(res, powTarget)
+      res = mul(res, powTarget)
     }
 
-    return fromImpl(res)
+    return res
   })
 
   export const ascend = curry2(
