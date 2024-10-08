@@ -1,4 +1,5 @@
 import * as btc from "@scure/btc-signer"
+import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
 import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
@@ -25,6 +26,7 @@ import {
 import { range } from "../utils/arrayHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
+  KnownRoute_FromBitcoin,
   KnownRoute_FromBitcoin_ToEVM,
   KnownRoute_FromBitcoin_ToStacks,
   buildSupportedRoutes,
@@ -39,9 +41,8 @@ import {
   _allKnownEVMMainnetChains,
   _allKnownEVMTestnetChains,
 } from "../utils/types/knownIds"
-import { SDKNumber } from "./types"
+import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -88,10 +89,10 @@ export type BridgeFromBitcoinInput_signPsbtFn = (tx: {
 }) => Promise<{ psbt: Uint8Array }>
 
 export interface BridgeFromBitcoinInput {
-  fromChain: KnownChainId.BitcoinChain
-  toChain: KnownChainId.StacksChain | KnownChainId.EVMChain
-  fromToken: KnownTokenId.BitcoinToken
-  toToken: KnownTokenId.StacksToken | KnownTokenId.EVMToken
+  fromChain: ChainId
+  toChain: ChainId
+  fromToken: TokenId
+  toToken: TokenId
   fromAddress: string
   fromAddressScriptPubKey: Uint8Array
   toAddress: string
@@ -349,11 +350,17 @@ async function constructBitcoinTransaction(
 
 export type PrepareBitcoinTransactionInput = Omit<
   BridgeFromBitcoinInput,
-  "signPsbt" | "sendTransaction"
-> & {
-  orderData: Uint8Array
-  pegInAddressScriptPubKey: Uint8Array
-}
+  | "fromChain"
+  | "toChain"
+  | "fromToken"
+  | "toToken"
+  | "signPsbt"
+  | "sendTransaction"
+> &
+  KnownRoute_FromBitcoin & {
+    orderData: Uint8Array
+    pegInAddressScriptPubKey: Uint8Array
+  }
 export async function prepareBitcoinTransaction(
   info: PrepareBitcoinTransactionInput,
 ): Promise<
