@@ -5,10 +5,16 @@ export async function requestAPI<T>(options: {
   method: "GET" | "POST" | "PUT" | "DELETE"
   body?: Record<string, unknown>
 }): Promise<T> {
-  const res = await fetch(`${backendAPIPrefix}${options.path}`, {
-    method: options.method,
-    body: JSON.stringify(options.body),
-  })
+  const res = await fetch(
+    `${backendAPIPrefix}${options.path}`.replace(/(\w)\/\//g, "$1/"),
+    {
+      method: options.method,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(options.body),
+    },
+  )
 
   return readAPIResponse(res)
 }
