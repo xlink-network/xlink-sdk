@@ -321,7 +321,7 @@ async function constructBitcoinTransaction(
       addressScriptPubKey: info.fromAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
-    [info.orderData],
+    [],
   )
 
   const { psbt } = await info.signPsbt({
