@@ -68,12 +68,12 @@ export async function prepareTransaction(txInfo: {
   let lastSelectedUTXOSatsInTotal = sumUTXO(lastSelectedUTXOs)
 
   // Calculate fee
-  let calculatedFee = await calculateFee(
-    newRecipientAddresses,
+  let calculatedFee = await calculateFee({
+    recipientAddressScriptPubKeys: newRecipientAddresses,
     opReturnData,
-    lastSelectedUTXOs,
+    selectedUTXOs: lastSelectedUTXOs,
     feeRate,
-  )
+  })
 
   let loopTimes = 0
   while (lastSelectedUTXOSatsInTotal < satsToSend + calculatedFee.fee) {
@@ -97,12 +97,12 @@ export async function prepareTransaction(txInfo: {
     lastSelectedUTXOs = newSelectedUTXOs
 
     // Re-calculate fee
-    calculatedFee = await calculateFee(
-      newRecipientAddresses,
+    calculatedFee = await calculateFee({
+      recipientAddressScriptPubKeys: newRecipientAddresses,
       opReturnData,
-      lastSelectedUTXOs,
+      selectedUTXOs: newSelectedUTXOs,
       feeRate,
-    )
+    })
 
     loopTimes++
     if (loopTimes > 500) {
@@ -154,27 +154,28 @@ async function getOutputDustThresholdForOutput(
  */
 const DEFAULT_MIN_RELAY_TX_FEE = 1000n
 
-async function calculateFee(
-  recipientAddressScriptPubKeys: Uint8Array[],
-  opReturnData: Uint8Array[],
-  selectedUTXOs: Array<UTXOSpendable>,
-  feeRate: bigint,
-): Promise<{
+export async function calculateFee(info: {
+  recipientAddressScriptPubKeys: Uint8Array[]
+  opReturnData: Uint8Array[]
+  selectedUTXOs: Array<UTXOSpendable>
+  feeRate: bigint
+  extraSize?: number
+}): Promise<{
   fee: bigint
   estimatedVSize: number
 }> {
   const outputs: EstimationOutput[] = [
-    ...recipientAddressScriptPubKeys.map(r => ({
+    ...info.recipientAddressScriptPubKeys.map(r => ({
       scriptPubKey: r,
     })),
-    ...opReturnData.map(data => ({
+    ...info.opReturnData.map(data => ({
       scriptPubKey: btc.Script.encode(["RETURN", data]),
     })),
   ]
 
   try {
     const vSize = estimateTransactionVSizeAfterSign({
-      inputs: selectedUTXOs,
+      inputs: info.selectedUTXOs,
       outputs,
     })
 
@@ -182,7 +183,7 @@ async function calculateFee(
 
     return {
       estimatedVSize: vSize,
-      fee: max([feeRate * txSize, DEFAULT_MIN_RELAY_TX_FEE]),
+      fee: max([info.feeRate * txSize, DEFAULT_MIN_RELAY_TX_FEE]),
     }
   } catch (e) {
     if (e instanceof UnsupportedInputTypeError) {

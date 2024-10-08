@@ -1,4 +1,5 @@
 import * as btc from "@scure/btc-signer"
+import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
 import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
 import { createTransaction } from "../bitcoinUtils/createTransaction"
@@ -22,11 +23,12 @@ import {
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { range } from "../utils/arrayHelpers"
+import { BigNumber } from "../utils/BigNumber"
 import {
-  buildSupportedRoutes,
-  defineRoute,
   KnownRoute_FromBitcoin_ToEVM,
   KnownRoute_FromBitcoin_ToStacks,
+  buildSupportedRoutes,
+  defineRoute,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
@@ -37,8 +39,9 @@ import {
   _allKnownEVMMainnetChains,
   _allKnownEVMTestnetChains,
 } from "../utils/types/knownIds"
-import { ChainId, SDKNumber, TokenId } from "./types"
+import { SDKNumber } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -81,10 +84,10 @@ export type BridgeFromBitcoinInput_signPsbtFn = (tx: {
 }) => Promise<{ psbt: Uint8Array }>
 
 export interface BridgeFromBitcoinInput {
-  fromChain: ChainId
-  toChain: ChainId
-  fromToken: TokenId
-  toToken: TokenId
+  fromChain: KnownChainId.BitcoinChain
+  toChain: KnownChainId.StacksChain | KnownChainId.EVMChain
+  fromToken: KnownTokenId.BitcoinToken
+  toToken: KnownTokenId.StacksToken | KnownTokenId.EVMToken
   fromAddress: string
   fromAddressScriptPubKey: Uint8Array
   toAddress: string
@@ -169,7 +172,7 @@ async function bridgeFromBitcoin_toStacks(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToStacks(
+  const { data: orderData } = await createBridgeOrder_BitcoinToStacks(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
@@ -182,6 +185,7 @@ async function bridgeFromBitcoin_toStacks(
   )
 
   const tx = await constructBitcoinTransaction({
+    ...info,
     validateBridgeOrder: (btcTx, swapRoute) =>
       validateBridgeOrder_BitcoinToStacks(
         {
@@ -190,17 +194,32 @@ async function bridgeFromBitcoin_toStacks(
         },
         { btcTx, swapRoute },
       ),
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    signPsbt: info.signPsbt,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
+    orderData,
     pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 
-  return info.sendTransaction({ hex: tx.hex })
+  const { txid: apiBroadcastedTxId } = await broadcastRevealableTransaction({
+    fromChain: info.fromChain,
+    transactionHex: tx.hex,
+    orderData: orderData,
+    orderOutputIndex: tx.orderOutputIndex,
+    orderOutputSatsAmount: tx.orderOutputSatsAmount,
+    xlinkPegInAddress: pegInAddress,
+  })
+
+  const { txid: delegateBroadcastedTxId } = await info.sendTransaction({
+    hex: tx.hex,
+  })
+
+  if (apiBroadcastedTxId !== delegateBroadcastedTxId) {
+    console.warn(
+      "[xlink-sdk] Transaction id broadcasted by API and delegatee are different:",
+      `API: ${apiBroadcastedTxId}, `,
+      `Delegatee: ${delegateBroadcastedTxId}`,
+    )
+  }
+
+  return { txid: delegateBroadcastedTxId }
 }
 
 async function bridgeFromBitcoin_toEVM(
@@ -224,7 +243,7 @@ async function bridgeFromBitcoin_toEVM(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToEVM(
+  const { data: orderData } = await createBridgeOrder_BitcoinToEVM(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
@@ -239,6 +258,7 @@ async function bridgeFromBitcoin_toEVM(
   )
 
   const tx = await constructBitcoinTransaction({
+    ...info,
     validateBridgeOrder: (btcTx, swapRoute) =>
       validateBridgeOrder_BitcoinToEVM(
         {
@@ -247,17 +267,32 @@ async function bridgeFromBitcoin_toEVM(
         },
         { btcTx, swapRoute },
       ),
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    signPsbt: info.signPsbt,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
+    orderData,
     pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 
-  return info.sendTransaction({ hex: tx.hex })
+  const { txid: apiBroadcastedTxId } = await broadcastRevealableTransaction({
+    fromChain: info.fromChain,
+    transactionHex: tx.hex,
+    orderData: orderData,
+    orderOutputIndex: tx.orderOutputIndex,
+    orderOutputSatsAmount: tx.orderOutputSatsAmount,
+    xlinkPegInAddress: pegInAddress,
+  })
+
+  const { txid: delegateBroadcastedTxId } = await info.sendTransaction({
+    hex: tx.hex,
+  })
+
+  if (apiBroadcastedTxId !== delegateBroadcastedTxId) {
+    console.warn(
+      "[xlink-sdk] Transaction id broadcasted by API and delegatee are different:",
+      `API: ${apiBroadcastedTxId}, `,
+      `Delegatee: ${delegateBroadcastedTxId}`,
+    )
+  }
+
+  return { txid: delegateBroadcastedTxId }
 }
 
 async function constructBitcoinTransaction(
@@ -268,7 +303,11 @@ async function constructBitcoinTransaction(
         swapRoute: BridgeSwapRoute_FromBitcoin,
       ) => Promise<void>
     },
-): Promise<{ hex: string }> {
+): Promise<{
+  hex: `0x${string}`
+  orderOutputIndex: number
+  orderOutputSatsAmount: bigint
+}> {
   const txOptions = await prepareBitcoinTransaction(info)
 
   const tx = createTransaction(
@@ -277,7 +316,7 @@ async function constructBitcoinTransaction(
       addressScriptPubKey: info.fromAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
-    [info.opReturnData],
+    [info.orderData],
   )
 
   const { psbt } = await info.signPsbt({
@@ -298,17 +337,17 @@ async function constructBitcoinTransaction(
   await info.validateBridgeOrder(decodeHex(hex), [])
 
   return {
-    hex: hex,
+    hex: hex as `0x${string}`,
+    orderOutputIndex: txOptions.orderOutputIndex,
+    orderOutputSatsAmount: txOptions.orderOutputSatsAmount,
   }
 }
 
-export type PrepareBitcoinTransactionInput = Pick<
+export type PrepareBitcoinTransactionInput = Omit<
   BridgeFromBitcoinInput,
-  "networkFeeRate" | "reselectSpendableUTXOs" | "fromAddressScriptPubKey"
+  "signPsbt" | "sendTransaction"
 > & {
-  fromChain: KnownChainId.BitcoinChain
-  fromAmount: string
-  opReturnData: Uint8Array
+  orderData: Uint8Array
   pegInAddressScriptPubKey: Uint8Array
 }
 export async function prepareBitcoinTransaction(
@@ -316,6 +355,8 @@ export async function prepareBitcoinTransaction(
 ): Promise<
   BitcoinTransactionPrepareResult & {
     bitcoinNetwork: typeof btc.NETWORK
+    orderOutputIndex: number
+    orderOutputSatsAmount: bigint
   }
 > {
   const bitcoinNetwork =
@@ -323,15 +364,33 @@ export async function prepareBitcoinTransaction(
       ? btc.NETWORK
       : btc.TEST_NETWORK
 
+  const recipient = await createBitcoinPegInRecipients({
+    fromChain: info.fromChain,
+    toChain: info.toChain,
+    fromToken: info.fromToken,
+    toToken: info.toToken,
+    fromAddress: {
+      address: info.fromAddress,
+      scriptPubKey: info.fromAddressScriptPubKey,
+    },
+    toAddress: info.toAddress,
+    fromAmount: BigNumber.from(info.amount),
+    orderData: info.orderData,
+    feeRate: info.networkFeeRate,
+  })
+
   const result = await prepareTransaction({
     recipients: [
       {
+        addressScriptPubKey: recipient.scriptPubKey,
+        satsAmount: recipient.satsAmount,
+      },
+      {
         addressScriptPubKey: info.pegInAddressScriptPubKey,
-        satsAmount: bitcoinToSatoshi(info.fromAmount),
+        satsAmount: bitcoinToSatoshi(info.amount),
       },
     ],
     changeAddressScriptPubKey: info.fromAddressScriptPubKey,
-    opReturnData: [info.opReturnData],
     feeRate: info.networkFeeRate,
     reselectSpendableUTXOs: info.reselectSpendableUTXOs,
   })
@@ -339,5 +398,7 @@ export async function prepareBitcoinTransaction(
   return {
     ...result,
     bitcoinNetwork,
+    orderOutputIndex: 0,
+    orderOutputSatsAmount: recipient.satsAmount,
   }
 }

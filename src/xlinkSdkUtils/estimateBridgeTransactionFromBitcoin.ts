@@ -105,7 +105,7 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const { data: opReturnData } = await createBridgeOrder_BitcoinToStacks(
+  const { data: orderData } = await createBridgeOrder_BitcoinToStacks(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
@@ -118,12 +118,8 @@ async function estimateFromBitcoin_toStacks(
   )
 
   const resp = await prepareBitcoinTransaction({
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
+    ...info,
+    orderData: orderData,
     pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 
@@ -173,12 +169,8 @@ async function estimateFromBitcoin_toEVM(
   )
 
   const resp = await prepareBitcoinTransaction({
-    networkFeeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: info.reselectSpendableUTXOs,
-    fromChain: info.fromChain,
-    fromAddressScriptPubKey: info.fromAddressScriptPubKey,
-    fromAmount: info.amount,
-    opReturnData,
+    ...info,
+    orderData: opReturnData,
     pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
   })
 
