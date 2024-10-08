@@ -70,7 +70,11 @@ export const supportedRoutes = buildSupportedRoutes(
     //      to EVM
     ...defineRoute(
       [[KnownChainId.Bitcoin.Testnet], [..._allKnownEVMTestnetChains]],
-      [[KnownTokenId.Bitcoin.BTC, KnownTokenId.EVM.WBTC]],
+      [
+        [KnownTokenId.Bitcoin.BTC, KnownTokenId.EVM.WBTC],
+        [KnownTokenId.Bitcoin.BTC, KnownTokenId.EVM.BTCB],
+        [KnownTokenId.Bitcoin.BTC, KnownTokenId.EVM.aBTC],
+      ],
     ),
   ],
   {
