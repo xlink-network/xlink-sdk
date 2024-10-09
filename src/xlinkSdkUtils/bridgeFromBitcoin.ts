@@ -302,7 +302,7 @@ async function bridgeFromBitcoin_toEVM(
 
   const { txid: apiBroadcastedTxId } = await broadcastRevealableTransaction({
     fromChain: info.fromChain,
-    transactionHex: tx.hex,
+    transactionHex: `0x${tx.hex}`,
     orderData: createdOrder.data,
     orderOutputIndex: tx.revealOutput.index,
     orderOutputSatsAmount: tx.revealOutput.satsAmount,
@@ -338,7 +338,7 @@ async function constructBitcoinTransaction(
       ) => Promise<void>
     },
 ): Promise<{
-  hex: `0x${string}`
+  hex: string
   revealOutput?: {
     index: number
     satsAmount: bigint
@@ -386,7 +386,7 @@ async function constructBitcoinTransaction(
   await info.validateBridgeOrder(decodeHex(hex), revealTx, [])
 
   return {
-    hex: hex as `0x${string}`,
+    hex,
     revealOutput: txOptions.revealOutput,
   }
 }

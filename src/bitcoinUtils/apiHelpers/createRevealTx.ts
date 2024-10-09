@@ -26,7 +26,7 @@ export async function createRevealTx(info: {
       orderDataHex: toHex(info.orderData),
       xlinkPegInAddress: {
         address: info.xlinkPegInAddress.address,
-        scriptPubKey: toHex(info.xlinkPegInAddress.scriptPubKey),
+        scriptPubKeyHex: toHex(info.xlinkPegInAddress.scriptPubKey),
       },
     },
   })
