@@ -26,7 +26,7 @@ export async function broadcastRevealableTransaction(info: {
       orderOutputSatoshiAmount: info.orderOutputSatsAmount.toString(),
       xlinkPegInAddress: {
         address: info.xlinkPegInAddress.address,
-        scriptPubKey: toHex(info.xlinkPegInAddress.scriptPubKey),
+        scriptPubKeyHex: toHex(info.xlinkPegInAddress.scriptPubKey),
       },
     },
   })

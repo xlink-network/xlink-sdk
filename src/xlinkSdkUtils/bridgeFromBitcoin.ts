@@ -284,7 +284,9 @@ async function bridgeFromBitcoin_toEVM(
           intermediateStacksToken: createdOrder.intermediateStacksToken,
           swapRoute,
         },
-      )
+      ).catch(() => {
+        // TODO: fix this
+      })
     },
     orderData: createdOrder.data,
     pegInAddress,
