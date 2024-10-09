@@ -1,11 +1,11 @@
 import { generateContracts } from "clarity-codegen/lib/generate"
 import * as path from "node:path"
-import { STACKS_MAINNET } from "../src/config"
-import { xlinkContractsDeployerMainnet } from "../src/stacksUtils/stxContractAddresses"
+import { STACKS_TESTNET } from "../src/config"
+import { xlinkContractsDeployerTestnet } from "../src/stacksUtils/stxContractAddresses"
 ;(async function main(): Promise<void> {
   await generateContracts(
-    STACKS_MAINNET.coreApiUrl,
-    xlinkContractsDeployerMainnet,
+    STACKS_TESTNET.coreApiUrl,
+    xlinkContractsDeployerTestnet,
     [
       "btc-peg-in-endpoint-v2-03",
       "btc-peg-out-endpoint-v2-01",
