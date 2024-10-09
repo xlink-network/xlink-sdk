@@ -201,7 +201,7 @@ async function bridgeFromBitcoin_toStacks(
         { btcTx, swapRoute },
       ),
     orderData,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    pegInAddress,
   })
 
   if (tx.revealOutput != null) {
@@ -287,7 +287,7 @@ async function bridgeFromBitcoin_toEVM(
       )
     },
     orderData: createdOrder.data,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    pegInAddress,
   })
 
   if (tx.revealOutput == null) {
@@ -325,6 +325,10 @@ async function bridgeFromBitcoin_toEVM(
 async function constructBitcoinTransaction(
   info: PrepareBitcoinTransactionInput &
     Pick<BridgeFromBitcoinInput, "signPsbt"> & {
+      pegInAddress: {
+        address: string
+        scriptPubKey: Uint8Array
+      }
       validateBridgeOrder: (
         pegInTx: Uint8Array,
         revealTx: undefined | Uint8Array,
@@ -372,10 +376,7 @@ async function constructBitcoinTransaction(
       vout: txOptions.revealOutput.index,
       satsAmount: txOptions.revealOutput.satsAmount,
       orderData: info.orderData,
-      xlinkPegInAddress: {
-        address: info.toAddress,
-        scriptPubKey: info.pegInAddressScriptPubKey,
-      },
+      xlinkPegInAddress: info.pegInAddress,
     })
     revealTx = decodeHex(created.txHex)
   }
@@ -399,7 +400,10 @@ export type PrepareBitcoinTransactionInput = Omit<
 > &
   KnownRoute_FromBitcoin & {
     orderData: Uint8Array
-    pegInAddressScriptPubKey: Uint8Array
+    pegInAddress: {
+      address: string
+      scriptPubKey: Uint8Array
+    }
   }
 export async function prepareBitcoinTransaction(
   info: PrepareBitcoinTransactionInput,
@@ -421,7 +425,7 @@ export async function prepareBitcoinTransaction(
     const result = await prepareTransaction({
       recipients: [
         {
-          addressScriptPubKey: info.pegInAddressScriptPubKey,
+          addressScriptPubKey: info.pegInAddress.scriptPubKey,
           satsAmount: bitcoinToSatoshi(info.amount),
         },
       ],
@@ -458,7 +462,7 @@ export async function prepareBitcoinTransaction(
         satsAmount: recipient.satsAmount,
       },
       {
-        addressScriptPubKey: info.pegInAddressScriptPubKey,
+        addressScriptPubKey: info.pegInAddress.scriptPubKey,
         satsAmount: bitcoinToSatoshi(info.amount),
       },
     ],

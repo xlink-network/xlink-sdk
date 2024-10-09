@@ -119,8 +119,8 @@ async function estimateFromBitcoin_toStacks(
 
   const resp = await prepareBitcoinTransaction({
     ...info,
-    orderData: orderData,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    orderData,
+    pegInAddress,
   })
 
   return {
@@ -179,7 +179,7 @@ async function estimateFromBitcoin_toEVM(
   const resp = await prepareBitcoinTransaction({
     ...info,
     orderData: createdOrder.data,
-    pegInAddressScriptPubKey: pegInAddress.scriptPubKey,
+    pegInAddress,
   })
 
   return {
