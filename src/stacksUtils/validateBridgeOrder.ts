@@ -30,7 +30,7 @@ export async function validateBridgeOrder_BitcoinToStacks(
 
   if (hasLength(swapRoute, 0)) {
     resp = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "validate-tx-0",
       {
         tx: btcTx,
@@ -96,11 +96,16 @@ export async function validateBridgeOrder_BitcoinToEVM(
     endpointDeployerAddress: string
   },
   info: {
-    btcTx: Uint8Array
+    commitTx: Uint8Array
+    revealTx: Uint8Array
+    intermediateStacksToken: {
+      deployerAddress: string
+      contractName: string
+    }
     swapRoute: BridgeSwapRoute_FromBitcoin
   },
 ): Promise<void> {
-  const { btcTx, swapRoute } = info
+  const { commitTx, revealTx, swapRoute } = info
   const executeOptions = {
     deployerAddress: contractCallInfo.endpointDeployerAddress,
     callReadOnlyFunction: (callOptions =>
@@ -114,12 +119,18 @@ export async function validateBridgeOrder_BitcoinToEVM(
 
   if (hasLength(swapRoute, 0)) {
     resp = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "validate-tx-cross",
       {
-        tx: btcTx,
-        "output-idx": 0n,
-        "order-idx": 2n,
+        "commit-tx": {
+          tx: commitTx,
+          "output-idx": 1n,
+        },
+        "reveal-tx": {
+          tx: revealTx,
+          "order-idx": 0n,
+        },
+        "token-trait": `${info.intermediateStacksToken.deployerAddress}.${info.intermediateStacksToken.contractName}`,
       },
       executeOptions,
     )

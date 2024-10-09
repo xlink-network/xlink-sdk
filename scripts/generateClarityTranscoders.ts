@@ -7,10 +7,9 @@ import { xlinkContractsDeployerMainnet } from "../src/stacksUtils/stxContractAdd
     STACKS_MAINNET.coreApiUrl,
     xlinkContractsDeployerMainnet,
     [
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "btc-peg-out-endpoint-v2-01",
-      "cross-bridge-registry-v2-01",
-      "cross-peg-in-endpoint-v2-01",
+      "cross-peg-in-endpoint-v2-03",
       "cross-peg-out-endpoint-v2-01",
     ],
     path.resolve(__dirname, "../generated/smartContract/"),

@@ -106,7 +106,7 @@ export const getEvm2StacksFeeInfo = async (
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
     isPaused: executeReadonlyCallXLINK(
-      "cross-peg-in-endpoint-v2-01",
+      "cross-peg-in-endpoint-v2-03",
       "get-paused",
       {},
       executeOptions,

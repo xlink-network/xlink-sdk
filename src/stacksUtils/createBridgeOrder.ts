@@ -5,8 +5,10 @@ import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMappin
 import { hasLength } from "../utils/arrayHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { KnownChainId } from "../utils/types/knownIds"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { executeReadonlyCallXLINK } from "./xlinkContractHelpers"
+import { toCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
+import { getStacksAlternativeFromTokenContractAddress } from "./stxContractAddresses"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -45,7 +47,7 @@ export async function createBridgeOrder_BitcoinToStacks(
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "create-order-0-or-fail",
       { order: receiverAddr },
       executeOptions,
@@ -106,12 +108,22 @@ export async function createBridgeOrder_BitcoinToEVM(
   },
   info: {
     targetChain: KnownChainId.EVMChain
+    targetToken: KnownTokenId.EVMToken
     fromBitcoinScriptPubKey: Uint8Array
     receiverAddr: string
     swapRoute: BridgeSwapRoute_FromBitcoin
     swapSlippedAmount?: bigint
   },
-): Promise<{ data: Uint8Array }> {
+): Promise<
+  | undefined
+  | {
+      intermediateStacksToken: {
+        deployerAddress: string
+        contractName: string
+      }
+      data: Uint8Array
+    }
+> {
   let data: undefined | Uint8Array
 
   const { swapRoute, receiverAddr /*, swapSlippedAmount = 0n */ } = info
@@ -125,16 +137,29 @@ export async function createBridgeOrder_BitcoinToEVM(
   }
 
   const targetChainId = contractAssignedChainIdFromKnownChain(info.targetChain)
+  const targetTokenCorrespondingStacksToken =
+    await toCorrespondingStacksCurrency(info.targetToken)
+  if (targetTokenCorrespondingStacksToken == null) return undefined
+  const alternativeStacksToken = getStacksAlternativeFromTokenContractAddress(
+    contractCallInfo.network.isMainnet()
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    targetTokenCorrespondingStacksToken,
+    info.targetChain,
+    info.targetToken,
+  )
+  if (alternativeStacksToken == null) return undefined
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-02",
+      "btc-peg-in-endpoint-v2-03",
       "create-order-cross-or-fail",
       {
         order: {
           from: info.fromBitcoinScriptPubKey,
           to: decodeHex(receiverAddr),
           "chain-id": targetChainId,
+          token: `${alternativeStacksToken.deployerAddress}.${alternativeStacksToken.contractName}`,
         },
       },
       executeOptions,
@@ -185,5 +210,8 @@ export async function createBridgeOrder_BitcoinToEVM(
     checkNever(swapRoute)
   }
 
-  return { data: data! }
+  return {
+    intermediateStacksToken: alternativeStacksToken,
+    data: data!,
+  }
 }
