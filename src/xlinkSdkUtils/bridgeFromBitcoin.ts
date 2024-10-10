@@ -284,9 +284,7 @@ async function bridgeFromBitcoin_toEVM(
           intermediateStacksToken: createdOrder.intermediateStacksToken,
           swapRoute,
         },
-      ).catch(() => {
-        // TODO: fix this
-      })
+      )
     },
     orderData: createdOrder.data,
     pegInAddress,
@@ -368,8 +366,6 @@ async function constructBitcoinTransaction(
     signedTx.finalize()
   }
 
-  const hex = signedTx.hex
-
   let revealTx: undefined | Uint8Array
   if (txOptions.revealOutput != null) {
     const created = await createRevealTx({
@@ -383,10 +379,10 @@ async function constructBitcoinTransaction(
     revealTx = decodeHex(created.txHex)
   }
 
-  await info.validateBridgeOrder(decodeHex(hex), revealTx, [])
+  await info.validateBridgeOrder(signedTx.extract(), revealTx, [])
 
   return {
-    hex,
+    hex: signedTx.hex,
     revealOutput: txOptions.revealOutput,
   }
 }
@@ -431,6 +427,7 @@ export async function prepareBitcoinTransaction(
           satsAmount: bitcoinToSatoshi(info.amount),
         },
       ],
+      opReturnData: [info.orderData],
       changeAddressScriptPubKey: info.fromAddressScriptPubKey,
       feeRate: info.networkFeeRate,
       reselectSpendableUTXOs: info.reselectSpendableUTXOs,
