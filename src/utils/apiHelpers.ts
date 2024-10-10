@@ -2,7 +2,7 @@ import { backendAPIPrefix } from "../config"
 
 export async function requestAPI<T>(options: {
   path: string
-  method: "GET" | "POST" | "PUT" | "DELETE"
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
   body?: Record<string, unknown>
 }): Promise<T> {
   const res = await fetch(
@@ -22,6 +22,10 @@ export async function requestAPI<T>(options: {
 export const readAPIResponse = async <T>(resp: Response): Promise<T> => {
   if (resp.status >= 200 && resp.status < 300) {
     return resp.json() as any
+  }
+
+  if (resp.status === 429) {
+    throw new TooManyRequestsError(resp)
   }
 
   const respText = await resp.text()
@@ -47,6 +51,29 @@ export const readAPIResponse = async <T>(resp: Response): Promise<T> => {
       cause: respData,
     },
   )
+}
+
+export class TooManyRequestsError extends Error {
+  requestUrl: string
+  retryAfter?: number
+
+  constructor(resp: Response, options?: ErrorConstructorOptions) {
+    const _retryAfter = Number(resp.headers.get("Retry-After"))
+    const retryAfter = Number.isNaN(_retryAfter) ? undefined : _retryAfter
+
+    let errMsg = `Too many requests to SDK API server`
+    if (retryAfter != null) {
+      errMsg += `; retry after ${retryAfter} seconds`
+    }
+
+    super(errMsg, {
+      ...options,
+      cause: options?.cause ?? resp,
+    })
+
+    this.requestUrl = resp.url
+    this.retryAfter = retryAfter
+  }
 }
 
 export class ThirdPartyRequestError extends Error {

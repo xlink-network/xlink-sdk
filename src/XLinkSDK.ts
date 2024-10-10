@@ -1,5 +1,6 @@
 import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
+import { defaultEvmClients } from "./evmUtils/evmClients"
 import {
   getEVMContractCallInfo,
   getEVMToken,
@@ -9,10 +10,12 @@ import {
   getStacksToken,
   getStacksTokenContractInfo,
 } from "./stacksUtils/xlinkContractHelpers"
+import { TooManyRequestsError } from "./utils/apiHelpers"
 import {
   GetSupportedRoutesFn_Conditions,
   KnownRoute,
 } from "./utils/buildSupportedRoutes"
+import { TooFrequentlyError } from "./utils/errors"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import {
   BridgeFromBitcoinInput,
@@ -32,7 +35,11 @@ import {
   bridgeFromStacks,
   supportedRoutes as supportedRoutesFromStacks,
 } from "./xlinkSdkUtils/bridgeFromStacks"
-import { bridgeInfoFromBitcoin } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+import {
+  BridgeInfoFromBitcoinInput,
+  BridgeInfoFromBitcoinOutput,
+  bridgeInfoFromBitcoin,
+} from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
 import {
   BridgeInfoFromEVMInput,
   BridgeInfoFromEVMOutput,
@@ -63,7 +70,6 @@ import {
   StacksContractAddress,
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
-import { defaultEvmClients } from "./evmUtils/evmClients"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -404,8 +410,22 @@ export class XLinkSDK {
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains is unsupported.
    */
-  bridgeInfoFromBitcoin = bridgeInfoFromBitcoin
-
+  bridgeInfoFromBitcoin(
+    input: BridgeInfoFromBitcoinInput,
+  ): Promise<BridgeInfoFromBitcoinOutput> {
+    return bridgeInfoFromBitcoin(input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(
+          ["bridgeInfoFromBitcoin"],
+          err.retryAfter,
+          {
+            cause: err,
+          },
+        )
+      }
+      throw err
+    })
+  }
   /**
    * This function estimates the transaction fee and vSize for move or swap tokens from the Bitcoin network
    * to other supported blockchain networks, including Stacks and EVM-compatible chains.
@@ -430,7 +450,20 @@ export class XLinkSDK {
   estimateBridgeTransactionFromBitcoin(
     input: EstimateBridgeTransactionFromBitcoinInput,
   ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
-    return estimateBridgeTransactionFromBitcoin(this.sdkContext, input)
+    return estimateBridgeTransactionFromBitcoin(this.sdkContext, input).catch(
+      err => {
+        if (err instanceof TooManyRequestsError) {
+          throw new TooFrequentlyError(
+            ["estimateBridgeTransactionFromBitcoin"],
+            err.retryAfter,
+            {
+              cause: err,
+            },
+          )
+        }
+        throw err
+      },
+    )
   }
   /**
    * This function facilitates the transfer of tokens from the Bitcoin network to other supported
@@ -456,7 +489,14 @@ export class XLinkSDK {
   bridgeFromBitcoin(
     input: BridgeFromBitcoinInput,
   ): Promise<BridgeFromBitcoinOutput> {
-    return bridgeFromBitcoin(this.sdkContext, input)
+    return bridgeFromBitcoin(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeFromBitcoin"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
   }
 }
 
