@@ -24,23 +24,6 @@ export const btcPegInEndpointV203 = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
-  'finalize-peg-in-0': {
-    input: [
-      { name: 'tx', type: bufferT },
-      {
-        name: 'block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      { name: 'output-idx', type: uintT },
-      { name: 'order-idx', type: uintT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
   'finalize-peg-in-cross': {
     input: [
       { name: 'tx', type: bufferT },
@@ -57,7 +40,7 @@ export const btcPegInEndpointV203 = defineContract({
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
       },
-      { name: 'token-trait', type: traitT }
+      { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(booleanT, ),
     mode: 'public'
@@ -78,7 +61,8 @@ export const btcPegInEndpointV203 = defineContract({
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
       },
-      { name: 'routing-traits', type: listT(traitT, ) }
+      { name: 'routing-traits', type: listT(traitT, ) },
+      { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(booleanT, ),
     mode: 'public'
@@ -133,16 +117,17 @@ export const btcPegInEndpointV203 = defineContract({
     output: responseSimpleT(principalT, ),
     mode: 'readonly'
   },
-  'create-order-0-or-fail': {
-    input: [ { name: 'order', type: principalT } ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
   'create-order-cross-or-fail': {
     input: [
       {
         name: 'order',
-        type: tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT, token: principalT }, )
+        type: tupleT({
+          'chain-id': optionalT(uintT, ),
+          from: bufferT,
+          to: bufferT,
+          token: principalT,
+          'token-out': principalT
+        }, )
       }
     ],
     output: responseSimpleT(bufferT, ),
@@ -157,7 +142,8 @@ export const btcPegInEndpointV203 = defineContract({
           from: bufferT,
           'min-amount-out': optionalT(uintT, ),
           routing: listT(uintT, ),
-          to: bufferT
+          to: bufferT,
+          'token-out': principalT
         }, )
       }
     ],
@@ -182,11 +168,6 @@ export const btcPegInEndpointV203 = defineContract({
     output: responseSimpleT(tupleT({ 'commit-txid': bufferT, 'order-script': bufferT }, ), ),
     mode: 'readonly'
   },
-  'decode-order-0-or-fail': {
-    input: [ { name: 'order-script', type: bufferT } ],
-    output: responseSimpleT(principalT, ),
-    mode: 'readonly'
-  },
   'decode-order-cross-from-reveal-tx-or-fail': {
     input: [
       { name: 'tx', type: bufferT },
@@ -194,13 +175,25 @@ export const btcPegInEndpointV203 = defineContract({
     ],
     output: responseSimpleT(tupleT({
       'commit-txid': bufferT,
-      'order-details': tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT, token: principalT }, )
+      'order-details': tupleT({
+        'chain-id': optionalT(uintT, ),
+        from: bufferT,
+        to: bufferT,
+        token: principalT,
+        'token-out': principalT
+      }, )
     }, ), ),
     mode: 'readonly'
   },
   'decode-order-cross-or-fail': {
     input: [ { name: 'order-script', type: bufferT } ],
-    output: responseSimpleT(tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT, token: principalT }, ), ),
+    output: responseSimpleT(tupleT({
+      'chain-id': optionalT(uintT, ),
+      from: bufferT,
+      to: bufferT,
+      token: principalT,
+      'token-out': principalT
+    }, ), ),
     mode: 'readonly'
   },
   'decode-order-cross-swap-from-reveal-tx-or-fail': {
@@ -215,7 +208,8 @@ export const btcPegInEndpointV203 = defineContract({
         from: bufferT,
         'min-amount-out': optionalT(uintT, ),
         routing: listT(uintT, ),
-        to: bufferT
+        to: bufferT,
+        'token-out': principalT
       }, )
     }, ), ),
     mode: 'readonly'
@@ -227,7 +221,8 @@ export const btcPegInEndpointV203 = defineContract({
       from: bufferT,
       'min-amount-out': optionalT(uintT, ),
       routing: listT(uintT, ),
-      to: bufferT
+      to: bufferT,
+      'token-out': principalT
     }, ), ),
     mode: 'readonly'
   },
@@ -260,11 +255,6 @@ export const btcPegInEndpointV203 = defineContract({
     }, ), ),
     mode: 'readonly'
   },
-  'get-approved-wrapped-or-default': {
-    input: [ { name: 'token', type: principalT } ],
-    output: booleanT,
-    mode: 'readonly'
-  },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
   'get-peg-in-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-peg-in-min-fee': { input: [], output: uintT, mode: 'readonly' },
@@ -285,15 +275,6 @@ export const btcPegInEndpointV203 = defineContract({
     mode: 'readonly'
   },
   'is-peg-in-paused': { input: [], output: booleanT, mode: 'readonly' },
-  'validate-tx-0': {
-    input: [
-      { name: 'tx', type: bufferT },
-      { name: 'output-idx', type: uintT },
-      { name: 'order-idx', type: uintT }
-    ],
-    output: responseSimpleT(tupleT({ 'amount-net': uintT, fee: uintT, 'order-details': principalT }, ), ),
-    mode: 'readonly'
-  },
   'validate-tx-cross': {
     input: [
       {
@@ -304,12 +285,18 @@ export const btcPegInEndpointV203 = defineContract({
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
       },
-      { name: 'token-trait', type: traitT }
+      { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(tupleT({
       'amount-net': uintT,
       fee: uintT,
-      'order-details': tupleT({ 'chain-id': uintT, from: bufferT, to: bufferT, token: principalT }, )
+      'order-details': tupleT({
+        'chain-id': optionalT(uintT, ),
+        from: bufferT,
+        to: bufferT,
+        token: principalT,
+        'token-out': principalT
+      }, )
     }, ), ),
     mode: 'readonly'
   },
@@ -323,7 +310,8 @@ export const btcPegInEndpointV203 = defineContract({
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
       },
-      { name: 'routing-traits', type: listT(traitT, ) }
+      { name: 'routing-traits', type: listT(traitT, ) },
+      { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(tupleT({
       'amount-net': uintT,
@@ -333,7 +321,8 @@ export const btcPegInEndpointV203 = defineContract({
         from: bufferT,
         'min-amount-out': optionalT(uintT, ),
         routing: listT(uintT, ),
-        to: bufferT
+        to: bufferT,
+        'token-out': principalT
       }, ),
       'routing-factors': listT(uintT, ),
       'routing-tokens': listT(principalT, )

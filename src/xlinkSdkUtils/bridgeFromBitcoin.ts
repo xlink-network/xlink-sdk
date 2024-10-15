@@ -15,12 +15,10 @@ import {
   createBridgeOrder_BitcoinToEVM,
   createBridgeOrder_BitcoinToStacks,
 } from "../stacksUtils/createBridgeOrder"
-import {
-  validateBridgeOrder_BitcoinToEVM,
-  validateBridgeOrder_BitcoinToStacks,
-} from "../stacksUtils/validateBridgeOrder"
+import { validateBridgeOrder } from "../stacksUtils/validateBridgeOrder"
 import {
   getStacksContractCallInfo,
+  getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { range } from "../utils/arrayHelpers"
@@ -170,7 +168,15 @@ async function bridgeFromBitcoin_toStacks(
 ): Promise<BridgeFromBitcoinOutput> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const contractCallInfo = getStacksContractCallInfo(info.toChain)
-  if (pegInAddress == null || contractCallInfo == null) {
+  const toTokenContractInfo = getStacksTokenContractInfo(
+    info.toChain,
+    info.toToken,
+  )
+  if (
+    pegInAddress == null ||
+    contractCallInfo == null ||
+    toTokenContractInfo == null
+  ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -178,29 +184,52 @@ async function bridgeFromBitcoin_toStacks(
     )
   }
 
-  const { data: orderData } = await createBridgeOrder_BitcoinToStacks(
+  const createdOrder = await createBridgeOrder_BitcoinToStacks(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
     },
     {
+      targetToken: info.toToken,
+      fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
       receiverAddr: info.toAddress,
       swapSlippedAmount: numberToStacksContractNumber(info.amount),
       swapRoute: [],
     },
   )
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
 
   const tx = await constructBitcoinTransaction({
     ...info,
-    validateBridgeOrder: (btcTx, revealTx, swapRoute) =>
-      validateBridgeOrder_BitcoinToStacks(
+    validateBridgeOrder: (btcTx, revealTx, swapRoute) => {
+      if (revealTx == null) {
+        throw new UnsupportedBridgeRouteError(
+          info.fromChain,
+          info.toChain,
+          KnownTokenId.Bitcoin.BTC,
+        )
+      }
+
+      return validateBridgeOrder(
         {
           network: contractCallInfo.network,
           endpointDeployerAddress: contractCallInfo.deployerAddress,
         },
-        { btcTx, swapRoute },
-      ),
-    orderData,
+        {
+          commitTx: btcTx,
+          revealTx,
+          intermediateStacksToken: toTokenContractInfo,
+          swapRoute,
+        },
+      )
+    },
+    orderData: createdOrder.data,
     pegInAddress,
   })
 
@@ -273,7 +302,7 @@ async function bridgeFromBitcoin_toEVM(
         )
       }
 
-      return validateBridgeOrder_BitcoinToEVM(
+      return validateBridgeOrder(
         {
           network: contractCallInfo.network,
           endpointDeployerAddress: contractCallInfo.deployerAddress,

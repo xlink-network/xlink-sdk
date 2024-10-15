@@ -31,11 +31,13 @@ export async function createBridgeOrder_BitcoinToStacks(
     network: StacksNetwork
   },
   info: {
+    targetToken: KnownTokenId.StacksToken
+    fromBitcoinScriptPubKey: Uint8Array
     receiverAddr: string
     swapRoute: BridgeSwapRoute_FromBitcoin
     swapSlippedAmount?: bigint
   },
-): Promise<{ data: Uint8Array }> {
+): Promise<undefined | { data: Uint8Array }> {
   let data: undefined | Uint8Array
 
   const { swapRoute, receiverAddr /*, swapSlippedAmount = 0n */ } = info
@@ -48,55 +50,31 @@ export async function createBridgeOrder_BitcoinToStacks(
       })) satisfies CallReadOnlyFunctionFn,
   }
 
+  const targetTokenContractInfo = getStacksTokenContractInfo(
+    contractCallInfo.network.isMainnet()
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    info.targetToken,
+  )
+  if (targetTokenContractInfo == null) {
+    return undefined
+  }
+
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
       "btc-peg-in-endpoint-v2-03",
-      "create-order-0-or-fail",
-      { order: receiverAddr },
+      "create-order-cross-or-fail",
+      {
+        order: {
+          from: info.fromBitcoinScriptPubKey,
+          to: decodeHex(receiverAddr),
+          "chain-id": undefined,
+          token: `${targetTokenContractInfo.deployerAddress}.${targetTokenContractInfo.contractName}`,
+          "token-out": `${targetTokenContractInfo.deployerAddress}.${targetTokenContractInfo.contractName}`,
+        },
+      },
       executeOptions,
     ).then(unwrapResponse)
-    // } else if (swapRoute.length === 1) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-peg-in-endpoint-v2-01",
-    //     "create-order-1-or-fail",
-    //     {
-    //       order: {
-    //         "pool-id": swapRoute[0].poolId,
-    //         "min-dy": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 2) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-peg-in-endpoint-v2-01",
-    //     "create-order-2-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "min-dz": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 3) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-bridge-endpoint-v1-11",
-    //     "create-order-3-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "pool3-id": swapRoute[2].poolId,
-    //         "min-dw": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
   } else {
     checkNever(swapRoute)
   }
@@ -150,6 +128,9 @@ export async function createBridgeOrder_BitcoinToEVM(
         : KnownChainId.Stacks.Testnet,
       targetTokenCorrespondingStacksToken,
     )
+  if (targetTokenCorrespondingStacksTokenContractInfo == null) {
+    return undefined
+  }
 
   const alternativeStacksTokenAddress =
     getStacksAlternativeFromTokenContractAddress(
@@ -163,7 +144,6 @@ export async function createBridgeOrder_BitcoinToEVM(
   const intermediateStacksTokenAddress =
     alternativeStacksTokenAddress ??
     targetTokenCorrespondingStacksTokenContractInfo
-  if (intermediateStacksTokenAddress == null) return undefined
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
@@ -174,53 +154,12 @@ export async function createBridgeOrder_BitcoinToEVM(
           from: info.fromBitcoinScriptPubKey,
           to: decodeHex(receiverAddr),
           "chain-id": targetChainId,
-          token: `${intermediateStacksTokenAddress.deployerAddress}.${intermediateStacksTokenAddress.contractName}`,
+          token: `${targetTokenCorrespondingStacksTokenContractInfo.deployerAddress}.${targetTokenCorrespondingStacksTokenContractInfo.contractName}`,
+          "token-out": `${intermediateStacksTokenAddress.deployerAddress}.${intermediateStacksTokenAddress.contractName}`,
         },
       },
       executeOptions,
     ).then(unwrapResponse)
-    // } else if (swapRoute.length === 1) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "cross-peg-in-endpoint-v2-01",
-    //     "create-order-1-or-fail",
-    //     {
-    //       order: {
-    //         "pool-id": swapRoute[0].poolId,
-    //         "min-dy": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 2) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "cross-peg-in-endpoint-v2-01",
-    //     "create-order-2-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "min-dz": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
-    // } else if (swapRoute.length === 3) {
-    //   data = await executeReadonlyCallXLINK(
-    //     "btc-bridge-endpoint-v1-11",
-    //     "create-order-3-or-fail",
-    //     {
-    //       order: {
-    //         "pool1-id": swapRoute[0].poolId,
-    //         "pool2-id": swapRoute[1].poolId,
-    //         "pool3-id": swapRoute[2].poolId,
-    //         "min-dw": swapSlippedAmount,
-    //         user: receiverAddr,
-    //       },
-    //     },
-    //     executeOptions,
-    //   ).then(unwrapResponse)
   } else {
     checkNever(swapRoute)
   }

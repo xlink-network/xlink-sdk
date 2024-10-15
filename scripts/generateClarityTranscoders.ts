@@ -4,7 +4,7 @@ import { STACKS_TESTNET } from "../src/config"
 import { xlinkContractsDeployerTestnet } from "../src/stacksUtils/stxContractAddresses"
 ;(async function main(): Promise<void> {
   await generateContracts(
-    STACKS_TESTNET.coreApiUrl,
+    process.env.STACKS_CORE_API_URL ?? STACKS_TESTNET.coreApiUrl,
     xlinkContractsDeployerTestnet,
     [
       "btc-peg-in-endpoint-v2-03",

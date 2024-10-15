@@ -105,21 +105,30 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const { data: orderData } = await createBridgeOrder_BitcoinToStacks(
+  const createdOrder = await createBridgeOrder_BitcoinToStacks(
     {
       network: contractCallInfo.network,
       endpointDeployerAddress: contractCallInfo.deployerAddress,
     },
     {
+      targetToken: info.toToken,
+      fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
       receiverAddr: info.toAddress,
       swapSlippedAmount: numberToStacksContractNumber(info.amount),
       swapRoute: [],
     },
   )
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
 
   const resp = await prepareBitcoinTransaction({
     ...info,
-    orderData,
+    orderData: createdOrder.data,
     pegInAddress,
   })
 

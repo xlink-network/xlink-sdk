@@ -50,10 +50,12 @@ export const crossPegInEndpointV203 = defineContract({
           salt: bufferT,
           'src-chain-id': uintT,
           to: bufferT,
-          token: principalT
+          'token-in': principalT,
+          'token-out': principalT
         }, )
       },
-      { name: 'token-trait', type: traitT },
+      { name: 'token-in-trait', type: traitT },
+      { name: 'token-out-trait', type: traitT },
       {
         name: 'signature-packs',
         type: listT(tupleT({ 'order-hash': bufferT, signature: bufferT, signer: principalT }, ), )
@@ -75,10 +77,14 @@ export const crossPegInEndpointV203 = defineContract({
           'routing-tokens': listT(principalT, ),
           salt: bufferT,
           'src-chain-id': uintT,
-          to: bufferT
+          to: bufferT,
+          'token-in': principalT,
+          'token-out': principalT
         }, )
       },
+      { name: 'token-in-trait', type: traitT },
       { name: 'routing-traits', type: listT(traitT, ) },
+      { name: 'token-out-trait', type: traitT },
       {
         name: 'signature-packs',
         type: listT(tupleT({ 'order-hash': bufferT, signature: bufferT, signer: principalT }, ), )
@@ -137,7 +143,8 @@ export const crossPegInEndpointV203 = defineContract({
           salt: bufferT,
           'src-chain-id': uintT,
           to: bufferT,
-          token: principalT
+          'token-in': principalT,
+          'token-out': principalT
         }, )
       }
     ],
@@ -157,7 +164,9 @@ export const crossPegInEndpointV203 = defineContract({
           'routing-tokens': listT(principalT, ),
           salt: bufferT,
           'src-chain-id': uintT,
-          to: bufferT
+          to: bufferT,
+          'token-in': principalT,
+          'token-out': principalT
         }, )
       }
     ],
@@ -191,7 +200,8 @@ export const crossPegInEndpointV203 = defineContract({
       salt: bufferT,
       'src-chain-id': uintT,
       to: bufferT,
-      token: principalT
+      'token-in': principalT,
+      'token-out': principalT
     }, ), ),
     mode: 'readonly'
   },
@@ -206,7 +216,9 @@ export const crossPegInEndpointV203 = defineContract({
       'routing-tokens': listT(principalT, ),
       salt: bufferT,
       'src-chain-id': uintT,
-      to: bufferT
+      to: bufferT,
+      'token-in': principalT,
+      'token-out': principalT
     }, ), ),
     mode: 'readonly'
   },
@@ -285,7 +297,8 @@ export const crossPegInEndpointV203 = defineContract({
           salt: bufferT,
           'src-chain-id': uintT,
           to: bufferT,
-          token: principalT
+          'token-in': principalT,
+          'token-out': principalT
         }, )
       }
     ],
@@ -305,7 +318,9 @@ export const crossPegInEndpointV203 = defineContract({
           'routing-tokens': listT(principalT, ),
           salt: bufferT,
           'src-chain-id': uintT,
-          to: bufferT
+          to: bufferT,
+          'token-in': principalT,
+          'token-out': principalT
         }, )
       }
     ],
@@ -366,9 +381,12 @@ export const crossPegInEndpointV203 = defineContract({
           salt: bufferT,
           'src-chain-id': uintT,
           to: bufferT,
-          token: principalT
+          'token-in': principalT,
+          'token-out': principalT
         }, )
-      }
+      },
+      { name: 'token-in-trait', type: traitT },
+      { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(booleanT, ),
     mode: 'readonly'
@@ -386,9 +404,14 @@ export const crossPegInEndpointV203 = defineContract({
           'routing-tokens': listT(principalT, ),
           salt: bufferT,
           'src-chain-id': uintT,
-          to: bufferT
+          to: bufferT,
+          'token-in': principalT,
+          'token-out': principalT
         }, )
-      }
+      },
+      { name: 'token-in-trait', type: traitT },
+      { name: 'routing-traits', type: listT(traitT, ) },
+      { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(booleanT, ),
     mode: 'readonly'
@@ -438,8 +461,6 @@ export const crossPegInEndpointV203 = defineContract({
     mode: 'mapEntry'
   },
   'is-paused': { input: noneT, output: booleanT, mode: 'variable' },
-  'order-hash-to-iter': { input: noneT, output: bufferT, mode: 'variable' },
-  'src-chain-id-to-iter': { input: noneT, output: uintT, mode: 'variable' },
   'use-whitelist': { input: noneT, output: booleanT, mode: 'variable' }
 }
 } as const)
