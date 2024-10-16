@@ -127,6 +127,8 @@ export async function getAllAddresses(
   const localAddresses = evmContractAddresses[chainId]
   const configContractAddress = localAddresses[EVMEndpointContract.BridgeConfig]
 
+  if (client == null) return
+
   let onChainAddresses: undefined | EVMOnChainAddresses
   if (configContractAddress != null) {
     onChainAddresses = await getOnChainConfigs(
@@ -147,7 +149,7 @@ const getOnChainConfigs = async (
   sdkContext: SDKGlobalContext,
   chain: KnownChainId.EVMChain,
   configContractAddress: Address,
-): Promise<EVMOnChainAddresses> => {
+): Promise<undefined | EVMOnChainAddresses> => {
   const cache = sdkContext.evm.onChainConfigCache
   const cacheKey = `${chain}:${configContractAddress}`
 
@@ -157,6 +159,8 @@ const getOnChainConfigs = async (
   }
 
   const client = sdkContext.evm.viemClients[chain]
+  if (client == null) return
+
   const promise = _getOnChainConfigsImpl(
     client,
     chain,
