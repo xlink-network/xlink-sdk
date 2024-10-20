@@ -7,3 +7,5 @@ export {
   contractAssignedChainIdFromKnownChain,
   contractAssignedChainIdToKnownChain,
 } from "./stacksUtils/crossContractDataMapping"
+
+export { getTerminatingStacksTokenContractAddress } from "./stacksUtils/stxContractAddresses"

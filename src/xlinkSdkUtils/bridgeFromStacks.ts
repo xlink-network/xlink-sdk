@@ -26,7 +26,7 @@ import {
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { getStacksAlternativeFromTokenContractAddress } from "../stacksUtils/stxContractAddresses"
+import { getTerminatingStacksTokenContractAddress } from "../stacksUtils/stxContractAddresses"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -215,8 +215,8 @@ async function bridgeFromStacks_toEVM(
     )
   }
 
-  const finalTokenContractAddress =
-    getStacksAlternativeFromTokenContractAddress(
+  const terminatingTokenContractAddress =
+    getTerminatingStacksTokenContractAddress(
       info.fromChain,
       info.fromToken,
       info.toChain,
@@ -227,7 +227,7 @@ async function bridgeFromStacks_toEVM(
     "cross-peg-out-endpoint-v2-01",
     "transfer-to-unwrap",
     {
-      "token-trait": `${finalTokenContractAddress.deployerAddress}.${finalTokenContractAddress.contractName}`,
+      "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),

@@ -11,7 +11,8 @@ import {
   getStacksTokenContractInfo,
 } from "./xlinkContractHelpers"
 import { toCorrespondingStacksCurrency } from "../evmUtils/peggingHelpers"
-import { getStacksAlternativeFromTokenContractAddress } from "./stxContractAddresses"
+import { getTerminatingStacksTokenContractAddress } from "./stxContractAddresses"
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -98,10 +99,7 @@ export async function createBridgeOrder_BitcoinToEVM(
 ): Promise<
   | undefined
   | {
-      intermediateStacksToken: {
-        deployerAddress: string
-        contractName: string
-      }
+      terminatingStacksToken: StacksContractAddress
       data: Uint8Array
     }
 > {
@@ -118,32 +116,30 @@ export async function createBridgeOrder_BitcoinToEVM(
   }
 
   const targetChainId = contractAssignedChainIdFromKnownChain(info.targetChain)
-  const targetTokenCorrespondingStacksToken =
-    await toCorrespondingStacksCurrency(info.targetToken)
-  if (targetTokenCorrespondingStacksToken == null) return undefined
-  const targetTokenCorrespondingStacksTokenContractInfo =
-    getStacksTokenContractInfo(
-      contractCallInfo.network.isMainnet()
-        ? KnownChainId.Stacks.Mainnet
-        : KnownChainId.Stacks.Testnet,
-      targetTokenCorrespondingStacksToken,
-    )
-  if (targetTokenCorrespondingStacksTokenContractInfo == null) {
+
+  const intermediateFromStacksToken = await toCorrespondingStacksCurrency(
+    info.targetToken,
+  )
+  if (intermediateFromStacksToken == null) return undefined
+  const intermediateFromStacksTokenAddress = getStacksTokenContractInfo(
+    contractCallInfo.network.isMainnet()
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    intermediateFromStacksToken,
+  )
+  if (intermediateFromStacksTokenAddress == null) {
     return undefined
   }
 
-  const alternativeStacksTokenAddress =
-    getStacksAlternativeFromTokenContractAddress(
+  const intermediateToStacksTokenAddress =
+    getTerminatingStacksTokenContractAddress(
       contractCallInfo.network.isMainnet()
         ? KnownChainId.Stacks.Mainnet
         : KnownChainId.Stacks.Testnet,
-      targetTokenCorrespondingStacksToken,
+      intermediateFromStacksToken,
       info.targetChain,
       info.targetToken,
-    )
-  const intermediateStacksTokenAddress =
-    alternativeStacksTokenAddress ??
-    targetTokenCorrespondingStacksTokenContractInfo
+    ) ?? intermediateFromStacksTokenAddress
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
@@ -154,8 +150,8 @@ export async function createBridgeOrder_BitcoinToEVM(
           from: info.fromBitcoinScriptPubKey,
           to: decodeHex(receiverAddr),
           "chain-id": targetChainId,
-          token: `${targetTokenCorrespondingStacksTokenContractInfo.deployerAddress}.${targetTokenCorrespondingStacksTokenContractInfo.contractName}`,
-          "token-out": `${intermediateStacksTokenAddress.deployerAddress}.${intermediateStacksTokenAddress.contractName}`,
+          token: `${intermediateFromStacksTokenAddress.deployerAddress}.${intermediateFromStacksTokenAddress.contractName}`,
+          "token-out": `${intermediateToStacksTokenAddress.deployerAddress}.${intermediateToStacksTokenAddress.contractName}`,
         },
       },
       executeOptions,
@@ -165,9 +161,9 @@ export async function createBridgeOrder_BitcoinToEVM(
   }
 
   return {
-    intermediateStacksToken: {
-      deployerAddress: intermediateStacksTokenAddress.deployerAddress,
-      contractName: intermediateStacksTokenAddress.contractName,
+    terminatingStacksToken: {
+      deployerAddress: intermediateToStacksTokenAddress.deployerAddress,
+      contractName: intermediateToStacksTokenAddress.contractName,
     },
     data: data!,
   }

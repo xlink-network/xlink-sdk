@@ -224,7 +224,7 @@ async function bridgeFromBitcoin_toStacks(
         {
           commitTx: btcTx,
           revealTx,
-          intermediateStacksToken: toTokenContractInfo,
+          terminatingStacksToken: toTokenContractInfo,
           swapRoute,
         },
       )
@@ -310,7 +310,7 @@ async function bridgeFromBitcoin_toEVM(
         {
           commitTx: btcTx,
           revealTx,
-          intermediateStacksToken: createdOrder.intermediateStacksToken,
+          terminatingStacksToken: createdOrder.terminatingStacksToken,
           swapRoute,
         },
       )

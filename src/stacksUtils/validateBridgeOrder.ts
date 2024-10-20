@@ -3,6 +3,7 @@ import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn, Response } from "clarity-codegen"
 import { hasLength } from "../utils/arrayHelpers"
 import { checkNever } from "../utils/typeHelpers"
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { BridgeSwapRoute_FromBitcoin } from "./createBridgeOrder"
 import { executeReadonlyCallXLINK } from "./xlinkContractHelpers"
 
@@ -14,10 +15,7 @@ export async function validateBridgeOrder(
   info: {
     commitTx: Uint8Array
     revealTx: Uint8Array
-    intermediateStacksToken: {
-      deployerAddress: string
-      contractName: string
-    }
+    terminatingStacksToken: StacksContractAddress
     swapRoute: BridgeSwapRoute_FromBitcoin
   },
 ): Promise<void> {
@@ -46,7 +44,7 @@ export async function validateBridgeOrder(
           tx: revealTx,
           "order-idx": 0n,
         },
-        "token-out-trait": `${info.intermediateStacksToken.deployerAddress}.${info.intermediateStacksToken.contractName}`,
+        "token-out-trait": `${info.terminatingStacksToken.deployerAddress}.${info.terminatingStacksToken.contractName}`,
       },
       executeOptions,
     )

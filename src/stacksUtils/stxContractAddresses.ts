@@ -37,8 +37,11 @@ export const stxAlternativeTokenContractAddresses = {
       contractName: "token-btcb",
     },
   },
-}
-export const getStacksAlternativeFromTokenContractAddress = (
+} satisfies Record<
+  string,
+  Record<KnownChainId.StacksChain, StacksContractAddress>
+>
+export const getTerminatingStacksTokenContractAddress = (
   fromStacksChain: KnownChainId.StacksChain,
   fromStacksToken: KnownTokenId.StacksToken,
   toEVMChain: KnownChainId.EVMChain,
