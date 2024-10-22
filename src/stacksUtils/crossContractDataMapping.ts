@@ -50,6 +50,8 @@ export function contractAssignedChainIdFromKnownChain(
       return 13n
     case KnownChainId.EVM.Manta:
       return 14n
+    case KnownChainId.EVM.Linea:
+      return 15n
     default:
       checkNever(chain)
       throw new UnsupportedChainError(chain)
@@ -143,6 +145,11 @@ export function contractAssignedChainIdToKnownChain(
     return [KnownChainId.EVM.Manta]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Manta)
+
+  if (chainId === 15n) {
+    return [KnownChainId.EVM.Linea]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Linea)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)

@@ -6,6 +6,7 @@ import {
   bsc,
   bscTestnet,
   coreDao,
+  linea,
   mainnet,
   manta,
   merlin,
@@ -133,6 +134,12 @@ export const defaultEvmClients: Record<EVMChain, Client> = {
 
   [EVMChain.Manta]: createClient({
     chain: manta,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.Linea]: createClient({
+    chain: linea,
     transport: http(),
     batch: { multicall: true },
   }),

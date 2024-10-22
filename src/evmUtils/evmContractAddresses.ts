@@ -94,6 +94,19 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMEndpointContract.BridgeConfig]:
       "0xf99f62475F50BE59393dbdc148E6627E4E88Fc24",
   },
+  [EVMChain.Linea]: {
+    // https://t.me/c/1599543687/61611
+    [EVMEndpointContract.BridgeEndpoint]:
+      "0x79d1C91053baceced5C796aB8a765E4d5aB38e8a",
+    [EVMEndpointContract.Registry]:
+      "0x88af5f4bDd601c1bd3674bF1aD2CC282a720D66C",
+    [EVMToken.aBTC]: "0x7A087e75807F2E5143C161a817E64dF6dC5EAFe0",
+    [EVMToken.ALEX]: "0xdfd0660032c2D0D38a9092a43d1669D6568cAF71",
+    [EVMToken.vLiALEX]: "0xcd5ED0B0b1e107D331833715932B4a596bFbA378",
+    [EVMToken.vLiSTX]: "0x70727228DB8C7491bF0aD42C180dbf8D95B257e2",
+    [EVMToken.sUSDT]: "0xA831a4E181F25D3B35949E582Ff27Cc44e703F37",
+    [EVMToken.wuBTC]: "0x9e801CB9ce84a84a563E5a74Cc2f3Ad55F914072",
+  },
 
   // testnet
   [EVMChain.Sepolia]: {
