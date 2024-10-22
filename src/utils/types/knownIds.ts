@@ -203,6 +203,12 @@ export namespace KnownChainId {
     /** Represents the Manta testnet chain ID. */
     // export const MantaTestnet = chainId("evm-manta-testnet")
 
+    // Linea
+    /** Represents the Linea mainnet chain ID. */
+    export const Linea = chainId("evm-linea")
+    /** Represents the Linea testnet chain ID. */
+    // export const LineaTestnet = chainId("evm-linea-testnet")
+
     // Bera
     /** Represents the Bera mainnet chain ID. */
     // export const Bera = chainId("evm-bera")
@@ -259,6 +265,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Arbitrum,
   KnownChainId.EVM.Aurora,
   KnownChainId.EVM.Manta,
+  KnownChainId.EVM.Linea,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
