@@ -71,38 +71,39 @@ For detailed API documentation, including a full list of available methods and t
 
 Create an instance of the SDK with default options
 ```typescript
-import{ XLinkSDK } from '@xlink-network/xlink-sdk';
+import { XLinkSDK } from '@xlink-network/xlink-sdk';
 const xlinkSdk = new XLinkSDK();
 ```
 
 1. Bridge from Stacks
 ```typescript
-import{ 
+import { 
     BridgeInfoFromStacksInput, 
     BridgeFromStacksInput,
     KnownChainId,
     KnownTokenId, 
+    toSDKNumberOrUndefined,
 } from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({    
     fromChain: KnownChainId.Stacks.Mainnet,
-    toChain: KnownChainId.EVM.Ethereum,
     fromToken: KnownTokenId.Stacks.sUSDT,
+    toChain: KnownChainId.EVM.Ethereum,
     toToken: KnownTokenId.EVM.USDT,
-    amount: 100,
-} as BridgeInfoFromStacksInput);
+    amount: toSDKNumberOrUndefined(100),
+});
 console.log("Bridge Info:", bridgeInfo);
 
 // Perform the bridge operation
 const result = await xlinkSdk.bridgeFromStacks({ 
     fromChain: KnownChainId.Stacks.Mainnet,
-    toChain: KnownChainId.EVM.Ethereum,
     fromToken: KnownTokenId.Stacks.sUSDT,
+    toChain: KnownChainId.EVM.Ethereum,
     toToken: KnownTokenId.EVM.USDT,
     toAddress: "0x...",
-    amount: 10,
-    sendTransaction: async (tx: ContractCallOptions) => {
+    amount: toSDKNumberOrUndefined(10),
+    sendTransaction: async tx => {
         // Implementation for sending transaction from Stacks mainnet
         const network = new StacksMainnet();
         const transaction = await makeContractCall({
@@ -117,8 +118,8 @@ const result = await xlinkSdk.bridgeFromStacks({
         });
         const broadcastResponse = await broadcastTransaction(transaction, network);
         return broadcastResponse.txid;
-    } 
-} as BridgeFromStacksInput);
+    },
+});
 console.log("Transaction ID:", result.txid);
 ```
 
@@ -129,28 +130,29 @@ import {
     BridgeFromEVMInput,
     KnownChainId,
     KnownTokenId,
+    toSDKNumberOrUndefined,
 } from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
     fromChain: KnownChainId.EVM.Ethereum,
-    toChain: KnownChainId.Stacks.Mainnet,
     fromToken: KnownTokenId.EVM.USDT,
+    toChain: KnownChainId.Stacks.Mainnet,
     toToken: KnownTokenId.Stacks.sUSDT,
-    amount: 100,
-} as BridgeInfoFromEVMInput);
+    amount: toSDKNumberOrUndefined(100),
+});
 console.log("Bridge Info:", bridgeInfo);
 
 // Perform the bridge operation
 const result = await xlinkSdk.bridgeFromEVM({
     fromChain: KnownChainId.EVM.Ethereum,
-    toChain: KnownChainId.Stacks.Mainnet,
     fromToken: KnownTokenId.EVM.USDT,
+    toChain: KnownChainId.Stacks.Mainnet,
     toToken: KnownTokenId.Stacks.sUSDT,
     toAddress: "0x...",
-    amount: 10,
+    amount: toSDKNumberOrUndefined(10),
     sendTransaction: // Implementation for sending transaction from EVM chain
-} as BridgeFromEVMInput);
+});
 console.log("Transaction ID:", result.txHash);
 ```
 
@@ -161,29 +163,30 @@ import {
     BridgeFromBitcoinInput,
     KnownChainId,
     KnownTokenId,
+    toSDKNumberOrUndefined,
 } from '@xlink-network/xlink-sdk';
 
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
     fromChain: KnownChainId.Bitcoin.Mainnet,
     toChain: KnownChainId.EVM.Ethereum,
-    amount: 1,
-} as BridgeInfoFromBitcoinInput);
+    amount: toSDKNumberOrUndefined(1),
+});
 console.log("Bridge Info:", bridgeInfo);
 
 // Perform the bridge operation
 const result = await xlinkSdk.bridgeFromBitcoin({
     fromChain: KnownChainId.Bitcoin.Mainnet,
-    toChain: KnownChainId.EVM.Ethereum,
     fromToken: KnownTokenId.Bitcoin.BTC,
+    toChain: KnownChainId.EVM.Ethereum,
     toToken: KnownTokenId.EVM.WBTC,
     fromAddress: "bitcoin address",
     fromAddressScriptPubKey: scriptPubKey,
     toAddress: "0x...",
-    amount: 1,
+    amount: toSDKNumberOrUndefined(1),
     networkFeeRate: 10n,
     reselectSpendableUTXOs: // Implementation for reselect UTXOs
     signPsbt: // Implementation for signing PSBT
-} as BridgeFromBitcoinInput);
+});
 console.log("Transaction ID:", result.tx);
 ```
