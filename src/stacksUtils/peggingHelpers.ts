@@ -16,8 +16,18 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     return false
   }
 
-  if (_allNoLongerSupportedEVMChains.includes(fromChain)) return false
-  if (_allNoLongerSupportedEVMChains.includes(toChain)) return false
+  if (
+    KnownChainId.isEVMChain(fromChain) &&
+    _allNoLongerSupportedEVMChains.includes(fromChain)
+  ) {
+    return false
+  }
+  if (
+    KnownChainId.isEVMChain(toChain) &&
+    _allNoLongerSupportedEVMChains.includes(toChain)
+  ) {
+    return false
+  }
 
   if (
     !KnownChainId.isStacksChain(fromChain) ||
