@@ -77,7 +77,7 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "create-order-cross-or-fail",
       {
         order: {
@@ -159,7 +159,7 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
   let data: undefined | Uint8Array
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "create-order-cross-or-fail",
       {
         order: {

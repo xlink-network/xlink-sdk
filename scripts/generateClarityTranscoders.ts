@@ -7,7 +7,7 @@ import { xlinkContractsDeployerTestnet } from "../src/stacksUtils/stxContractAdd
     process.env.STACKS_CORE_API_URL ?? STACKS_TESTNET.coreApiUrl,
     xlinkContractsDeployerTestnet,
     [
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "btc-peg-out-endpoint-v2-01",
       "cross-peg-in-endpoint-v2-03",
       "cross-peg-out-endpoint-v2-01",

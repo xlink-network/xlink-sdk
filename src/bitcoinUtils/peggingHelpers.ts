@@ -45,19 +45,19 @@ export const getBtc2StacksFeeInfo = async (
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "is-peg-in-paused",
       {},
       executeOptions,
     ),
     feeRate: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "get-peg-in-fee",
       {},
       executeOptions,
     ).then(numberFromStacksContractNumber),
     minFeeAmount: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "get-peg-in-min-fee",
       {},
       executeOptions,

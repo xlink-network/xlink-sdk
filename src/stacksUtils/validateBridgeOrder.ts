@@ -33,7 +33,7 @@ export async function validateBridgeOrder(
 
   if (hasLength(swapRoute, 0)) {
     resp = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-03",
+      "btc-peg-in-endpoint-v2-04",
       "validate-tx-cross",
       {
         "commit-tx": {
