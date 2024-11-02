@@ -323,15 +323,21 @@ async function bridgeFromEVM_toStacks(
     ],
   })
 
+  const fallbackGasLimit = 200_000
   const estimated = await estimateGas(fromTokenContractInfo.client, {
     account: info.fromAddress,
     to: bridgeEndpointAddress,
     data: functionData,
   })
-    .then(n => BigNumber.round({ precision: 0 }, BigNumber.mul(n, 1.2)))
+    .then(n =>
+      BigNumber.round(
+        { precision: 0 },
+        BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
+      ),
+    )
     .catch(
       // add a fallback in case estimate failed
-      () => 5 * 1e5,
+      () => fallbackGasLimit,
     )
 
   return await info.sendTransaction({
@@ -396,17 +402,21 @@ async function bridgeFromEVM_toBitcoin(
     ],
   })
 
+  const fallbackGasLimit = 200_000
   const estimated = await estimateGas(fromTokenContractInfo.client, {
     account: info.fromAddress,
     to: bridgeEndpointAddress,
     data: functionData,
   })
-    .then(n => BigNumber.round({ precision: 0 }, BigNumber.mul(n, 1.2)))
+    .then(n =>
+      BigNumber.round(
+        { precision: 0 },
+        BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
+      ),
+    )
     .catch(
       // add a fallback in case estimate failed
-      () =>
-        // https://mainnet-explorer.ailayer.xyz/tx/0xa62dd8c3a6a3fe2dbc10b0847dcc0cae610c348a77b163134b87eb9563fd5f62
-        5 * 1e5,
+      () => fallbackGasLimit,
     )
 
   return await info.sendTransaction({
@@ -469,17 +479,21 @@ async function bridgeFromEVM_toEVM(
     ],
   })
 
+  const fallbackGasLimit = 200_000
   const estimated = await estimateGas(fromTokenContractInfo.client, {
     account: info.fromAddress,
     to: bridgeEndpointAddress,
     data: functionData,
   })
-    .then(n => BigNumber.round({ precision: 0 }, BigNumber.mul(n, 1.2)))
+    .then(n =>
+      BigNumber.round(
+        { precision: 0 },
+        BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
+      ),
+    )
     .catch(
       // add a fallback in case estimate failed
-      () =>
-        // https://mainnet-explorer.ailayer.xyz/tx/0xa62dd8c3a6a3fe2dbc10b0847dcc0cae610c348a77b163134b87eb9563fd5f62
-        5 * 1e5,
+      () => fallbackGasLimit,
     )
 
   return await info.sendTransaction({
