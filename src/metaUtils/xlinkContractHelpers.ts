@@ -43,7 +43,7 @@ export async function getBRC20SupportedRoutes(
   return promise
 }
 async function _getBRC20SupportedRoutes(
-  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  sdkContext: SDKGlobalContext,
   chainId: KnownChainId.BRC20Chain,
 ): Promise<BRC20SupportedRoute[]> {
   const stacksChainId =
@@ -65,6 +65,7 @@ async function _getBRC20SupportedRoutes(
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | BRC20SupportedRoute> => {
       const stacksToken = await getStacksToken(
+        sdkContext,
         stacksChainId,
         route.stacksTokenContractAddress,
       )
@@ -118,7 +119,6 @@ export interface RunesSupportedRoute {
   pegOutFeeRate: BigNumber
   pegOutFeeBitcoinAmount: null | BigNumber
 }
-
 export async function getRunesSupportedRoutes(
   sdkContext: SDKGlobalContext,
   chainId: KnownChainId.RunesChain,
@@ -141,7 +141,7 @@ export async function getRunesSupportedRoutes(
   return promise
 }
 async function _getRunesSupportedRoutes(
-  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  sdkContext: SDKGlobalContext,
   chainId: KnownChainId.RunesChain,
 ): Promise<RunesSupportedRoute[]> {
   const stacksChainId =
@@ -163,6 +163,7 @@ async function _getRunesSupportedRoutes(
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | RunesSupportedRoute> => {
       const stacksToken = await getStacksToken(
+        sdkContext,
         stacksChainId,
         route.stacksTokenContractAddress,
       )

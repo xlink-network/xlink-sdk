@@ -11,10 +11,8 @@ import {
   numberToSolidityContractNumber,
 } from "../evmUtils/xlinkContractHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import {
-  addressToBuffer,
-  getStacksTokenContractInfo,
-} from "../stacksUtils/xlinkContractHelpers"
+import { getStacksTokenContractInfo } from "../stacksUtils/xlinkContractHelpers"
+import { addressToBuffer } from "../utils/addressHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   buildSupportedRoutes,
@@ -350,6 +348,7 @@ async function bridgeFromEVM_toStacks(
     info.fromToken,
   )
   const toTokenContractInfo = await getStacksTokenContractInfo(
+    ctx,
     info.toChain,
     info.toToken,
   )
@@ -639,7 +638,7 @@ async function bridgeFromEVM_toMeta(
     throw new InvalidMethodParametersError(
       [
         "XLinkSDK",
-        `bridgeFromEVM (to ${KnownChainId.isBRC20Chain(info.toChain) ? "BRC20" : "Runes"})`,
+        `bridgeFromEVM (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
         {

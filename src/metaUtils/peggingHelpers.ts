@@ -1,13 +1,25 @@
-import { toCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
+import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import {
+  executeReadonlyCallXLINK,
+  getStacksContractCallInfo,
+  numberFromStacksContractNumber,
+} from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
-  _KnownRoute_FromBRC20_ToStacks,
-  _KnownRoute_FromRunes_ToStacks,
+  getFinalStepStacksTokenAddress,
+  getFirstStepStacksTokenAddress,
+  SwapRoute,
+} from "../utils/SwapRouteHelpers"
+import {
   IsSupportedFn,
+  KnownRoute_FromBRC20_ToStacks,
+  KnownRoute_FromRunes_ToStacks,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToRunes,
 } from "../utils/buildSupportedRoutes"
+import { props } from "../utils/promiseHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
 import { TransferProphet } from "../utils/types/TransferProphet"
 import {
@@ -18,15 +30,62 @@ import {
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { getMetaPegInAddress } from "./btcAddresses"
 import {
-  BRC20SupportedRoute,
   getBRC20SupportedRoutes,
   getRunesSupportedRoutes,
-  RunesSupportedRoute,
 } from "./xlinkContractHelpers"
+
+export async function metaTokenFromCorrespondingStacksToken(
+  ctx: SDKGlobalContext,
+  chain: KnownChainId.BRC20Chain | KnownChainId.RunesChain,
+  stacksToken: KnownTokenId.StacksToken,
+): Promise<undefined | KnownTokenId.BRC20Token | KnownTokenId.RunesToken> {
+  if (KnownChainId.isBRC20Chain(chain)) {
+    const routes = await getBRC20SupportedRoutes(ctx, chain)
+    return routes.find(r => r.stacksToken === stacksToken)?.brc20Token
+  } else if (KnownChainId.isRunesChain(chain)) {
+    const routes = await getRunesSupportedRoutes(ctx, chain)
+    return routes.find(r => r.stacksToken === stacksToken)?.runesToken
+  } else {
+    checkNever(chain)
+    return
+  }
+}
+
+export async function metaTokenToCorrespondingStacksToken(
+  ctx: SDKGlobalContext,
+  route:
+    | { chain: KnownChainId.BRC20Chain; token: KnownTokenId.BRC20Token }
+    | { chain: KnownChainId.RunesChain; token: KnownTokenId.RunesToken },
+): Promise<undefined | KnownTokenId.StacksToken> {
+  if (KnownChainId.isBRC20Chain(route.chain)) {
+    const routes = await getBRC20SupportedRoutes(ctx, route.chain)
+    return routes.find(r => r.brc20Token === route.token)?.stacksToken
+  } else if (KnownChainId.isRunesChain(route.chain)) {
+    const routes = await getRunesSupportedRoutes(ctx, route.chain)
+    return routes.find(r => r.runesToken === route.token)?.stacksToken
+  } else {
+    checkNever(route.chain)
+    return
+  }
+}
 
 export const getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
-  route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
+  route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
+  options: {
+    swapRoute: null | SwapRoute
+  },
+): Promise<undefined | TransferProphet> => {
+  if (options.swapRoute != null) {
+    return getMeta2StacksSwapFeeInfo(route)
+  } else {
+    return getMeta2StacksBaseFeeInfo(ctx, route)
+  }
+}
+
+const getMeta2StacksBaseFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
 ): Promise<undefined | TransferProphet> => {
   const filteredRoutes = KnownChainId.isBRC20Chain(route.fromChain)
     ? await getBRC20SupportedRoutes(ctx, route.fromChain).then(routes =>
@@ -60,10 +119,51 @@ export const getMeta2StacksFeeInfo = async (
         ? null
         : {
             type: "fixed" as const,
-            token: KnownTokenId.Stacks.aBTC,
+            token: KnownTokenId.Bitcoin.BTC,
             amount: filteredRoute.pegInFeeBitcoinAmount,
           },
     ].filter(isNotNull),
+    minBridgeAmount: BigNumber.ZERO,
+    maxBridgeAmount: null,
+  }
+}
+
+const getMeta2StacksSwapFeeInfo = async (
+  route1: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  const stacksSwapContractCallInfo = getStacksContractCallInfo(
+    route1.toChain,
+    StacksContractName.MetaPegInEndpointSwap,
+  )
+  if (stacksSwapContractCallInfo == null) {
+    return
+  }
+
+  const resp = await props({
+    isPaused: executeReadonlyCallXLINK(
+      stacksSwapContractCallInfo.contractName,
+      "is-paused",
+      {},
+      stacksSwapContractCallInfo.executeOptions,
+    ),
+    fixedBtcFee: executeReadonlyCallXLINK(
+      stacksSwapContractCallInfo.contractName,
+      "get-peg-in-fee",
+      {},
+      stacksSwapContractCallInfo.executeOptions,
+    ).then(numberFromStacksContractNumber),
+  })
+
+  return {
+    isPaused: resp.isPaused,
+    bridgeToken: route1.fromToken,
+    fees: [
+      {
+        type: "fixed" as const,
+        token: KnownTokenId.Bitcoin.BTC,
+        amount: resp.fixedBtcFee,
+      },
+    ],
     minBridgeAmount: BigNumber.ZERO,
     maxBridgeAmount: null,
   }
@@ -105,7 +205,7 @@ export const getStacks2MetaFeeInfo = async (
         ? null
         : {
             type: "fixed" as const,
-            token: KnownTokenId.Stacks.aBTC,
+            token: KnownTokenId.Bitcoin.BTC,
             amount: filteredRoute.pegOutFeeBitcoinAmount,
           },
     ].filter(isNotNull),
@@ -158,13 +258,23 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
     if (!KnownTokenId.isStacksToken(toToken)) return false
 
     if (KnownChainId.isRunesChain(fromChain)) {
+      if (!KnownTokenId.isRunesToken(fromToken)) return false
+
       const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-      return runesRoutes.some(route => route.stacksToken === toToken)
+      return runesRoutes.some(
+        route =>
+          route.runesToken === fromToken && route.stacksToken === toToken,
+      )
     }
 
     if (KnownChainId.isBRC20Chain(fromChain)) {
+      if (!KnownTokenId.isBRC20Token(fromToken)) return false
+
       const brc20Routes = await getBRC20SupportedRoutes(ctx, fromChain)
-      return brc20Routes.some(route => route.stacksToken === toToken)
+      return brc20Routes.some(
+        route =>
+          route.brc20Token === fromToken && route.stacksToken === toToken,
+      )
     }
 
     checkNever(fromChain)
@@ -177,17 +287,29 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
     const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
     if (info == null) return false
 
-    const transitStacksToken = await toCorrespondingStacksToken(toToken)
+    const transitStacksToken = await evmTokenToCorrespondingStacksToken(toToken)
     if (transitStacksToken == null) return false
 
     if (KnownChainId.isRunesChain(fromChain)) {
+      if (!KnownTokenId.isRunesToken(fromToken)) return false
+
       const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-      return runesRoutes.some(route => route.stacksToken === transitStacksToken)
+      return runesRoutes.some(
+        route =>
+          route.runesToken === fromToken &&
+          route.stacksToken === transitStacksToken,
+      )
     }
 
     if (KnownChainId.isBRC20Chain(fromChain)) {
+      if (!KnownTokenId.isBRC20Token(fromToken)) return false
+
       const brc20Routes = await getBRC20SupportedRoutes(ctx, fromChain)
-      return brc20Routes.some(route => route.stacksToken === transitStacksToken)
+      return brc20Routes.some(
+        route =>
+          route.brc20Token === fromToken &&
+          route.stacksToken === transitStacksToken,
+      )
     }
 
     checkNever(fromChain)
@@ -197,39 +319,205 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isRunesChain(toChain)) {
     if (!KnownTokenId.isRunesToken(toToken)) return false
 
-    // TODO: runes -> runes (swap) is not supported yet
-    if (KnownChainId.isRunesChain(fromChain)) return false
+    const finalStepStacksToken =
+      route.swapRoute == null
+        ? await metaTokenToCorrespondingStacksToken(ctx, {
+            chain: toChain,
+            token: toToken,
+          })
+        : await getFinalStepStacksTokenAddress(ctx, {
+            swap: route.swapRoute,
+            stacksChain:
+              toChain === KnownChainId.Runes.Mainnet
+                ? KnownChainId.Stacks.Mainnet
+                : KnownChainId.Stacks.Testnet,
+          })
+    if (finalStepStacksToken == null) return false
 
-    const brc20Routes = await getBRC20SupportedRoutes(ctx, fromChain)
-    const runesRoutes = await getRunesSupportedRoutes(ctx, toChain)
-    return getRoutesOverlapping(brc20Routes, runesRoutes) != null
+    // runes -> runes
+    if (KnownChainId.isRunesChain(fromChain)) {
+      if (!KnownTokenId.isRunesToken(fromToken)) return false
+
+      const firstStepStacksToken =
+        route.swapRoute == null
+          ? await metaTokenToCorrespondingStacksToken(ctx, {
+              chain: fromChain,
+              token: fromToken,
+            })
+          : await getFirstStepStacksTokenAddress(ctx, {
+              swap: route.swapRoute,
+              stacksChain:
+                fromChain === KnownChainId.Runes.Mainnet
+                  ? KnownChainId.Stacks.Mainnet
+                  : KnownChainId.Stacks.Testnet,
+            })
+      if (firstStepStacksToken == null) return false
+
+      if (route.swapRoute == null) {
+        return firstStepStacksToken === finalStepStacksToken
+      }
+
+      const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+
+      return (
+        runesRoutes.find(
+          route =>
+            route.runesToken === fromToken &&
+            route.stacksToken === firstStepStacksToken,
+        ) != null &&
+        runesRoutes.find(
+          route =>
+            route.runesToken === toToken &&
+            route.stacksToken === finalStepStacksToken,
+        ) != null
+      )
+    }
+
+    // brc20 -> runes
+    if (KnownChainId.isBRC20Chain(fromChain)) {
+      if (!KnownTokenId.isBRC20Token(fromToken)) return false
+
+      const firstStepStacksToken =
+        route.swapRoute == null
+          ? await metaTokenToCorrespondingStacksToken(ctx, {
+              chain: fromChain,
+              token: fromToken,
+            })
+          : await getFirstStepStacksTokenAddress(ctx, {
+              swap: route.swapRoute,
+              stacksChain:
+                fromChain === KnownChainId.BRC20.Mainnet
+                  ? KnownChainId.Stacks.Mainnet
+                  : KnownChainId.Stacks.Testnet,
+            })
+      if (firstStepStacksToken == null) return false
+
+      if (route.swapRoute == null) {
+        return firstStepStacksToken === finalStepStacksToken
+      }
+
+      const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
+      const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
+
+      return (
+        fromRoutes.find(
+          route =>
+            route.brc20Token === fromToken &&
+            route.stacksToken === firstStepStacksToken,
+        ) != null &&
+        toRoutes.find(
+          route =>
+            route.runesToken === toToken &&
+            route.stacksToken === finalStepStacksToken,
+        ) != null
+      )
+    }
+
+    checkNever(fromChain)
+    return false
   }
 
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
-    // TODO: brc20 -> brc20 (swap) is not supported yet
-    if (KnownChainId.isBRC20Chain(fromChain)) return false
+    const finalStepStacksToken =
+      route.swapRoute == null
+        ? await metaTokenToCorrespondingStacksToken(ctx, {
+            chain: toChain,
+            token: toToken,
+          })
+        : await getFinalStepStacksTokenAddress(ctx, {
+            swap: route.swapRoute,
+            stacksChain:
+              toChain === KnownChainId.BRC20.Mainnet
+                ? KnownChainId.Stacks.Mainnet
+                : KnownChainId.Stacks.Testnet,
+          })
+    if (finalStepStacksToken == null) return false
 
-    const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
-    const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-    return getRoutesOverlapping(brc20Routes, runesRoutes) != null
+    // brc20 -> brc20
+    if (KnownChainId.isBRC20Chain(fromChain)) {
+      if (!KnownTokenId.isBRC20Token(fromToken)) return false
+
+      const firstStepStacksToken =
+        route.swapRoute == null
+          ? await metaTokenToCorrespondingStacksToken(ctx, {
+              chain: fromChain,
+              token: fromToken,
+            })
+          : await getFirstStepStacksTokenAddress(ctx, {
+              swap: route.swapRoute,
+              stacksChain:
+                fromChain === KnownChainId.BRC20.Mainnet
+                  ? KnownChainId.Stacks.Mainnet
+                  : KnownChainId.Stacks.Testnet,
+            })
+      if (firstStepStacksToken == null) return false
+
+      if (route.swapRoute == null) {
+        return firstStepStacksToken === finalStepStacksToken
+      }
+
+      const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
+
+      return (
+        brc20Routes.find(
+          route =>
+            route.brc20Token === fromToken &&
+            route.stacksToken === firstStepStacksToken,
+        ) != null &&
+        brc20Routes.find(
+          route =>
+            route.brc20Token === toToken &&
+            route.stacksToken === finalStepStacksToken,
+        ) != null
+      )
+    }
+
+    // runes -> brc20
+    if (KnownChainId.isRunesChain(fromChain)) {
+      if (!KnownTokenId.isRunesToken(fromToken)) return false
+
+      const firstStepStacksToken =
+        route.swapRoute == null
+          ? await metaTokenToCorrespondingStacksToken(ctx, {
+              chain: fromChain,
+              token: fromToken,
+            })
+          : await getFirstStepStacksTokenAddress(ctx, {
+              swap: route.swapRoute,
+              stacksChain:
+                fromChain === KnownChainId.Runes.Mainnet
+                  ? KnownChainId.Stacks.Mainnet
+                  : KnownChainId.Stacks.Testnet,
+            })
+      if (firstStepStacksToken == null) return false
+
+      if (route.swapRoute == null) {
+        return firstStepStacksToken === finalStepStacksToken
+      }
+
+      const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+      const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
+
+      return (
+        fromRoutes.find(
+          route =>
+            route.runesToken === fromToken &&
+            route.stacksToken === firstStepStacksToken,
+        ) != null &&
+        toRoutes.find(
+          route =>
+            route.brc20Token === toToken &&
+            route.stacksToken === finalStepStacksToken,
+        ) != null
+      )
+    }
+
+    checkNever(fromChain)
+    return false
   }
 
   checkNever(toChain)
   return false
-}
-
-const getRoutesOverlapping = (
-  brc20Routes: BRC20SupportedRoute[],
-  runesRoutes: RunesSupportedRoute[],
-): null | [BRC20SupportedRoute, RunesSupportedRoute] => {
-  for (const brc20Route of brc20Routes) {
-    for (const runesRoute of runesRoutes) {
-      if (brc20Route.stacksToken === runesRoute.stacksToken) {
-        return [brc20Route, runesRoute]
-      }
-    }
-  }
-  return null
 }

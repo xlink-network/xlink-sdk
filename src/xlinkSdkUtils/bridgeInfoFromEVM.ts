@@ -3,7 +3,7 @@ import { nativeCurrencyAddress } from "../evmUtils/addressHelpers"
 import {
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
-  toCorrespondingStacksToken,
+  evmTokenToCorrespondingStacksToken,
 } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
@@ -23,7 +23,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   PublicTransferProphetAggregated,
   transformToPublicTransferProphet,
-  transformToPublicTransferProphetAggregated,
+  transformToPublicTransferProphetAggregated2,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromEVM"
@@ -173,7 +173,9 @@ async function bridgeInfoFromEVM_toBitcoin(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.fromToken,
+  )
   if (transitStacksToken == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -198,7 +200,9 @@ async function bridgeInfoFromEVM_toBitcoin(
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2BtcFeeInfo(step2Route),
+    getStacks2BtcFeeInfo(step2Route, {
+      swappedFromRoute: step1Route,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
@@ -209,24 +213,12 @@ async function bridgeInfoFromEVM_toBitcoin(
     )
   }
 
-  const step1TransferProphet = transformToPublicTransferProphet(
-    step1Route,
-    info.amount,
-    step1,
+  return transformToPublicTransferProphetAggregated2(
+    [step1Route, step2Route],
+    [step1, step2],
+    BigNumber.from(info.amount),
+    BigNumber.ONE,
   )
-  const step2TransferProphet = transformToPublicTransferProphet(
-    step2Route,
-    step1TransferProphet.toAmount,
-    step2,
-  )
-
-  return {
-    ...transformToPublicTransferProphetAggregated(
-      [step1TransferProphet, step2TransferProphet],
-      [BigNumber.ONE],
-    ),
-    transferProphets: [step1TransferProphet, step2TransferProphet],
-  }
 }
 
 async function bridgeInfoFromEVM_toEVM(
@@ -246,7 +238,9 @@ async function bridgeInfoFromEVM_toEVM(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.fromToken,
+  )
   if (
     transitStacksToken == null ||
     evmTokenContractCallInfo?.tokenContractAddress === nativeCurrencyAddress
@@ -274,7 +268,7 @@ async function bridgeInfoFromEVM_toEVM(
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2EvmFeeInfo(step2Route),
+    getStacks2EvmFeeInfo(ctx, step2Route),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
@@ -285,24 +279,12 @@ async function bridgeInfoFromEVM_toEVM(
     )
   }
 
-  const step1TransferProphet = transformToPublicTransferProphet(
-    step1Route,
-    info.amount,
-    step1,
+  return transformToPublicTransferProphetAggregated2(
+    [step1Route, step2Route],
+    [step1, step2],
+    BigNumber.from(info.amount),
+    BigNumber.ONE,
   )
-  const step2TransferProphet = transformToPublicTransferProphet(
-    step2Route,
-    step1TransferProphet.toAmount,
-    step2,
-  )
-
-  return {
-    ...transformToPublicTransferProphetAggregated(
-      [step1TransferProphet, step2TransferProphet],
-      [BigNumber.ONE],
-    ),
-    transferProphets: [step1TransferProphet, step2TransferProphet],
-  }
 }
 
 async function bridgeInfoFromEVM_toMeta(
@@ -322,7 +304,9 @@ async function bridgeInfoFromEVM_toMeta(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.fromToken,
+  )
   if (
     transitStacksToken == null ||
     evmTokenContractCallInfo?.tokenContractAddress === nativeCurrencyAddress
@@ -363,22 +347,10 @@ async function bridgeInfoFromEVM_toMeta(
     )
   }
 
-  const step1TransferProphet = transformToPublicTransferProphet(
-    step1Route,
-    info.amount,
-    step1,
+  return transformToPublicTransferProphetAggregated2(
+    [step1Route, step2Route],
+    [step1, step2],
+    BigNumber.from(info.amount),
+    BigNumber.ONE,
   )
-  const step2TransferProphet = transformToPublicTransferProphet(
-    step2Route,
-    step1TransferProphet.toAmount,
-    step2,
-  )
-
-  return {
-    ...transformToPublicTransferProphetAggregated(
-      [step1TransferProphet, step2TransferProphet],
-      [BigNumber.ONE],
-    ),
-    transferProphets: [step1TransferProphet, step2TransferProphet],
-  }
 }

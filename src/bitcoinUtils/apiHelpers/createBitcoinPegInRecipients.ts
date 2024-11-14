@@ -15,9 +15,17 @@ export async function createBitcoinPegInRecipients(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: {
     fromChain: KnownChainId.BitcoinChain
-    toChain: KnownChainId.StacksChain | KnownChainId.EVMChain
     fromToken: KnownTokenId.BitcoinToken
-    toToken: KnownTokenId.StacksToken | KnownTokenId.EVMToken
+    toChain:
+      | KnownChainId.StacksChain
+      | KnownChainId.EVMChain
+      | KnownChainId.BRC20Chain
+      | KnownChainId.RunesChain
+    toToken:
+      | KnownTokenId.StacksToken
+      | KnownTokenId.EVMToken
+      | KnownTokenId.BRC20Token
+      | KnownTokenId.RunesToken
     fromAddress: {
       address: string
       scriptPubKey: Uint8Array

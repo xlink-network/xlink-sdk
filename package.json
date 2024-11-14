@@ -41,9 +41,9 @@
     "gen": "pnpm run gen:stacksContract",
     "docs": "typedoc",
     "docs:watch": "typedoc --watch",
-    "build": "pnpm run gen && rm -rf lib && tsup-node --sourcemap --dts -d lib --format cjs,esm src",
+    "build": "pnpm run gen && rm -rf lib && tsup-node src",
     "prepare": "pnpm run build",
-    "test": "vitest --exclude lib"
+    "test": "vitest --exclude lib --run"
   },
   "dependencies": {
     "@c4/btc-utils": "^0.3.1",
