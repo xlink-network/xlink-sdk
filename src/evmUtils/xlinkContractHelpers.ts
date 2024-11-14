@@ -156,7 +156,7 @@ const getOnChainConfigs = async (
   configContractAddress: Address,
 ): Promise<undefined | EVMOnChainAddresses> => {
   const cache = sdkContext.evm.onChainConfigCache
-  const cacheKey = `${chain}:${configContractAddress}`
+  const cacheKey = `${chain}:${configContractAddress}` as const
 
   if (cache != null) {
     const cachedPromise = cache.get(cacheKey)

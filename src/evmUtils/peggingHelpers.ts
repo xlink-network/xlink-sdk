@@ -1,5 +1,4 @@
-import { callReadOnlyFunction } from "@stacks/transactions"
-import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
+import { unwrapResponse } from "clarity-codegen"
 import { readContract } from "viem/actions"
 import {
   getBRC20SupportedRoutes,
@@ -8,6 +7,7 @@ import {
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import {
   getTerminatingStacksTokenContractAddress,
+  StacksContractName,
   stxTokenContractAddresses,
 } from "../stacksUtils/stxContractAddresses"
 import {
@@ -46,7 +46,7 @@ export const getEvm2StacksFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "cross-peg-in-endpoint-v2-04",
+    StacksContractName.EVMPegInEndpoint,
   )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   const evmTokenContractCallInfo = await getEVMTokenContractInfo(
@@ -64,15 +64,6 @@ export const getEvm2StacksFeeInfo = async (
 
   if (evmTokenContractCallInfo.tokenContractAddress === nativeCurrencyAddress) {
     return getEvm2StacksNativeBridgeFeeInfo(ctx, route)
-  }
-
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
   }
 
   const { client, tokenContractAddress } = evmTokenContractCallInfo
@@ -126,7 +117,7 @@ export const getEvm2StacksFeeInfo = async (
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
   })
 
@@ -157,7 +148,7 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "cross-peg-in-endpoint-v2-04",
+    StacksContractName.EVMPegInEndpoint,
   )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   if (
@@ -167,21 +158,12 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
     return
   }
 
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
-
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
   })
 
@@ -195,13 +177,15 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
 }
 
 export const getStacks2EvmFeeInfo = async (
+  ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToEVM,
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
-    "cross-peg-out-endpoint-v2-01",
+    StacksContractName.EVMPegOutEndpoint,
   )
-  const stacksTokenContractCallInfo = getStacksTokenContractInfo(
+  const stacksTokenContractCallInfo = await getStacksTokenContractInfo(
+    ctx,
     route.fromChain,
     route.fromToken,
   )
@@ -214,15 +198,6 @@ export const getStacks2EvmFeeInfo = async (
     getTerminatingStacksTokenContractAddress(route) ??
     stacksTokenContractCallInfo
 
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
-
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
@@ -233,13 +208,13 @@ export const getStacks2EvmFeeInfo = async (
           "chain-id": toChainId,
         },
       },
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
   ]).then(([resp, isPaused]) => {
     if (resp.type !== "success") return undefined
@@ -281,7 +256,7 @@ export const getStacks2EvmFeeInfo = async (
   }
 }
 
-export async function fromCorrespondingStacksToken(
+export async function evmTokenFromCorrespondingStacksToken(
   toChain: KnownChainId.EVMChain,
   stacksToken: KnownTokenId.StacksToken,
 ): Promise<KnownTokenId.EVMToken[]> {
@@ -348,7 +323,7 @@ export async function fromCorrespondingStacksToken(
   checkNever(restEVMTokenPossibilities)
   return []
 }
-export async function toCorrespondingStacksToken(
+export async function evmTokenToCorrespondingStacksToken(
   evmToken: KnownTokenId.EVMToken,
 ): Promise<undefined | KnownTokenId.StacksToken> {
   const EVMToken = KnownTokenId.EVM
@@ -429,7 +404,7 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
 
-    const stacksToken = await toCorrespondingStacksToken(fromToken)
+    const stacksToken = await evmTokenToCorrespondingStacksToken(fromToken)
     if (stacksToken == null) return false
 
     if (stxTokenContractAddresses[stacksToken]?.[toChain] == null) {
@@ -445,10 +420,11 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
     const toTokenInfo = await getEVMTokenContractInfo(ctx, toChain, toToken)
     if (toTokenInfo == null) return false
 
-    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
+    const transitStacksToken =
+      await evmTokenToCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
 
-    const toEVMTokens = await fromCorrespondingStacksToken(
+    const toEVMTokens = await evmTokenFromCorrespondingStacksToken(
       toChain,
       transitStacksToken,
     )
@@ -457,14 +433,15 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
 
   if (KnownChainId.isBitcoinChain(toChain)) {
     if (!KnownTokenId.isBitcoinToken(toToken)) return false
-    const stacksToken = await toCorrespondingStacksToken(fromToken)
+    const stacksToken = await evmTokenToCorrespondingStacksToken(fromToken)
     return stacksToken === KnownTokenId.Stacks.aBTC
   }
 
   if (KnownChainId.isRunesChain(toChain)) {
     if (!KnownTokenId.isRunesToken(toToken)) return false
 
-    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
+    const transitStacksToken =
+      await evmTokenToCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
 
     const runesRoutes = await getRunesSupportedRoutes(ctx, toChain)
@@ -474,7 +451,8 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
-    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
+    const transitStacksToken =
+      await evmTokenToCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
 
     const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)

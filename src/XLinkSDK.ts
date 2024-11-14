@@ -1,7 +1,11 @@
 import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
 import { nativeCurrencyAddress } from "./evmUtils/addressHelpers"
-import { defaultEvmClients } from "./evmUtils/evmClients"
+import {
+  defaultEvmClients,
+  evmChainIdFromKnownChainId,
+  evmChainIdToKnownChainId,
+} from "./evmUtils/evmClients"
 import {
   getEVMContractCallInfo,
   getEVMToken,
@@ -124,6 +128,15 @@ export interface XLinkSDKOptions {
     backendAPI?: {
       runtimeEnv?: "prod" | "dev"
     }
+    btc?: {
+      ignoreValidateResult?: boolean
+    }
+    brc20?: {
+      ignoreValidateResult?: boolean
+    }
+    runes?: {
+      ignoreValidateResult?: boolean
+    }
   }
   evm?: {
     /**
@@ -160,11 +173,22 @@ export class XLinkSDK {
         ...options.__experimental?.backendAPI,
         runtimeEnv: options.__experimental?.backendAPI?.runtimeEnv ?? "prod",
       },
+      stacks: {
+        tokensCache: new Map(),
+      },
+      btc: {
+        ignoreValidateResult:
+          options.__experimental?.btc?.ignoreValidateResult ?? false,
+      },
       brc20: {
         routesConfigCache: new Map(),
+        ignoreValidateResult:
+          options.__experimental?.brc20?.ignoreValidateResult ?? false,
       },
       runes: {
         routesConfigCache: new Map(),
+        ignoreValidateResult:
+          options.__experimental?.runes?.ignoreValidateResult ?? false,
       },
       evm: {
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
@@ -218,8 +242,18 @@ export class XLinkSDK {
     return checkingResult.some(r => r)
   }
 
-  stacksAddressFromStacksToken = stacksAddressFromStacksToken
-  stacksAddressToStacksToken = stacksAddressToStacksToken
+  stacksAddressFromStacksToken(
+    chain: ChainId,
+    token: KnownTokenId.StacksToken,
+  ): Promise<undefined | StacksContractAddress> {
+    return stacksAddressFromStacksToken(this.sdkContext, chain, token)
+  }
+  stacksAddressToStacksToken(
+    chain: ChainId,
+    address: StacksContractAddress,
+  ): Promise<undefined | KnownTokenId.StacksToken> {
+    return stacksAddressToStacksToken(this.sdkContext, chain, address)
+  }
 
   /**
    * This function provides detailed information about token transfers from the Stacks network to other supported
@@ -294,6 +328,18 @@ export class XLinkSDK {
       return info?.bridgeEndpointContractAddress
     }
     return
+  }
+
+  async evmChainIdFromKnownChainId(
+    chain: KnownChainId.EVMChain,
+  ): Promise<undefined | bigint> {
+    return evmChainIdFromKnownChainId(chain)
+  }
+
+  async evmChainIdToKnownChainId(
+    chainId: bigint,
+  ): Promise<undefined | KnownChainId.EVMChain> {
+    return evmChainIdToKnownChainId(chainId)
   }
 
   /**
@@ -582,11 +628,12 @@ export class XLinkSDK {
  * or `undefined` if the chain is not a Stacks chain or if the contract address cannot be retrieved.
  */
 async function stacksAddressFromStacksToken(
+  sdkContext: SDKGlobalContext,
   chain: ChainId,
   token: KnownTokenId.StacksToken,
 ): Promise<undefined | StacksContractAddress> {
   if (!KnownChainId.isStacksChain(chain)) return
-  const info = await getStacksTokenContractInfo(chain, token)
+  const info = await getStacksTokenContractInfo(sdkContext, chain, token)
   if (info == null) return
   return {
     deployerAddress: info.deployerAddress,
@@ -604,11 +651,12 @@ async function stacksAddressFromStacksToken(
  * cannot be found.
  */
 async function stacksAddressToStacksToken(
+  sdkContext: SDKGlobalContext,
   chain: ChainId,
   address: StacksContractAddress,
 ): Promise<undefined | KnownTokenId.StacksToken> {
   if (!KnownChainId.isStacksChain(chain)) return
-  return getStacksToken(chain, address)
+  return getStacksToken(sdkContext, chain, address)
 }
 
 async function brc20TickFromBRC20Token(
@@ -627,7 +675,8 @@ async function brc20TickToBRC20Token(
 ): Promise<undefined | KnownTokenId.BRC20Token> {
   if (!KnownChainId.isBRC20Chain(chain)) return
   const routes = await getBRC20SupportedRoutes(sdkContext, chain)
-  return routes.find(r => r.brc20Tick === tick)?.brc20Token
+  return routes.find(r => r.brc20Tick.toLowerCase() === tick.toLowerCase())
+    ?.brc20Token
 }
 
 async function runesIdFromRunesToken(

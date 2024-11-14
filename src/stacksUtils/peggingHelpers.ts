@@ -1,4 +1,4 @@
-import { fromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
+import { evmTokenFromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import {
   getBRC20SupportedRoutes,
@@ -82,7 +82,10 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
     if (info == null) return false
 
-    const toEVMTokens = await fromCorrespondingStacksToken(toChain, fromToken)
+    const toEVMTokens = await evmTokenFromCorrespondingStacksToken(
+      toChain,
+      fromToken,
+    )
     return toEVMTokens.includes(toToken)
   }
 

@@ -104,15 +104,20 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("stx-vlistx")
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
     export const vLiALEX = tokenId("stx-vlialex")
+    export const vLiaBTC = tokenId("stx-vliabtc")
     export const uBTC = tokenId("stx-ubtc")
     export const DB20 = tokenId("stx-db20")
     export const DOG = tokenId("stx-dog")
   }
-  /** This type includes all known tokens on the Stacks blockchain. */
-  export type StacksToken = (typeof _allKnownStacksTokens)[number]
+  export type StacksToken = TokenId<`stx-${string}`>
   export function isStacksToken(value: TokenId): value is StacksToken {
-    return _allKnownStacksTokens.includes(value as any)
+    return value.startsWith("stx-")
   }
+}
+export const createStacksToken = (
+  stacksTokenId: string,
+): KnownTokenId.StacksToken => {
+  return `stx-${stacksTokenId}` as any
 }
 export const createBRC20Token = (
   brc20tick: string,
@@ -126,7 +131,6 @@ export const createRunesToken = (
 }
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
-export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 
 /**
  * The `KnownChainId` namespace provides types of blockchain networks
