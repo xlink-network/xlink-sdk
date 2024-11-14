@@ -21,7 +21,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   PublicTransferProphetAggregated,
   transformToPublicTransferProphet,
-  transformToPublicTransferProphetAggregated,
+  transformToPublicTransferProphetAggregated2,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromEVM"
@@ -199,24 +199,12 @@ async function bridgeInfoFromEVM_toBitcoin(
     )
   }
 
-  const step1TransferProphet = transformToPublicTransferProphet(
-    step1Route,
-    info.amount,
-    step1,
+  return transformToPublicTransferProphetAggregated2(
+    [step1Route, step2Route],
+    [step1, step2],
+    BigNumber.from(info.amount),
+    BigNumber.ONE,
   )
-  const step2TransferProphet = transformToPublicTransferProphet(
-    step2Route,
-    step1TransferProphet.toAmount,
-    step2,
-  )
-
-  return {
-    ...transformToPublicTransferProphetAggregated(
-      [step1TransferProphet, step2TransferProphet],
-      [BigNumber.ONE],
-    ),
-    transferProphets: [step1TransferProphet, step2TransferProphet],
-  }
 }
 
 async function bridgeInfoFromEVM_toEVM(
@@ -266,24 +254,12 @@ async function bridgeInfoFromEVM_toEVM(
     )
   }
 
-  const step1TransferProphet = transformToPublicTransferProphet(
-    step1Route,
-    info.amount,
-    step1,
+  return transformToPublicTransferProphetAggregated2(
+    [step1Route, step2Route],
+    [step1, step2],
+    BigNumber.from(info.amount),
+    BigNumber.ONE,
   )
-  const step2TransferProphet = transformToPublicTransferProphet(
-    step2Route,
-    step1TransferProphet.toAmount,
-    step2,
-  )
-
-  return {
-    ...transformToPublicTransferProphetAggregated(
-      [step1TransferProphet, step2TransferProphet],
-      [BigNumber.ONE],
-    ),
-    transferProphets: [step1TransferProphet, step2TransferProphet],
-  }
 }
 
 async function bridgeInfoFromEVM_toMeta(
@@ -335,22 +311,10 @@ async function bridgeInfoFromEVM_toMeta(
     )
   }
 
-  const step1TransferProphet = transformToPublicTransferProphet(
-    step1Route,
-    info.amount,
-    step1,
+  return transformToPublicTransferProphetAggregated2(
+    [step1Route, step2Route],
+    [step1, step2],
+    BigNumber.from(info.amount),
+    BigNumber.ONE,
   )
-  const step2TransferProphet = transformToPublicTransferProphet(
-    step2Route,
-    step1TransferProphet.toAmount,
-    step2,
-  )
-
-  return {
-    ...transformToPublicTransferProphetAggregated(
-      [step1TransferProphet, step2TransferProphet],
-      [BigNumber.ONE],
-    ),
-    transferProphets: [step1TransferProphet, step2TransferProphet],
-  }
 }

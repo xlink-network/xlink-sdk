@@ -100,6 +100,7 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("stx-vlistx")
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
     export const vLiALEX = tokenId("stx-vlialex")
+    export const vLiaBTC = tokenId("stx-vliabtc")
     export const uBTC = tokenId("stx-ubtc")
     export const DB20 = tokenId("stx-db20")
     export const DOG = tokenId("stx-dog")

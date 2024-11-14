@@ -19,12 +19,34 @@ export interface TransferProphetAppliedResult {
 export const applyTransferProphets = (
   transferProphets: OneOrMore<TransferProphet>,
   amount: BigNumber,
+  options: {
+    exchangeRates?: readonly BigNumber[]
+  } = {},
 ): OneOrMore<TransferProphetAppliedResult> => {
+  const { exchangeRates } = options
+
+  if (
+    exchangeRates != null &&
+    exchangeRates.length < transferProphets.length - 1
+  ) {
+    throw new Error(
+      `[XLinkSDK#applyTransferProphets] exchangeRate count not match with transferProphet count, which is not expected`,
+    )
+  }
+
   return reduce(
-    (acc, transferProphet) =>
-      concat(acc, [applyTransferProphet(transferProphet, last(acc).netAmount)]),
-    [{ fees: [], netAmount: amount }],
-    transferProphets,
+    (acc, transferProphet, idx) =>
+      concat(acc, [
+        applyTransferProphet(
+          transferProphet,
+          BigNumber.mul(
+            last(acc).netAmount,
+            exchangeRates?.[idx] ?? BigNumber.ONE,
+          ),
+        ),
+      ]),
+    [applyTransferProphet(transferProphets[0], amount)],
+    transferProphets.slice(1),
   )
 }
 
@@ -70,6 +92,9 @@ export const applyTransferProphet = (
 }
 
 /**
+ * @deprecated
+ * **DO NOT** use this function before we created it's unit tests
+ *
  * @example
  * composeTransferProphets(
  *   [
@@ -92,6 +117,15 @@ export const composeTransferProphets = (
   transferProphets: readonly TransferProphet[],
   exchangeRates: readonly BigNumber[],
 ): TransferProphetAggregated<TransferProphet[]> => {
+  if (
+    exchangeRates != null &&
+    exchangeRates.length < transferProphets.length - 1
+  ) {
+    throw new Error(
+      `[XLinkSDK#composeTransferProphets] exchangeRate count not match with transferProphet count, which is not expected`,
+    )
+  }
+
   const cumulativeExchangeRates = calcCumulativeExchangeRates(exchangeRates)
 
   return reduce(
@@ -99,7 +133,7 @@ export const composeTransferProphets = (
       ...composeTransferProphet2(
         res,
         transferProphet,
-        cumulativeExchangeRates[idx],
+        cumulativeExchangeRates[idx + 1],
       ),
       transferProphets: [...res.transferProphets, transferProphet],
     }),
@@ -114,18 +148,18 @@ export const composeTransferProphets = (
 /**
  * @example
  * calcCumulativeExchangeRates([
- *   exchangeRateOf(tokenA, tokenB),
- *   exchangeRateOf(tokenB, tokenC),
- *   exchangeRateOf(tokenC, tokenD),
+ *   exchangeRateOf(A, B),
+ *   exchangeRateOf(B, C),
+ *   exchangeRateOf(C, D),
  *   // ...
  * ])
  *
  * // =>
  *
  * [
- *   exchangeRateOf(tokenA, tokenB),
- *   exchangeRateOf(tokenA, tokenC),
- *   exchangeRateOf(tokenA, tokenD),
+ *   exchangeRateOf(A, B),
+ *   exchangeRateOf(A, C),
+ *   exchangeRateOf(A, D),
  *   // ...
  * ]
  */
@@ -140,30 +174,6 @@ export const composeTransferProphet2 = (
   transferProphet2: TransferProphet,
   exchangeRate: BigNumber,
 ): TransferProphetAggregated<[TransferProphet, TransferProphet]> => {
-  if (exchangeRate == null) {
-    throw new Error(
-      "[XLinkSDK#composeTransferProphet2] exchangeRate is required",
-    )
-  }
-
-  const bridgeTokenMinFeeAmount = BigNumber.sum([
-    ...transferProphet1.fees.flatMap(f =>
-      f.type === "rate" && f.token === transferProphet1.bridgeToken
-        ? [f.minimumAmount]
-        : [],
-    ),
-    ...transferProphet2.fees.flatMap(f =>
-      f.type === "rate" && f.token === transferProphet2.bridgeToken
-        ? [
-            /**
-             * convert to the denomination of the first step token
-             */
-            BigNumber.div(f.minimumAmount, exchangeRate),
-          ]
-        : [],
-    ),
-  ])
-
   /**
    * flatFeeRate = 1 - (amount1 * (1-feeRate1) * (1-feeRate2) * (1-feeRateN...) / amount1)
    * flatFeeRate = 1 - (1-feeRate1) * (1-feeRate2) * (1-feeRateN...)
@@ -181,14 +191,35 @@ export const composeTransferProphet2 = (
       ),
     ),
   )
+
   /**
    * step2Amount = step1Amount * (1-feeRate1) * (1-feeRate2) * (1-feeRateN)... * exchangeRate
-   * step2Amount = step1Amount * (1-flatFeeRate) * exchangeRate
+   * step2Amount = step1Amount * (1-flatFeeRate1) * exchangeRate
+   * step2Amount = step1Amount * step1ToStep2Rate
+   * step1ToStep2Rate = (1-flatFeeRate1) * exchangeRate
    */
   const step1ToStep2Rate = BigNumber.mul(
     BigNumber.minus(1, step1FlatFeeRate),
     exchangeRate,
   )
+
+  const bridgeTokenMinFeeAmount = BigNumber.sum([
+    ...transferProphet1.fees.flatMap(f =>
+      f.type === "rate" && f.token === transferProphet1.bridgeToken
+        ? [f.minimumAmount]
+        : [],
+    ),
+    ...transferProphet2.fees.flatMap(f =>
+      f.type === "rate" && f.token === transferProphet2.bridgeToken
+        ? [
+            /**
+             * convert to the denomination of the first step token
+             */
+            BigNumber.div(f.minimumAmount, step1ToStep2Rate),
+          ]
+        : [],
+    ),
+  ])
 
   let minBridgeAmount: BigNumber | null = null
   if (
