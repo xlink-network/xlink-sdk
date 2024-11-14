@@ -1,5 +1,4 @@
-import { callReadOnlyFunction } from "@stacks/transactions"
-import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
+import { unwrapResponse } from "clarity-codegen"
 import { readContract } from "viem/actions"
 import {
   getBRC20SupportedRoutes,
@@ -61,15 +60,6 @@ export const getEvm2StacksFeeInfo = async (
     return
   }
 
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
-
   const { client, tokenContractAddress } = evmTokenContractCallInfo
 
   const registryAddr =
@@ -121,7 +111,7 @@ export const getEvm2StacksFeeInfo = async (
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
   })
 
@@ -166,15 +156,6 @@ export const getStacks2EvmFeeInfo = async (
     getTerminatingStacksTokenContractAddress(route) ??
     stacksTokenContractCallInfo
 
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
-
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
@@ -185,13 +166,13 @@ export const getStacks2EvmFeeInfo = async (
           "chain-id": toChainId,
         },
       },
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
   ]).then(([resp, isPaused]) => {
     if (resp.type !== "success") return undefined

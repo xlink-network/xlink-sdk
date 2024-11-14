@@ -3,6 +3,7 @@ import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
+import { getTerminatingStacksTokenContractAddress } from "../stacksUtils/stxContractAddresses"
 import {
   composeTxXLINK,
   getStacksContractCallInfo,
@@ -21,14 +22,13 @@ import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
-  KnownChainId,
-  KnownTokenId,
   _allKnownEVMMainnetChains,
   _allKnownEVMTestnetChains,
+  KnownChainId,
+  KnownTokenId,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { getTerminatingStacksTokenContractAddress } from "../stacksUtils/stxContractAddresses"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -223,7 +223,7 @@ async function bridgeFromStacks_toBitcoin(
       "peg-out-address": addressToScriptPubKey(bitcoinNetwork, info.toAddress),
       amount: numberToStacksContractNumber(info.amount),
     },
-    { deployerAddress: contractCallInfo.deployerAddress },
+    contractCallInfo.executeOptions,
   )
 
   return await info.sendTransaction(options)
@@ -265,7 +265,7 @@ async function bridgeFromStacks_toEVM(
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),
     },
-    { deployerAddress: contractCallInfo.deployerAddress },
+    contractCallInfo.executeOptions,
   )
 
   return await info.sendTransaction(options)
@@ -310,7 +310,7 @@ async function bridgeFromStacks_toMeta(
       "token-trait": `${fromTokenContractInfo.deployerAddress}.${fromTokenContractInfo.contractName}`,
       amount: numberToStacksContractNumber(info.amount),
     },
-    { deployerAddress: contractCallInfo.deployerAddress },
+    contractCallInfo.executeOptions,
   )
 
   return await info.sendTransaction(options)

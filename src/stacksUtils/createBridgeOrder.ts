@@ -1,12 +1,20 @@
-import { callReadOnlyFunction } from "@stacks/transactions"
-import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
+import { unwrapResponse } from "clarity-codegen"
 import { toCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
-import { hasLength } from "../utils/arrayHelpers"
+import {
+  getBRC20SupportedRoutes,
+  getRunesSupportedRoutes,
+} from "../metaUtils/xlinkContractHelpers"
+import {
+  KnownRoute_FromBitcoin_ToBRC20,
+  KnownRoute_FromBitcoin_ToRunes,
+} from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
+import { SwapRoute_WithMinimumAmountsToReceive } from "../utils/SwapRouteHelpers"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { getTerminatingStacksTokenContractAddress } from "./stxContractAddresses"
 import {
@@ -14,19 +22,13 @@ import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
+  numberToStacksContractNumber,
 } from "./xlinkContractHelpers"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
-  tokenContractAddress: `${string}.${string}::${string}`
+  tokenAddress: StacksContractAddress
 }
-
-// prettier-ignore
-export type BridgeSwapRoute_FromBitcoin =
-  | []
-// | [BridgeSwapRouteNode]
-// | [BridgeSwapRouteNode, BridgeSwapRouteNode]
-// | [BridgeSwapRouteNode, BridgeSwapRouteNode, BridgeSwapRouteNode]
 
 export interface CreateBridgeOrderResult {
   terminatingStacksToken: StacksContractAddress
@@ -39,16 +41,19 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
   toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
   toStacksAddress: string
-  swapRoute: BridgeSwapRoute_FromBitcoin
-  swapSlippedAmount?: bigint
+  swap?: SwapRoute_WithMinimumAmountsToReceive
 }): Promise<undefined | CreateBridgeOrderResult> {
   let data: undefined | Uint8Array
 
-  const contractCallInfo = getStacksContractCallInfo(
+  const contractBaseCallInfo = getStacksContractCallInfo(
     info.toChain,
     "btc-peg-in-endpoint-v2-05",
   )
-  if (contractCallInfo == null) {
+  const contractSwapCallInfo = getStacksContractCallInfo(
+    info.toChain,
+    "btc-peg-in-endpoint-v2-05-swap",
+  )
+  if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -57,15 +62,7 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
     )
   }
 
-  const { swapRoute, toStacksAddress /*, swapSlippedAmount = 0n */ } = info
-  const executeOptions = {
-    deployerAddress: contractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: contractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
+  const { toStacksAddress, swap: swapInfo } = info
 
   const targetTokenContractInfo = getStacksTokenContractInfo(
     info.toChain,
@@ -75,9 +72,9 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
     return undefined
   }
 
-  if (hasLength(swapRoute, 0)) {
+  if (swapInfo == null) {
     data = await executeReadonlyCallXLINK(
-      contractCallInfo.contractName,
+      contractBaseCallInfo.contractName,
       "create-order-cross-or-fail",
       {
         order: {
@@ -88,10 +85,26 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
           "token-out": `${targetTokenContractInfo.deployerAddress}.${targetTokenContractInfo.contractName}`,
         },
       },
-      executeOptions,
+      contractBaseCallInfo.executeOptions,
     ).then(unwrapResponse)
   } else {
-    checkNever(swapRoute)
+    data = await executeReadonlyCallXLINK(
+      contractSwapCallInfo.contractName,
+      "create-order-cross-swap-or-fail",
+      {
+        order: {
+          from: info.fromBitcoinScriptPubKey,
+          to: addressToBuffer(info.toChain, toStacksAddress),
+          "chain-id": undefined,
+          routing: swapInfo.swapPools.map(n => n.poolId),
+          "min-amount-out": numberToStacksContractNumber(
+            swapInfo.minimumAmountsToReceive,
+          ),
+          "token-out": `${targetTokenContractInfo.deployerAddress}.${targetTokenContractInfo.contractName}`,
+        },
+      },
+      contractSwapCallInfo.executeOptions,
+    ).then(unwrapResponse)
   }
 
   return {
@@ -106,16 +119,21 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
   toChain: KnownChainId.EVMChain
   toToken: KnownTokenId.EVMToken
   toEVMAddress: string
-  swapRoute: BridgeSwapRoute_FromBitcoin
-  swapSlippedAmount?: bigint
+  swap?: SwapRoute_WithMinimumAmountsToReceive
 }): Promise<undefined | CreateBridgeOrderResult> {
-  const contractCallInfo = getStacksContractCallInfo(
+  const contractBaseCallInfo = getStacksContractCallInfo(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
     "btc-peg-in-endpoint-v2-05",
   )
-  if (contractCallInfo == null) {
+  const contractSwapCallInfo = getStacksContractCallInfo(
+    info.fromChain === KnownChainId.Bitcoin.Mainnet
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    "btc-peg-in-endpoint-v2-05-swap",
+  )
+  if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -124,22 +142,14 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
     )
   }
 
-  const { swapRoute, toEVMAddress /*, swapSlippedAmount = 0n */ } = info
-  const executeOptions = {
-    deployerAddress: contractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: contractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
+  const { swap: swapInfo, toEVMAddress } = info
 
   const targetChainId = contractAssignedChainIdFromKnownChain(info.toChain)
 
   const swappedStacksToken = await toCorrespondingStacksToken(info.toToken)
   if (swappedStacksToken == null) return undefined
   const swappedStacksTokenAddress = getStacksTokenContractInfo(
-    contractCallInfo.network.isMainnet()
+    contractBaseCallInfo.network.isMainnet()
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
     swappedStacksToken,
@@ -148,7 +158,7 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
 
   const terminatingStacksTokenAddress =
     getTerminatingStacksTokenContractAddress({
-      fromChain: contractCallInfo.network.isMainnet()
+      fromChain: contractBaseCallInfo.network.isMainnet()
         ? KnownChainId.Stacks.Mainnet
         : KnownChainId.Stacks.Testnet,
       fromToken: swappedStacksToken,
@@ -157,9 +167,9 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
     }) ?? swappedStacksTokenAddress
 
   let data: undefined | Uint8Array
-  if (hasLength(swapRoute, 0)) {
+  if (swapInfo == null) {
     data = await executeReadonlyCallXLINK(
-      contractCallInfo.contractName,
+      contractBaseCallInfo.contractName,
       "create-order-cross-or-fail",
       {
         order: {
@@ -170,16 +180,132 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
           "token-out": `${terminatingStacksTokenAddress.deployerAddress}.${terminatingStacksTokenAddress.contractName}`,
         },
       },
-      executeOptions,
+      contractBaseCallInfo.executeOptions,
     ).then(unwrapResponse)
   } else {
-    checkNever(swapRoute)
+    data = await executeReadonlyCallXLINK(
+      contractSwapCallInfo.contractName,
+      "create-order-cross-swap-or-fail",
+      {
+        order: {
+          from: info.fromBitcoinScriptPubKey,
+          to: decodeHex(toEVMAddress),
+          "chain-id": targetChainId,
+          routing: swapInfo.swapPools.map(n => n.poolId),
+          "min-amount-out": numberToStacksContractNumber(
+            swapInfo.minimumAmountsToReceive,
+          ),
+          "token-out": `${terminatingStacksTokenAddress.deployerAddress}.${terminatingStacksTokenAddress.contractName}`,
+        },
+      },
+      contractSwapCallInfo.executeOptions,
+    ).then(unwrapResponse)
   }
 
   return {
     terminatingStacksToken: {
       deployerAddress: terminatingStacksTokenAddress.deployerAddress,
       contractName: terminatingStacksTokenAddress.contractName,
+    },
+    data: data!,
+  }
+}
+
+export async function createBridgeOrder_BitcoinToMeta(
+  sdkContext: SDKGlobalContext,
+  info: (KnownRoute_FromBitcoin_ToBRC20 | KnownRoute_FromBitcoin_ToRunes) & {
+    fromBitcoinScriptPubKey: Uint8Array
+    toBitcoinScriptPubKey: Uint8Array
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
+  const contractBaseCallInfo = getStacksContractCallInfo(
+    info.fromChain === KnownChainId.Bitcoin.Mainnet
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    "btc-peg-in-endpoint-v2-05",
+  )
+  const contractSwapCallInfo = getStacksContractCallInfo(
+    info.fromChain === KnownChainId.Bitcoin.Mainnet
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    "btc-peg-in-endpoint-v2-05-swap",
+  )
+  if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+      info.toToken,
+    )
+  }
+
+  const { swap: swapInfo } = info
+
+  const targetChainId = contractAssignedChainIdFromKnownChain(info.toChain)
+
+  // prettier-ignore
+  const swappedStacksToken =
+    KnownChainId.isBRC20Chain(info.toChain) ?
+      await getBRC20SupportedRoutes(sdkContext, info.toChain).then(routes => {
+        const route = routes.find(n => n.brc20Token === info.toToken)
+        return route?.stacksToken
+      }) :
+    KnownChainId.isRunesChain(info.toChain) ?
+      await getRunesSupportedRoutes(sdkContext, info.toChain).then(routes => {
+        const route = routes.find(n => n.runesToken === info.toToken)
+        return route?.stacksToken
+      }) :
+    (checkNever(info.toChain), undefined)
+  if (swappedStacksToken == null) return undefined
+  const swappedStacksTokenAddress = getStacksTokenContractInfo(
+    contractBaseCallInfo.network.isMainnet()
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet,
+    swappedStacksToken,
+  )
+  if (swappedStacksTokenAddress == null) return undefined
+
+  let data: undefined | Uint8Array
+  if (swapInfo == null) {
+    data = await executeReadonlyCallXLINK(
+      contractBaseCallInfo.contractName,
+      "create-order-cross-or-fail",
+      {
+        order: {
+          from: info.fromBitcoinScriptPubKey,
+          to: info.toBitcoinScriptPubKey,
+          "chain-id": targetChainId,
+          token: `${swappedStacksTokenAddress.deployerAddress}.${swappedStacksTokenAddress.contractName}`,
+          "token-out": `${swappedStacksTokenAddress.deployerAddress}.${swappedStacksTokenAddress.contractName}`,
+        },
+      },
+      contractBaseCallInfo.executeOptions,
+    ).then(unwrapResponse)
+  } else {
+    data = await executeReadonlyCallXLINK(
+      contractSwapCallInfo.contractName,
+      "create-order-cross-swap-or-fail",
+      {
+        order: {
+          from: info.fromBitcoinScriptPubKey,
+          to: info.toBitcoinScriptPubKey,
+          "chain-id": targetChainId,
+          routing: swapInfo.swapPools.map(n => n.poolId),
+          "min-amount-out": numberToStacksContractNumber(
+            swapInfo.minimumAmountsToReceive,
+          ),
+          "token-out": `${swappedStacksTokenAddress.deployerAddress}.${swappedStacksTokenAddress.contractName}`,
+        },
+      },
+      contractSwapCallInfo.executeOptions,
+    ).then(unwrapResponse)
+  }
+
+  return {
+    terminatingStacksToken: {
+      deployerAddress: swappedStacksTokenAddress.deployerAddress,
+      contractName: swappedStacksTokenAddress.contractName,
     },
     data: data!,
   }
