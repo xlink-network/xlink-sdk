@@ -16,17 +16,22 @@ export interface SDKGlobalContext {
   backendAPI: {
     runtimeEnv: "prod" | "dev"
   }
+  btc: {
+    ignoreValidateResult?: boolean
+  }
   brc20: {
     routesConfigCache?: SDKGlobalContextCache<
       string,
       Promise<BRC20SupportedRoute[]>
     >
+    ignoreValidateResult?: boolean
   }
   runes: {
     routesConfigCache?: SDKGlobalContextCache<
       string,
       Promise<RunesSupportedRoute[]>
     >
+    ignoreValidateResult?: boolean
   }
   evm: {
     enableMulticall?: boolean

@@ -12,6 +12,11 @@ export {
   StacksContractAddress,
   PublicEVMContractType as EVMContractType,
 } from "./xlinkSdkUtils/types"
+export {
+  SwapRoute,
+  SwapRoute_WithMinimumAmountsToReceive_Public as SwapRoute_WithMinimumAmountsOut,
+  SwapRoute_WithExchangeRate_Public as SwapRoute_WithExchangeRate,
+} from "./utils/SwapRouteHelpers"
 export { TimeLockedAsset } from "./xlinkSdkUtils/timelockFromEVM"
 export {
   PublicTransferProphet as TransferProphet,

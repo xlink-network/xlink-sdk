@@ -124,6 +124,15 @@ export interface XLinkSDKOptions {
     backendAPI?: {
       runtimeEnv?: "prod" | "dev"
     }
+    btc?: {
+      ignoreValidateResult?: boolean
+    }
+    brc20?: {
+      ignoreValidateResult?: boolean
+    }
+    runes?: {
+      ignoreValidateResult?: boolean
+    }
   }
   evm?: {
     /**
@@ -160,11 +169,19 @@ export class XLinkSDK {
         ...options.__experimental?.backendAPI,
         runtimeEnv: options.__experimental?.backendAPI?.runtimeEnv ?? "prod",
       },
+      btc: {
+        ignoreValidateResult:
+          options.__experimental?.btc?.ignoreValidateResult ?? false,
+      },
       brc20: {
         routesConfigCache: new Map(),
+        ignoreValidateResult:
+          options.__experimental?.brc20?.ignoreValidateResult ?? false,
       },
       runes: {
         routesConfigCache: new Map(),
+        ignoreValidateResult:
+          options.__experimental?.runes?.ignoreValidateResult ?? false,
       },
       evm: {
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
@@ -627,7 +644,8 @@ async function brc20TickToBRC20Token(
 ): Promise<undefined | KnownTokenId.BRC20Token> {
   if (!KnownChainId.isBRC20Chain(chain)) return
   const routes = await getBRC20SupportedRoutes(sdkContext, chain)
-  return routes.find(r => r.brc20Tick === tick)?.brc20Token
+  return routes.find(r => r.brc20Tick.toLowerCase() === tick.toLowerCase())
+    ?.brc20Token
 }
 
 async function runesIdFromRunesToken(

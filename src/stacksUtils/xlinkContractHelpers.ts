@@ -1,11 +1,13 @@
 import { NETWORK, TEST_NETWORK } from "@scure/btc-signer"
 import { StacksNetwork } from "@stacks/network"
+import { callReadOnlyFunction } from "@stacks/transactions"
 import {
   c32address,
   c32addressDecode,
   versions as c32addressVersions,
 } from "c32check"
 import {
+  CallReadOnlyFunctionFn,
   composeTxOptionsFactory,
   executeReadonlyCallFactory,
 } from "clarity-codegen"
@@ -26,7 +28,7 @@ import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import {
-  stxContractDeployers,
+  stxContractAddresses,
   stxTokenContractAddresses,
 } from "./stxContractAddresses"
 
@@ -50,6 +52,16 @@ export const numberToStacksContractNumber = (
   )
 }
 
+// const _composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
+// export const composeTxXLINK: typeof _composeTxXLINK = (...args) => {
+//   const res = _composeTxXLINK(...args)
+//   return {
+//     ...res,
+//     contractName:
+//       (contractNameOverrides as any)?.[res.contractName] ?? res.contractName,
+//   }
+// }
+
 export const composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
 
 export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
@@ -58,7 +70,7 @@ export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
 )
 
 export const getStacksContractCallInfo = <
-  C extends keyof typeof stxContractDeployers,
+  C extends keyof typeof stxContractAddresses,
 >(
   chainId: KnownChainId.StacksChain,
   contractName: C,
@@ -67,18 +79,37 @@ export const getStacksContractCallInfo = <
   | (Omit<StacksContractAddress, "contractName"> & {
       contractName: C
       network: StacksNetwork
+      executeOptions: {
+        deployerAddress?: string
+        senderAddress?: string
+        callReadOnlyFunction?: CallReadOnlyFunctionFn
+      }
     }) => {
   const network =
     chainId === KnownChainId.Stacks.Mainnet ? STACKS_MAINNET : STACKS_TESTNET
 
-  if (stxContractDeployers[contractName][chainId] == null) {
+  if (stxContractAddresses[contractName][chainId] == null) {
     return undefined
   }
 
   return {
-    ...stxContractDeployers[contractName][chainId],
+    ...stxContractAddresses[contractName][chainId],
     contractName,
     network,
+    executeOptions: {
+      deployerAddress:
+        stxContractAddresses[contractName][chainId].deployerAddress,
+      callReadOnlyFunction(callOptions) {
+        return callReadOnlyFunction({
+          ...callOptions,
+          contractAddress:
+            stxContractAddresses[contractName][chainId].deployerAddress,
+          contractName:
+            stxContractAddresses[contractName][chainId].contractName,
+          network,
+        })
+      },
+    },
   }
 }
 

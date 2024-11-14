@@ -639,7 +639,7 @@ async function bridgeFromEVM_toMeta(
     throw new InvalidMethodParametersError(
       [
         "XLinkSDK",
-        `bridgeFromEVM (to ${KnownChainId.isBRC20Chain(info.toChain) ? "BRC20" : "Runes"})`,
+        `bridgeFromEVM (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
         {
