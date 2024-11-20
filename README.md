@@ -101,6 +101,7 @@ const result = await xlinkSdk.bridgeFromStacks({
     fromToken: KnownTokenId.Stacks.sUSDT,
     toChain: KnownChainId.EVM.Ethereum,
     toToken: KnownTokenId.EVM.USDT,
+    fromAddress: "0x...",
     toAddress: "0x...",
     amount: toSDKNumberOrUndefined(10),
     sendTransaction: async tx => {
@@ -111,13 +112,13 @@ const result = await xlinkSdk.bridgeFromStacks({
             contractName: tx.contractName,
             functionName: tx.functionName,
             functionArgs: tx.functionArgs,
-            senderKey: /* sender address private key */,
+            senderKey: "sender address private key here",
             network,
             postConditions: tx.postConditions,
             anchorMode: tx.anchorMode,
         });
         const broadcastResponse = await broadcastTransaction(transaction, network);
-        return broadcastResponse.txid;
+        return {txid: broadcastResponse.txid};
     },
 });
 console.log("Transaction ID:", result.txid);
@@ -147,11 +148,20 @@ console.log("Bridge Info:", bridgeInfo);
 const result = await xlinkSdk.bridgeFromEVM({
     fromChain: KnownChainId.EVM.Ethereum,
     fromToken: KnownTokenId.EVM.USDT,
+    fromAddress: "0x95222290DD7278Aa3D......................",
     toChain: KnownChainId.Stacks.Mainnet,
     toToken: KnownTokenId.Stacks.sUSDT,
-    toAddress: "0x...",
+    toAddress: "0x95222290DD7278Aa3D......................",
     amount: toSDKNumberOrUndefined(10),
-    sendTransaction: // Implementation for sending transaction from EVM chain
+    sendTransaction:  async function (tx: {
+      from: `0x${string}`;
+      to: `0x${string}`;
+      data: Uint8Array;
+      recommendedGasLimit: `${string} (XLinkSDK number)`;
+    }): Promise<{ txHash: string; }> {
+      // Implementation for sending transaction from EVM chain
+      return { txHash: "....." }
+    }
 });
 console.log("Transaction ID:", result.txHash);
 ```
@@ -169,7 +179,9 @@ import {
 // Get bridge info
 const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
     fromChain: KnownChainId.Bitcoin.Mainnet,
+    fromToken: KnownTokenId.Bitcoin.BTC,
     toChain: KnownChainId.EVM.Ethereum,
+    toToken: KnownTokenId.EVM.BTCB,
     amount: toSDKNumberOrUndefined(1),
 });
 console.log("Bridge Info:", bridgeInfo);
@@ -178,15 +190,23 @@ console.log("Bridge Info:", bridgeInfo);
 const result = await xlinkSdk.bridgeFromBitcoin({
     fromChain: KnownChainId.Bitcoin.Mainnet,
     fromToken: KnownTokenId.Bitcoin.BTC,
+    fromAddress: "bitcoin address",
     toChain: KnownChainId.EVM.Ethereum,
     toToken: KnownTokenId.EVM.WBTC,
-    fromAddress: "bitcoin address",
-    fromAddressScriptPubKey: scriptPubKey,
     toAddress: "0x...",
+    fromAddressScriptPubKey: new Uint8Array([10, 20, 30, 40,]),
     amount: toSDKNumberOrUndefined(1),
     networkFeeRate: 10n,
-    reselectSpendableUTXOs: // Implementation for reselect UTXOs
-    signPsbt: // Implementation for signing PSBT
+    reselectSpendableUTXOs(satsToSend: bigint, pinnedUTXOs: UTXOSpendable[], lastTimeSelectedUTXOs: UTXOSpendable[]): Promise<UTXOSpendable[]> {
+    return Promise.resolve([]);
+    },
+    signPsbt: function (tx: { psbt: Uint8Array; signInputs: number[]; }): Promise<{ psbt: Uint8Array }> {
+    throw new Error("Function not implemented.");
+    },
+    sendTransaction: function (tx: { hex: string }): Promise<{ txid: string; }> {
+    throw new Error("Function not implemented.");
+    }
+
 });
 console.log("Transaction ID:", result.tx);
 ```
