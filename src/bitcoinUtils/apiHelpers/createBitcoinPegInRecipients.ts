@@ -1,29 +1,33 @@
+import { estimateInputVSizeAfterSign } from "@c4/btc-utils"
 import { toHex } from "viem"
 import { requestAPI } from "../../utils/apiHelpers"
 import { BigNumber } from "../../utils/BigNumber"
-import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
-import { calculateFee } from "../prepareTransaction"
-import { getBTCPegInAddress } from "../btcAddresses"
 import { UnsupportedBridgeRouteError } from "../../utils/errors"
 import { decodeHex } from "../../utils/hexHelpers"
-import { estimateInputVSizeAfterSign } from "@c4/btc-utils"
+import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
+import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { getBTCPegInAddress } from "../btcAddresses"
+import { calculateFee } from "../prepareTransaction"
 
 const REVEAL_TX_OUTPUT_AMOUNT = 546n
 
-export async function createBitcoinPegInRecipients(info: {
-  fromChain: KnownChainId.BitcoinChain
-  toChain: KnownChainId.StacksChain | KnownChainId.EVMChain
-  fromToken: KnownTokenId.BitcoinToken
-  toToken: KnownTokenId.StacksToken | KnownTokenId.EVMToken
-  fromAddress: {
-    address: string
-    scriptPubKey: Uint8Array
-  }
-  toAddress: string
-  fromAmount: BigNumber
-  feeRate: bigint
-  orderData: Uint8Array
-}): Promise<{
+export async function createBitcoinPegInRecipients(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    toChain: KnownChainId.StacksChain | KnownChainId.EVMChain
+    fromToken: KnownTokenId.BitcoinToken
+    toToken: KnownTokenId.StacksToken | KnownTokenId.EVMToken
+    fromAddress: {
+      address: string
+      scriptPubKey: Uint8Array
+    }
+    toAddress: string
+    fromAmount: BigNumber
+    feeRate: bigint
+    orderData: Uint8Array
+  },
+): Promise<{
   address: string
   scriptPubKey: Uint8Array
   satsAmount: bigint
@@ -39,7 +43,7 @@ export async function createBitcoinPegInRecipients(info: {
 
   const resp = await requestAPI<{
     addresses: BitcoinPegInRecipient[]
-  }>({
+  }>(sdkContext, {
     path: `/2024-10-01/bitcoin/peg-in-recipients`,
     method: "POST",
     body: {

@@ -1,21 +1,25 @@
 import { toHex } from "viem"
 import { requestAPI } from "../../utils/apiHelpers"
 import { KnownChainId } from "../../utils/types/knownIds"
+import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 
-export async function broadcastRevealableTransaction(info: {
-  fromChain: KnownChainId.BitcoinChain
-  transactionHex: `0x${string}`
-  orderData: Uint8Array
-  orderOutputIndex: number
-  orderOutputSatsAmount: bigint
-  xlinkPegInAddress: {
-    address: string
-    scriptPubKey: Uint8Array
-  }
-}): Promise<{ txid: string }> {
+export async function broadcastRevealableTransaction(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    transactionHex: `0x${string}`
+    orderData: Uint8Array
+    orderOutputIndex: number
+    orderOutputSatsAmount: bigint
+    xlinkPegInAddress: {
+      address: string
+      scriptPubKey: Uint8Array
+    }
+  },
+): Promise<{ txid: string }> {
   const resp = await requestAPI<{
     txId: string
-  }>({
+  }>(sdkContext, {
     path: `/2024-10-01/bitcoin/broadcast`,
     method: "POST",
     body: {
