@@ -32,7 +32,7 @@ export async function getBRC20SupportedRoutes(
     return sdkContext.brc20.routesConfigCache.get(chainId)!
   }
 
-  const promise = _getBRC20SupportedRoutes(chainId).catch(err => {
+  const promise = _getBRC20SupportedRoutes(sdkContext, chainId).catch(err => {
     const cachedPromise = sdkContext.brc20.routesConfigCache?.get(chainId)
     if (promise === cachedPromise) {
       sdkContext.brc20.routesConfigCache?.delete(chainId)
@@ -43,6 +43,7 @@ export async function getBRC20SupportedRoutes(
   return promise
 }
 async function _getBRC20SupportedRoutes(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   chainId: KnownChainId.BRC20Chain,
 ): Promise<BRC20SupportedRoute[]> {
   const stacksChainId =
@@ -50,13 +51,16 @@ async function _getBRC20SupportedRoutes(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const resp = await requestAPI<{ routes: SupportedBRC20BridgeRoute[] }>({
-    method: "GET",
-    path: "/2024-10-01/brc20/supported-routes",
-    query: {
-      network: chainId === KnownChainId.BRC20.Mainnet ? "mainnet" : "testnet",
+  const resp = await requestAPI<{ routes: SupportedBRC20BridgeRoute[] }>(
+    sdkContext,
+    {
+      method: "GET",
+      path: "/2024-10-01/brc20/supported-routes",
+      query: {
+        network: chainId === KnownChainId.BRC20.Mainnet ? "mainnet" : "testnet",
+      },
     },
-  })
+  )
 
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | BRC20SupportedRoute> => {
@@ -126,7 +130,7 @@ export async function getRunesSupportedRoutes(
     return sdkContext.runes.routesConfigCache.get(chainId)!
   }
 
-  const promise = _getRunesSupportedRoutes(chainId).catch(err => {
+  const promise = _getRunesSupportedRoutes(sdkContext, chainId).catch(err => {
     const cachedPromise = sdkContext.runes.routesConfigCache?.get(chainId)
     if (promise === cachedPromise) {
       sdkContext.runes.routesConfigCache?.delete(chainId)
@@ -137,6 +141,7 @@ export async function getRunesSupportedRoutes(
   return promise
 }
 async function _getRunesSupportedRoutes(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   chainId: KnownChainId.RunesChain,
 ): Promise<RunesSupportedRoute[]> {
   const stacksChainId =
@@ -144,13 +149,16 @@ async function _getRunesSupportedRoutes(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const resp = await requestAPI<{ routes: SupportedRunesBridgeRoute[] }>({
-    method: "GET",
-    path: "/2024-10-01/runes/supported-routes",
-    query: {
-      network: chainId === KnownChainId.Runes.Mainnet ? "mainnet" : "testnet",
+  const resp = await requestAPI<{ routes: SupportedRunesBridgeRoute[] }>(
+    sdkContext,
+    {
+      method: "GET",
+      path: "/2024-10-01/runes/supported-routes",
+      query: {
+        network: chainId === KnownChainId.Runes.Mainnet ? "mainnet" : "testnet",
+      },
     },
-  })
+  )
 
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | RunesSupportedRoute> => {

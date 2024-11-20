@@ -11,6 +11,9 @@ async function print(matchers: { chain: string[] }): Promise<void> {
     chainIds.map(chainId =>
       getAllAddresses(
         {
+          backendAPI: {
+            runtimeEnv: "prod",
+          },
           brc20: {},
           runes: {},
           evm: {

@@ -42,7 +42,7 @@ export async function estimateBridgeTransactionFromBitcoin(
         KnownTokenId.isBitcoinToken(route.fromToken) &&
         KnownTokenId.isStacksToken(route.toToken)
       ) {
-        return estimateFromBitcoin_toStacks({
+        return estimateFromBitcoin_toStacks(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -55,7 +55,7 @@ export async function estimateBridgeTransactionFromBitcoin(
         KnownTokenId.isBitcoinToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return estimateFromBitcoin_toEVM({
+        return estimateFromBitcoin_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -89,6 +89,7 @@ export async function estimateBridgeTransactionFromBitcoin(
 }
 
 async function estimateFromBitcoin_toStacks(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: Omit<
     EstimateBridgeTransactionFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -125,7 +126,7 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const resp = await prepareBitcoinTransaction({
+  const resp = await prepareBitcoinTransaction(sdkContext, {
     ...info,
     orderData: createdOrder.data,
     pegInAddress,
@@ -138,6 +139,7 @@ async function estimateFromBitcoin_toStacks(
 }
 
 async function estimateFromBitcoin_toEVM(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: Omit<
     EstimateBridgeTransactionFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -174,7 +176,7 @@ async function estimateFromBitcoin_toEVM(
     )
   }
 
-  const resp = await prepareBitcoinTransaction({
+  const resp = await prepareBitcoinTransaction(sdkContext, {
     ...info,
     orderData: createdOrder.data,
     pegInAddress,

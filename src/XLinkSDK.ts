@@ -117,6 +117,11 @@ export {
 } from "./xlinkSdkUtils/timelockFromEVM"
 
 export interface XLinkSDKOptions {
+  __experimental?: {
+    backendAPI?: {
+      runtimeEnv?: "prod" | "dev"
+    }
+  }
   evm?: {
     /**
      * @default true
@@ -148,6 +153,10 @@ export class XLinkSDK {
       options.evm?.cacheOnChainConfig ?? defaultConfig.evm?.cacheOnChainConfig
 
     this.sdkContext = {
+      backendAPI: {
+        ...options.__experimental?.backendAPI,
+        runtimeEnv: options.__experimental?.backendAPI?.runtimeEnv ?? "prod",
+      },
       brc20: {
         routesConfigCache: new Map(),
       },

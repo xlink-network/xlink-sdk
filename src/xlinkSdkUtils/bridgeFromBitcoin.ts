@@ -123,7 +123,7 @@ export async function bridgeFromBitcoin(
         KnownTokenId.isBitcoinToken(route.fromToken) &&
         KnownTokenId.isStacksToken(route.toToken)
       ) {
-        return bridgeFromBitcoin_toStacks({
+        return bridgeFromBitcoin_toStacks(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -136,7 +136,7 @@ export async function bridgeFromBitcoin(
         KnownTokenId.isBitcoinToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeFromBitcoin_toEVM({
+        return bridgeFromBitcoin_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -170,6 +170,7 @@ export async function bridgeFromBitcoin(
 }
 
 async function bridgeFromBitcoin_toStacks(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: Omit<
     BridgeFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -206,10 +207,11 @@ async function bridgeFromBitcoin_toStacks(
     )
   }
 
-  return broadcastBitcoinTransaction(info, createdOrder)
+  return broadcastBitcoinTransaction(sdkContext, info, createdOrder)
 }
 
 async function bridgeFromBitcoin_toEVM(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: Omit<
     BridgeFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -233,10 +235,11 @@ async function bridgeFromBitcoin_toEVM(
     )
   }
 
-  return broadcastBitcoinTransaction(info, createdOrder)
+  return broadcastBitcoinTransaction(sdkContext, info, createdOrder)
 }
 
 async function broadcastBitcoinTransaction(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: Omit<
     ConstructBitcoinTransactionInput,
     "validateBridgeOrder" | "orderData" | "pegInAddress"
@@ -254,7 +257,7 @@ async function broadcastBitcoinTransaction(
     )
   }
 
-  const tx = await constructBitcoinTransaction({
+  const tx = await constructBitcoinTransaction(sdkContext, {
     ...(info as any),
     validateBridgeOrder: (btcTx, revealTx, swapRoute) => {
       if (revealTx == null) {
@@ -285,14 +288,17 @@ async function broadcastBitcoinTransaction(
     )
   }
 
-  const { txid: apiBroadcastedTxId } = await broadcastRevealableTransaction({
-    fromChain: info.fromChain,
-    transactionHex: `0x${tx.hex}`,
-    orderData: createdOrder.data,
-    orderOutputIndex: tx.revealOutput.index,
-    orderOutputSatsAmount: tx.revealOutput.satsAmount,
-    xlinkPegInAddress: pegInAddress,
-  })
+  const { txid: apiBroadcastedTxId } = await broadcastRevealableTransaction(
+    sdkContext,
+    {
+      fromChain: info.fromChain,
+      transactionHex: `0x${tx.hex}`,
+      orderData: createdOrder.data,
+      orderOutputIndex: tx.revealOutput.index,
+      orderOutputSatsAmount: tx.revealOutput.satsAmount,
+      xlinkPegInAddress: pegInAddress,
+    },
+  )
 
   const { txid: delegateBroadcastedTxId } = await info.sendTransaction({
     hex: tx.hex,
@@ -322,6 +328,7 @@ type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
   ) => Promise<void>
 }
 async function constructBitcoinTransaction(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: ConstructBitcoinTransactionInput,
 ): Promise<{
   hex: string
@@ -330,7 +337,7 @@ async function constructBitcoinTransaction(
     satsAmount: bigint
   }
 }> {
-  const txOptions = await prepareBitcoinTransaction(info)
+  const txOptions = await prepareBitcoinTransaction(sdkContext, info)
 
   const tx = createTransaction(
     txOptions.inputs,
@@ -356,7 +363,7 @@ async function constructBitcoinTransaction(
 
   let revealTx: undefined | Uint8Array
   if (txOptions.revealOutput != null) {
-    const created = await createRevealTx({
+    const created = await createRevealTx(sdkContext, {
       fromChain: info.fromChain,
       txId: signedTx.id,
       vout: txOptions.revealOutput.index,
@@ -393,6 +400,7 @@ export type PrepareBitcoinTransactionInput = KnownRoute_FromBitcoin & {
   }
 }
 export async function prepareBitcoinTransaction(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: PrepareBitcoinTransactionInput,
 ): Promise<
   BitcoinTransactionPrepareResult & {
@@ -408,7 +416,7 @@ export async function prepareBitcoinTransaction(
       ? btc.NETWORK
       : btc.TEST_NETWORK
 
-  const recipient = await createBitcoinPegInRecipients({
+  const recipient = await createBitcoinPegInRecipients(sdkContext, {
     fromChain: info.fromChain,
     toChain: info.toChain,
     fromToken: info.fromToken,

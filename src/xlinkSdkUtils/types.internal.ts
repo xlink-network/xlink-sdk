@@ -13,6 +13,9 @@ export interface SDKGlobalContextCache<K, T> {
 }
 
 export interface SDKGlobalContext {
+  backendAPI: {
+    runtimeEnv: "prod" | "dev"
+  }
   brc20: {
     routesConfigCache?: SDKGlobalContextCache<
       string,

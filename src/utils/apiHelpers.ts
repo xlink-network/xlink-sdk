@@ -1,11 +1,15 @@
 import { backendAPIPrefix } from "../config"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 
-export async function requestAPI<T>(options: {
-  path: string
-  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
-  query?: Record<string, string>
-  body?: Record<string, unknown>
-}): Promise<T> {
+export async function requestAPI<T>(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  options: {
+    path: string
+    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+    query?: Record<string, string>
+    body?: Record<string, unknown>
+  },
+): Promise<T> {
   const queryPairs = Object.entries(options.query ?? {})
   const querystring = new URLSearchParams(queryPairs as string[][]).toString()
 
@@ -16,6 +20,7 @@ export async function requestAPI<T>(options: {
       method: options.method,
       headers: {
         "Content-Type": "application/json",
+        "X-Xlink-Runtime-Env": sdkContext.backendAPI.runtimeEnv,
       },
       body: JSON.stringify(options.body),
     },
