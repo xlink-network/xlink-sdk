@@ -62,6 +62,14 @@ export interface StacksContractAddress {
   deployerAddress: string
   contractName: string
 }
+export const isStacksContractAddressEqual = (
+  a: StacksContractAddress,
+  b: StacksContractAddress,
+): boolean => {
+  return (
+    a.deployerAddress === b.deployerAddress && a.contractName === b.contractName
+  )
+}
 
 /**
  * Represents the type of public EVM contracts that are accessible through the SDK.

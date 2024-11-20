@@ -1,5 +1,7 @@
 import { Big, BigSource } from "big.js"
 import { OneOrMore } from "./typeHelpers"
+import { last } from "./arrayHelpers"
+import { reduce } from "./arrayHelpers"
 
 export type BigNumberSource = number | bigint | string | Big | BigNumber
 
@@ -249,6 +251,31 @@ export namespace BigNumber {
       return fromBig(toBig(value).mul(toBig(a)))
     },
   )
+  /**
+   * @example
+   * cumulativeMul(v, [a, b, c]) // =>
+   * [
+   *   v,
+   *   v * a,
+   *   v * a * b,
+   *   v * a * b * c
+   * ]
+   */
+  export const cumulativeMul = curry2(
+    (
+      value: BigNumberSource,
+      as: readonly BigNumberSource[],
+    ): OneOrMore<BigNumber> => {
+      return reduce(
+        (acc: OneOrMore<BigNumber>, currentRate: BigNumberSource) => [
+          ...acc,
+          BigNumber.mul(last(acc)!, currentRate),
+        ],
+        [from(value)],
+        as,
+      )
+    },
+  )
 
   export const div = curry2(
     (value: BigNumberSource, a: BigNumberSource): BigNumber => {
@@ -336,6 +363,7 @@ export namespace BigNumber {
   }
 
   export const ZERO = BigNumber.from(0)
+  export const ONE = BigNumber.from(1)
 }
 
 interface Curry2<Args extends [any, any], Ret> {

@@ -13,58 +13,113 @@ export interface DefinedRoute {
 
 export type KnownRoute_FromStacks_ToBitcoin = {
   fromChain: KnownChainId.StacksChain
-  toChain: KnownChainId.BitcoinChain
   fromToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.BitcoinChain
   toToken: KnownTokenId.BitcoinToken
 }
 export type KnownRoute_FromStacks_ToEVM = {
   fromChain: KnownChainId.StacksChain
-  toChain: KnownChainId.EVMChain
   fromToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.EVMChain
   toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromStacks_ToBRC20 = {
+  fromChain: KnownChainId.StacksChain
+  fromToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromStacks_ToRunes = {
+  fromChain: KnownChainId.StacksChain
+  fromToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
 }
 export type KnownRoute_FromStacks =
   | KnownRoute_FromStacks_ToBitcoin
   | KnownRoute_FromStacks_ToEVM
+  | KnownRoute_FromStacks_ToBRC20
+  | KnownRoute_FromStacks_ToRunes
 
 export type KnownRoute_FromBitcoin_ToStacks = {
   fromChain: KnownChainId.BitcoinChain
-  toChain: KnownChainId.StacksChain
   fromToken: KnownTokenId.BitcoinToken
+  toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
 }
 export type KnownRoute_FromBitcoin_ToEVM = {
   fromChain: KnownChainId.BitcoinChain
-  toChain: KnownChainId.EVMChain
   fromToken: KnownTokenId.BitcoinToken
+  toChain: KnownChainId.EVMChain
   toToken: KnownTokenId.EVMToken
 }
+// export type KnownRoute_FromBitcoin_ToBRC20 = {
+//   fromChain: KnownChainId.BitcoinChain
+//   fromToken: KnownTokenId.BitcoinToken
+//   toChain: KnownChainId.BRC20Chain
+//   toToken: KnownTokenId.BRC20Token
+// }
+// export type KnownRoute_FromBitcoin_ToRunes = {
+//   fromChain: KnownChainId.BitcoinChain
+//   fromToken: KnownTokenId.BitcoinToken
+//   toChain: KnownChainId.RunesChain
+//   toToken: KnownTokenId.RunesToken
+// }
 export type KnownRoute_FromBitcoin =
   | KnownRoute_FromBitcoin_ToStacks
   | KnownRoute_FromBitcoin_ToEVM
+// | KnownRoute_FromBitcoin_ToBRC20
+// | KnownRoute_FromBitcoin_ToRunes
 
 export type KnownRoute_FromEVM_ToStacks = {
   fromChain: KnownChainId.EVMChain
-  toChain: KnownChainId.StacksChain
   fromToken: KnownTokenId.EVMToken
+  toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
 }
 export type KnownRoute_FromEVM_ToBitcoin = {
   fromChain: KnownChainId.EVMChain
-  toChain: KnownChainId.BitcoinChain
   fromToken: KnownTokenId.EVMToken
+  toChain: KnownChainId.BitcoinChain
   toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromEVM_ToBRC20 = {
+  fromChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.EVMToken
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromEVM_ToRunes = {
+  fromChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.EVMToken
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
 }
 export type KnownRoute_FromEVM_ToEVM = {
   fromChain: KnownChainId.EVMChain
-  toChain: KnownChainId.EVMChain
   fromToken: KnownTokenId.EVMToken
+  toChain: KnownChainId.EVMChain
   toToken: KnownTokenId.EVMToken
 }
 export type KnownRoute_FromEVM =
   | KnownRoute_FromEVM_ToStacks
   | KnownRoute_FromEVM_ToBitcoin
+  | KnownRoute_FromEVM_ToBRC20
+  | KnownRoute_FromEVM_ToRunes
   | KnownRoute_FromEVM_ToEVM
+
+export type _KnownRoute_FromBRC20_ToStacks = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.StacksChain
+  toToken: KnownTokenId.StacksToken
+}
+export type _KnownRoute_FromRunes_ToStacks = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.StacksChain
+  toToken: KnownTokenId.StacksToken
+}
 
 export type KnownRoute =
   | KnownRoute_FromStacks

@@ -4,18 +4,24 @@ import {
   getStacks2EvmFeeInfo,
   toCorrespondingStacksToken,
 } from "../evmUtils/peggingHelpers"
+import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
+import { BigNumber } from "../utils/BigNumber"
 import {
   KnownRoute,
   KnownRoute_FromEVM_ToBitcoin,
+  KnownRoute_FromEVM_ToBRC20,
   KnownRoute_FromEVM_ToEVM,
+  KnownRoute_FromEVM_ToRunes,
   KnownRoute_FromEVM_ToStacks,
+  KnownRoute_FromStacks_ToBRC20,
+  KnownRoute_FromStacks_ToRunes,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   PublicTransferProphetAggregated,
   transformToPublicTransferProphet,
-  transformToPublicTransferProphetAggregated2 as transformToPublicTransferProphetAggregated,
+  transformToPublicTransferProphetAggregated,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromEVM"
@@ -72,6 +78,32 @@ export async function bridgeInfoFromEVM(
         KnownTokenId.isEVMToken(route.toToken)
       ) {
         return bridgeInfoFromEVM_toEVM(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isBRC20Chain(route.toChain)) {
+      if (
+        KnownTokenId.isEVMToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.toToken)
+      ) {
+        return bridgeInfoFromEVM_toMeta(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isRunesChain(route.toChain)) {
+      if (
+        KnownTokenId.isEVMToken(route.fromToken) &&
+        KnownTokenId.isRunesToken(route.toToken)
+      ) {
+        return bridgeInfoFromEVM_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -179,10 +211,10 @@ async function bridgeInfoFromEVM_toBitcoin(
   )
 
   return {
-    ...transformToPublicTransferProphetAggregated([
-      step1TransferProphet,
-      step2TransferProphet,
-    ]),
+    ...transformToPublicTransferProphetAggregated(
+      [step1TransferProphet, step2TransferProphet],
+      [BigNumber.ONE],
+    ),
     transferProphets: [step1TransferProphet, step2TransferProphet],
   }
 }
@@ -246,10 +278,79 @@ async function bridgeInfoFromEVM_toEVM(
   )
 
   return {
-    ...transformToPublicTransferProphetAggregated([
-      step1TransferProphet,
-      step2TransferProphet,
-    ]),
+    ...transformToPublicTransferProphetAggregated(
+      [step1TransferProphet, step2TransferProphet],
+      [BigNumber.ONE],
+    ),
+    transferProphets: [step1TransferProphet, step2TransferProphet],
+  }
+}
+
+async function bridgeInfoFromEVM_toMeta(
+  ctx: SDKGlobalContext,
+  info: Omit<
+    BridgeInfoFromEVMInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    (KnownRoute_FromEVM_ToBRC20 | KnownRoute_FromEVM_ToRunes),
+): Promise<BridgeInfoFromEVMOutput> {
+  const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
+    ? KnownChainId.Stacks.Mainnet
+    : KnownChainId.Stacks.Testnet
+  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  if (transitStacksToken == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const step1Route: KnownRoute = {
+    fromChain: info.fromChain,
+    fromToken: info.fromToken,
+    toChain: transitStacksChain,
+    toToken: transitStacksToken,
+  }
+  const step2Route:
+    | KnownRoute_FromStacks_ToBRC20
+    | KnownRoute_FromStacks_ToRunes = {
+    fromChain: transitStacksChain,
+    fromToken: transitStacksToken,
+    toChain: info.toChain as any,
+    toToken: info.toToken as any,
+  }
+
+  const [step1, step2] = await Promise.all([
+    getEvm2StacksFeeInfo(ctx, step1Route),
+    getStacks2MetaFeeInfo(ctx, step2Route),
+  ])
+  if (step1 == null || step2 == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const step1TransferProphet = transformToPublicTransferProphet(
+    step1Route,
+    info.amount,
+    step1,
+  )
+  const step2TransferProphet = transformToPublicTransferProphet(
+    step2Route,
+    step1TransferProphet.toAmount,
+    step2,
+  )
+
+  return {
+    ...transformToPublicTransferProphetAggregated(
+      [step1TransferProphet, step2TransferProphet],
+      [BigNumber.ONE],
+    ),
     transferProphets: [step1TransferProphet, step2TransferProphet],
   }
 }

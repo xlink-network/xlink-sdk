@@ -11,6 +11,8 @@ async function print(matchers: { chain: string[] }): Promise<void> {
     chainIds.map(chainId =>
       getAllAddresses(
         {
+          brc20: {},
+          runes: {},
           evm: {
             viemClients: defaultEvmClients,
           },

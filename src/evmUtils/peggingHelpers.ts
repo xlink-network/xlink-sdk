@@ -35,6 +35,10 @@ import {
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
+import {
+  getBRC20SupportedRoutes,
+  getRunesSupportedRoutes,
+} from "../metaUtils/xlinkContractHelpers"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
@@ -42,7 +46,7 @@ export const getEvm2StacksFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "evm-peg-in-endpoint",
+    "cross-peg-in-endpoint-v2-04",
   )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   const evmTokenContractCallInfo = await getEVMTokenContractInfo(
@@ -115,7 +119,7 @@ export const getEvm2StacksFeeInfo = async (
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
     isPaused: executeReadonlyCallXLINK(
-      "cross-peg-in-endpoint-v2-03",
+      stacksContractCallInfo.contractName,
       "get-paused",
       {},
       executeOptions,
@@ -125,14 +129,19 @@ export const getEvm2StacksFeeInfo = async (
   if (!resp.isApproved) return undefined
 
   const minAmount = BigNumber.max([resp.minAmount, resp.minFeeAmount])
-
   const maxAmount = BigNumber.min([resp.maxAmount])
 
   return {
     isPaused: resp.isPaused,
-    feeRate: resp.feeRate,
-    feeToken: route.fromToken,
-    minFeeAmount: resp.minFeeAmount,
+    bridgeToken: route.fromToken,
+    fees: [
+      {
+        type: "rate",
+        token: route.fromToken,
+        rate: resp.feeRate,
+        minimumAmount: resp.minFeeAmount,
+      },
+    ],
     minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
     maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
   }
@@ -143,7 +152,7 @@ export const getStacks2EvmFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
-    "evm-peg-out-endpoint",
+    "cross-peg-out-endpoint-v2-01",
   )
   const stacksTokenContractCallInfo = getStacksTokenContractInfo(
     route.fromChain,
@@ -169,7 +178,7 @@ export const getStacks2EvmFeeInfo = async (
 
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
-      "cross-peg-out-endpoint-v2-01",
+      stacksContractCallInfo.contractName,
       "get-approved-pair-or-fail",
       {
         pair: {
@@ -180,7 +189,7 @@ export const getStacks2EvmFeeInfo = async (
       executeOptions,
     ),
     executeReadonlyCallXLINK(
-      "cross-peg-out-endpoint-v2-01",
+      stacksContractCallInfo.contractName,
       "get-paused",
       {},
       executeOptions,
@@ -204,7 +213,6 @@ export const getStacks2EvmFeeInfo = async (
     numberFromStacksContractNumber(tokenConf["min-amount"]),
     minFee,
   ])
-
   const maxAmount = BigNumber.min([
     numberFromStacksContractNumber(tokenConf["max-amount"]),
     reserve,
@@ -212,9 +220,15 @@ export const getStacks2EvmFeeInfo = async (
 
   return {
     isPaused: tokenConf.isPaused || tokenConf.approved === false,
-    feeToken: route.fromToken,
-    feeRate,
-    minFeeAmount: minFee,
+    bridgeToken: route.fromToken,
+    fees: [
+      {
+        type: "rate",
+        token: route.fromToken,
+        rate: feeRate,
+        minimumAmount: minFee,
+      },
+    ],
     minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
     maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
   }
@@ -273,6 +287,16 @@ export async function fromCorrespondingStacksToken(
   assertExclude(restEVMTokenPossibilities, EVMToken.uBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.wuBTC)
 
+  if (stacksToken === StacksToken.DB20) {
+    return [EVMToken.DB20]
+  }
+  assertExclude(restEVMTokenPossibilities, EVMToken.DB20)
+
+  if (stacksToken === StacksToken.DOG) {
+    return [EVMToken.DOG]
+  }
+  assertExclude(restEVMTokenPossibilities, EVMToken.DOG)
+
   checkNever(restEVMTokenPossibilities)
   checkNever(restEVMTokenPossibilities)
   return []
@@ -304,6 +328,10 @@ export async function toCorrespondingStacksToken(
     case EVMToken.uBTC:
     case EVMToken.wuBTC:
       return StacksToken.uBTC
+    case EVMToken.DB20:
+      return StacksToken.DB20
+    case EVMToken.DOG:
+      return StacksToken.DOG
     default:
       checkNever(evmToken)
       return
@@ -373,6 +401,22 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isBitcoinChain(toChain)) {
     const stacksToken = await toCorrespondingStacksToken(fromToken)
     return stacksToken === KnownTokenId.Stacks.aBTC
+  }
+
+  if (KnownChainId.isRunesChain(toChain)) {
+    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
+    if (transitStacksToken == null) return false
+
+    const runesRoutes = await getRunesSupportedRoutes(ctx, toChain)
+    return runesRoutes.some(route => route.stacksToken === transitStacksToken)
+  }
+
+  if (KnownChainId.isBRC20Chain(toChain)) {
+    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
+    if (transitStacksToken == null) return false
+
+    const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
+    return brc20Routes.some(route => route.stacksToken === transitStacksToken)
   }
 
   checkNever(toChain)

@@ -3,10 +3,15 @@ import { backendAPIPrefix } from "../config"
 export async function requestAPI<T>(options: {
   path: string
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE"
+  query?: Record<string, string>
   body?: Record<string, unknown>
 }): Promise<T> {
+  const queryPairs = Object.entries(options.query ?? {})
+  const querystring = new URLSearchParams(queryPairs as string[][]).toString()
+
   const res = await fetch(
-    `${backendAPIPrefix}${options.path}`.replace(/(\w)\/\//g, "$1/"),
+    `${backendAPIPrefix}${options.path}`.replace(/(\w)\/\//g, "$1/") +
+      (querystring ? "?" + querystring : ""),
     {
       method: options.method,
       headers: {

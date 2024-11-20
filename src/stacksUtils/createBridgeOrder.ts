@@ -46,7 +46,7 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
 
   const contractCallInfo = getStacksContractCallInfo(
     info.toChain,
-    "btc-peg-in-endpoint",
+    "btc-peg-in-endpoint-v2-05",
   )
   if (contractCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
@@ -77,7 +77,7 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
 
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-04",
+      contractCallInfo.contractName,
       "create-order-cross-or-fail",
       {
         order: {
@@ -113,7 +113,7 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint",
+    "btc-peg-in-endpoint-v2-05",
   )
   if (contractCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
@@ -159,7 +159,7 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
   let data: undefined | Uint8Array
   if (hasLength(swapRoute, 0)) {
     data = await executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-04",
+      contractCallInfo.contractName,
       "create-order-cross-or-fail",
       {
         order: {

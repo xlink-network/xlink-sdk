@@ -1,5 +1,9 @@
 import { fromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
+import {
+  getBRC20SupportedRoutes,
+  getRunesSupportedRoutes,
+} from "../metaUtils/xlinkContractHelpers"
 import { hasAny } from "../utils/arrayHelpers"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
@@ -45,6 +49,24 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     return (
       fromToken === KnownTokenId.Stacks.aBTC &&
       toToken === KnownTokenId.Bitcoin.BTC
+    )
+  }
+
+  if (KnownChainId.isRunesChain(toChain)) {
+    const supportedRoutes = await getRunesSupportedRoutes(ctx, toChain)
+    if (supportedRoutes == null || !hasAny(supportedRoutes)) return false
+
+    return supportedRoutes.some(
+      route => route.stacksToken === fromToken && route.runesToken === toToken,
+    )
+  }
+
+  if (KnownChainId.isBRC20Chain(toChain)) {
+    const supportedRoutes = await getBRC20SupportedRoutes(ctx, toChain)
+    if (supportedRoutes == null || !hasAny(supportedRoutes)) return false
+
+    return supportedRoutes.some(
+      route => route.stacksToken === fromToken && route.brc20Token === toToken,
     )
   }
 

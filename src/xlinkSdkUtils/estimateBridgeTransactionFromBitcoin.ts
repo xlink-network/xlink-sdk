@@ -63,6 +63,13 @@ export async function estimateBridgeTransactionFromBitcoin(
           toToken: route.toToken,
         })
       }
+    } else if (
+      KnownChainId.isBRC20Chain(route.toChain) ||
+      KnownChainId.isRunesChain(route.toChain)
+    ) {
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.BRC20Chain>())
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.RunesChain>())
+      // TODO: bitcoin to brc20/runes is not supported yet
     } else {
       assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
       checkNever(route)

@@ -16,6 +16,7 @@ import {
 } from "../bitcoinUtils/bitcoinHelpers"
 import { STACKS_MAINNET, STACKS_TESTNET } from "../config"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
+import { StacksAddressVersionNotSupportedError } from "../utils/errors"
 import {
   decodeHex,
   encodeHex,
@@ -25,13 +26,9 @@ import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import {
+  stxContractDeployers,
   stxTokenContractAddresses,
-  xlinkContractsDeployerMainnet,
-  xlinkContractsDeployerTestnet,
-  xlinkContractsMultisigMainnet,
-  xlinkContractsMultisigTestnet,
 } from "./stxContractAddresses"
-import { StacksAddressVersionNotSupportedError } from "../utils/errors"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
 export const numberFromStacksContractNumber = (
@@ -60,43 +57,29 @@ export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
   {},
 )
 
-export const getStacksContractCallInfo = (
+export const getStacksContractCallInfo = <
+  C extends keyof typeof stxContractDeployers,
+>(
   chainId: KnownChainId.StacksChain,
-  contractName:
-    | "btc-peg-in-endpoint"
-    | "btc-peg-out-endpoint"
-    | "evm-peg-in-endpoint"
-    | "evm-peg-out-endpoint",
+  contractName: C,
 ):
   | undefined
-  | {
+  | (Omit<StacksContractAddress, "contractName"> & {
+      contractName: C
       network: StacksNetwork
-      deployerAddress: string
-    } => {
-  if (chainId === KnownChainId.Stacks.Mainnet) {
-    const deployerAddress =
-      contractName === "btc-peg-in-endpoint" ||
-      contractName === "evm-peg-in-endpoint"
-        ? xlinkContractsMultisigMainnet
-        : xlinkContractsDeployerMainnet
-    return {
-      deployerAddress,
-      network: STACKS_MAINNET,
-    }
+    }) => {
+  const network =
+    chainId === KnownChainId.Stacks.Mainnet ? STACKS_MAINNET : STACKS_TESTNET
+
+  if (stxContractDeployers[contractName][chainId] == null) {
+    return undefined
   }
-  if (chainId === KnownChainId.Stacks.Testnet) {
-    const deployerAddress =
-      contractName === "btc-peg-in-endpoint" ||
-      contractName === "evm-peg-in-endpoint"
-        ? xlinkContractsMultisigTestnet
-        : xlinkContractsDeployerTestnet
-    return {
-      deployerAddress,
-      network: STACKS_TESTNET,
-    }
+
+  return {
+    ...stxContractDeployers[contractName][chainId],
+    contractName,
+    network,
   }
-  checkNever(chainId)
-  return
 }
 
 export const getStacksTokenContractInfo = (
@@ -150,7 +133,11 @@ export function addressFromBuffer(
     )
   }
 
-  if (KnownChainId.isBitcoinChain(chain)) {
+  if (
+    KnownChainId.isBitcoinChain(chain) ||
+    KnownChainId.isBRC20Chain(chain) ||
+    KnownChainId.isRunesChain(chain)
+  ) {
     return scriptPubKeyToAddress(
       chain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
       buffer,
@@ -191,7 +178,11 @@ export function addressToBuffer(
     return decodeHex(hash160)
   }
 
-  if (KnownChainId.isBitcoinChain(chain)) {
+  if (
+    KnownChainId.isBitcoinChain(chain) ||
+    KnownChainId.isBRC20Chain(chain) ||
+    KnownChainId.isRunesChain(chain)
+  ) {
     return addressToScriptPubKey(
       chain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
       address,

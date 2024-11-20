@@ -1,6 +1,6 @@
 {
   "name": "@xlink-network/xlink-sdk",
-  "version": "0.3.2",
+  "version": "0.4.0-11",
   "description": "XLINK js SDK",
   "packageManager": "pnpm@9.9.0",
   "keywords": [
@@ -67,7 +67,7 @@
     "tsx": "^4.7.2",
     "typedoc": "^0.26.6",
     "typescript": "^5.4.5",
-    "viem": "^2.15.1",
+    "viem": "^2.21.44",
     "vitest": "^1.4.0"
   },
   "optionalDependencies": {

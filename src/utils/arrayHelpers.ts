@@ -59,6 +59,12 @@ export function range(start: number, end: number): number[] {
   return Array.from({ length: end - start }, (_, i) => i + start)
 }
 
+export function reverse<T>(ary: T[]): T[] {
+  const newAry = [...ary]
+  newAry.reverse()
+  return newAry
+}
+
 export function uniq<T>(
   ary: T[],
   iteratee: (item: T) => any = item => item,

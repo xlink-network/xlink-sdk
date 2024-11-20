@@ -8,7 +8,10 @@ export {
   contractAssignedChainIdToKnownChain,
 } from "./stacksUtils/crossContractDataMapping"
 
-export { getTerminatingStacksTokenContractAddress } from "./stacksUtils/stxContractAddresses"
+export {
+  getTerminatingStacksTokenContractAddress,
+  getTokenIdFromTerminatingStacksTokenContractAddress,
+} from "./stacksUtils/stxContractAddresses"
 
 export {
   addressFromBuffer,

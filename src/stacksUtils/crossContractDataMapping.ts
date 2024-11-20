@@ -8,6 +8,8 @@ import { KnownChainId } from "../utils/types/knownIds"
 export type KnownChainIdWithAssignedId =
   | KnownChainId.EVMChain
   | KnownChainId.BitcoinChain
+  | KnownChainId.BRC20Chain
+  | KnownChainId.RunesChain
 
 export function contractAssignedChainIdFromKnownChain(
   chain: KnownChainIdWithAssignedId,
@@ -52,6 +54,12 @@ export function contractAssignedChainIdFromKnownChain(
       return 14n
     case KnownChainId.EVM.Linea:
       return 15n
+    case KnownChainId.BRC20.Mainnet:
+    case KnownChainId.BRC20.Testnet:
+      return 1001n
+    case KnownChainId.Runes.Mainnet:
+    case KnownChainId.Runes.Testnet:
+      return 1002n
     default:
       checkNever(chain)
       throw new UnsupportedChainError(chain)
@@ -150,6 +158,18 @@ export function contractAssignedChainIdToKnownChain(
     return [KnownChainId.EVM.Linea]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Linea)
+
+  if (chainId === 1001n) {
+    return [KnownChainId.BRC20.Mainnet, KnownChainId.BRC20.Testnet]
+  }
+  assertExclude(resPossibilities, KnownChainId.BRC20.Mainnet)
+  assertExclude(resPossibilities, KnownChainId.BRC20.Testnet)
+
+  if (chainId === 1002n) {
+    return [KnownChainId.Runes.Mainnet, KnownChainId.Runes.Testnet]
+  }
+  assertExclude(resPossibilities, KnownChainId.Runes.Mainnet)
+  assertExclude(resPossibilities, KnownChainId.Runes.Testnet)
 
   checkNever(resPossibilities)
   throw new UnsupportedContractAssignedChainIdError(chainId)

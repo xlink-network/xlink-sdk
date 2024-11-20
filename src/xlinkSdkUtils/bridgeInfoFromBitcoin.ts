@@ -1,5 +1,6 @@
 import { getBtc2StacksFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
+import { BigNumber } from "../utils/BigNumber"
 import {
   KnownRoute,
   KnownRoute_FromBitcoin_ToEVM,
@@ -10,7 +11,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   PublicTransferProphetAggregated,
   transformToPublicTransferProphet,
-  transformToPublicTransferProphetAggregated2,
+  transformToPublicTransferProphetAggregated,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { supportedRoutes } from "./bridgeFromBitcoin"
@@ -61,6 +62,13 @@ export const bridgeInfoFromBitcoin = async (
           toToken: route.toToken,
         })
       }
+    } else if (
+      KnownChainId.isBRC20Chain(route.toChain) ||
+      KnownChainId.isRunesChain(route.toChain)
+    ) {
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.BRC20Chain>())
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.RunesChain>())
+      // TODO: bitcoin to brc20/runes is not supported yet
     } else {
       assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
       checkNever(route)
@@ -152,10 +160,10 @@ async function bridgeInfoFromBitcoin_toEVM(
   )
 
   return {
-    ...transformToPublicTransferProphetAggregated2([
-      step1TransferProphet,
-      step2TransferProphet,
-    ]),
+    ...transformToPublicTransferProphetAggregated(
+      [step1TransferProphet, step2TransferProphet],
+      [BigNumber.ONE],
+    ),
     transferProphets: [step1TransferProphet, step2TransferProphet],
   }
 }

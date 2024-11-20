@@ -1,11 +1,18 @@
 import { BigNumber } from "./BigNumber"
 import { concat, last, reduce } from "./arrayHelpers"
-import { OneOrMore } from "./typeHelpers"
-import { TransferProphet } from "./types/TransferProphet"
-import { TransferProphetAggregated } from "./types/TransferProphet"
+import { checkNever, OneOrMore } from "./typeHelpers"
+import {
+  TransferProphet,
+  TransferProphet_Fee_Fixed,
+  TransferProphet_Fee_Rate,
+  TransferProphetAggregated,
+} from "./types/TransferProphet"
 
 export interface TransferProphetAppliedResult {
-  feeAmount: BigNumber
+  fees: (
+    | (TransferProphet_Fee_Rate & { amount: BigNumber })
+    | TransferProphet_Fee_Fixed
+  )[]
   netAmount: BigNumber
 }
 
@@ -16,7 +23,7 @@ export const applyTransferProphets = (
   return reduce(
     (acc, transferProphet) =>
       concat(acc, [applyTransferProphet(transferProphet, last(acc).netAmount)]),
-    [{ feeAmount: BigNumber.ZERO, netAmount: amount }],
+    [{ fees: [], netAmount: amount }],
     transferProphets,
   )
 }
@@ -25,63 +32,178 @@ export const applyTransferProphet = (
   transferProphet: TransferProphet,
   amount: BigNumber,
 ): TransferProphetAppliedResult => {
-  const feeAmount = BigNumber.max([
-    transferProphet.minFeeAmount,
-    BigNumber.mul(transferProphet.feeRate, amount),
-  ])
+  const fees: TransferProphetAppliedResult["fees"] = []
+
+  let totalFeeAmount = BigNumber.ZERO
+  for (const f of transferProphet.fees) {
+    let feeAmount = BigNumber.ZERO
+
+    if (f.type === "rate") {
+      if (f.token !== transferProphet.bridgeToken) {
+        throw new Error(
+          `[XLinkSDK#applyTransferProphet] transferProphet.bridgeToken (${transferProphet.bridgeToken}) does not match rateFee.token (${f.token}), which is not expected`,
+        )
+      }
+      feeAmount = BigNumber.max([
+        f.minimumAmount,
+        BigNumber.mul(f.rate, amount),
+      ])
+      fees.push({ ...f, amount: feeAmount })
+    } else if (f.type === "fixed") {
+      if (f.token === transferProphet.bridgeToken) {
+        feeAmount = f.amount
+      }
+      fees.push(f)
+    } else {
+      checkNever(f)
+    }
+
+    totalFeeAmount = BigNumber.add(totalFeeAmount, feeAmount)
+  }
+
   const netAmount = BigNumber.max([
     BigNumber.ZERO,
-    BigNumber.minus(amount, feeAmount),
+    BigNumber.minus(amount, totalFeeAmount),
   ])
-  return { feeAmount, netAmount }
+
+  return { fees, netAmount }
 }
 
+/**
+ * @example
+ * composeTransferProphets(
+ *   [
+ *     // tokenA : chain1 -> chain2
+ *     transferProphetOf(tokenAChain1, tokenAChain2),
+ *     // tokenB : chain2 -> chain3
+ *     transferProphetOf(tokenBChain2, tokenBChain3),
+ *     // tokenC : chain3 -> chain4
+ *     transferProphetOf(tokenCChain3, tokenCChain4),
+ *   ],
+ *   [
+ *     // tokenA -> tokenB : chain2
+ *     exchangeRateOf(tokenAChain2, tokenBChain2),
+ *     // tokenB -> tokenC : chain3
+ *     exchangeRateOf(tokenBChain3, tokenCChain3),
+ *   ],
+ * )
+ */
 export const composeTransferProphets = (
   transferProphets: readonly TransferProphet[],
+  exchangeRates: readonly BigNumber[],
 ): TransferProphetAggregated<TransferProphet[]> => {
+  const cumulativeExchangeRates = calcCumulativeExchangeRates(exchangeRates)
+
   return reduce(
-    (res, transferProphet) => ({
-      ...composeTransferProphet2(res, transferProphet),
+    (res, transferProphet, idx) => ({
+      ...composeTransferProphet2(
+        res,
+        transferProphet,
+        cumulativeExchangeRates[idx],
+      ),
       transferProphets: [...res.transferProphets, transferProphet],
     }),
     composeTransferProphet2(
       transferProphets[0],
       transferProphets[1],
+      cumulativeExchangeRates[0],
     ) as TransferProphetAggregated<TransferProphet[]>,
     transferProphets.slice(2),
   )
+}
+/**
+ * @example
+ * calcCumulativeExchangeRates([
+ *   exchangeRateOf(tokenA, tokenB),
+ *   exchangeRateOf(tokenB, tokenC),
+ *   exchangeRateOf(tokenC, tokenD),
+ *   // ...
+ * ])
+ *
+ * // =>
+ *
+ * [
+ *   exchangeRateOf(tokenA, tokenB),
+ *   exchangeRateOf(tokenA, tokenC),
+ *   exchangeRateOf(tokenA, tokenD),
+ *   // ...
+ * ]
+ */
+const calcCumulativeExchangeRates = (
+  exchangeRates: readonly BigNumber[],
+): readonly BigNumber[] => {
+  return BigNumber.cumulativeMul(BigNumber.ONE, exchangeRates).slice(1)
 }
 
 export const composeTransferProphet2 = (
   transferProphet1: TransferProphet,
   transferProphet2: TransferProphet,
+  exchangeRate: BigNumber,
 ): TransferProphetAggregated<[TransferProphet, TransferProphet]> => {
-  const minFeeAmount = BigNumber.sum([
-    transferProphet1.minFeeAmount,
-    transferProphet2.minFeeAmount,
+  if (exchangeRate == null) {
+    throw new Error(
+      "[XLinkSDK#composeTransferProphet2] exchangeRate is required",
+    )
+  }
+
+  const bridgeTokenMinFeeAmount = BigNumber.sum([
+    ...transferProphet1.fees.flatMap(f =>
+      f.type === "rate" && f.token === transferProphet1.bridgeToken
+        ? [f.minimumAmount]
+        : [],
+    ),
+    ...transferProphet2.fees.flatMap(f =>
+      f.type === "rate" && f.token === transferProphet2.bridgeToken
+        ? [
+            /**
+             * convert to the denomination of the first step token
+             */
+            BigNumber.div(f.minimumAmount, exchangeRate),
+          ]
+        : [],
+    ),
   ])
 
-  const secondStepFeeAmountScaleRatio = getAmountBeforeFirstStepRate(
-    transferProphet1.feeRate,
+  /**
+   * flatFeeRate = 1 - (amount1 * (1-feeRate1) * (1-feeRate2) * (1-feeRateN...) / amount1)
+   * flatFeeRate = 1 - (1-feeRate1) * (1-feeRate2) * (1-feeRateN...)
+   */
+  const step1FlatFeeRate = BigNumber.minus(
+    BigNumber.ONE,
+    last(
+      BigNumber.cumulativeMul(
+        BigNumber.ONE,
+        transferProphet1.fees.flatMap(f =>
+          f.type === "rate" && f.token === transferProphet1.bridgeToken
+            ? [BigNumber.minus(1, f.rate)]
+            : [],
+        ),
+      ),
+    ),
+  )
+  /**
+   * step2Amount = step1Amount * (1-feeRate1) * (1-feeRate2) * (1-feeRateN)... * exchangeRate
+   * step2Amount = step1Amount * (1-flatFeeRate) * exchangeRate
+   */
+  const step1ToStep2Rate = BigNumber.mul(
+    BigNumber.minus(1, step1FlatFeeRate),
+    exchangeRate,
   )
 
   let minBridgeAmount: BigNumber | null = null
   if (
-    BigNumber.isZero(minFeeAmount) /* min fee amount not set */ &&
+    BigNumber.isZero(bridgeTokenMinFeeAmount) /* min fee amount not set */ &&
     transferProphet1.minBridgeAmount == null &&
     transferProphet2.minBridgeAmount == null
   ) {
     minBridgeAmount = null
   } else {
     minBridgeAmount = BigNumber.max([
-      minFeeAmount,
+      bridgeTokenMinFeeAmount,
       transferProphet1.minBridgeAmount ?? 0,
       transferProphet2.minBridgeAmount == null
         ? 0
-        : BigNumber.mul(
-            transferProphet2.minBridgeAmount,
-            secondStepFeeAmountScaleRatio,
-          ),
+        : BigNumber.div(transferProphet2.minBridgeAmount, step1ToStep2Rate),
     ])
   }
 
@@ -97,10 +219,7 @@ export const composeTransferProphet2 = (
   ) {
     maxBridgeAmount = BigNumber.min([
       transferProphet1.maxBridgeAmount,
-      BigNumber.mul(
-        transferProphet2.maxBridgeAmount,
-        secondStepFeeAmountScaleRatio,
-      ),
+      BigNumber.div(transferProphet2.maxBridgeAmount, step1ToStep2Rate),
     ])
   } else {
     maxBridgeAmount =
@@ -109,11 +228,42 @@ export const composeTransferProphet2 = (
 
   return {
     isPaused: transferProphet1.isPaused || transferProphet2.isPaused,
-    feeToken: transferProphet1.feeToken,
-    feeRate: composeRates2(transferProphet1.feeRate, transferProphet2.feeRate),
-    minFeeAmount,
+    bridgeToken: transferProphet1.bridgeToken,
     minBridgeAmount,
     maxBridgeAmount,
+    fees: [
+      ...transferProphet1.fees,
+      ...transferProphet2.fees.map(fee => {
+        if (fee.type === "fixed") {
+          if (fee.token !== transferProphet2.bridgeToken) return fee
+          return {
+            type: "fixed",
+            token: transferProphet1.bridgeToken,
+            amount: BigNumber.div(fee.amount, step1ToStep2Rate),
+          } satisfies TransferProphet_Fee_Fixed
+        }
+
+        if (fee.type === "rate") {
+          if (fee.token !== transferProphet2.bridgeToken) return fee
+          return {
+            type: "rate",
+            token: transferProphet1.bridgeToken,
+            /**
+             * feeAmount = step2Amount * fee.rate
+             * feeAmount = (step1Amount * (1 - step1FlatFeeRate) * exchangeRate) * fee.rate
+             * step1Amount * newFeeRate = (step1Amount * (1 - step1FlatFeeRate) * exchangeRate) * fee.rate
+             * newFeeRate = (1 - step1FlatFeeRate) * exchangeRate * fee.rate
+             * newFeeRate = step1ToStep2Rate * fee.rate
+             */
+            rate: BigNumber.mul(step1ToStep2Rate, fee.rate),
+            minimumAmount: BigNumber.div(fee.minimumAmount, step1ToStep2Rate),
+          } satisfies TransferProphet_Fee_Rate
+        }
+
+        checkNever(fee)
+        return fee
+      }),
+    ],
     transferProphets: [transferProphet1, transferProphet2],
   }
 }
@@ -143,26 +293,4 @@ export const composeRates2 = (
       rate2,
     ),
   ])
-}
-
-export const getAmountBeforeFirstStepRate = (
-  firstStepRate: BigNumber,
-): BigNumber => {
-  /**
-   * amount before first step = n
-   *
-   * amount = n - n * firstStepFeeRate
-   *        = n * (1 - firstStepFeeRate)
-   *        |
-   *        V
-   *      n = amount / (1 - firstStepFeeRate)
-   *        +
-   *      n = amount * scale // the `scale` is what we want to find
-   *        |
-   *        V
-   * amount * scale = amount / (1 - firstStepFeeRate)
-   *          scale = (amount / (1 - firstStepFeeRate)) / amount
-   *          scale = 1 / (1 - firstStepFeeRate)
-   */
-  return BigNumber.div(1, BigNumber.minus(1, firstStepRate))
 }

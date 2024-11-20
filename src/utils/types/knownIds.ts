@@ -10,9 +10,20 @@ const tokenId = <const T extends string>(value: T): TokenId<T> => value as any
  */
 export namespace KnownTokenId {
   /** Represents a known token supported by the SDK. */
-  export type KnownToken = BitcoinToken | EVMToken | StacksToken
+  export type KnownToken =
+    | BitcoinToken
+    | BRC20Token
+    | RunesToken
+    | EVMToken
+    | StacksToken
   export function isKnownToken(value: TokenId): value is KnownToken {
-    return isBitcoinToken(value) || isEVMToken(value) || isStacksToken(value)
+    return (
+      isBitcoinToken(value) ||
+      isBRC20Token(value) ||
+      isRunesToken(value) ||
+      isEVMToken(value) ||
+      isStacksToken(value)
+    )
   }
 
   /** A namespace that contains constants and types for Bitcoin tokens. */
@@ -24,6 +35,16 @@ export namespace KnownTokenId {
   export type BitcoinToken = (typeof _allKnownBitcoinTokens)[number]
   export function isBitcoinToken(value: TokenId): value is BitcoinToken {
     return _allKnownBitcoinTokens.includes(value as any)
+  }
+
+  export type BRC20Token = TokenId<"a brc20 token">
+  export function isBRC20Token(value: TokenId): value is BRC20Token {
+    return value.startsWith("brc20-")
+  }
+
+  export type RunesToken = TokenId<"a runes token">
+  export function isRunesToken(value: TokenId): value is RunesToken {
+    return value.startsWith("runes-")
   }
 
   /** A namespace that contains constants and types for EVM-compatible tokens. */
@@ -52,6 +73,8 @@ export namespace KnownTokenId {
     export const vLiALEX = tokenId("evm-vlialex")
     export const uBTC = tokenId("evm-ubtc")
     export const wuBTC = tokenId("evm-wubtc")
+    export const DB20 = tokenId("evm-db20")
+    export const DOG = tokenId("evm-dog")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
@@ -76,12 +99,24 @@ export namespace KnownTokenId {
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
     export const vLiALEX = tokenId("stx-vlialex")
     export const uBTC = tokenId("stx-ubtc")
+    export const DB20 = tokenId("stx-db20")
+    export const DOG = tokenId("stx-dog")
   }
   /** This type includes all known tokens on the Stacks blockchain. */
   export type StacksToken = (typeof _allKnownStacksTokens)[number]
   export function isStacksToken(value: TokenId): value is StacksToken {
     return _allKnownStacksTokens.includes(value as any)
   }
+}
+export const createBRC20Token = (
+  brc20tick: string,
+): KnownTokenId.BRC20Token => {
+  return `brc20-${brc20tick}` as any
+}
+export const createRunesToken = (
+  runeId: `${number}:${number}`,
+): KnownTokenId.RunesToken => {
+  return `runes-${runeId}` as any
 }
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
@@ -93,10 +128,22 @@ export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
  */
 export namespace KnownChainId {
   /** Represents a known blockchain network supported by the SDK. */
-  export type KnownChain = BitcoinChain | EVMChain | StacksChain
+  export type KnownChain =
+    | BitcoinChain
+    | BRC20Chain
+    | RunesChain
+    | EVMChain
+    | StacksChain
   export function isKnownChain(value: ChainId): value is KnownChain {
-    return isBitcoinChain(value) || isEVMChain(value) || isStacksChain(value)
+    return (
+      isBitcoinChain(value) ||
+      isBRC20Chain(value) ||
+      isRunesChain(value) ||
+      isEVMChain(value) ||
+      isStacksChain(value)
+    )
   }
+
   /** A namespace that contains constants and types for Bitcoin networks. */
   export namespace Bitcoin {
     /** Represents the Bitcoin mainnet chain ID. */
@@ -109,6 +156,31 @@ export namespace KnownChainId {
   export function isBitcoinChain(value: ChainId): value is BitcoinChain {
     return _allKnownBitcoinChains.includes(value as any)
   }
+
+  export namespace Runes {
+    /** Represents the Runes mainnet chain ID. */
+    export const Mainnet = chainId("runes-mainnet")
+    /** Represents the Runes testnet chain ID. */
+    export const Testnet = chainId("runes-testnet")
+  }
+  /** Represents a Runes blockchain network. */
+  export type RunesChain = (typeof _allKnownRunesChains)[number]
+  export function isRunesChain(value: ChainId): value is RunesChain {
+    return _allKnownRunesChains.includes(value as any)
+  }
+
+  export namespace BRC20 {
+    /** Represents the BRC20 mainnet chain ID. */
+    export const Mainnet = chainId("brc20-mainnet")
+    /** Represents the BRC20 testnet chain ID. */
+    export const Testnet = chainId("brc20-testnet")
+  }
+  /** Represents a BRC20 blockchain network. */
+  export type BRC20Chain = (typeof _allKnownBRC20Chains)[number]
+  export function isBRC20Chain(value: ChainId): value is BRC20Chain {
+    return _allKnownBRC20Chains.includes(value as any)
+  }
+
   /** A namespace that contains constants and types for EVM-compatible networks. */
   export namespace EVM {
     // Mainnet
@@ -215,7 +287,6 @@ export namespace KnownChainId {
     /** Represents the Bera testnet chain ID. */
     export const BeraTestnet = chainId("evm-bera-testnet")
   }
-
   /** Represents a mainnet EVM-compatible blockchain network. */
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
   export function isEVMMainnetChain(value: ChainId): value is EVMMainnetChain {
@@ -226,7 +297,6 @@ export namespace KnownChainId {
   export function isEVMTestnetChain(value: ChainId): value is EVMTestnetChain {
     return _allKnownEVMTestnetChains.includes(value as any)
   }
-
   /** Represents an EVM-compatible blockchain network. */
   export type EVMChain = (typeof _allKnownEVMChains)[number]
   export function isEVMChain(value: ChainId): value is EVMChain {
@@ -247,6 +317,8 @@ export namespace KnownChainId {
   }
 }
 export const _allKnownBitcoinChains = Object.values(KnownChainId.Bitcoin)
+export const _allKnownRunesChains = Object.values(KnownChainId.Runes)
+export const _allKnownBRC20Chains = Object.values(KnownChainId.BRC20)
 export const _allKnownEVMChains = Object.values(KnownChainId.EVM)
 export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
 

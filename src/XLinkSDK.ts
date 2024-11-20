@@ -12,6 +12,7 @@ import {
 } from "./stacksUtils/xlinkContractHelpers"
 import { TooManyRequestsError } from "./utils/apiHelpers"
 import {
+  DefinedRoute,
   GetSupportedRoutesFn_Conditions,
   KnownRoute,
 } from "./utils/buildSupportedRoutes"
@@ -70,6 +71,10 @@ import {
   StacksContractAddress,
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+import {
+  getBRC20SupportedRoutes,
+  getRunesSupportedRoutes,
+} from "./metaUtils/xlinkContractHelpers"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -143,6 +148,12 @@ export class XLinkSDK {
       options.evm?.cacheOnChainConfig ?? defaultConfig.evm?.cacheOnChainConfig
 
     this.sdkContext = {
+      brc20: {
+        routesConfigCache: new Map(),
+      },
+      runes: {
+        routesConfigCache: new Map(),
+      },
       evm: {
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
         viemClients: {
@@ -176,6 +187,23 @@ export class XLinkSDK {
     ].map(async rules => rules.getSupportedRoutes(this.sdkContext, conditions))
 
     return (await Promise.all(promises)).flat()
+  }
+
+  async isSupportedRoute(route: DefinedRoute): Promise<boolean> {
+    const checkingResult = await Promise.all(
+      [
+        supportedRoutesFromStacks,
+        supportedRoutesFromEVM,
+        supportedRoutesFromBitcoin,
+      ].map(rule =>
+        rule
+          .checkRouteValid(this.sdkContext, route)
+          .then(() => true)
+          .catch(() => false),
+      ),
+    )
+
+    return checkingResult.some(r => r)
   }
 
   stacksAddressFromStacksToken = stacksAddressFromStacksToken
@@ -498,6 +526,32 @@ export class XLinkSDK {
       throw err
     })
   }
+
+  brc20TickFromBRC20Token(
+    chain: ChainId,
+    token: KnownTokenId.BRC20Token,
+  ): Promise<undefined | string> {
+    return brc20TickFromBRC20Token(this.sdkContext, chain, token)
+  }
+  brc20TickToBRC20Token(
+    chain: ChainId,
+    tick: string,
+  ): Promise<undefined | KnownTokenId.BRC20Token> {
+    return brc20TickToBRC20Token(this.sdkContext, chain, tick)
+  }
+
+  runesIdFromRunesToken(
+    chain: ChainId,
+    token: KnownTokenId.RunesToken,
+  ): Promise<undefined | `${number}:${number}`> {
+    return runesIdFromRunesToken(this.sdkContext, chain, token)
+  }
+  runesIdToRunesToken(
+    chain: ChainId,
+    id: `${number}:${number}`,
+  ): Promise<undefined | KnownTokenId.RunesToken> {
+    return runesIdToRunesToken(this.sdkContext, chain, id)
+  }
 }
 
 /**
@@ -536,4 +590,42 @@ async function stacksAddressToStacksToken(
 ): Promise<undefined | KnownTokenId.StacksToken> {
   if (!KnownChainId.isStacksChain(chain)) return
   return getStacksToken(chain, address)
+}
+
+async function brc20TickFromBRC20Token(
+  sdkContext: SDKGlobalContext,
+  chain: ChainId,
+  token: KnownTokenId.BRC20Token,
+): Promise<undefined | string> {
+  if (!KnownChainId.isBRC20Chain(chain)) return
+  const routes = await getBRC20SupportedRoutes(sdkContext, chain)
+  return routes.find(r => r.brc20Token === token)?.brc20Tick
+}
+async function brc20TickToBRC20Token(
+  sdkContext: SDKGlobalContext,
+  chain: ChainId,
+  tick: string,
+): Promise<undefined | KnownTokenId.BRC20Token> {
+  if (!KnownChainId.isBRC20Chain(chain)) return
+  const routes = await getBRC20SupportedRoutes(sdkContext, chain)
+  return routes.find(r => r.brc20Tick === tick)?.brc20Token
+}
+
+async function runesIdFromRunesToken(
+  sdkContext: SDKGlobalContext,
+  chain: ChainId,
+  token: KnownTokenId.RunesToken,
+): Promise<undefined | `${number}:${number}`> {
+  if (!KnownChainId.isRunesChain(chain)) return
+  const routes = await getRunesSupportedRoutes(sdkContext, chain)
+  return routes.find(r => r.runesToken === token)?.runesId
+}
+async function runesIdToRunesToken(
+  sdkContext: SDKGlobalContext,
+  chain: ChainId,
+  runesId: `${number}:${number}`,
+): Promise<undefined | KnownTokenId.RunesToken> {
+  if (!KnownChainId.isRunesChain(chain)) return
+  const routes = await getRunesSupportedRoutes(sdkContext, chain)
+  return routes.find(r => r.runesId === runesId)?.runesToken
 }

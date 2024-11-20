@@ -30,7 +30,7 @@ export const getBtc2StacksFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "btc-peg-in-endpoint",
+    "btc-peg-in-endpoint-v2-05",
   )
   if (stacksContractCallInfo == null) return
 
@@ -45,19 +45,19 @@ export const getBtc2StacksFeeInfo = async (
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-04",
+      stacksContractCallInfo.contractName,
       "is-peg-in-paused",
       {},
       executeOptions,
     ),
     feeRate: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-04",
+      stacksContractCallInfo.contractName,
       "get-peg-in-fee",
       {},
       executeOptions,
     ).then(numberFromStacksContractNumber),
     minFeeAmount: executeReadonlyCallXLINK(
-      "btc-peg-in-endpoint-v2-04",
+      stacksContractCallInfo.contractName,
       "get-peg-in-min-fee",
       {},
       executeOptions,
@@ -66,9 +66,15 @@ export const getBtc2StacksFeeInfo = async (
 
   return {
     isPaused: resp.isPaused,
-    feeRate: resp.feeRate,
-    feeToken: route.fromToken,
-    minFeeAmount: resp.minFeeAmount,
+    bridgeToken: route.fromToken,
+    fees: [
+      {
+        type: "rate",
+        token: route.fromToken,
+        rate: resp.feeRate,
+        minimumAmount: resp.minFeeAmount,
+      },
+    ],
     minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
       ? null
       : resp.minFeeAmount,
@@ -81,7 +87,7 @@ export const getStacks2BtcFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
-    "btc-peg-out-endpoint",
+    "btc-peg-out-endpoint-v2-01",
   )
   if (stacksContractCallInfo == null) return
 
@@ -96,19 +102,19 @@ export const getStacks2BtcFeeInfo = async (
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
-      "btc-peg-out-endpoint-v2-01",
+      stacksContractCallInfo.contractName,
       "is-peg-out-paused",
       {},
       executeOptions,
     ),
     feeRate: executeReadonlyCallXLINK(
-      "btc-peg-out-endpoint-v2-01",
+      stacksContractCallInfo.contractName,
       "get-peg-out-fee",
       {},
       executeOptions,
     ).then(numberFromStacksContractNumber),
     minFeeAmount: executeReadonlyCallXLINK(
-      "btc-peg-out-endpoint-v2-01",
+      stacksContractCallInfo.contractName,
       "get-peg-out-min-fee",
       {},
       executeOptions,
@@ -117,9 +123,15 @@ export const getStacks2BtcFeeInfo = async (
 
   return {
     isPaused: resp.isPaused,
-    feeRate: resp.feeRate,
-    feeToken: route.fromToken,
-    minFeeAmount: resp.minFeeAmount,
+    bridgeToken: route.fromToken,
+    fees: [
+      {
+        type: "rate",
+        token: route.fromToken,
+        rate: resp.feeRate,
+        minimumAmount: resp.minFeeAmount,
+      },
+    ],
     minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
       ? null
       : resp.minFeeAmount,
@@ -159,6 +171,12 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   if (pegInAddress == null) return false
 
   if (KnownChainId.isBitcoinChain(toChain)) {
+    return false
+  }
+  if (KnownChainId.isRunesChain(toChain)) {
+    return false
+  }
+  if (KnownChainId.isBRC20Chain(toChain)) {
     return false
   }
 

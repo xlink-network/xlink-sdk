@@ -14,7 +14,9 @@ import {
   buildSupportedRoutes,
   defineRoute,
   KnownRoute_FromEVM_ToBitcoin,
+  KnownRoute_FromEVM_ToBRC20,
   KnownRoute_FromEVM_ToEVM,
+  KnownRoute_FromEVM_ToRunes,
   KnownRoute_FromEVM_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import {
@@ -68,6 +70,8 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.EVM.vLiALEX, KnownTokenId.Stacks.vLiALEX],
         [KnownTokenId.EVM.uBTC, KnownTokenId.Stacks.uBTC],
         [KnownTokenId.EVM.wuBTC, KnownTokenId.Stacks.uBTC],
+        [KnownTokenId.EVM.DB20, KnownTokenId.Stacks.DB20],
+        [KnownTokenId.EVM.DOG, KnownTokenId.Stacks.DOG],
       ],
     ),
     ...defineRoute(
@@ -105,6 +109,9 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.EVM.wuBTC, KnownTokenId.EVM.wuBTC],
         [KnownTokenId.EVM.uBTC, KnownTokenId.EVM.wuBTC],
         [KnownTokenId.EVM.wuBTC, KnownTokenId.EVM.uBTC],
+
+        [KnownTokenId.EVM.DB20, KnownTokenId.EVM.DB20],
+        [KnownTokenId.EVM.DOG, KnownTokenId.EVM.DOG],
       ],
     ),
 
@@ -136,6 +143,8 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.EVM.vLiALEX, KnownTokenId.Stacks.vLiALEX],
         [KnownTokenId.EVM.uBTC, KnownTokenId.Stacks.uBTC],
         [KnownTokenId.EVM.wuBTC, KnownTokenId.Stacks.uBTC],
+        [KnownTokenId.EVM.DB20, KnownTokenId.Stacks.DB20],
+        [KnownTokenId.EVM.DOG, KnownTokenId.Stacks.DOG],
       ],
     ),
     ...defineRoute(
@@ -173,6 +182,9 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.EVM.wuBTC, KnownTokenId.EVM.wuBTC],
         [KnownTokenId.EVM.uBTC, KnownTokenId.EVM.wuBTC],
         [KnownTokenId.EVM.wuBTC, KnownTokenId.EVM.uBTC],
+
+        [KnownTokenId.EVM.DB20, KnownTokenId.EVM.DB20],
+        [KnownTokenId.EVM.DOG, KnownTokenId.EVM.DOG],
       ],
     ),
   ],
@@ -253,6 +265,32 @@ export async function bridgeFromEVM(
           toToken: route.toToken,
         })
       }
+    } else if (KnownChainId.isBRC20Chain(route.toChain)) {
+      if (
+        KnownTokenId.isEVMToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.toToken)
+      ) {
+        return bridgeFromEVM_toMeta(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isRunesChain(route.toChain)) {
+      if (
+        KnownTokenId.isEVMToken(route.fromToken) &&
+        KnownTokenId.isRunesToken(route.toToken)
+      ) {
+        return bridgeFromEVM_toMeta(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
     } else {
       checkNever(route.toChain)
     }
@@ -274,6 +312,8 @@ const sendMessageAbi = parseAbi([
   "function transferToEVM(uint256 destChainId, address destToken, address destAddress) pure returns (uint256)",
   "function transferToStacks(string calldata to) pure returns (uint256)",
   "function transferToBTC(bytes calldata btcAddress) pure returns (uint256)",
+  "function transferToBRC20(bytes calldata btcAddress) pure returns (uint256)",
+  "function transferToRunes(bytes calldata btcAddress) pure returns (uint256)",
 ])
 
 async function bridgeFromEVM_toStacks(
@@ -468,6 +508,90 @@ async function bridgeFromEVM_toEVM(
       toTokenContractInfo.tokenContractAddress,
       info.toAddress as EVMAddress,
     ],
+  })
+  const functionData = await encodeFunctionData({
+    abi: BridgeEndpointAbi,
+    functionName: "sendMessageWithToken",
+    args: [
+      fromTokenContractInfo.tokenContractAddress,
+      numberToSolidityContractNumber(info.amount),
+      message,
+    ],
+  })
+
+  const fallbackGasLimit = 200_000
+  const estimated = await estimateGas(fromTokenContractInfo.client, {
+    account: info.fromAddress,
+    to: bridgeEndpointAddress,
+    data: functionData,
+  })
+    .then(n =>
+      BigNumber.round(
+        { precision: 0 },
+        BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
+      ),
+    )
+    .catch(
+      // add a fallback in case estimate failed
+      () => fallbackGasLimit,
+    )
+
+  return await info.sendTransaction({
+    from: info.fromAddress,
+    to: bridgeEndpointAddress,
+    data: decodeHex(functionData),
+    recommendedGasLimit: toSDKNumberOrUndefined(estimated),
+  })
+}
+
+async function bridgeFromEVM_toMeta(
+  ctx: SDKGlobalContext,
+  info: Omit<
+    BridgeFromEVMInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    (KnownRoute_FromEVM_ToBRC20 | KnownRoute_FromEVM_ToRunes),
+): Promise<BridgeFromEVMOutput> {
+  const { bridgeEndpointContractAddress: bridgeEndpointAddress } =
+    (await getEVMContractCallInfo(ctx, info.fromChain)) ?? {}
+  const fromTokenContractInfo = await getEVMTokenContractInfo(
+    ctx,
+    info.fromChain,
+    info.fromToken,
+  )
+  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  if (info.toAddressScriptPubKey == null) {
+    throw new InvalidMethodParametersError(
+      [
+        "XLinkSDK",
+        `bridgeFromEVM (to ${KnownChainId.isBRC20Chain(info.toChain) ? "BRC20" : "Runes"})`,
+      ],
+      [
+        {
+          name: "toAddressScriptPubKey",
+          expected: "Uint8Array",
+          received: "undefined",
+        },
+      ],
+    )
+  }
+
+  const toAddressHex = toHex(info.toAddressScriptPubKey)
+
+  const message = await encodeFunctionData({
+    abi: sendMessageAbi,
+    functionName: KnownChainId.isBRC20Chain(info.toChain)
+      ? "transferToBRC20"
+      : "transferToRunes",
+    args: [toAddressHex],
   })
   const functionData = await encodeFunctionData({
     abi: BridgeEndpointAbi,

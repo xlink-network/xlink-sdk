@@ -19,7 +19,6 @@ import {
 } from "../stacksUtils/createBridgeOrder"
 import { validateBridgeOrder } from "../stacksUtils/validateBridgeOrder"
 import {
-  getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
@@ -32,7 +31,10 @@ import {
   buildSupportedRoutes,
   defineRoute,
 } from "../utils/buildSupportedRoutes"
-import { UnsupportedBridgeRouteError } from "../utils/errors"
+import {
+  BridgeValidateFailedError,
+  UnsupportedBridgeRouteError,
+} from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
@@ -142,6 +144,13 @@ export async function bridgeFromBitcoin(
           toToken: route.toToken,
         })
       }
+    } else if (
+      KnownChainId.isBRC20Chain(route.toChain) ||
+      KnownChainId.isRunesChain(route.toChain)
+    ) {
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.BRC20Chain>())
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.RunesChain>())
+      // TODO: bitcoin to brc20/runes is not supported yet
     } else {
       assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
       checkNever(route)
@@ -236,14 +245,8 @@ async function broadcastBitcoinTransaction(
   },
   createdOrder: CreateBridgeOrderResult,
 ): Promise<{ txid: string }> {
-  const contractCallInfo = getStacksContractCallInfo(
-    info.fromChain === KnownChainId.Bitcoin.Mainnet
-      ? KnownChainId.Stacks.Mainnet
-      : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint",
-  )
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  if (pegInAddress == null || contractCallInfo == null) {
+  if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -262,18 +265,13 @@ async function broadcastBitcoinTransaction(
         )
       }
 
-      return validateBridgeOrder(
-        {
-          network: contractCallInfo.network,
-          endpointDeployerAddress: contractCallInfo.deployerAddress,
-        },
-        {
-          commitTx: btcTx,
-          revealTx,
-          terminatingStacksToken: createdOrder.terminatingStacksToken,
-          swapRoute,
-        },
-      )
+      return validateBridgeOrder({
+        chainId: info.fromChain,
+        commitTx: btcTx,
+        revealTx,
+        terminatingStacksToken: createdOrder.terminatingStacksToken,
+        swapRoute,
+      })
     },
     orderData: createdOrder.data,
     pegInAddress,
@@ -369,7 +367,11 @@ async function constructBitcoinTransaction(
     revealTx = decodeHex(created.txHex)
   }
 
-  await info.validateBridgeOrder(signedTx.extract(), revealTx, [])
+  await info
+    .validateBridgeOrder(signedTx.extract(), revealTx, [])
+    .catch(err => {
+      throw new BridgeValidateFailedError(err)
+    })
 
   return {
     hex: signedTx.hex,

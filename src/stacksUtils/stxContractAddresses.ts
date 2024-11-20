@@ -1,6 +1,9 @@
 import { KnownRoute_FromStacks_ToEVM } from "../utils/buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { StacksContractAddress } from "../xlinkSdkUtils/types"
+import {
+  isStacksContractAddressEqual,
+  StacksContractAddress,
+} from "../xlinkSdkUtils/types"
 
 export const xlinkContractsDeployerMainnet =
   "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK"
@@ -22,7 +25,7 @@ export const legacyAlexContractDeployerMainnet =
 export const legacyAlexContractDeployerTestnet =
   "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC"
 
-export const stxAlternativeTokenContractAddresses = {
+const stxAlternativeTokenContractAddresses = {
   wbtc: {
     [KnownChainId.Stacks.Mainnet]: {
       deployerAddress: xlinkContractsMultisigMainnet,
@@ -76,6 +79,94 @@ export const getTerminatingStacksTokenContractAddress = (
   }
   return undefined
 }
+export const getTokenIdFromTerminatingStacksTokenContractAddress = (route: {
+  fromChain: KnownChainId.EVMChain
+  toChain: KnownChainId.StacksChain
+  toTokenAddress: StacksContractAddress
+}): undefined | KnownTokenId.EVMToken => {
+  if (
+    isStacksContractAddressEqual(
+      route.toTokenAddress,
+      stxAlternativeTokenContractAddresses.wbtc[route.toChain],
+    )
+  ) {
+    return KnownTokenId.EVM.WBTC
+  }
+
+  if (
+    isStacksContractAddressEqual(
+      route.toTokenAddress,
+      stxAlternativeTokenContractAddresses.btcb[route.toChain],
+    )
+  ) {
+    return KnownTokenId.EVM.BTCB
+  }
+
+  if (
+    isStacksContractAddressEqual(
+      route.toTokenAddress,
+      stxAlternativeTokenContractAddresses.usdt[route.toChain],
+    )
+  ) {
+    return KnownTokenId.EVM.USDT
+  }
+
+  return undefined
+}
+
+export const stxContractDeployers = {
+  "btc-peg-in-endpoint-v2-05": {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsMultisigMainnet,
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsMultisigTestnet,
+    },
+  },
+  "btc-peg-out-endpoint-v2-01": {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsDeployerMainnet,
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+    },
+  },
+  "cross-peg-in-endpoint-v2-04": {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsMultisigMainnet,
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsMultisigTestnet,
+    },
+  },
+  "cross-peg-out-endpoint-v2-01": {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsDeployerMainnet,
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+    },
+  },
+  "meta-peg-in-endpoint-v2-04": {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsMultisigMainnet,
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsMultisigTestnet,
+    },
+  },
+  "meta-peg-out-endpoint-v2-04": {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsMultisigMainnet,
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsMultisigTestnet,
+    },
+  },
+} satisfies Record<
+  string,
+  Record<KnownChainId.StacksChain, { deployerAddress: string }>
+>
 
 export const stxTokenContractAddresses: Record<
   KnownTokenId.StacksToken,
@@ -153,12 +244,32 @@ export const stxTokenContractAddresses: Record<
   },
   [KnownTokenId.Stacks.uBTC]: {
     [KnownChainId.Stacks.Mainnet]: {
-      deployerAddress: "SP673Z4BPB4R73359K9HE55F2X91V5BJTN5SXZ5T",
+      deployerAddress: xlinkContractsMultisigMainnet,
       contractName: "token-ubtc",
     },
     [KnownChainId.Stacks.Testnet]: {
       deployerAddress: xlinkContractsDeployerTestnet,
       contractName: "token-ubtc",
+    },
+  },
+  [KnownTokenId.Stacks.DB20]: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: legacyAlexContractDeployerMainnet,
+      contractName: "brc20-db20",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: legacyAlexContractDeployerTestnet,
+      contractName: "brc20-db20",
+    },
+  },
+  [KnownTokenId.Stacks.DOG]: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: legacyAlexContractDeployerMainnet,
+      contractName: "runes-dog",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: legacyAlexContractDeployerTestnet,
+      contractName: "runes-dog",
     },
   },
 }

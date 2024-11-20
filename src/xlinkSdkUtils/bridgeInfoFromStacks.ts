@@ -1,8 +1,11 @@
 import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
+import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import {
   KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToEVM,
+  KnownRoute_FromStacks_ToRunes,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
@@ -59,6 +62,32 @@ export async function bridgeInfoFromStacks(
           toToken: route.toToken,
         })
       }
+    } else if (KnownChainId.isBRC20Chain(route.toChain)) {
+      if (
+        KnownTokenId.isStacksToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.toToken)
+      ) {
+        return bridgeInfoFromStacks_toMeta(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isRunesChain(route.toChain)) {
+      if (
+        KnownTokenId.isStacksToken(route.fromToken) &&
+        KnownTokenId.isRunesToken(route.toToken)
+      ) {
+        return bridgeInfoFromStacks_toMeta(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
     } else {
       assertExclude(route.toChain, assertExclude.i<KnownChainId.StacksChain>())
       checkNever(route)
@@ -108,6 +137,30 @@ async function bridgeInfoFromStacks_toEVM(
     KnownRoute_FromStacks_ToEVM,
 ): Promise<BridgeInfoFromStacksOutput> {
   const step1 = await getStacks2EvmFeeInfo(info)
+  if (step1 == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  return {
+    ...transformToPublicTransferProphet(info, info.amount, step1),
+    transferProphets: [],
+  }
+}
+
+async function bridgeInfoFromStacks_toMeta(
+  ctx: SDKGlobalContext,
+  info: Omit<
+    BridgeInfoFromStacksInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    (KnownRoute_FromStacks_ToBRC20 | KnownRoute_FromStacks_ToRunes),
+): Promise<BridgeInfoFromStacksOutput> {
+  const step1 = await getStacks2MetaFeeInfo(ctx, info)
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,

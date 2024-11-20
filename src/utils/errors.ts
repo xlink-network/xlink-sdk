@@ -8,6 +8,13 @@ export class XLinkSDKErrorBase extends Error {
   }
 }
 
+export class BridgeValidateFailedError extends XLinkSDKErrorBase {
+  constructor(public cause: Error) {
+    super("Bridge order validation failed", { cause })
+    this.name = "BridgeValidateFailedError"
+  }
+}
+
 export class StacksAddressVersionNotSupportedError extends XLinkSDKErrorBase {
   constructor(
     public address: string,

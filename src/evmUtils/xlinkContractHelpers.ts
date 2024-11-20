@@ -204,6 +204,8 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_SUSDT,
         ONCHAIN_CONFIG_KEY.TOKEN_UBTC,
         ONCHAIN_CONFIG_KEY.TOKEN_WUBTC,
+        ONCHAIN_CONFIG_KEY.TOKEN_DB20,
+        ONCHAIN_CONFIG_KEY.TOKEN_DOG,
       ],
     ],
   }).catch(err => {
@@ -236,6 +238,8 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.sUSDT]: maybeAddress(configs[11]),
     [EVMToken.uBTC]: maybeAddress(configs[12]),
     [EVMToken.wuBTC]: maybeAddress(configs[13]),
+    [EVMToken.DB20]: maybeAddress(configs[14]),
+    [EVMToken.DOG]: maybeAddress(configs[15]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -261,6 +265,8 @@ enum ONCHAIN_CONFIG_KEY {
   TOKEN_LUNR = "TOKEN_LUNR",
   TOKEN_SKO = "TOKEN_SKO",
   TOKEN_SUSDT = "TOKEN_SUSDT",
+  TOKEN_DB20 = "TOKEN_DB20",
+  TOKEN_DOG = "TOKEN_DOG",
   TIMELOCK = "TIMELOCK",
   MULTISIG = "MULTISIG",
   MIGRATE = "MIGRATE",
