@@ -36,11 +36,11 @@ pnpm install @xlink-network/xlink-sdk
 
 The `KnownChainId` namespace encapsulates types and utility functions to validate blockchain networks supported by the SDK. It ensures that only recognized chain IDs across Bitcoin, EVM-compatible chains, and Stacks are used.
 
-| Namespace | mainnet                                                                                              | testnet                                                                                                                                                           |
-|-----------|------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Bitcoin   | `Mainnet`                                                                                            | `Testnet`                                                                                                                                                         |
-| Stacks    | `Mainnet`                                                                                            | `Testnet`                                                                                                                                                         |
-| EVM       | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`,  `Merlin`, `AILayer`, `Mode` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BsquaredTestnet`, `BOBTestnet`, `BitlayerTestnet`, `LorenzoTestnet`, `MerlinTestnet`, `AILayerTestnet`, `ModeTestnet` |
+| Namespace |Mainnet                                                                                                                                              |Testnet                                                                                   |
+| ----------|-----------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------- |
+| Bitcoin   |`Mainnet`                                                                                                                                            |`Testnet`                                                                                 |
+| Stacks    |`Mainnet`                                                                                                                                            |`Testnet`                                                                                 |
+| EVM       |`Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`, `Merlin`, `AILayer`, `Mode`, `XLayer`, `Arbitrum`, `Aurora`, `Manta`, `Linea`|`Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BisonTestnet`, `BitboyTestnet`, `BeraTestnet` |
 
 #### KnownTokenId
 
@@ -48,11 +48,12 @@ The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies
 
 ##### Namespaces
 
-| Namespace  | Token                                                                                                |
-|------------|------------------------------------------------------------------------------------------------------|
-| `Bitcoin`  | `BTC`                                                                                                |
-| `Stacks`   | `ALEX`, `aBTC`, `sLUNR`, `sSKO`, `sUSDT`, `uBTC`, `vLiALEX`, `vLiSTX`                                |    
-| `EVM`      | `ALEX`, `aBTC`, `BTCB`, `LUNR`, `SKO`, `sUSDT`, `uBTC`, `USDT`, `vLiALEX`, `vLiSTX`, `WBTC`, `wuBTC` |
+| Namespace |Tokens                                                                                                              |
+| ----------|------------------------------------------------------------------------------------------------------------------- |
+| Bitcoin   |`BTC`                                                                                                               |
+| Stacks    |`sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`, `uBTC`, `DB20`, `DOG`                                |
+| EVM       |`USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX`, `uBTC`, `wuBTC`, `DB20`, `DOG` |
+
 
 **Future Support**: Support for Runes and BR20 tokens on the Bitcoin network is planned for a future update. 
 
