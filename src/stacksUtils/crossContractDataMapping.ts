@@ -54,6 +54,8 @@ export function contractAssignedChainIdFromKnownChain(
       return 14n
     case KnownChainId.EVM.Linea:
       return 15n
+    case KnownChainId.EVM.Base:
+      return 16n
     case KnownChainId.BRC20.Mainnet:
     case KnownChainId.BRC20.Testnet:
       return 1001n
@@ -158,6 +160,11 @@ export function contractAssignedChainIdToKnownChain(
     return [KnownChainId.EVM.Linea]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Linea)
+
+  if (chainId === 16n) {
+    return [KnownChainId.EVM.Base]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Base)
 
   if (chainId === 1001n) {
     return [KnownChainId.BRC20.Mainnet, KnownChainId.BRC20.Testnet]

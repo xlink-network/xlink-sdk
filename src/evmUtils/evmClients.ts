@@ -2,6 +2,7 @@ import { Client, createClient, fallback, http } from "viem"
 import {
   arbitrum,
   aurora,
+  base,
   bob,
   bsc,
   bscTestnet,
@@ -132,6 +133,12 @@ export const defaultEvmClients: Record<
 
   [EVMChain.Linea]: createClient({
     chain: linea,
+    transport: http(),
+    batch: { multicall: true },
+  }),
+
+  [EVMChain.Base]: createClient({
+    chain: base,
     transport: http(),
     batch: { multicall: true },
   }),

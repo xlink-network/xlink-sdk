@@ -101,6 +101,11 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMEndpointContract.BridgeConfig]:
       "0xf99f62475F50BE59393dbdc148E6627E4E88Fc24",
   },
+  [EVMChain.Base]: {
+    // https://t.me/c/1599543687/64684
+    [EVMEndpointContract.BridgeConfig]:
+      "0xf99f62475F50BE59393dbdc148E6627E4E88Fc24",
+  },
 
   // testnet
   [EVMChain.Sepolia]: {
