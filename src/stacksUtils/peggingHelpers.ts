@@ -6,7 +6,7 @@ import {
 } from "../metaUtils/xlinkContractHelpers"
 import { hasAny } from "../utils/arrayHelpers"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
-import { checkNever, isNotNull } from "../utils/typeHelpers"
+import { checkNever } from "../utils/typeHelpers"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
@@ -46,6 +46,8 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isBitcoinChain(toChain)) {
+    if (!KnownTokenId.isBitcoinToken(toToken)) return false
+
     return (
       fromToken === KnownTokenId.Stacks.aBTC &&
       toToken === KnownTokenId.Bitcoin.BTC
@@ -53,6 +55,8 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
     const supportedRoutes = await getRunesSupportedRoutes(ctx, toChain)
     if (supportedRoutes == null || !hasAny(supportedRoutes)) return false
 
@@ -62,6 +66,8 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isBRC20Chain(toChain)) {
+    if (!KnownTokenId.isBRC20Token(toToken)) return false
+
     const supportedRoutes = await getBRC20SupportedRoutes(ctx, toChain)
     if (supportedRoutes == null || !hasAny(supportedRoutes)) return false
 
@@ -71,17 +77,13 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isEVMChain(toChain)) {
+    if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
+    if (info == null) return false
+
     const toEVMTokens = await fromCorrespondingStacksToken(toChain, fromToken)
-    if (!hasAny(toEVMTokens)) return false
-
-    const toTokenInfos = (
-      await Promise.all(
-        toEVMTokens.map(token => getEVMTokenContractInfo(ctx, toChain, token)),
-      )
-    ).filter(isNotNull)
-    if (!hasAny(toTokenInfos)) return false
-
-    return toEVMTokens.includes(toToken as any)
+    return toEVMTokens.includes(toToken)
   }
 
   checkNever(toChain)

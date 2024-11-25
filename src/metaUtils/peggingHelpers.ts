@@ -1,4 +1,5 @@
 import { toCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
+import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   _KnownRoute_FromBRC20_ToStacks,
@@ -172,6 +173,9 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
 
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
+    if (info == null) return false
 
     const transitStacksToken = await toCorrespondingStacksToken(toToken)
     if (transitStacksToken == null) return false

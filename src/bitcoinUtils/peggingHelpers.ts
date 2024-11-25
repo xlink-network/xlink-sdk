@@ -15,7 +15,7 @@ import {
   KnownRoute_FromStacks_ToBitcoin,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
-import { checkNever, isNotNull } from "../utils/typeHelpers"
+import { checkNever } from "../utils/typeHelpers"
 import { TransferProphet } from "../utils/types/TransferProphet"
 import {
   _allNoLongerSupportedEVMChains,
@@ -23,7 +23,6 @@ import {
   KnownTokenId,
 } from "../utils/types/knownIds"
 import { getBTCPegInAddress } from "./btcAddresses"
-import { hasAny } from "../utils/arrayHelpers"
 
 export const getBtc2StacksFeeInfo = async (
   route: KnownRoute_FromBitcoin_ToStacks,
@@ -191,19 +190,15 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isEVMChain(toChain)) {
+    if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
+    if (info == null) return false
+
     const toEVMTokens = await fromCorrespondingStacksToken(
       toChain,
       KnownTokenId.Stacks.aBTC,
     )
-    if (!hasAny(toEVMTokens)) return false
-
-    const infos = (
-      await Promise.all(
-        toEVMTokens.map(token => getEVMTokenContractInfo(ctx, toChain, token)),
-      )
-    ).filter(isNotNull)
-    if (!hasAny(infos)) return false
-
     return toEVMTokens.includes(toToken as any)
   }
 

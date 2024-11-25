@@ -1,6 +1,10 @@
 import { callReadOnlyFunction } from "@stacks/transactions"
 import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
 import { readContract } from "viem/actions"
+import {
+  getBRC20SupportedRoutes,
+  getRunesSupportedRoutes,
+} from "../metaUtils/xlinkContractHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import {
   getTerminatingStacksTokenContractAddress,
@@ -13,14 +17,13 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
-import { hasAny } from "../utils/arrayHelpers"
 import {
   IsSupportedFn,
   KnownRoute_FromEVM_ToStacks,
   KnownRoute_FromStacks_ToEVM,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
-import { assertExclude, checkNever, isNotNull } from "../utils/typeHelpers"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { TransferProphet } from "../utils/types/TransferProphet"
 import {
   _allNoLongerSupportedEVMChains,
@@ -35,10 +38,6 @@ import {
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "../metaUtils/xlinkContractHelpers"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
@@ -381,6 +380,11 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isEVMChain(toChain)) {
+    if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
+    if (info == null) return false
+
     const transitStacksToken = await toCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
 
@@ -388,14 +392,7 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
       toChain,
       transitStacksToken,
     )
-    if (!hasAny(toEVMTokens)) return false
-
-    const toTokenInfos = await Promise.all(
-      toEVMTokens.map(token => getEVMTokenContractInfo(ctx, toChain, token)),
-    ).then(infos => infos.filter(isNotNull))
-    if (!hasAny(toTokenInfos)) return false
-
-    return toEVMTokens.includes(toToken as any)
+    return toEVMTokens.includes(toToken)
   }
 
   if (KnownChainId.isBitcoinChain(toChain)) {
