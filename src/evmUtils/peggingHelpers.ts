@@ -274,11 +274,12 @@ export async function fromCorrespondingStacksToken(
   assertExclude(restEVMTokenPossibilities, EVMToken.sUSDT)
 
   if (stacksToken === StacksToken.aBTC) {
-    return [EVMToken.WBTC, EVMToken.BTCB, EVMToken.aBTC]
+    return [EVMToken.aBTC, EVMToken.WBTC, EVMToken.BTCB, EVMToken.cbBTC]
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.aBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.WBTC)
   assertExclude(restEVMTokenPossibilities, EVMToken.BTCB)
+  assertExclude(restEVMTokenPossibilities, EVMToken.cbBTC)
 
   if (stacksToken === StacksToken.uBTC) {
     return [EVMToken.uBTC, EVMToken.wuBTC]
@@ -320,9 +321,10 @@ export async function toCorrespondingStacksToken(
     case EVMToken.USDT:
     case EVMToken.sUSDT:
       return StacksToken.sUSDT
+    case EVMToken.aBTC:
     case EVMToken.BTCB:
     case EVMToken.WBTC:
-    case EVMToken.aBTC:
+    case EVMToken.cbBTC:
       return StacksToken.aBTC
     case EVMToken.uBTC:
     case EVMToken.wuBTC:
@@ -369,6 +371,8 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (fromTokenInfo == null) return false
 
   if (KnownChainId.isStacksChain(toChain)) {
+    if (!KnownTokenId.isStacksToken(toToken)) return false
+
     const stacksToken = await toCorrespondingStacksToken(fromToken)
     if (stacksToken == null) return false
 
@@ -396,11 +400,14 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isBitcoinChain(toChain)) {
+    if (!KnownTokenId.isBitcoinToken(toToken)) return false
     const stacksToken = await toCorrespondingStacksToken(fromToken)
     return stacksToken === KnownTokenId.Stacks.aBTC
   }
 
   if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
     const transitStacksToken = await toCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
 
@@ -409,6 +416,8 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (KnownChainId.isBRC20Chain(toChain)) {
+    if (!KnownTokenId.isBRC20Token(toToken)) return false
+
     const transitStacksToken = await toCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
 

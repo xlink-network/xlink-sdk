@@ -57,6 +57,8 @@ export namespace KnownTokenId {
     export const WBTC = tokenId("evm-wbtc")
     /** Represents the BTCB token ID on EVM-compatible blockchains. */
     export const BTCB = tokenId("evm-btcb")
+    /** Represents the cbBTC token ID on EVM-compatible blockchains. */
+    export const cbBTC = tokenId("evm-cbbtc")
 
     // wrapped tokens
     /** Represents the aBTC token ID on EVM-compatible blockchains. */
