@@ -231,7 +231,12 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.vLiALEX]: maybeAddress(configs[5]),
     [EVMToken.vLiSTX]: maybeAddress(configs[6]),
     [EVMToken.USDT]: maybeAddress(configs[7]),
-    [chain === KnownChainId.EVM.BSC ? EVMToken.BTCB : EVMToken.WBTC]:
+    // prettier-ignore
+    [
+      chain === KnownChainId.EVM.BSC ? EVMToken.BTCB :
+      chain === KnownChainId.EVM.Base ? EVMToken.cbBTC :
+      EVMToken.WBTC
+    ]:
       maybeAddress(configs[8]),
     [EVMToken.LUNR]: maybeAddress(configs[9]),
     [EVMToken.SKO]: maybeAddress(configs[10]),

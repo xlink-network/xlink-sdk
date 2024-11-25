@@ -46,6 +46,16 @@ const stxAlternativeTokenContractAddresses = {
       contractName: "token-btcb",
     },
   },
+  cbBTC: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-wbtc",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+      contractName: "token-wbtc",
+    },
+  },
   usdt: {
     [KnownChainId.Stacks.Mainnet]: {
       deployerAddress: xlinkContractsMultisigMainnet,
@@ -70,6 +80,9 @@ export const getTerminatingStacksTokenContractAddress = (
     }
     if (toToken === KnownTokenId.EVM.BTCB) {
       return stxAlternativeTokenContractAddresses.btcb[route.fromChain]
+    }
+    if (toToken === KnownTokenId.EVM.cbBTC) {
+      return stxAlternativeTokenContractAddresses.cbBTC[route.fromChain]
     }
   }
   if (fromToken === KnownTokenId.Stacks.sUSDT) {
@@ -100,6 +113,15 @@ export const getTokenIdFromTerminatingStacksTokenContractAddress = (route: {
     )
   ) {
     return KnownTokenId.EVM.BTCB
+  }
+
+  if (
+    isStacksContractAddressEqual(
+      route.toTokenAddress,
+      stxAlternativeTokenContractAddresses.cbBTC[route.toChain],
+    )
+  ) {
+    return KnownTokenId.EVM.cbBTC
   }
 
   if (

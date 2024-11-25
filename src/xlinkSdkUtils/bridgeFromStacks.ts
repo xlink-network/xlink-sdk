@@ -43,9 +43,10 @@ export const supportedRoutes = buildSupportedRoutes(
       [[KnownChainId.Stacks.Mainnet], [..._allKnownEVMMainnetChains]],
       [
         // BTCs
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
         [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
         [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.cbBTC],
         // USDTs
         [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
         [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
@@ -72,9 +73,10 @@ export const supportedRoutes = buildSupportedRoutes(
       [[KnownChainId.Stacks.Testnet], [..._allKnownEVMTestnetChains]],
       [
         // BTCs
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
         [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
         [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
+        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.cbBTC],
         // USDTs
         [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
         [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
