@@ -15,6 +15,11 @@ export {
 } from "./stacksUtils/crossContractDataMapping"
 
 export {
+  fromCorrespondingStacksToken as evmTokensFromCorrespondingStacksToken,
+  toCorrespondingStacksToken as evmTokenToCorrespondingStacksToken,
+}
+
+export {
   getTerminatingStacksTokenContractAddress,
   getEVMTokenIdFromTerminatingStacksTokenContractAddress,
 } from "./stacksUtils/stxContractAddresses"
