@@ -16,7 +16,7 @@ export {
 
 export {
   getTerminatingStacksTokenContractAddress,
-  getTokenIdFromTerminatingStacksTokenContractAddress,
+  getEVMTokenIdFromTerminatingStacksTokenContractAddress,
 } from "./stacksUtils/stxContractAddresses"
 
 export {

@@ -73,15 +73,26 @@ const stxAlternativeTokenContractAddresses = {
 export const getTerminatingStacksTokenContractAddress = (
   route: KnownRoute_FromStacks_ToEVM,
 ): undefined | StacksContractAddress => {
-  const { fromToken, toToken } = route
+  const { fromToken, toChain, toToken } = route
   if (fromToken === KnownTokenId.Stacks.aBTC) {
-    if (toToken === KnownTokenId.EVM.WBTC) {
+    if (
+      (toChain === KnownChainId.EVM.Ethereum ||
+        toChain === KnownChainId.EVM.Sepolia) &&
+      toToken === KnownTokenId.EVM.WBTC
+    ) {
       return stxAlternativeTokenContractAddresses.wbtc[route.fromChain]
     }
-    if (toToken === KnownTokenId.EVM.BTCB) {
+    if (
+      (toChain === KnownChainId.EVM.BSC ||
+        toChain === KnownChainId.EVM.BSCTestnet) &&
+      toToken === KnownTokenId.EVM.BTCB
+    ) {
       return stxAlternativeTokenContractAddresses.btcb[route.fromChain]
     }
-    if (toToken === KnownTokenId.EVM.cbBTC) {
+    if (
+      toChain === KnownChainId.EVM.Base &&
+      toToken === KnownTokenId.EVM.cbBTC
+    ) {
       return stxAlternativeTokenContractAddresses.cbBTC[route.fromChain]
     }
   }
@@ -92,33 +103,38 @@ export const getTerminatingStacksTokenContractAddress = (
   }
   return undefined
 }
-export const getTokenIdFromTerminatingStacksTokenContractAddress = (route: {
-  fromChain: KnownChainId.EVMChain
-  toChain: KnownChainId.StacksChain
-  toTokenAddress: StacksContractAddress
+export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
+  evmChain: KnownChainId.EVMChain
+  stacksChain: KnownChainId.StacksChain
+  stacksTokenAddress: StacksContractAddress
 }): undefined | KnownTokenId.EVMToken => {
   if (
+    (route.evmChain === KnownChainId.EVM.Ethereum ||
+      route.evmChain === KnownChainId.EVM.Sepolia) &&
     isStacksContractAddressEqual(
-      route.toTokenAddress,
-      stxAlternativeTokenContractAddresses.wbtc[route.toChain],
+      route.stacksTokenAddress,
+      stxAlternativeTokenContractAddresses.wbtc[route.stacksChain],
     )
   ) {
     return KnownTokenId.EVM.WBTC
   }
 
   if (
+    (route.evmChain === KnownChainId.EVM.BSC ||
+      route.evmChain === KnownChainId.EVM.BSCTestnet) &&
     isStacksContractAddressEqual(
-      route.toTokenAddress,
-      stxAlternativeTokenContractAddresses.btcb[route.toChain],
+      route.stacksTokenAddress,
+      stxAlternativeTokenContractAddresses.btcb[route.stacksChain],
     )
   ) {
     return KnownTokenId.EVM.BTCB
   }
 
   if (
+    route.evmChain === KnownChainId.EVM.Base &&
     isStacksContractAddressEqual(
-      route.toTokenAddress,
-      stxAlternativeTokenContractAddresses.cbBTC[route.toChain],
+      route.stacksTokenAddress,
+      stxAlternativeTokenContractAddresses.cbBTC[route.stacksChain],
     )
   ) {
     return KnownTokenId.EVM.cbBTC
@@ -126,8 +142,8 @@ export const getTokenIdFromTerminatingStacksTokenContractAddress = (route: {
 
   if (
     isStacksContractAddressEqual(
-      route.toTokenAddress,
-      stxAlternativeTokenContractAddresses.usdt[route.toChain],
+      route.stacksTokenAddress,
+      stxAlternativeTokenContractAddresses.usdt[route.stacksChain],
     )
   ) {
     return KnownTokenId.EVM.USDT
