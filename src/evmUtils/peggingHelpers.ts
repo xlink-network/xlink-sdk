@@ -298,7 +298,6 @@ export async function fromCorrespondingStacksToken(
   assertExclude(restEVMTokenPossibilities, EVMToken.DOG)
 
   checkNever(restEVMTokenPossibilities)
-  checkNever(restEVMTokenPossibilities)
   return []
 }
 export async function toCorrespondingStacksToken(
