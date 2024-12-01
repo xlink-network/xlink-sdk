@@ -366,3 +366,26 @@ const _restEVMChain = null as Exclude<
   | (typeof _allKnownEVMTestnetChains)[number]
 >
 checkNever(_restEVMChain)
+
+export const _knownChainIdToErrorMessagePart = (chainId: ChainId): string => {
+  const unknownCase = `Unknown chain (${chainId})`
+
+  if (!KnownChainId.isKnownChain(chainId)) {
+    return unknownCase
+  }
+
+  if (KnownChainId.isBitcoinChain(chainId)) {
+    return "Bitcoin"
+  } else if (KnownChainId.isBRC20Chain(chainId)) {
+    return "BRC-20"
+  } else if (KnownChainId.isRunesChain(chainId)) {
+    return "Runes"
+  } else if (KnownChainId.isStacksChain(chainId)) {
+    return "Stacks"
+  } else if (KnownChainId.isEVMChain(chainId)) {
+    return "EVM"
+  }
+
+  checkNever(chainId)
+  return unknownCase
+}

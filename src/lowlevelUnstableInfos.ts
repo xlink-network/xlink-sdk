@@ -8,6 +8,7 @@ import {
   toCorrespondingStacksToken,
 } from "./evmUtils/peggingHelpers"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
+import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
 
 export {
   contractAssignedChainIdFromKnownChain,
@@ -28,6 +29,16 @@ export {
   addressFromBuffer,
   addressToBuffer,
 } from "./stacksUtils/xlinkContractHelpers"
+
+export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
+
+export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
+
+export const getXLinkSDKContext = (
+  sdk: import("./XLinkSDK").XLinkSDK,
+): SDKGlobalContext => {
+  return sdk["sdkContext"]
+}
 
 export const evmTokensFromStacksToken = async (options: {
   toEVMChain: KnownChainId.EVMChain
