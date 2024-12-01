@@ -1,6 +1,7 @@
-import { encodeFunctionData, parseAbi, toHex } from "viem"
+import { encodeFunctionData, toHex } from "viem"
 import { estimateGas } from "viem/actions"
 import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
+import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
 import {
   getEVMContractCallInfo,
@@ -8,7 +9,10 @@ import {
   numberToSolidityContractNumber,
 } from "../evmUtils/xlinkContractHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import { getStacksTokenContractInfo } from "../stacksUtils/xlinkContractHelpers"
+import {
+  addressToBuffer,
+  getStacksTokenContractInfo,
+} from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   buildSupportedRoutes,
@@ -28,6 +32,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   _allKnownEVMMainnetChains,
   _allKnownEVMTestnetChains,
+  _knownChainIdToErrorMessagePart,
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
@@ -326,14 +331,6 @@ export async function bridgeFromEVM(
   )
 }
 
-const sendMessageAbi = parseAbi([
-  "function transferToEVM(uint256 destChainId, address destToken, address destAddress) pure returns (uint256)",
-  "function transferToStacks(string calldata to) pure returns (uint256)",
-  "function transferToBTC(bytes calldata btcAddress) pure returns (uint256)",
-  "function transferToBRC20(bytes calldata btcAddress) pure returns (uint256)",
-  "function transferToRunes(bytes calldata btcAddress) pure returns (uint256)",
-])
-
 async function bridgeFromEVM_toStacks(
   ctx: SDKGlobalContext,
   info: Omit<
@@ -610,6 +607,112 @@ async function bridgeFromEVM_toMeta(
       ? "transferToBRC20"
       : "transferToRunes",
     args: [toAddressHex],
+  })
+  const functionData = await encodeFunctionData({
+    abi: BridgeEndpointAbi,
+    functionName: "sendMessageWithToken",
+    args: [
+      fromTokenContractInfo.tokenContractAddress,
+      numberToSolidityContractNumber(info.amount),
+      message,
+    ],
+  })
+
+  const fallbackGasLimit = 200_000
+  const estimated = await estimateGas(fromTokenContractInfo.client, {
+    account: info.fromAddress,
+    to: bridgeEndpointAddress,
+    data: functionData,
+  })
+    .then(n =>
+      BigNumber.round(
+        { precision: 0 },
+        BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
+      ),
+    )
+    .catch(
+      // add a fallback in case estimate failed
+      () => fallbackGasLimit,
+    )
+
+  return await info.sendTransaction({
+    from: info.fromAddress,
+    to: bridgeEndpointAddress,
+    data: decodeHex(functionData),
+    recommendedGasLimit: toSDKNumberOrUndefined(estimated),
+  })
+}
+
+export async function bridgeFromEVM_toLaunchpad(
+  ctx: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.EVMChain
+    fromToken: KnownTokenId.EVMToken
+    fromAddress: EVMAddress
+    receiverChain: KnownChainId.KnownChain
+    receiverAddress: string
+    /**
+     * **Required** when `receiverChain` is one of bitcoin chains
+     */
+    receiverAddressScriptPubKey?: Uint8Array
+    launchId: SDKNumber
+    amount: SDKNumber
+    sendTransaction: (tx: {
+      from: EVMAddress
+      to: EVMAddress
+      data: Uint8Array
+      recommendedGasLimit: SDKNumber
+    }) => Promise<{
+      txHash: string
+    }>
+  },
+): Promise<BridgeFromEVMOutput> {
+  const { bridgeEndpointContractAddress: bridgeEndpointAddress } =
+    (await getEVMContractCallInfo(ctx, info.fromChain)) ?? {}
+  const fromTokenContractInfo = await getEVMTokenContractInfo(
+    ctx,
+    info.fromChain,
+    info.fromToken,
+  )
+  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.receiverChain,
+      info.fromToken,
+    )
+  }
+
+  if (
+    KnownChainId.isBitcoinChain(info.receiverChain) &&
+    info.receiverAddressScriptPubKey == null
+  ) {
+    throw new InvalidMethodParametersError(
+      [
+        "XLinkSDK",
+        `bridgeFromEVM_toLaunchpad (to ${_knownChainIdToErrorMessagePart(info.receiverChain)})`,
+      ],
+      [
+        {
+          name: "toAddressScriptPubKey",
+          expected: "Uint8Array",
+          received: "undefined",
+        },
+      ],
+    )
+  }
+
+  const toAddressHex =
+    info.receiverAddressScriptPubKey != null
+      ? toHex(info.receiverAddressScriptPubKey)
+      : toHex(addressToBuffer(info.receiverChain, info.receiverAddress))
+
+  const message = await encodeFunctionData({
+    abi: sendMessageAbi,
+    functionName: "transferToLaunchpad",
+    args: [
+      BigNumber.toBigInt({ roundingMode: BigNumber.roundDown }, info.launchId),
+      toAddressHex,
+    ],
   })
   const functionData = await encodeFunctionData({
     abi: BridgeEndpointAbi,
