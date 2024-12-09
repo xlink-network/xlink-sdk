@@ -169,10 +169,17 @@ export function addressFromBuffer(
     KnownChainId.isBRC20Chain(chain) ||
     KnownChainId.isRunesChain(chain)
   ) {
-    return scriptPubKeyToAddress(
-      chain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
-      buffer,
-    )
+    const network =
+      chain === KnownChainId.Bitcoin.Mainnet ||
+      chain === KnownChainId.BRC20.Mainnet ||
+      chain === KnownChainId.Runes.Mainnet
+        ? NETWORK
+        : chain === KnownChainId.Bitcoin.Testnet ||
+            chain === KnownChainId.BRC20.Testnet ||
+            chain === KnownChainId.Runes.Testnet
+          ? TEST_NETWORK
+          : (checkNever(chain), NETWORK)
+    return scriptPubKeyToAddress(network, buffer)
   }
 
   if (KnownChainId.isEVMChain(chain)) {
@@ -214,10 +221,17 @@ export function addressToBuffer(
     KnownChainId.isBRC20Chain(chain) ||
     KnownChainId.isRunesChain(chain)
   ) {
-    return addressToScriptPubKey(
-      chain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
-      address,
-    )
+    const network =
+      chain === KnownChainId.Bitcoin.Mainnet ||
+      chain === KnownChainId.BRC20.Mainnet ||
+      chain === KnownChainId.Runes.Mainnet
+        ? NETWORK
+        : chain === KnownChainId.Bitcoin.Testnet ||
+            chain === KnownChainId.BRC20.Testnet ||
+            chain === KnownChainId.Runes.Testnet
+          ? TEST_NETWORK
+          : (checkNever(chain), NETWORK)
+    return addressToScriptPubKey(network, address)
   }
 
   if (KnownChainId.isEVMChain(chain)) {
