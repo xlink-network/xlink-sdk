@@ -80,16 +80,6 @@ export const stxContractAddresses = {
       contractName: "cross-peg-in-endpoint-v2-04",
     }),
   },
-  "cross-peg-in-endpoint-v2-04-swap": {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
-      deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "cross-peg-in-endpoint-v2-04-swap",
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress({
-      deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "cross-peg-in-endpoint-v2-04-swap",
-    }),
-  },
   "cross-peg-out-endpoint-v2-01": {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsDeployerMainnet,

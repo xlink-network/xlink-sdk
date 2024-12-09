@@ -16,148 +16,6 @@ noneT
 
 export const metaPegInEndpointV204Swap = defineContract({
 "meta-peg-in-endpoint-v2-04-swap": {
-  'finalize-peg-in-add-liquidity': {
-    input: [
-      {
-        name: 'commit-tx',
-        type: tupleT({ 'fee-idx': optionalT(uintT, ), 'output-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'reveal-proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      { name: 'dx-idx', type: uintT },
-      { name: 'token-trait', type: traitT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
-  'finalize-peg-in-add-liquidity-on-index': {
-    input: [
-      {
-        name: 'tx',
-        type: tupleT({
-          amt: uintT,
-          'bitcoin-tx': bufferT,
-          decimals: uintT,
-          from: bufferT,
-          'from-bal': uintT,
-          output: uintT,
-          tick: stringT,
-          to: bufferT,
-          'to-bal': uintT
-        }, )
-      },
-      {
-        name: 'block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      {
-        name: 'signature-packs',
-        type: listT(tupleT({ signature: bufferT, signer: principalT, 'tx-hash': bufferT }, ), )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'reveal-proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      { name: 'dx-idx', type: uintT },
-      { name: 'fee-idx', type: optionalT(uintT, ) },
-      { name: 'token-trait', type: traitT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
-  'finalize-peg-in-create-pool': {
-    input: [
-      {
-        name: 'commit-tx',
-        type: tupleT({ 'fee-idx': optionalT(uintT, ), 'output-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'reveal-proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      { name: 'dx-idx', type: uintT },
-      { name: 'token-trait', type: traitT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
-  'finalize-peg-in-create-pool-on-index': {
-    input: [
-      {
-        name: 'tx',
-        type: tupleT({
-          amt: uintT,
-          'bitcoin-tx': bufferT,
-          decimals: uintT,
-          from: bufferT,
-          'from-bal': uintT,
-          output: uintT,
-          tick: stringT,
-          to: bufferT,
-          'to-bal': uintT
-        }, )
-      },
-      {
-        name: 'block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      {
-        name: 'signature-packs',
-        type: listT(tupleT({ signature: bufferT, signer: principalT, 'tx-hash': bufferT }, ), )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'reveal-proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      { name: 'dx-idx', type: uintT },
-      { name: 'fee-idx', type: optionalT(uintT, ) },
-      { name: 'token-trait', type: traitT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
   'finalize-peg-in-cross-swap': {
     input: [
       {
@@ -229,37 +87,6 @@ export const metaPegInEndpointV204Swap = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
-  'finalize-peg-in-remove-liquidity': {
-    input: [
-      {
-        name: 'commit-tx',
-        type: tupleT({ 'fee-idx': optionalT(uintT, ), tx: bufferT }, )
-      },
-      {
-        name: 'block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-block',
-        type: tupleT({ header: bufferT, height: uintT }, )
-      },
-      {
-        name: 'reveal-proof',
-        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
-      },
-      { name: 'token-trait', type: traitT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
   pause: {
     input: [ { name: 'new-paused', type: booleanT } ],
     output: responseSimpleT(booleanT, ),
@@ -291,27 +118,6 @@ export const metaPegInEndpointV204Swap = defineContract({
     output: responseSimpleT(listT(responseSimpleT(booleanT, ), ), ),
     mode: 'public'
   },
-  'update-pool-setting': {
-    input: [
-      {
-        name: 'new-pool-setting',
-        type: tupleT({
-          'fee-rate-x': uintT,
-          'fee-rate-y': uintT,
-          'max-in-ratio': uintT,
-          'max-out-ratio': uintT,
-          memo: optionalT(bufferT, ),
-          'oracle-average': uintT,
-          'oracle-enabled': booleanT,
-          'start-block': uintT,
-          'threshold-x': uintT,
-          'threshold-y': uintT
-        }, )
-      }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
   'break-routing-id': {
     input: [
       { name: 'token-in', type: principalT },
@@ -321,31 +127,6 @@ export const metaPegInEndpointV204Swap = defineContract({
       'routing-factors': listT(uintT, ),
       'routing-tokens': listT(principalT, )
     }, ), ),
-    mode: 'readonly'
-  },
-  'create-order-add-liquidity-or-fail': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          factor: uintT,
-          from: bufferT,
-          'max-dy': optionalT(uintT, ),
-          token: principalT
-        }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
-  'create-order-create-pool-or-fail': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({ burn: booleanT, factor: uintT, from: bufferT, token: principalT }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
     mode: 'readonly'
   },
   'create-order-cross-swap-or-fail': {
@@ -363,58 +144,6 @@ export const metaPegInEndpointV204Swap = defineContract({
       }
     ],
     output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
-  'create-order-remove-liquidity-or-fail': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({ amount: uintT, 'chain-id': uintT, from: bufferT, 'pool-id': uintT }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
-  'decode-order-add-liquidity-from-reveal-tx-or-fail': {
-    input: [
-      { name: 'tx', type: bufferT },
-      { name: 'order-idx', type: uintT }
-    ],
-    output: responseSimpleT(tupleT({
-      'commit-txid': bufferT,
-      'order-details': tupleT({
-        factor: uintT,
-        from: bufferT,
-        'max-dy': optionalT(uintT, ),
-        token: principalT
-      }, )
-    }, ), ),
-    mode: 'readonly'
-  },
-  'decode-order-add-liquidity-or-fail': {
-    input: [ { name: 'order-script', type: bufferT } ],
-    output: responseSimpleT(tupleT({
-      factor: uintT,
-      from: bufferT,
-      'max-dy': optionalT(uintT, ),
-      token: principalT
-    }, ), ),
-    mode: 'readonly'
-  },
-  'decode-order-create-pool-from-reveal-tx-or-fail': {
-    input: [
-      { name: 'tx', type: bufferT },
-      { name: 'order-idx', type: uintT }
-    ],
-    output: responseSimpleT(tupleT({
-      'commit-txid': bufferT,
-      'order-details': tupleT({ burn: booleanT, factor: uintT, from: bufferT, token: principalT }, )
-    }, ), ),
-    mode: 'readonly'
-  },
-  'decode-order-create-pool-or-fail': {
-    input: [ { name: 'order-script', type: bufferT } ],
-    output: responseSimpleT(tupleT({ burn: booleanT, factor: uintT, from: bufferT, token: principalT }, ), ),
     mode: 'readonly'
   },
   'decode-order-cross-swap-from-reveal-tx-or-fail': {
@@ -445,22 +174,6 @@ export const metaPegInEndpointV204Swap = defineContract({
       to: bufferT,
       'token-out': principalT
     }, ), ),
-    mode: 'readonly'
-  },
-  'decode-order-remove-liquidity-from-reveal-tx-or-fail': {
-    input: [
-      { name: 'tx', type: bufferT },
-      { name: 'order-idx', type: uintT }
-    ],
-    output: responseSimpleT(tupleT({
-      'commit-txid': bufferT,
-      'order-details': tupleT({ amount: uintT, 'chain-id': uintT, from: bufferT, 'pool-id': uintT }, )
-    }, ), ),
-    mode: 'readonly'
-  },
-  'decode-order-remove-liquidity-or-fail': {
-    input: [ { name: 'order-script', type: bufferT } ],
-    output: responseSimpleT(tupleT({ amount: uintT, 'chain-id': uintT, from: bufferT, 'pool-id': uintT }, ), ),
     mode: 'readonly'
   },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
@@ -553,75 +266,6 @@ export const metaPegInEndpointV204Swap = defineContract({
     output: booleanT,
     mode: 'readonly'
   },
-  'validate-tx-add-liquidity': {
-    input: [
-      {
-        name: 'commit-tx',
-        type: tupleT({ 'fee-idx': optionalT(uintT, ), 'output-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      { name: 'dx-idx', type: uintT }
-    ],
-    output: responseSimpleT(tupleT({
-      'amt-net': uintT,
-      dx: uintT,
-      fee: uintT,
-      'order-details': tupleT({
-        factor: uintT,
-        from: bufferT,
-        'max-dy': optionalT(uintT, ),
-        token: principalT
-      }, ),
-      'pair-details': tupleT({ 'chain-id': uintT, token: principalT }, ),
-      'token-details': tupleT({
-        approved: booleanT,
-        'no-burn': booleanT,
-        'peg-in-fee': uintT,
-        'peg-in-paused': booleanT,
-        'peg-out-fee': uintT,
-        'peg-out-gas-fee': uintT,
-        'peg-out-paused': booleanT,
-        tick: stringT
-      }, ),
-      'tx-idxed': tupleT({ amt: uintT, from: bufferT, tick: stringT, to: bufferT }, )
-    }, ), ),
-    mode: 'readonly'
-  },
-  'validate-tx-create-pool': {
-    input: [
-      {
-        name: 'commit-tx',
-        type: tupleT({ 'fee-idx': optionalT(uintT, ), 'output-idx': uintT, tx: bufferT }, )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      },
-      { name: 'dx-idx', type: uintT }
-    ],
-    output: responseSimpleT(tupleT({
-      'amt-net': uintT,
-      dx: uintT,
-      fee: uintT,
-      'order-details': tupleT({ burn: booleanT, factor: uintT, from: bufferT, token: principalT }, ),
-      'pair-details': tupleT({ 'chain-id': uintT, token: principalT }, ),
-      'token-details': tupleT({
-        approved: booleanT,
-        'no-burn': booleanT,
-        'peg-in-fee': uintT,
-        'peg-in-paused': booleanT,
-        'peg-out-fee': uintT,
-        'peg-out-gas-fee': uintT,
-        'peg-out-paused': booleanT,
-        tick: stringT
-      }, ),
-      'tx-idxed': tupleT({ amt: uintT, from: bufferT, tick: stringT, to: bufferT }, )
-    }, ), ),
-    mode: 'readonly'
-  },
   'validate-tx-cross-swap': {
     input: [
       {
@@ -663,53 +307,9 @@ export const metaPegInEndpointV204Swap = defineContract({
     }, ), ),
     mode: 'readonly'
   },
-  'validate-tx-remove-liquidity': {
-    input: [
-      {
-        name: 'commit-tx',
-        type: tupleT({ 'fee-idx': optionalT(uintT, ), tx: bufferT }, )
-      },
-      {
-        name: 'reveal-tx',
-        type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
-      }
-    ],
-    output: responseSimpleT(tupleT({
-      fee: uintT,
-      'order-details': tupleT({ amount: uintT, 'chain-id': uintT, from: bufferT, 'pool-id': uintT }, ),
-      'pool-details': tupleT({ factor: uintT, 'token-x': principalT, 'token-y': principalT }, ),
-      'token-details': tupleT({
-        approved: booleanT,
-        'no-burn': booleanT,
-        'peg-in-fee': uintT,
-        'peg-in-paused': booleanT,
-        'peg-out-fee': uintT,
-        'peg-out-gas-fee': uintT,
-        'peg-out-paused': booleanT,
-        tick: stringT
-      }, )
-    }, ), ),
-    mode: 'readonly'
-  },
   'fee-to-address': { input: noneT, output: principalT, mode: 'variable' },
   paused: { input: noneT, output: booleanT, mode: 'variable' },
-  'peg-in-fee': { input: noneT, output: uintT, mode: 'variable' },
-  'pool-setting': {
-    input: noneT,
-    output: tupleT({
-      'fee-rate-x': uintT,
-      'fee-rate-y': uintT,
-      'max-in-ratio': uintT,
-      'max-out-ratio': uintT,
-      memo: optionalT(bufferT, ),
-      'oracle-average': uintT,
-      'oracle-enabled': booleanT,
-      'start-block': uintT,
-      'threshold-x': uintT,
-      'threshold-y': uintT
-    }, ),
-    mode: 'variable'
-  }
+  'peg-in-fee': { input: noneT, output: uintT, mode: 'variable' }
 }
 } as const)
 
