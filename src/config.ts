@@ -10,13 +10,14 @@ export const STACKS_TESTNET = new StacksMocknet({
 })
 
 export const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
-export const contractNameOverrides =
+export const contractNameOverrides: Record<string, string> =
   envName === "prod"
-    ? undefined
+    ? {
+        "btc-peg-in-endpoint-v2-05-swap": "btc-peg-in-v2-05-swap",
+        "meta-peg-in-endpoint-v2-04-swap": "meta-peg-in-v2-04-swap",
+      }
     : {
         "btc-peg-in-endpoint-v2-05-swap": "btc-peg-in-endpoint-v2-05-swap-da",
-        "cross-peg-in-endpoint-v2-04-swap":
-          "cross-peg-in-endpoint-v2-04-swap-da",
         "meta-peg-in-endpoint-v2-04-swap": "meta-peg-in-endpoint-v2-04-swap-da",
         "meta-peg-out-endpoint-v2-04": "meta-peg-out-endpoint-v2-04-da",
         "token-wvliabtc": "token-wvliabtc-da",
