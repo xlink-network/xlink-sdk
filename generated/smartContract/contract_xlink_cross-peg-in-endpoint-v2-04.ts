@@ -64,58 +64,6 @@ export const crossPegInEndpointV204 = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
-  'transfer-to-cross-swap': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          'amount-in-fixed': uintT,
-          'dest-chain-id': optionalT(uintT, ),
-          from: bufferT,
-          'min-amount-out-fixed': optionalT(uintT, ),
-          'routing-factors': listT(uintT, ),
-          'routing-tokens': listT(principalT, ),
-          salt: bufferT,
-          'src-chain-id': uintT,
-          to: bufferT,
-          'token-in': principalT,
-          'token-out': principalT
-        }, )
-      },
-      { name: 'token-in-trait', type: traitT },
-      { name: 'routing-traits', type: listT(traitT, ) },
-      { name: 'token-out-trait', type: traitT },
-      {
-        name: 'signature-packs',
-        type: listT(tupleT({ 'order-hash': bufferT, signature: bufferT, signer: principalT }, ), )
-      }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
-  'transfer-to-launchpad': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          address: bufferT,
-          'amount-in-fixed': uintT,
-          'chain-id': uintT,
-          dest: bufferT,
-          'launch-id': uintT,
-          salt: bufferT,
-          token: principalT
-        }, )
-      },
-      { name: 'token-trait', type: traitT },
-      {
-        name: 'signature-packs',
-        type: listT(tupleT({ 'order-hash': bufferT, signature: bufferT, signer: principalT }, ), )
-      }
-    ],
-    output: responseSimpleT(tupleT({ end: uintT, start: uintT }, ), ),
-    mode: 'public'
-  },
   whitelist: {
     input: [
       { name: 'user', type: principalT },
@@ -151,46 +99,6 @@ export const crossPegInEndpointV204 = defineContract({
     output: responseSimpleT(bufferT, ),
     mode: 'readonly'
   },
-  'create-cross-swap-order': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          'amount-in-fixed': uintT,
-          'dest-chain-id': optionalT(uintT, ),
-          from: bufferT,
-          'min-amount-out-fixed': optionalT(uintT, ),
-          'routing-factors': listT(uintT, ),
-          'routing-tokens': listT(principalT, ),
-          salt: bufferT,
-          'src-chain-id': uintT,
-          to: bufferT,
-          'token-in': principalT,
-          'token-out': principalT
-        }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
-  'create-launchpad-order': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          address: bufferT,
-          'amount-in-fixed': uintT,
-          'chain-id': uintT,
-          dest: bufferT,
-          'launch-id': uintT,
-          salt: bufferT,
-          token: principalT
-        }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
   'decode-cross-order': {
     input: [ { name: 'order-buff', type: bufferT } ],
     output: responseSimpleT(tupleT({
@@ -202,36 +110,6 @@ export const crossPegInEndpointV204 = defineContract({
       to: bufferT,
       'token-in': principalT,
       'token-out': principalT
-    }, ), ),
-    mode: 'readonly'
-  },
-  'decode-cross-swap-order': {
-    input: [ { name: 'order-buff', type: bufferT } ],
-    output: responseSimpleT(tupleT({
-      'amount-in-fixed': uintT,
-      'dest-chain-id': optionalT(uintT, ),
-      from: bufferT,
-      'min-amount-out-fixed': optionalT(uintT, ),
-      'routing-factors': listT(uintT, ),
-      'routing-tokens': listT(principalT, ),
-      salt: bufferT,
-      'src-chain-id': uintT,
-      to: bufferT,
-      'token-in': principalT,
-      'token-out': principalT
-    }, ), ),
-    mode: 'readonly'
-  },
-  'decode-launchpad-order': {
-    input: [ { name: 'order-buff', type: bufferT } ],
-    output: responseSimpleT(tupleT({
-      address: bufferT,
-      'amount-in-fixed': uintT,
-      'chain-id': uintT,
-      dest: bufferT,
-      'launch-id': uintT,
-      salt: bufferT,
-      token: principalT
     }, ), ),
     mode: 'readonly'
   },
@@ -305,46 +183,6 @@ export const crossPegInEndpointV204 = defineContract({
     output: responseSimpleT(bufferT, ),
     mode: 'readonly'
   },
-  'hash-cross-swap-order': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          'amount-in-fixed': uintT,
-          'dest-chain-id': optionalT(uintT, ),
-          from: bufferT,
-          'min-amount-out-fixed': optionalT(uintT, ),
-          'routing-factors': listT(uintT, ),
-          'routing-tokens': listT(principalT, ),
-          salt: bufferT,
-          'src-chain-id': uintT,
-          to: bufferT,
-          'token-in': principalT,
-          'token-out': principalT
-        }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
-  'hash-launchpad-order': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          address: bufferT,
-          'amount-in-fixed': uintT,
-          'chain-id': uintT,
-          dest: bufferT,
-          'launch-id': uintT,
-          salt: bufferT,
-          token: principalT
-        }, )
-      }
-    ],
-    output: responseSimpleT(bufferT, ),
-    mode: 'readonly'
-  },
   'is-approved-relayer-or-default': {
     input: [ { name: 'relayer', type: principalT } ],
     output: booleanT,
@@ -389,70 +227,6 @@ export const crossPegInEndpointV204 = defineContract({
       { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(booleanT, ),
-    mode: 'readonly'
-  },
-  'validate-cross-swap-order': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          'amount-in-fixed': uintT,
-          'dest-chain-id': optionalT(uintT, ),
-          from: bufferT,
-          'min-amount-out-fixed': optionalT(uintT, ),
-          'routing-factors': listT(uintT, ),
-          'routing-tokens': listT(principalT, ),
-          salt: bufferT,
-          'src-chain-id': uintT,
-          to: bufferT,
-          'token-in': principalT,
-          'token-out': principalT
-        }, )
-      },
-      { name: 'token-in-trait', type: traitT },
-      { name: 'routing-traits', type: listT(traitT, ) },
-      { name: 'token-out-trait', type: traitT }
-    ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'readonly'
-  },
-  'validate-launchpad-order': {
-    input: [
-      {
-        name: 'order',
-        type: tupleT({
-          address: bufferT,
-          'amount-in-fixed': uintT,
-          'chain-id': uintT,
-          dest: bufferT,
-          'launch-id': uintT,
-          salt: bufferT,
-          token: principalT
-        }, )
-      }
-    ],
-    output: responseSimpleT(tupleT({
-      'apower-to-burn': uintT,
-      offering: tupleT({
-        'activation-threshold': uintT,
-        'apower-per-ticket-in-fixed': listT(tupleT({ 'apower-per-ticket-in-fixed': uintT, 'tier-threshold': uintT }, ), ),
-        'claim-end-height': uintT,
-        'fee-per-ticket-in-fixed': uintT,
-        'launch-owner': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ) }, ),
-        'launch-token': principalT,
-        'launch-tokens-per-ticket': uintT,
-        'max-size-factor': uintT,
-        memo: optionalT(bufferT, ),
-        'payment-token': principalT,
-        'price-per-ticket-in-fixed': uintT,
-        'registration-end-height': uintT,
-        'registration-max-tickets': uintT,
-        'registration-start-height': uintT,
-        'total-registration-max': uintT,
-        'total-tickets': uintT
-      }, ),
-      tickets: uintT
-    }, ), ),
     mode: 'readonly'
   },
   'whitelisted-users': {
