@@ -14,6 +14,7 @@ async function print(matchers: { chain: string[] }): Promise<void> {
           backendAPI: {
             runtimeEnv: "prod",
           },
+          stacks: {},
           btc: {},
           brc20: {},
           runes: {},

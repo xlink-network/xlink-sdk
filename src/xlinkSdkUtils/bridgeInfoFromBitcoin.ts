@@ -64,7 +64,7 @@ export const bridgeInfoFromBitcoin = async (
         KnownTokenId.isBitcoinToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeInfoFromBitcoin_toEVM({
+        return bridgeInfoFromBitcoin_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -140,6 +140,7 @@ async function bridgeInfoFromBitcoin_toStacks(
 }
 
 async function bridgeInfoFromBitcoin_toEVM(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -166,7 +167,7 @@ async function bridgeInfoFromBitcoin_toEVM(
 
   const [step1, step2] = await Promise.all([
     getBtc2StacksFeeInfo(step1Route),
-    getStacks2EvmFeeInfo(step2Route),
+    getStacks2EvmFeeInfo(ctx, step2Route),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
@@ -203,7 +204,7 @@ async function bridgeInfoFromBitcoin_toMeta(
   const step2FromStacksToken =
     info.swapRoute == null
       ? KnownTokenId.Stacks.aBTC
-      : await getFinalStepStacksTokenAddress({
+      : await getFinalStepStacksTokenAddress(ctx, {
           swap: info.swapRoute,
           stacksChain: transitStacksChain,
         })

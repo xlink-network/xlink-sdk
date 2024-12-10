@@ -128,7 +128,7 @@ export async function estimateBridgeTransactionFromBitcoin(
 }
 
 async function estimateFromBitcoin_toStacks(
-  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  sdkContext: SDKGlobalContext,
   info: Omit<
     EstimateBridgeTransactionFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -144,7 +144,7 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const createdOrder = await createBridgeOrder_BitcoinToStacks({
+  const createdOrder = await createBridgeOrder_BitcoinToStacks(sdkContext, {
     fromChain: info.fromChain,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
     toChain: info.toChain,
@@ -181,7 +181,7 @@ async function estimateFromBitcoin_toStacks(
 }
 
 async function estimateFromBitcoin_toEVM(
-  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  sdkContext: SDKGlobalContext,
   info: Omit<
     EstimateBridgeTransactionFromBitcoinInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -197,7 +197,7 @@ async function estimateFromBitcoin_toEVM(
     )
   }
 
-  const createdOrder = await createBridgeOrder_BitcoinToEVM({
+  const createdOrder = await createBridgeOrder_BitcoinToEVM(sdkContext, {
     fromChain: info.fromChain,
     toChain: info.toChain,
     toToken: info.toToken,

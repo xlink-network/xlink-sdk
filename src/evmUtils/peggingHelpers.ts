@@ -137,13 +137,15 @@ export const getEvm2StacksFeeInfo = async (
 }
 
 export const getStacks2EvmFeeInfo = async (
+  ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToEVM,
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
     "cross-peg-out-endpoint-v2-01",
   )
-  const stacksTokenContractCallInfo = getStacksTokenContractInfo(
+  const stacksTokenContractCallInfo = await getStacksTokenContractInfo(
+    ctx,
     route.fromChain,
     route.fromToken,
   )
