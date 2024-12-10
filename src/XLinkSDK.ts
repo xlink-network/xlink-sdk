@@ -1,7 +1,11 @@
 import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
 import { nativeCurrencyAddress } from "./evmUtils/addressHelpers"
-import { defaultEvmClients } from "./evmUtils/evmClients"
+import {
+  defaultEvmClients,
+  evmChainIdFromKnownChainId,
+  evmChainIdToKnownChainId,
+} from "./evmUtils/evmClients"
 import {
   getEVMContractCallInfo,
   getEVMToken,
@@ -324,6 +328,18 @@ export class XLinkSDK {
       return info?.bridgeEndpointContractAddress
     }
     return
+  }
+
+  async evmChainIdFromKnownChainId(
+    chain: KnownChainId.EVMChain,
+  ): Promise<undefined | bigint> {
+    return evmChainIdFromKnownChainId(chain)
+  }
+
+  async evmChainIdToKnownChainId(
+    chainId: bigint,
+  ): Promise<undefined | KnownChainId.EVMChain> {
+    return evmChainIdToKnownChainId(chainId)
   }
 
   /**
