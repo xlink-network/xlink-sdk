@@ -139,7 +139,7 @@ export async function bridgeFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeFromStacks_toEVM({
+        return bridgeFromStacks_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -152,7 +152,7 @@ export async function bridgeFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isBRC20Token(route.toToken)
       ) {
-        return bridgeFromStacks_toMeta({
+        return bridgeFromStacks_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -165,7 +165,7 @@ export async function bridgeFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isRunesToken(route.toToken)
       ) {
-        return bridgeFromStacks_toMeta({
+        return bridgeFromStacks_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -230,6 +230,7 @@ async function bridgeFromStacks_toBitcoin(
 }
 
 async function bridgeFromStacks_toEVM(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -240,7 +241,8 @@ async function bridgeFromStacks_toEVM(
     info.fromChain,
     "cross-peg-out-endpoint-v2-01",
   )
-  const fromTokenContractInfo = getStacksTokenContractInfo(
+  const fromTokenContractInfo = await getStacksTokenContractInfo(
+    ctx,
     info.fromChain,
     info.fromToken,
   )
@@ -272,6 +274,7 @@ async function bridgeFromStacks_toEVM(
 }
 
 async function bridgeFromStacks_toMeta(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -282,7 +285,8 @@ async function bridgeFromStacks_toMeta(
     info.fromChain,
     "meta-peg-out-endpoint-v2-04",
   )
-  const fromTokenContractInfo = getStacksTokenContractInfo(
+  const fromTokenContractInfo = await getStacksTokenContractInfo(
+    ctx,
     info.fromChain,
     info.fromToken,
   )

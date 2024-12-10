@@ -1,5 +1,6 @@
 import { getStacksToken } from "../stacksUtils/xlinkContractHelpers"
 import { SDKNumber, StacksContractAddress } from "../xlinkSdkUtils/types"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { last } from "./arrayHelpers"
 import { BigNumber } from "./BigNumber"
 import { OneOrMore } from "./typeHelpers"
@@ -28,11 +29,18 @@ export interface SwapRoute_WithMinimumAmountsToReceive_Public
   minimumAmountsToReceive: SDKNumber
 }
 
-export async function getFinalStepStacksTokenAddress(info: {
-  swap: SwapRoute
-  stacksChain: KnownChainId.StacksChain
-}): Promise<undefined | KnownTokenId.StacksToken> {
+export async function getFinalStepStacksTokenAddress(
+  sdkContext: SDKGlobalContext,
+  info: {
+    swap: SwapRoute
+    stacksChain: KnownChainId.StacksChain
+  },
+): Promise<undefined | KnownTokenId.StacksToken> {
   const finalStepStacksTokenAddress = last(info.swap.swapPools).toTokenAddress
 
-  return getStacksToken(info.stacksChain, finalStepStacksTokenAddress)
+  return getStacksToken(
+    sdkContext,
+    info.stacksChain,
+    finalStepStacksTokenAddress,
+  )
 }
