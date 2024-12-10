@@ -268,11 +268,11 @@ export async function fromCorrespondingStacksToken(
   assertExclude(restEVMTokenPossibilities, EVMToken.vLiALEX)
 
   if (stacksToken === StacksToken.sUSDT) {
-    return [EVMToken.USDT, EVMToken.sUSDT]
+    return [EVMToken.sUSDT, EVMToken.USDT, EVMToken.USDC]
   }
-  assertExclude(restEVMTokenPossibilities, EVMToken.USDT)
   assertExclude(restEVMTokenPossibilities, EVMToken.sUSDT)
-
+  assertExclude(restEVMTokenPossibilities, EVMToken.USDT)
+  assertExclude(restEVMTokenPossibilities, EVMToken.USDC)
   if (stacksToken === StacksToken.aBTC) {
     return [EVMToken.aBTC, EVMToken.WBTC, EVMToken.BTCB, EVMToken.cbBTC]
   }
@@ -317,8 +317,9 @@ export async function toCorrespondingStacksToken(
       return StacksToken.vLiSTX
     case EVMToken.vLiALEX:
       return StacksToken.vLiALEX
-    case EVMToken.USDT:
     case EVMToken.sUSDT:
+    case EVMToken.USDT:
+    case EVMToken.USDC:
       return StacksToken.sUSDT
     case EVMToken.aBTC:
     case EVMToken.BTCB:

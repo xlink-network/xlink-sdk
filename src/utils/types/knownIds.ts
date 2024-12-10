@@ -49,10 +49,17 @@ export namespace KnownTokenId {
 
   /** A namespace that contains constants and types for EVM-compatible tokens. */
   export namespace EVM {
+    // USD[X]s
+    /** Represents the sUSDT token ID on EVM-compatible blockchains. */
+    export const sUSDT = tokenId("evm-susdt")
     /** Represents the USDT token ID on EVM-compatible blockchains. */
     export const USDT = tokenId("evm-usdt")
-    /** Represents the LUNR token ID on EVM-compatible blockchains. */
-    export const LUNR = tokenId("evm-lunr")
+    /** Represents the USDC token ID on EVM-compatible blockchains. */
+    export const USDC = tokenId("evm-usdc")
+
+    // BTC
+    /** Represents the aBTC token ID on EVM-compatible blockchains. */
+    export const aBTC = tokenId("evm-abtc")
     /** Represents the WBTC token ID on EVM-compatible blockchains. */
     export const WBTC = tokenId("evm-wbtc")
     /** Represents the BTCB token ID on EVM-compatible blockchains. */
@@ -60,11 +67,8 @@ export namespace KnownTokenId {
     /** Represents the cbBTC token ID on EVM-compatible blockchains. */
     export const cbBTC = tokenId("evm-cbbtc")
 
-    // wrapped tokens
-    /** Represents the aBTC token ID on EVM-compatible blockchains. */
-    export const aBTC = tokenId("evm-abtc")
-    /** Represents the sUSDT token ID on EVM-compatible blockchains. */
-    export const sUSDT = tokenId("evm-susdt")
+    /** Represents the LUNR token ID on EVM-compatible blockchains. */
+    export const LUNR = tokenId("evm-lunr")
     /** Represents the ALEX token ID on EVM-compatible blockchains. */
     export const ALEX = tokenId("evm-alex")
     /** Represents the SKO token ID on EVM-compatible blockchains. */
