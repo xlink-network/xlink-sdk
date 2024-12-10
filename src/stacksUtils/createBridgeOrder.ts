@@ -18,12 +18,12 @@ import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { getTerminatingStacksTokenContractAddress } from "./stxContractAddresses"
 import {
-  addressToBuffer,
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./xlinkContractHelpers"
+import { addressToBuffer } from "../utils/addressHelpers"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -35,14 +35,17 @@ export interface CreateBridgeOrderResult {
   data: Uint8Array
 }
 
-export async function createBridgeOrder_BitcoinToStacks(info: {
-  fromChain: KnownChainId.BitcoinChain
-  fromBitcoinScriptPubKey: Uint8Array
-  toChain: KnownChainId.StacksChain
-  toToken: KnownTokenId.StacksToken
-  toStacksAddress: string
-  swap?: SwapRoute_WithMinimumAmountsToReceive
-}): Promise<undefined | CreateBridgeOrderResult> {
+export async function createBridgeOrder_BitcoinToStacks(
+  sdkContext: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    fromBitcoinScriptPubKey: Uint8Array
+    toChain: KnownChainId.StacksChain
+    toToken: KnownTokenId.StacksToken
+    toStacksAddress: string
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
   let data: undefined | Uint8Array
 
   const contractBaseCallInfo = getStacksContractCallInfo(
@@ -64,7 +67,8 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
 
   const { toStacksAddress, swap: swapInfo } = info
 
-  const targetTokenContractInfo = getStacksTokenContractInfo(
+  const targetTokenContractInfo = await getStacksTokenContractInfo(
+    sdkContext,
     info.toChain,
     info.toToken,
   )
@@ -113,14 +117,17 @@ export async function createBridgeOrder_BitcoinToStacks(info: {
   }
 }
 
-export async function createBridgeOrder_BitcoinToEVM(info: {
-  fromChain: KnownChainId.BitcoinChain
-  fromBitcoinScriptPubKey: Uint8Array
-  toChain: KnownChainId.EVMChain
-  toToken: KnownTokenId.EVMToken
-  toEVMAddress: string
-  swap?: SwapRoute_WithMinimumAmountsToReceive
-}): Promise<undefined | CreateBridgeOrderResult> {
+export async function createBridgeOrder_BitcoinToEVM(
+  sdkContext: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    fromBitcoinScriptPubKey: Uint8Array
+    toChain: KnownChainId.EVMChain
+    toToken: KnownTokenId.EVMToken
+    toEVMAddress: string
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
   const contractBaseCallInfo = getStacksContractCallInfo(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
@@ -148,7 +155,8 @@ export async function createBridgeOrder_BitcoinToEVM(info: {
 
   const swappedStacksToken = await toCorrespondingStacksToken(info.toToken)
   if (swappedStacksToken == null) return undefined
-  const swappedStacksTokenAddress = getStacksTokenContractInfo(
+  const swappedStacksTokenAddress = await getStacksTokenContractInfo(
+    sdkContext,
     contractBaseCallInfo.network.isMainnet()
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
@@ -258,7 +266,8 @@ export async function createBridgeOrder_BitcoinToMeta(
       }) :
     (checkNever(info.toChain), undefined)
   if (swappedStacksToken == null) return undefined
-  const swappedStacksTokenAddress = getStacksTokenContractInfo(
+  const swappedStacksTokenAddress = await getStacksTokenContractInfo(
+    sdkContext,
     contractBaseCallInfo.network.isMainnet()
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,

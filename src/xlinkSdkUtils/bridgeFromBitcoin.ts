@@ -205,7 +205,8 @@ async function bridgeFromBitcoin_toStacks(
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeFromBitcoinOutput> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  const toTokenContractInfo = getStacksTokenContractInfo(
+  const toTokenContractInfo = await getStacksTokenContractInfo(
+    sdkContext,
     info.toChain,
     info.toToken,
   )
@@ -217,7 +218,7 @@ async function bridgeFromBitcoin_toStacks(
     )
   }
 
-  const createdOrder = await createBridgeOrder_BitcoinToStacks({
+  const createdOrder = await createBridgeOrder_BitcoinToStacks(sdkContext, {
     fromChain: info.fromChain,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
     toChain: info.toChain,
@@ -252,7 +253,7 @@ async function bridgeFromBitcoin_toEVM(
   > &
     KnownRoute_FromBitcoin_ToEVM,
 ): Promise<BridgeFromBitcoinOutput> {
-  const createdOrder = await createBridgeOrder_BitcoinToEVM({
+  const createdOrder = await createBridgeOrder_BitcoinToEVM(sdkContext, {
     fromChain: info.fromChain,
     toChain: info.toChain,
     toToken: info.toToken,

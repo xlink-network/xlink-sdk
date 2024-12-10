@@ -60,7 +60,7 @@ export const getMeta2StacksFeeInfo = async (
         ? null
         : {
             type: "fixed" as const,
-            token: KnownTokenId.Stacks.aBTC,
+            token: KnownTokenId.Bitcoin.BTC,
             amount: filteredRoute.pegInFeeBitcoinAmount,
           },
     ].filter(isNotNull),
@@ -105,7 +105,7 @@ export const getStacks2MetaFeeInfo = async (
         ? null
         : {
             type: "fixed" as const,
-            token: KnownTokenId.Stacks.aBTC,
+            token: KnownTokenId.Bitcoin.BTC,
             amount: filteredRoute.pegOutFeeBitcoinAmount,
           },
     ].filter(isNotNull),

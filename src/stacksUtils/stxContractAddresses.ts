@@ -126,7 +126,7 @@ export const stxContractAddresses = {
 >
 
 export const stxTokenContractAddresses: Record<
-  KnownTokenId.StacksToken,
+  string,
   Record<KnownChainId.StacksChain, StacksContractAddress>
 > = {
   [KnownTokenId.Stacks.ALEX]: {

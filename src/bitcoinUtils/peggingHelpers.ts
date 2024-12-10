@@ -161,7 +161,7 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   const finalStepStacksToken =
     route.swapRoute == null
       ? KnownTokenId.Stacks.aBTC
-      : await getFinalStepStacksTokenAddress({
+      : await getFinalStepStacksTokenAddress(ctx, {
           swap: route.swapRoute,
           stacksChain:
             fromChain === KnownChainId.Bitcoin.Mainnet

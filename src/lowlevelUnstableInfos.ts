@@ -16,21 +16,18 @@ export {
 } from "./stacksUtils/crossContractDataMapping"
 
 export {
-  fromCorrespondingStacksToken as evmTokensFromCorrespondingStacksToken,
-  toCorrespondingStacksToken as evmTokenToCorrespondingStacksToken,
-}
-
-export {
-  getTerminatingStacksTokenContractAddress,
   getEVMTokenIdFromTerminatingStacksTokenContractAddress,
+  getTerminatingStacksTokenContractAddress,
 } from "./stacksUtils/stxContractAddresses"
 
 export {
-  addressFromBuffer,
-  addressToBuffer,
-} from "./stacksUtils/xlinkContractHelpers"
+  fromCorrespondingStacksToken as evmTokensFromCorrespondingStacksToken,
+  toCorrespondingStacksToken as evmTokenToCorrespondingStacksToken,
+} from "./evmUtils/peggingHelpers"
 
 export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
+
+export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
 
 export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
 

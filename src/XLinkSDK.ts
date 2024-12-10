@@ -169,6 +169,9 @@ export class XLinkSDK {
         ...options.__experimental?.backendAPI,
         runtimeEnv: options.__experimental?.backendAPI?.runtimeEnv ?? "prod",
       },
+      stacks: {
+        tokensCache: new Map(),
+      },
       btc: {
         ignoreValidateResult:
           options.__experimental?.btc?.ignoreValidateResult ?? false,
@@ -235,8 +238,18 @@ export class XLinkSDK {
     return checkingResult.some(r => r)
   }
 
-  stacksAddressFromStacksToken = stacksAddressFromStacksToken
-  stacksAddressToStacksToken = stacksAddressToStacksToken
+  stacksAddressFromStacksToken(
+    chain: ChainId,
+    token: KnownTokenId.StacksToken,
+  ): Promise<undefined | StacksContractAddress> {
+    return stacksAddressFromStacksToken(this.sdkContext, chain, token)
+  }
+  stacksAddressToStacksToken(
+    chain: ChainId,
+    address: StacksContractAddress,
+  ): Promise<undefined | KnownTokenId.StacksToken> {
+    return stacksAddressToStacksToken(this.sdkContext, chain, address)
+  }
 
   /**
    * This function provides detailed information about token transfers from the Stacks network to other supported
@@ -599,11 +612,12 @@ export class XLinkSDK {
  * or `undefined` if the chain is not a Stacks chain or if the contract address cannot be retrieved.
  */
 async function stacksAddressFromStacksToken(
+  sdkContext: SDKGlobalContext,
   chain: ChainId,
   token: KnownTokenId.StacksToken,
 ): Promise<undefined | StacksContractAddress> {
   if (!KnownChainId.isStacksChain(chain)) return
-  const info = await getStacksTokenContractInfo(chain, token)
+  const info = await getStacksTokenContractInfo(sdkContext, chain, token)
   if (info == null) return
   return {
     deployerAddress: info.deployerAddress,
@@ -621,11 +635,12 @@ async function stacksAddressFromStacksToken(
  * cannot be found.
  */
 async function stacksAddressToStacksToken(
+  sdkContext: SDKGlobalContext,
   chain: ChainId,
   address: StacksContractAddress,
 ): Promise<undefined | KnownTokenId.StacksToken> {
   if (!KnownChainId.isStacksChain(chain)) return
-  return getStacksToken(chain, address)
+  return getStacksToken(sdkContext, chain, address)
 }
 
 async function brc20TickFromBRC20Token(
