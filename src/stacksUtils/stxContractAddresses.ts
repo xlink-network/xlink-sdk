@@ -1,4 +1,5 @@
 import { KnownRoute_FromStacks_ToEVM } from "../utils/buildSupportedRoutes"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import {
   isStacksContractAddressEqual,
@@ -66,6 +67,16 @@ const stxAlternativeTokenContractAddresses = {
       contractName: "token-usdt",
     },
   },
+  usdc: {
+    [KnownChainId.Stacks.Mainnet]: {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-usdt",
+    },
+    [KnownChainId.Stacks.Testnet]: {
+      deployerAddress: xlinkContractsDeployerTestnet,
+      contractName: "token-usdt",
+    },
+  },
 } satisfies Record<
   string,
   Record<KnownChainId.StacksChain, StacksContractAddress>
@@ -75,6 +86,8 @@ export const getTerminatingStacksTokenContractAddress = (
 ): undefined | StacksContractAddress => {
   const { fromToken, toChain, toToken } = route
   if (fromToken === KnownTokenId.Stacks.aBTC) {
+    const restChains = assertExclude.i<ChainsHaveAlternativeBTC>()
+
     if (
       (toChain === KnownChainId.EVM.Ethereum ||
         toChain === KnownChainId.EVM.Sepolia) &&
@@ -82,6 +95,9 @@ export const getTerminatingStacksTokenContractAddress = (
     ) {
       return stxAlternativeTokenContractAddresses.wbtc[route.fromChain]
     }
+    assertExclude(restChains, KnownChainId.EVM.Ethereum)
+    assertExclude(restChains, KnownChainId.EVM.Sepolia)
+
     if (
       (toChain === KnownChainId.EVM.BSC ||
         toChain === KnownChainId.EVM.BSCTestnet) &&
@@ -89,17 +105,46 @@ export const getTerminatingStacksTokenContractAddress = (
     ) {
       return stxAlternativeTokenContractAddresses.btcb[route.fromChain]
     }
+    assertExclude(restChains, KnownChainId.EVM.BSC)
+    assertExclude(restChains, KnownChainId.EVM.BSCTestnet)
+
     if (
       toChain === KnownChainId.EVM.Base &&
       toToken === KnownTokenId.EVM.cbBTC
     ) {
       return stxAlternativeTokenContractAddresses.cbBTC[route.fromChain]
     }
+    assertExclude(restChains, KnownChainId.EVM.Base)
+
+    checkNever(restChains)
   }
+
   if (fromToken === KnownTokenId.Stacks.sUSDT) {
-    if (toToken === KnownTokenId.EVM.USDT) {
+    const restChains = assertExclude.i<ChainsHaveAlternativeStableUSD>()
+
+    if (
+      (toChain === KnownChainId.EVM.Ethereum ||
+        toChain === KnownChainId.EVM.Sepolia ||
+        toChain === KnownChainId.EVM.BSC ||
+        toChain === KnownChainId.EVM.BSCTestnet) &&
+      toToken === KnownTokenId.EVM.USDT
+    ) {
       return stxAlternativeTokenContractAddresses.usdt[route.fromChain]
     }
+    assertExclude(restChains, KnownChainId.EVM.Ethereum)
+    assertExclude(restChains, KnownChainId.EVM.Sepolia)
+    assertExclude(restChains, KnownChainId.EVM.BSC)
+    assertExclude(restChains, KnownChainId.EVM.BSCTestnet)
+
+    if (
+      toChain === KnownChainId.EVM.Base &&
+      toToken === KnownTokenId.EVM.USDC
+    ) {
+      return stxAlternativeTokenContractAddresses.usdt[route.fromChain]
+    }
+    assertExclude(restChains, KnownChainId.EVM.Base)
+
+    checkNever(restChains)
   }
   return undefined
 }
@@ -108,6 +153,9 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
   stacksChain: KnownChainId.StacksChain
   stacksTokenAddress: StacksContractAddress
 }): undefined | KnownTokenId.EVMToken => {
+  const restStableUSDChains = assertExclude.i<ChainsHaveAlternativeStableUSD>()
+  const restBTCChains = assertExclude.i<ChainsHaveAlternativeBTC>()
+
   if (
     (route.evmChain === KnownChainId.EVM.Ethereum ||
       route.evmChain === KnownChainId.EVM.Sepolia) &&
@@ -118,6 +166,8 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
   ) {
     return KnownTokenId.EVM.WBTC
   }
+  assertExclude(restBTCChains, KnownChainId.EVM.Ethereum)
+  assertExclude(restBTCChains, KnownChainId.EVM.Sepolia)
 
   if (
     (route.evmChain === KnownChainId.EVM.BSC ||
@@ -129,6 +179,8 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
   ) {
     return KnownTokenId.EVM.BTCB
   }
+  assertExclude(restBTCChains, KnownChainId.EVM.BSC)
+  assertExclude(restBTCChains, KnownChainId.EVM.BSCTestnet)
 
   if (
     route.evmChain === KnownChainId.EVM.Base &&
@@ -139,8 +191,13 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
   ) {
     return KnownTokenId.EVM.cbBTC
   }
+  assertExclude(restBTCChains, KnownChainId.EVM.Base)
 
   if (
+    (route.evmChain === KnownChainId.EVM.Ethereum ||
+      route.evmChain === KnownChainId.EVM.Sepolia ||
+      route.evmChain === KnownChainId.EVM.BSC ||
+      route.evmChain === KnownChainId.EVM.BSCTestnet) &&
     isStacksContractAddressEqual(
       route.stacksTokenAddress,
       stxAlternativeTokenContractAddresses.usdt[route.stacksChain],
@@ -148,9 +205,38 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
   ) {
     return KnownTokenId.EVM.USDT
   }
+  assertExclude(restStableUSDChains, KnownChainId.EVM.Ethereum)
+  assertExclude(restStableUSDChains, KnownChainId.EVM.Sepolia)
+  assertExclude(restStableUSDChains, KnownChainId.EVM.BSC)
+  assertExclude(restStableUSDChains, KnownChainId.EVM.BSCTestnet)
 
+  if (
+    route.evmChain === KnownChainId.EVM.Base &&
+    isStacksContractAddressEqual(
+      route.stacksTokenAddress,
+      stxAlternativeTokenContractAddresses.usdc[route.stacksChain],
+    )
+  ) {
+    return KnownTokenId.EVM.USDC
+  }
+  assertExclude(restStableUSDChains, KnownChainId.EVM.Base)
+
+  checkNever(restStableUSDChains)
+  checkNever(restBTCChains)
   return undefined
 }
+type ChainsHaveAlternativeStableUSD =
+  | typeof KnownChainId.EVM.Ethereum
+  | typeof KnownChainId.EVM.Sepolia
+  | typeof KnownChainId.EVM.BSC
+  | typeof KnownChainId.EVM.BSCTestnet
+  | typeof KnownChainId.EVM.Base
+type ChainsHaveAlternativeBTC =
+  | typeof KnownChainId.EVM.Ethereum
+  | typeof KnownChainId.EVM.Sepolia
+  | typeof KnownChainId.EVM.BSC
+  | typeof KnownChainId.EVM.BSCTestnet
+  | typeof KnownChainId.EVM.Base
 
 export const stxContractDeployers = {
   "btc-peg-in-endpoint-v2-05": {
