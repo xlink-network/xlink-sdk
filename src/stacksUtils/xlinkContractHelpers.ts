@@ -20,6 +20,7 @@ import {
 } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import {
+  StacksContractName,
   stxContractAddresses,
   stxTokenContractAddresses,
 } from "./stxContractAddresses"
@@ -61,9 +62,7 @@ export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
   {},
 )
 
-export const getStacksContractCallInfo = <
-  C extends keyof typeof stxContractAddresses,
->(
+export const getStacksContractCallInfo = <C extends StacksContractName>(
   chainId: KnownChainId.StacksChain,
   contractName: C,
 ):

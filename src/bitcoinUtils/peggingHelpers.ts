@@ -4,7 +4,10 @@ import {
   getBRC20SupportedRoutes,
   getRunesSupportedRoutes,
 } from "../metaUtils/xlinkContractHelpers"
-import { stxTokenContractAddresses } from "../stacksUtils/stxContractAddresses"
+import {
+  StacksContractName,
+  stxTokenContractAddresses,
+} from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
@@ -17,7 +20,10 @@ import {
   KnownRoute_FromStacks_ToBitcoin,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
-import { getFinalStepStacksTokenAddress } from "../utils/SwapRouteHelpers"
+import {
+  getFinalStepStacksTokenAddress,
+  SwapRoute,
+} from "../utils/SwapRouteHelpers"
 import { checkNever } from "../utils/typeHelpers"
 import {
   _allNoLongerSupportedEVMChains,
@@ -29,31 +35,48 @@ import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (
   route: KnownRoute_FromBitcoin_ToStacks,
+  options: {
+    swapRoute: null | SwapRoute
+  },
 ): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(
+  const stacksBaseContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "btc-peg-in-endpoint-v2-05",
+    StacksContractName.BTCPegInEndpoint,
   )
-  if (stacksContractCallInfo == null) return
+  const stacksSwapContractCallInfo = getStacksContractCallInfo(
+    route.toChain,
+    StacksContractName.BTCPegInEndpointSwap,
+  )
+  if (
+    stacksBaseContractCallInfo == null ||
+    stacksSwapContractCallInfo == null
+  ) {
+    return
+  }
+
+  const contractCallInfo =
+    options.swapRoute == null
+      ? stacksBaseContractCallInfo
+      : stacksSwapContractCallInfo
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
-      stacksContractCallInfo.contractName,
+      contractCallInfo.contractName,
       "is-peg-in-paused",
       {},
-      stacksContractCallInfo.executeOptions,
+      contractCallInfo.executeOptions,
     ),
     feeRate: executeReadonlyCallXLINK(
-      stacksContractCallInfo.contractName,
+      contractCallInfo.contractName,
       "get-peg-in-fee",
       {},
-      stacksContractCallInfo.executeOptions,
+      contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
     minFeeAmount: executeReadonlyCallXLINK(
-      stacksContractCallInfo.contractName,
+      contractCallInfo.contractName,
       "get-peg-in-min-fee",
       {},
-      stacksContractCallInfo.executeOptions,
+      contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
   })
 
@@ -80,7 +103,7 @@ export const getStacks2BtcFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
-    "btc-peg-out-endpoint-v2-01",
+    StacksContractName.BTCPegOutEndpoint,
   )
   if (stacksContractCallInfo == null) return
 

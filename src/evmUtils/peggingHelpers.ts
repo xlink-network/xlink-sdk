@@ -7,6 +7,7 @@ import {
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import {
   getTerminatingStacksTokenContractAddress,
+  StacksContractName,
   stxTokenContractAddresses,
 } from "../stacksUtils/stxContractAddresses"
 import {
@@ -44,7 +45,7 @@ export const getEvm2StacksFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "cross-peg-in-endpoint-v2-04",
+    StacksContractName.EVMPegInEndpoint,
   )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   const evmTokenContractCallInfo = await getEVMTokenContractInfo(
@@ -142,7 +143,7 @@ export const getStacks2EvmFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
-    "cross-peg-out-endpoint-v2-01",
+    StacksContractName.EVMPegOutEndpoint,
   )
   const stacksTokenContractCallInfo = await getStacksTokenContractInfo(
     ctx,
