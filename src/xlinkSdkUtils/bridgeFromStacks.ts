@@ -3,7 +3,10 @@ import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
-import { getTerminatingStacksTokenContractAddress } from "../stacksUtils/stxContractAddresses"
+import {
+  getTerminatingStacksTokenContractAddress,
+  StacksContractName,
+} from "../stacksUtils/stxContractAddresses"
 import {
   composeTxXLINK,
   getStacksContractCallInfo,
@@ -200,7 +203,7 @@ async function bridgeFromStacks_toBitcoin(
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain,
-    "btc-peg-out-endpoint-v2-01",
+    StacksContractName.BTCPegOutEndpoint,
   )
   if (!contractCallInfo) {
     throw new UnsupportedBridgeRouteError(
@@ -239,7 +242,7 @@ async function bridgeFromStacks_toEVM(
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain,
-    "cross-peg-out-endpoint-v2-01",
+    StacksContractName.EVMPegOutEndpoint,
   )
   const fromTokenContractInfo = await getStacksTokenContractInfo(
     ctx,
@@ -283,7 +286,7 @@ async function bridgeFromStacks_toMeta(
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain,
-    "meta-peg-out-endpoint-v2-04",
+    StacksContractName.MetaPegOutEndpoint,
   )
   const fromTokenContractInfo = await getStacksTokenContractInfo(
     ctx,

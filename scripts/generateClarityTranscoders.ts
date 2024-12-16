@@ -7,6 +7,7 @@ import {
   STACKS_TESTNET,
 } from "../src/config"
 import {
+  StacksContractName,
   stxContractAddresses,
   xlinkContractsMultisigMainnet,
   xlinkContractsMultisigTestnet,
@@ -28,19 +29,19 @@ import { KnownChainId } from "../src/utils/types/knownIds"
     process.env.STACKS_CORE_API_URL ?? fallbackStacksNetwork.coreApiUrl,
     contractName => {
       return (
-        stxContractAddresses[
-          contractName as keyof typeof stxContractAddresses
-        ]?.[stacksChainId]?.deployerAddress ?? fallbackDeployerAddress
+        stxContractAddresses[contractName as StacksContractName]?.[
+          stacksChainId
+        ]?.deployerAddress ?? fallbackDeployerAddress
       )
     },
     [
       "btc-peg-in-endpoint-v2-05",
-      "btc-peg-in-endpoint-v2-05-swap",
+      "btc-peg-in-endpoint-v2-06-swap",
       "btc-peg-out-endpoint-v2-01",
       "cross-peg-in-endpoint-v2-04",
       "cross-peg-out-endpoint-v2-01",
       "meta-peg-in-endpoint-v2-04",
-      "meta-peg-in-endpoint-v2-04-swap",
+      "meta-peg-in-endpoint-v2-05-swap",
       "meta-peg-out-endpoint-v2-04",
     ],
     path.resolve(__dirname, "../generated/smartContract/"),

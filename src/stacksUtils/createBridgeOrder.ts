@@ -16,7 +16,10 @@ import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
-import { getTerminatingStacksTokenContractAddress } from "./stxContractAddresses"
+import {
+  getTerminatingStacksTokenContractAddress,
+  StacksContractName,
+} from "./stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
@@ -50,11 +53,11 @@ export async function createBridgeOrder_BitcoinToStacks(
 
   const contractBaseCallInfo = getStacksContractCallInfo(
     info.toChain,
-    "btc-peg-in-endpoint-v2-05",
+    StacksContractName.BTCPegInEndpoint,
   )
   const contractSwapCallInfo = getStacksContractCallInfo(
     info.toChain,
-    "btc-peg-in-endpoint-v2-05-swap",
+    StacksContractName.BTCPegInEndpointSwap,
   )
   if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
@@ -132,13 +135,13 @@ export async function createBridgeOrder_BitcoinToEVM(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint-v2-05",
+    StacksContractName.BTCPegInEndpoint,
   )
   const contractSwapCallInfo = getStacksContractCallInfo(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint-v2-05-swap",
+    StacksContractName.BTCPegInEndpointSwap,
   )
   if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
     throw new UnsupportedBridgeRouteError(
@@ -231,13 +234,13 @@ export async function createBridgeOrder_BitcoinToMeta(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint-v2-05",
+    StacksContractName.BTCPegInEndpoint,
   )
   const contractSwapCallInfo = getStacksContractCallInfo(
     info.fromChain === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint-v2-05-swap",
+    StacksContractName.BTCPegInEndpointSwap,
   )
   if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
     throw new UnsupportedBridgeRouteError(

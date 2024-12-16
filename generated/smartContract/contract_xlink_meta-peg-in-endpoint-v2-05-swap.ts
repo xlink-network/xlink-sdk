@@ -14,8 +14,8 @@ principalT,
 noneT
 } from "../smartContractHelpers/codegenImport"
 
-export const metaPegInEndpointV204Swap = defineContract({
-"meta-peg-in-endpoint-v2-04-swap": {
+export const metaPegInEndpointV205Swap = defineContract({
+"meta-peg-in-endpoint-v2-05-swap": {
   'finalize-peg-in-cross-swap': {
     input: [
       {
@@ -89,6 +89,16 @@ export const metaPegInEndpointV204Swap = defineContract({
   },
   pause: {
     input: [ { name: 'new-paused', type: booleanT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-btc-peg-out-fee': {
+    input: [ { name: 'fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-btc-peg-out-min-fee': {
+    input: [ { name: 'fee', type: uintT } ],
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
@@ -176,6 +186,8 @@ export const metaPegInEndpointV204Swap = defineContract({
     }, ), ),
     mode: 'readonly'
   },
+  'get-btc-peg-out-fee': { input: [], output: uintT, mode: 'readonly' },
+  'get-btc-peg-out-min-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
   'get-pair-details': {
     input: [
@@ -307,6 +319,8 @@ export const metaPegInEndpointV204Swap = defineContract({
     }, ), ),
     mode: 'readonly'
   },
+  'btc-peg-out-fee': { input: noneT, output: uintT, mode: 'variable' },
+  'btc-peg-out-min-fee': { input: noneT, output: uintT, mode: 'variable' },
   'fee-to-address': { input: noneT, output: principalT, mode: 'variable' },
   paused: { input: noneT, output: booleanT, mode: 'variable' },
   'peg-in-fee': { input: noneT, output: uintT, mode: 'variable' }

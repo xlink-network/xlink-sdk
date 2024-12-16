@@ -1,6 +1,13 @@
 import { toCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import {
+  executeReadonlyCallXLINK,
+  getStacksContractCallInfo,
+  numberFromStacksContractNumber,
+} from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
+import { SwapRoute } from "../utils/SwapRouteHelpers"
 import {
   _KnownRoute_FromBRC20_ToStacks,
   _KnownRoute_FromRunes_ToStacks,
@@ -8,6 +15,7 @@ import {
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToRunes,
 } from "../utils/buildSupportedRoutes"
+import { props } from "../utils/promiseHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
 import { TransferProphet } from "../utils/types/TransferProphet"
 import {
@@ -25,6 +33,20 @@ import {
 } from "./xlinkContractHelpers"
 
 export const getMeta2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
+  options: {
+    swapRoute: null | SwapRoute
+  },
+): Promise<undefined | TransferProphet> => {
+  if (options.swapRoute != null) {
+    return getMeta2StacksSwapFeeInfo(ctx, route)
+  } else {
+    return getMeta2StacksBaseFeeInfo(ctx, route)
+  }
+}
+
+export const getMeta2StacksBaseFeeInfo = async (
   ctx: SDKGlobalContext,
   route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
 ): Promise<undefined | TransferProphet> => {
@@ -64,6 +86,48 @@ export const getMeta2StacksFeeInfo = async (
             amount: filteredRoute.pegInFeeBitcoinAmount,
           },
     ].filter(isNotNull),
+    minBridgeAmount: BigNumber.ZERO,
+    maxBridgeAmount: null,
+  }
+}
+
+export const getMeta2StacksSwapFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  const stacksSwapContractCallInfo = getStacksContractCallInfo(
+    route.toChain,
+    StacksContractName.MetaPegInEndpointSwap,
+  )
+  if (stacksSwapContractCallInfo == null) {
+    return
+  }
+
+  const resp = await props({
+    isPaused: executeReadonlyCallXLINK(
+      stacksSwapContractCallInfo.contractName,
+      "is-paused",
+      {},
+      stacksSwapContractCallInfo.executeOptions,
+    ),
+    fixedBtcFee: executeReadonlyCallXLINK(
+      stacksSwapContractCallInfo.contractName,
+      "get-peg-in-fee",
+      {},
+      stacksSwapContractCallInfo.executeOptions,
+    ).then(numberFromStacksContractNumber),
+  })
+
+  return {
+    isPaused: resp.isPaused,
+    bridgeToken: route.fromToken,
+    fees: [
+      {
+        type: "fixed" as const,
+        token: KnownTokenId.Bitcoin.BTC,
+        amount: resp.fixedBtcFee,
+      },
+    ],
     minBridgeAmount: BigNumber.ZERO,
     maxBridgeAmount: null,
   }
