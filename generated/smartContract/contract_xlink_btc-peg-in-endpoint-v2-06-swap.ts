@@ -14,8 +14,8 @@ stringAsciiT,
 noneT
 } from "../smartContractHelpers/codegenImport"
 
-export const btcPegInEndpointV205Swap = defineContract({
-"btc-peg-in-endpoint-v2-05-swap": {
+export const btcPegInEndpointV206Swap = defineContract({
+"btc-peg-in-endpoint-v2-06-swap": {
   callback: {
     input: [
       { name: 'sender', type: principalT },
@@ -48,6 +48,16 @@ export const btcPegInEndpointV205Swap = defineContract({
   },
   'pause-peg-in': {
     input: [ { name: 'paused', type: booleanT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-btc-peg-out-fee': {
+    input: [ { name: 'fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-btc-peg-out-min-fee': {
+    input: [ { name: 'fee', type: uintT } ],
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
@@ -155,6 +165,8 @@ export const btcPegInEndpointV205Swap = defineContract({
     }, ), ),
     mode: 'readonly'
   },
+  'get-btc-peg-out-fee': { input: [], output: uintT, mode: 'readonly' },
+  'get-btc-peg-out-min-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
   'get-peg-in-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-peg-in-min-fee': { input: [], output: uintT, mode: 'readonly' },
@@ -219,6 +231,8 @@ export const btcPegInEndpointV205Swap = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'readonly'
   },
+  'btc-peg-out-min-fee': { input: noneT, output: uintT, mode: 'variable' },
+  'btc-peg-outfee': { input: noneT, output: uintT, mode: 'variable' },
   'fee-to-address': { input: noneT, output: principalT, mode: 'variable' },
   'peg-in-fee': { input: noneT, output: uintT, mode: 'variable' },
   'peg-in-min-fee': { input: noneT, output: uintT, mode: 'variable' },

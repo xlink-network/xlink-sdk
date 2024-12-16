@@ -3,6 +3,7 @@ import { hasLength } from "../utils/arrayHelpers"
 import { SwapRoute } from "../utils/SwapRouteHelpers"
 import { KnownChainId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
+import { StacksContractName } from "./stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
@@ -19,13 +20,13 @@ export async function validateBridgeOrder(info: {
     info.chainId === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint-v2-05",
+    StacksContractName.BTCPegInEndpoint,
   )
   const contractSwapCallInfo = getStacksContractCallInfo(
     info.chainId === KnownChainId.Bitcoin.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    "btc-peg-in-endpoint-v2-05-swap",
+    StacksContractName.BTCPegInEndpointSwap,
   )
   if (contractBaseCallInfo == null || contractSwapCallInfo == null) {
     throw new Error(

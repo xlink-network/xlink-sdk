@@ -123,7 +123,9 @@ async function bridgeInfoFromBitcoin_toStacks(
   > &
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeInfoFromBitcoinOutput> {
-  const step1 = await getBtc2StacksFeeInfo(info)
+  const step1 = await getBtc2StacksFeeInfo(info, {
+    swapRoute: info.swapRoute ?? null,
+  })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -165,8 +167,20 @@ async function bridgeInfoFromBitcoin_toEVM(
     toToken: info.toToken,
   }
 
+  // TODO: add support for Bitcoin -> EVM with swap
+  if (info.swapRoute != null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
   const [step1, step2] = await Promise.all([
-    getBtc2StacksFeeInfo(step1Route),
+    getBtc2StacksFeeInfo(step1Route, {
+      swapRoute: info.swapRoute ?? null,
+    }),
     getStacks2EvmFeeInfo(ctx, step2Route),
   ])
   if (step1 == null || step2 == null) {
@@ -233,7 +247,9 @@ async function bridgeInfoFromBitcoin_toMeta(
   }
 
   const [step1, step2] = await Promise.all([
-    getBtc2StacksFeeInfo(step1Route),
+    getBtc2StacksFeeInfo(step1Route, {
+      swapRoute: info.swapRoute ?? null,
+    }),
     getStacks2MetaFeeInfo(ctx, step2Route),
   ])
   if (step1 == null || step2 == null) {
