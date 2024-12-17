@@ -1,4 +1,4 @@
-import { toCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
+import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
@@ -9,8 +9,8 @@ import {
 import { BigNumber } from "../utils/BigNumber"
 import { SwapRoute } from "../utils/SwapRouteHelpers"
 import {
-  _KnownRoute_FromBRC20_ToStacks,
-  _KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromBRC20_ToStacks,
+  KnownRoute_FromRunes_ToStacks,
   IsSupportedFn,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToRunes,
@@ -32,23 +32,58 @@ import {
   RunesSupportedRoute,
 } from "./xlinkContractHelpers"
 
+export async function metaTokenFromCorrespondingStacksToken(
+  ctx: SDKGlobalContext,
+  chain: KnownChainId.BRC20Chain | KnownChainId.RunesChain,
+  stacksToken: KnownTokenId.StacksToken,
+): Promise<undefined | KnownTokenId.BRC20Token | KnownTokenId.RunesToken> {
+  if (KnownChainId.isBRC20Chain(chain)) {
+    const routes = await getBRC20SupportedRoutes(ctx, chain)
+    return routes.find(r => r.stacksToken === stacksToken)?.brc20Token
+  } else if (KnownChainId.isRunesChain(chain)) {
+    const routes = await getRunesSupportedRoutes(ctx, chain)
+    return routes.find(r => r.stacksToken === stacksToken)?.runesToken
+  } else {
+    checkNever(chain)
+    return
+  }
+}
+
+export async function metaTokenToCorrespondingStacksToken(
+  ctx: SDKGlobalContext,
+  route:
+    | { chain: KnownChainId.BRC20Chain; token: KnownTokenId.BRC20Token }
+    | { chain: KnownChainId.RunesChain; token: KnownTokenId.RunesToken },
+): Promise<undefined | KnownTokenId.StacksToken> {
+  if (KnownChainId.isBRC20Chain(route.chain)) {
+    const routes = await getBRC20SupportedRoutes(ctx, route.chain)
+    return routes.find(r => r.brc20Token === route.token)?.stacksToken
+  } else if (KnownChainId.isRunesChain(route.chain)) {
+    const routes = await getRunesSupportedRoutes(ctx, route.chain)
+    return routes.find(r => r.runesToken === route.token)?.stacksToken
+  } else {
+    checkNever(route.chain)
+    return
+  }
+}
+
 export const getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
-  route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
+  route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
     swapRoute: null | SwapRoute
   },
 ): Promise<undefined | TransferProphet> => {
   if (options.swapRoute != null) {
-    return getMeta2StacksSwapFeeInfo(ctx, route)
+    return getMeta2StacksSwapFeeInfo(route)
   } else {
     return getMeta2StacksBaseFeeInfo(ctx, route)
   }
 }
 
-export const getMeta2StacksBaseFeeInfo = async (
+const getMeta2StacksBaseFeeInfo = async (
   ctx: SDKGlobalContext,
-  route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
+  route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
 ): Promise<undefined | TransferProphet> => {
   const filteredRoutes = KnownChainId.isBRC20Chain(route.fromChain)
     ? await getBRC20SupportedRoutes(ctx, route.fromChain).then(routes =>
@@ -91,12 +126,11 @@ export const getMeta2StacksBaseFeeInfo = async (
   }
 }
 
-export const getMeta2StacksSwapFeeInfo = async (
-  ctx: SDKGlobalContext,
-  route: _KnownRoute_FromBRC20_ToStacks | _KnownRoute_FromRunes_ToStacks,
+const getMeta2StacksSwapFeeInfo = async (
+  route1: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
 ): Promise<undefined | TransferProphet> => {
   const stacksSwapContractCallInfo = getStacksContractCallInfo(
-    route.toChain,
+    route1.toChain,
     StacksContractName.MetaPegInEndpointSwap,
   )
   if (stacksSwapContractCallInfo == null) {
@@ -120,7 +154,7 @@ export const getMeta2StacksSwapFeeInfo = async (
 
   return {
     isPaused: resp.isPaused,
-    bridgeToken: route.fromToken,
+    bridgeToken: route1.fromToken,
     fees: [
       {
         type: "fixed" as const,
@@ -241,7 +275,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
     const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
     if (info == null) return false
 
-    const transitStacksToken = await toCorrespondingStacksToken(toToken)
+    const transitStacksToken = await evmTokenToCorrespondingStacksToken(toToken)
     if (transitStacksToken == null) return false
 
     if (KnownChainId.isRunesChain(fromChain)) {

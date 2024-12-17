@@ -14,8 +14,8 @@ principalT,
 noneT
 } from "../smartContractHelpers/codegenImport"
 
-export const metaPegInEndpointV205Swap = defineContract({
-"meta-peg-in-endpoint-v2-05-swap": {
+export const metaPegInEndpointV206Swap = defineContract({
+"meta-peg-in-endpoint-v2-06-swap": {
   'finalize-peg-in-cross-swap': {
     input: [
       {
