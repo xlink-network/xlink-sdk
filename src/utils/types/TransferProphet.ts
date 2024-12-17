@@ -5,7 +5,7 @@ import {
 } from "../../xlinkSdkUtils/types"
 import { BigNumber } from "../BigNumber"
 import { first, last } from "../arrayHelpers"
-import { KnownRoute } from "../buildSupportedRoutes"
+import { KnownRoute_WithMetaProtocol } from "../buildSupportedRoutes"
 import {
   applyTransferProphet,
   applyTransferProphets,
@@ -98,7 +98,7 @@ export function transformFromPublicTransferProphet(
   }
 }
 export function transformToPublicTransferProphet(
-  route: KnownRoute,
+  route: KnownRoute_WithMetaProtocol,
   fromAmount: SDKNumber | BigNumber,
   transferProphet: TransferProphet,
 ): PublicTransferProphet {
@@ -156,7 +156,7 @@ export function transformToPublicTransferProphet(
  * )
  */
 export const transformToPublicTransferProphetAggregated2 = (
-  routes: [KnownRoute, KnownRoute],
+  routes: [KnownRoute_WithMetaProtocol, KnownRoute_WithMetaProtocol],
   transferProphets: [TransferProphet, TransferProphet],
   fromAmount: BigNumber,
   exchangeRate: BigNumber,

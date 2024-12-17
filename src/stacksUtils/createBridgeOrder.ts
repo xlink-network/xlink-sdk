@@ -1,5 +1,5 @@
 import { unwrapResponse } from "clarity-codegen"
-import { toCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
+import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import {
   getBRC20SupportedRoutes,
   getRunesSupportedRoutes,
@@ -156,7 +156,9 @@ export async function createBridgeOrder_BitcoinToEVM(
 
   const targetChainId = contractAssignedChainIdFromKnownChain(info.toChain)
 
-  const swappedStacksToken = await toCorrespondingStacksToken(info.toToken)
+  const swappedStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.toToken,
+  )
   if (swappedStacksToken == null) return undefined
   const swappedStacksTokenAddress = await getStacksTokenContractInfo(
     sdkContext,

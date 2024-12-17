@@ -3,7 +3,7 @@ import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
-  getFinalStepStacksTokenAddress,
+  getTransitStacksChainTransitStepInfos,
   SwapRoute_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
 import {
@@ -213,23 +213,8 @@ async function bridgeInfoFromBitcoin_toMeta(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const step1ToStacksToken = KnownTokenId.Stacks.aBTC
-
-  const step2FromStacksToken =
-    info.swapRoute == null
-      ? KnownTokenId.Stacks.aBTC
-      : await getFinalStepStacksTokenAddress(ctx, {
-          swap: info.swapRoute,
-          stacksChain: transitStacksChain,
-        })
-  if (step2FromStacksToken == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
+  const { step1ToStacksToken, step2FromStacksToken } =
+    await getTransitStacksChainTransitStepInfos(ctx, info)
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,

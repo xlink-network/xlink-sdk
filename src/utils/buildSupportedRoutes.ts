@@ -109,23 +109,97 @@ export type KnownRoute_FromEVM =
   | KnownRoute_FromEVM_ToRunes
   | KnownRoute_FromEVM_ToEVM
 
-export type _KnownRoute_FromBRC20_ToStacks = {
+export type KnownRoute_FromBRC20_ToStacks = {
   fromChain: KnownChainId.BRC20Chain
   fromToken: KnownTokenId.BRC20Token
   toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
 }
-export type _KnownRoute_FromRunes_ToStacks = {
+export type KnownRoute_FromBRC20_ToEVM = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.EVMChain
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromBRC20_ToBitcoin = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.BitcoinChain
+  toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromBRC20_ToBRC20 = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromBRC20_ToRunes = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
+}
+export type _KnownRoute_FromBRC20 =
+  | KnownRoute_FromBRC20_ToStacks
+  | KnownRoute_FromBRC20_ToEVM
+  | KnownRoute_FromBRC20_ToBitcoin
+  | KnownRoute_FromBRC20_ToBRC20
+  | KnownRoute_FromBRC20_ToRunes
+
+export type KnownRoute_FromRunes_ToStacks = {
   fromChain: KnownChainId.RunesChain
   fromToken: KnownTokenId.RunesToken
   toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
 }
+export type KnownRoute_FromRunes_ToEVM = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.EVMChain
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromRunes_ToBitcoin = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.BitcoinChain
+  toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromRunes_ToBRC20 = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromRunes_ToRunes = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
+}
+export type _KnownRoute_FromRunes =
+  | KnownRoute_FromRunes_ToStacks
+  | KnownRoute_FromRunes_ToEVM
+  | KnownRoute_FromRunes_ToBitcoin
+  | KnownRoute_FromRunes_ToBRC20
+  | KnownRoute_FromRunes_ToRunes
 
 export type KnownRoute =
   | KnownRoute_FromStacks
   | KnownRoute_FromBitcoin
   | KnownRoute_FromEVM
+
+export type KnownRoute_WithMetaProtocol =
+  | KnownRoute_FromStacks
+  | KnownRoute_FromEVM
+  | KnownRoute_FromBitcoin
+  | _KnownRoute_FromBRC20
+  | _KnownRoute_FromRunes
+
+export type KnownRoute_ToStacks =
+  | KnownRoute_FromBitcoin_ToStacks
+  | KnownRoute_FromEVM_ToStacks
+  | KnownRoute_FromBRC20_ToStacks
+  | KnownRoute_FromRunes_ToStacks
 
 export function defineRoute(
   chainPairs: [fromChains: ChainId[], toChains: ChainId[]],

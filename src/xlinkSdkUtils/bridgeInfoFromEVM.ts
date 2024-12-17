@@ -2,7 +2,7 @@ import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import {
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
-  toCorrespondingStacksToken,
+  evmTokenToCorrespondingStacksToken,
 } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import { BigNumber } from "../utils/BigNumber"
@@ -163,7 +163,9 @@ async function bridgeInfoFromEVM_toBitcoin(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.fromToken,
+  )
   if (transitStacksToken == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -188,7 +190,9 @@ async function bridgeInfoFromEVM_toBitcoin(
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2BtcFeeInfo(step2Route),
+    getStacks2BtcFeeInfo(step2Route, {
+      swappedFromRoute: step1Route,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
@@ -218,7 +222,9 @@ async function bridgeInfoFromEVM_toEVM(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.fromToken,
+  )
   if (transitStacksToken == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -273,7 +279,9 @@ async function bridgeInfoFromEVM_toMeta(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await toCorrespondingStacksToken(info.fromToken)
+  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    info.fromToken,
+  )
   if (transitStacksToken == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
