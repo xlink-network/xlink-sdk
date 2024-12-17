@@ -14,8 +14,8 @@ stringAsciiT,
 noneT
 } from "../smartContractHelpers/codegenImport"
 
-export const btcPegInEndpointV206Swap = defineContract({
-"btc-peg-in-endpoint-v2-06-swap": {
+export const btcPegInEndpointV207Swap = defineContract({
+"btc-peg-in-endpoint-v2-07-swap": {
   callback: {
     input: [
       { name: 'sender', type: principalT },

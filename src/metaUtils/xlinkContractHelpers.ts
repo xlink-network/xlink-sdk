@@ -119,7 +119,6 @@ export interface RunesSupportedRoute {
   pegOutFeeRate: BigNumber
   pegOutFeeBitcoinAmount: null | BigNumber
 }
-
 export async function getRunesSupportedRoutes(
   sdkContext: SDKGlobalContext,
   chainId: KnownChainId.RunesChain,

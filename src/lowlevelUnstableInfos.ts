@@ -4,9 +4,13 @@
  */
 
 import {
-  fromCorrespondingStacksToken,
-  toCorrespondingStacksToken,
+  evmTokenFromCorrespondingStacksToken,
+  evmTokenToCorrespondingStacksToken,
 } from "./evmUtils/peggingHelpers"
+import {
+  metaTokenFromCorrespondingStacksToken,
+  metaTokenToCorrespondingStacksToken,
+} from "./metaUtils/peggingHelpers"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
 
@@ -20,12 +24,12 @@ export {
   getTerminatingStacksTokenContractAddress,
 } from "./stacksUtils/stxContractAddresses"
 
-export {
-  fromCorrespondingStacksToken as evmTokensFromCorrespondingStacksToken,
-  toCorrespondingStacksToken as evmTokenToCorrespondingStacksToken,
-} from "./evmUtils/peggingHelpers"
-
 export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
+export {
+  bridgeInfoFromMeta,
+  BridgeInfoFromMetaInput,
+  BridgeInfoFromMetaOutput,
+} from "./xlinkSdkUtils/bridgeInfoFromMeta"
 
 export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
 
@@ -43,7 +47,7 @@ export const evmTokensFromStacksToken = async (options: {
 }): Promise<{
   evmTokens: KnownTokenId.EVMToken[]
 }> => {
-  const evmTokens = await fromCorrespondingStacksToken(
+  const evmTokens = await evmTokenFromCorrespondingStacksToken(
     options.toEVMChain,
     options.fromStacksToken,
   )
@@ -55,6 +59,44 @@ export const evmTokenToStacksToken = async (options: {
 }): Promise<{
   stacksTokens: KnownTokenId.StacksToken[]
 }> => {
-  const stacksTokens = await toCorrespondingStacksToken(options.fromEVMToken)
+  const stacksTokens = await evmTokenToCorrespondingStacksToken(
+    options.fromEVMToken,
+  )
+  return { stacksTokens: stacksTokens == null ? [] : [stacksTokens] }
+}
+
+export const metaTokensFromStacksToken = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  options: {
+    fromStacksToken: KnownTokenId.StacksToken
+    toChain: KnownChainId.BRC20Chain | KnownChainId.RunesChain
+  },
+): Promise<{
+  tokens: (KnownTokenId.BRC20Token | KnownTokenId.RunesToken)[]
+}> => {
+  const metaTokens = await metaTokenFromCorrespondingStacksToken(
+    getXLinkSDKContext(sdk),
+    options.toChain,
+    options.fromStacksToken,
+  )
+  return { tokens: metaTokens == null ? [] : [metaTokens as any] }
+}
+export const metaTokenToStacksToken = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  options: {
+    fromChain: KnownChainId.BRC20Chain | KnownChainId.RunesChain
+    fromToken: KnownTokenId.BRC20Token | KnownTokenId.RunesToken
+    toStacksChain: KnownChainId.StacksChain
+  },
+): Promise<{
+  stacksTokens: KnownTokenId.StacksToken[]
+}> => {
+  const stacksTokens = await metaTokenToCorrespondingStacksToken(
+    getXLinkSDKContext(sdk),
+    {
+      chain: options.fromChain as any,
+      token: options.fromToken as any,
+    },
+  )
   return { stacksTokens: stacksTokens == null ? [] : [stacksTokens] }
 }

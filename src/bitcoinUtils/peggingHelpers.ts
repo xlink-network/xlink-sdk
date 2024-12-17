@@ -1,4 +1,4 @@
-import { fromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
+import { evmTokenFromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import {
   getBRC20SupportedRoutes,
@@ -18,13 +18,14 @@ import {
   IsSupportedFn,
   KnownRoute_FromBitcoin_ToStacks,
   KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
 import {
   getFinalStepStacksTokenAddress,
   SwapRoute,
 } from "../utils/SwapRouteHelpers"
-import { checkNever } from "../utils/typeHelpers"
+import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
@@ -100,32 +101,103 @@ export const getBtc2StacksFeeInfo = async (
 
 export const getStacks2BtcFeeInfo = async (
   route: KnownRoute_FromStacks_ToBitcoin,
+  options: {
+    swappedFromRoute: null | KnownRoute_ToStacks
+  },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
     StacksContractName.BTCPegOutEndpoint,
   )
-  if (stacksContractCallInfo == null) return
+  const btcPegInSwapContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    StacksContractName.BTCPegInEndpointSwap,
+  )
+  const metaPegInSwapContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    StacksContractName.MetaPegInEndpointSwap,
+  )
+  if (
+    stacksContractCallInfo == null ||
+    btcPegInSwapContractCallInfo == null ||
+    metaPegInSwapContractCallInfo == null
+  ) {
+    return
+  }
+
+  let feeInfo:
+    | undefined
+    | {
+        feeRate: Promise<BigNumber>
+        minFeeAmount: Promise<BigNumber>
+      }
+  if (options.swappedFromRoute != null) {
+    if (KnownChainId.isBitcoinChain(options.swappedFromRoute.fromChain)) {
+      feeInfo = {
+        feeRate: executeReadonlyCallXLINK(
+          btcPegInSwapContractCallInfo.contractName,
+          "get-btc-peg-out-fee",
+          {},
+          btcPegInSwapContractCallInfo.executeOptions,
+        ).then(numberFromStacksContractNumber),
+        minFeeAmount: executeReadonlyCallXLINK(
+          btcPegInSwapContractCallInfo.contractName,
+          "get-btc-peg-out-min-fee",
+          {},
+          btcPegInSwapContractCallInfo.executeOptions,
+        ).then(numberFromStacksContractNumber),
+      }
+    } else if (
+      KnownChainId.isBRC20Chain(options.swappedFromRoute.fromChain) ||
+      KnownChainId.isRunesChain(options.swappedFromRoute.fromChain)
+    ) {
+      feeInfo = {
+        feeRate: executeReadonlyCallXLINK(
+          metaPegInSwapContractCallInfo.contractName,
+          "get-btc-peg-out-fee",
+          {},
+          metaPegInSwapContractCallInfo.executeOptions,
+        ).then(numberFromStacksContractNumber),
+        minFeeAmount: executeReadonlyCallXLINK(
+          metaPegInSwapContractCallInfo.contractName,
+          "get-btc-peg-out-min-fee",
+          {},
+          metaPegInSwapContractCallInfo.executeOptions,
+        ).then(numberFromStacksContractNumber),
+      }
+    } else {
+      assertExclude(
+        options.swappedFromRoute.fromChain,
+        assertExclude.i<KnownChainId.EVMChain>(),
+      )
+      checkNever(options.swappedFromRoute)
+    }
+  }
+  if (feeInfo == null) {
+    feeInfo = {
+      feeRate: executeReadonlyCallXLINK(
+        stacksContractCallInfo.contractName,
+        "get-peg-out-fee",
+        {},
+        stacksContractCallInfo.executeOptions,
+      ).then(numberFromStacksContractNumber),
+      minFeeAmount: executeReadonlyCallXLINK(
+        stacksContractCallInfo.contractName,
+        "get-peg-out-min-fee",
+        {},
+        stacksContractCallInfo.executeOptions,
+      ).then(numberFromStacksContractNumber),
+    }
+  }
 
   const resp = await props({
+    ...feeInfo,
     isPaused: executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "is-peg-out-paused",
       {},
       stacksContractCallInfo.executeOptions,
     ),
-    feeRate: executeReadonlyCallXLINK(
-      stacksContractCallInfo.contractName,
-      "get-peg-out-fee",
-      {},
-      stacksContractCallInfo.executeOptions,
-    ).then(numberFromStacksContractNumber),
-    minFeeAmount: executeReadonlyCallXLINK(
-      stacksContractCallInfo.contractName,
-      "get-peg-out-min-fee",
-      {},
-      stacksContractCallInfo.executeOptions,
-    ).then(numberFromStacksContractNumber),
   })
 
   return {
@@ -209,9 +281,10 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
 
     if (finalStepStacksToken == null) return false
 
-    return fromCorrespondingStacksToken(toChain, finalStepStacksToken).then(
-      toEVMTokens => toEVMTokens.includes(toToken),
-    )
+    return evmTokenFromCorrespondingStacksToken(
+      toChain,
+      finalStepStacksToken,
+    ).then(toEVMTokens => toEVMTokens.includes(toToken))
   }
 
   if (KnownChainId.isRunesChain(toChain)) {

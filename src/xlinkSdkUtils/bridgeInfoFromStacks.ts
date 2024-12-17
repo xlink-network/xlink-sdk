@@ -113,7 +113,9 @@ async function bridgeInfoFromStacks_toBitcoin(
   > &
     KnownRoute_FromStacks_ToBitcoin,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const step1 = await getStacks2BtcFeeInfo(info)
+  const step1 = await getStacks2BtcFeeInfo(info, {
+    swappedFromRoute: null,
+  })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
