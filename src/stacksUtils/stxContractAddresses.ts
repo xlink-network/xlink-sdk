@@ -54,81 +54,81 @@ export const stxContractAddresses = {
   [StacksContractName.BTCPegInEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "btc-peg-in-endpoint-v2-05",
+      contractName: StacksContractName.BTCPegInEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "btc-peg-in-endpoint-v2-05",
+      contractName: StacksContractName.BTCPegInEndpoint,
     }),
   },
   [StacksContractName.BTCPegInEndpointSwap]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "btc-peg-in-endpoint-v2-06-swap",
+      contractName: StacksContractName.BTCPegInEndpointSwap,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "btc-peg-in-endpoint-v2-06-swap",
+      contractName: StacksContractName.BTCPegInEndpointSwap,
     }),
   },
   [StacksContractName.BTCPegOutEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsDeployerMainnet,
-      contractName: "btc-peg-out-endpoint-v2-01",
+      contractName: StacksContractName.BTCPegOutEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "btc-peg-out-endpoint-v2-01",
+      contractName: StacksContractName.BTCPegOutEndpoint,
     }),
   },
   [StacksContractName.EVMPegInEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "cross-peg-in-endpoint-v2-04",
+      contractName: StacksContractName.EVMPegInEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "cross-peg-in-endpoint-v2-04",
+      contractName: StacksContractName.EVMPegInEndpoint,
     }),
   },
   [StacksContractName.EVMPegOutEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsDeployerMainnet,
-      contractName: "cross-peg-out-endpoint-v2-01",
+      contractName: StacksContractName.EVMPegOutEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "cross-peg-out-endpoint-v2-01",
+      contractName: StacksContractName.EVMPegOutEndpoint,
     }),
   },
   [StacksContractName.MetaPegInEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "meta-peg-in-endpoint-v2-04",
+      contractName: StacksContractName.MetaPegInEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "meta-peg-in-endpoint-v2-04",
+      contractName: StacksContractName.MetaPegInEndpoint,
     }),
   },
   [StacksContractName.MetaPegInEndpointSwap]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "meta-peg-in-endpoint-v2-05-swap",
+      contractName: StacksContractName.MetaPegInEndpointSwap,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "meta-peg-in-endpoint-v2-05-swap",
+      contractName: StacksContractName.MetaPegInEndpointSwap,
     }),
   },
   [StacksContractName.MetaPegOutEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "meta-peg-out-endpoint-v2-04",
+      contractName: StacksContractName.MetaPegOutEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress({
       deployerAddress: xlinkContractsMultisigTestnet,
-      contractName: "meta-peg-out-endpoint-v2-04",
+      contractName: StacksContractName.MetaPegOutEndpoint,
     }),
   },
 } satisfies Record<
