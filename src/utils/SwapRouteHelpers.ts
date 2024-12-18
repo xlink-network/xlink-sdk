@@ -130,11 +130,11 @@ export async function getTransitStacksChainTransitStepInfos(
       | Promise<undefined | KnownTokenId.StacksToken>
 
     if (KnownChainId.isBitcoinChain(chain)) {
-      if (info.fromToken === KnownTokenId.Bitcoin.BTC) {
+      if (token === KnownTokenId.Bitcoin.BTC) {
         toStacksTokenPromise = Promise.resolve(KnownTokenId.Stacks.aBTC)
       }
     } else if (KnownChainId.isBRC20Chain(chain)) {
-      if (KnownTokenId.isBRC20Token(info.fromToken)) {
+      if (KnownTokenId.isBRC20Token(token)) {
         toStacksTokenPromise = metaTokenToCorrespondingStacksToken(ctx, {
           chain: chain as KnownChainId.BRC20Chain,
           token: token as KnownTokenId.BRC20Token,
