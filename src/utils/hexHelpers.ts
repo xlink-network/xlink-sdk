@@ -49,8 +49,7 @@ export function encodeHex(value: Uint8Array): string {
   for (let i = 0; i < value.length; i++) {
     string += hexes[value[i]]
   }
-  const hex = `0x${string}` as const
-  return hex
+  return string
 }
 const hexes = Array.from({ length: 256 }, (_v, i) =>
   i.toString(16).padStart(2, "0"),
