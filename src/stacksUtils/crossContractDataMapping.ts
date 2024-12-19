@@ -30,7 +30,7 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.Bsquared:
       return 4n
     case KnownChainId.EVM.BOB:
-    case KnownChainId.EVM.BisonTestnet:
+    case KnownChainId.EVM.BlifeTestnet:
       return 5n
     case KnownChainId.EVM.Bitlayer:
     case KnownChainId.EVM.BitboyTestnet:
@@ -104,10 +104,10 @@ export function contractAssignedChainIdToKnownChain(
   // assertExclude(resPossibilities, KnownChainId.EVM.BsquaredTestnet)
 
   if (chainId === 5n) {
-    return [KnownChainId.EVM.BOB, KnownChainId.EVM.BisonTestnet]
+    return [KnownChainId.EVM.BOB, KnownChainId.EVM.BlifeTestnet]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.BOB)
-  assertExclude(resPossibilities, KnownChainId.EVM.BisonTestnet)
+  assertExclude(resPossibilities, KnownChainId.EVM.BlifeTestnet)
 
   if (chainId === 6n) {
     return [KnownChainId.EVM.Bitlayer, KnownChainId.EVM.BitboyTestnet]

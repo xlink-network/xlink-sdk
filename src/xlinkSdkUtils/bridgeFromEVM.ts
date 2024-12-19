@@ -1,6 +1,8 @@
-import { encodeFunctionData, toHex } from "viem"
+import { encodeFunctionData, Hex, toHex } from "viem"
 import { estimateGas } from "viem/actions"
+import { nativeCurrencyAddress } from "../evmUtils/addressHelpers"
 import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
+import { NativeBridgeEndpointAbi } from "../evmUtils/contractAbi/nativeBridgeEndpoint"
 import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
 import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
 import {
@@ -27,7 +29,7 @@ import {
   InvalidMethodParametersError,
   UnsupportedBridgeRouteError,
 } from "../utils/errors"
-import { decodeHex } from "../utils/hexHelpers"
+import { decodeHex, encodeZeroPrefixedHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   _allKnownEVMMainnetChains,
@@ -233,6 +235,7 @@ export type BridgeFromEVMInput = {
     to: EVMAddress
     data: Uint8Array
     recommendedGasLimit: SDKNumber
+    value?: SDKNumber
   }) => Promise<{
     txHash: string
   }>
@@ -353,7 +356,8 @@ async function bridgeFromEVM_toStacks(
   if (
     bridgeEndpointAddress == null ||
     fromTokenContractInfo == null ||
-    toTokenContractInfo == null
+    toTokenContractInfo == null ||
+    fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress
   ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -368,6 +372,7 @@ async function bridgeFromEVM_toStacks(
     functionName: "transferToStacks",
     args: [info.toAddress],
   })
+
   const functionData = await encodeFunctionData({
     abi: BridgeEndpointAbi,
     functionName: "sendMessageWithToken",
@@ -447,15 +452,42 @@ async function bridgeFromEVM_toBitcoin(
     functionName: "transferToBTC",
     args: [toAddressHex],
   })
-  const functionData = await encodeFunctionData({
-    abi: BridgeEndpointAbi,
-    functionName: "sendMessageWithToken",
-    args: [
-      fromTokenContractInfo.tokenContractAddress,
-      numberToSolidityContractNumber(info.amount),
-      message,
-    ],
-  })
+  let functionData: Hex
+  let value: undefined | SDKNumber
+  if (fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress) {
+    functionData = await encodeFunctionData({
+      abi: NativeBridgeEndpointAbi,
+      functionName: "withdraw",
+      args: [
+        encodeZeroPrefixedHex(addressToBuffer(info.toChain, info.toAddress)),
+      ],
+    })
+
+    const nativeCurrencyDecimals =
+      fromTokenContractInfo.client.chain?.nativeCurrency.decimals
+    if (nativeCurrencyDecimals == null) {
+      throw new UnsupportedBridgeRouteError(
+        info.fromChain,
+        info.toChain,
+        info.fromToken,
+        info.toToken,
+      )
+    }
+
+    value = toSDKNumberOrUndefined(
+      BigNumber.rightMoveDecimals(nativeCurrencyDecimals, info.amount),
+    )
+  } else {
+    functionData = await encodeFunctionData({
+      abi: BridgeEndpointAbi,
+      functionName: "sendMessageWithToken",
+      args: [
+        fromTokenContractInfo.tokenContractAddress,
+        numberToSolidityContractNumber(info.amount),
+        message,
+      ],
+    })
+  }
 
   const fallbackGasLimit = 200_000
   const estimated = await estimateGas(fromTokenContractInfo.client, {
@@ -478,6 +510,7 @@ async function bridgeFromEVM_toBitcoin(
     from: info.fromAddress,
     to: bridgeEndpointAddress,
     data: decodeHex(functionData),
+    value,
     recommendedGasLimit: toSDKNumberOrUndefined(estimated),
   })
 }
@@ -505,7 +538,8 @@ async function bridgeFromEVM_toEVM(
   if (
     bridgeEndpointAddress == null ||
     fromTokenContractInfo == null ||
-    toTokenContractInfo == null
+    toTokenContractInfo == null ||
+    fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress
   ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -574,7 +608,11 @@ async function bridgeFromEVM_toMeta(
     info.fromChain,
     info.fromToken,
   )
-  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
+  if (
+    bridgeEndpointAddress == null ||
+    fromTokenContractInfo == null ||
+    fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress
+  ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -674,7 +712,11 @@ export async function bridgeFromEVM_toLaunchpad(
     info.fromChain,
     info.fromToken,
   )
-  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
+  if (
+    bridgeEndpointAddress == null ||
+    fromTokenContractInfo == null ||
+    fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress
+  ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.receiverChain,

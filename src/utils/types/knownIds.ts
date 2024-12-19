@@ -265,10 +265,10 @@ export namespace KnownChainId {
     export const Aurora = chainId("evm-aurora")
     // export const AuroraTestnet = chainId("evm-aurora-testnet")
 
-    // Bison
-    /** Represents the Bison mainnet chain ID. */
-    // export const Bison = chainId("evm-bison")
-    export const BisonTestnet = chainId("evm-bison-testnet")
+    // Blife
+    /** Represents the Blife mainnet chain ID. */
+    // export const Blife = chainId("evm-blife")
+    export const BlifeTestnet = chainId("evm-blife-testnet")
 
     // Bitboy
     /** Represents the Bitboy mainnet chain ID. */
@@ -356,7 +356,7 @@ export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
   KnownChainId.EVM.BSCTestnet,
   KnownChainId.EVM.CoreDAOTestnet,
-  KnownChainId.EVM.BisonTestnet,
+  KnownChainId.EVM.BlifeTestnet,
   KnownChainId.EVM.BitboyTestnet,
   KnownChainId.EVM.BeraTestnet,
 ] as const

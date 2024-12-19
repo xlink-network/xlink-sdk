@@ -18,6 +18,7 @@ import {
   ailayer,
   berachainTestnet,
   bitlayer,
+  blifeTestnet,
   bsquared,
   coreDaoTestnet,
   lorenzo,
@@ -26,10 +27,7 @@ import {
 import { EVMChain } from "./evmContractAddresses"
 
 export const defaultEvmClients: Record<
-  Exclude<
-    EVMChain,
-    typeof EVMChain.BitboyTestnet | typeof EVMChain.BisonTestnet
-  >,
+  Exclude<EVMChain, typeof EVMChain.BitboyTestnet>,
   Client
 > = {
   [EVMChain.Ethereum]: createClient({
@@ -143,9 +141,13 @@ export const defaultEvmClients: Record<
     batch: { multicall: true },
   }),
 
+  [EVMChain.BlifeTestnet]: createClient({
+    chain: blifeTestnet,
+    transport: http(),
+  }),
+
   [EVMChain.BeraTestnet]: createClient({
     chain: berachainTestnet,
     transport: http(),
-    batch: { multicall: true },
   }),
 }

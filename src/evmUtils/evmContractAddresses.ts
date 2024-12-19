@@ -1,5 +1,6 @@
 import { Address } from "viem"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
+import { nativeCurrencyAddress } from "./addressHelpers"
 
 export type EVMChain = KnownChainId.EVMChain
 export const EVMChain = KnownChainId.EVM
@@ -9,11 +10,13 @@ const EVMToken = KnownTokenId.EVM
 
 export type EVMEndpointContract =
   | typeof EVMEndpointContract.BridgeEndpoint
+  | typeof EVMEndpointContract.NativeBridgeEndpoint
   | typeof EVMEndpointContract.BridgeConfig
   | typeof EVMEndpointContract.TimeLock
   | typeof EVMEndpointContract.Registry
 export namespace EVMEndpointContract {
   export const BridgeEndpoint = "BridgeEndpoint"
+  export const NativeBridgeEndpoint = "NativeBridgeEndpoint"
   export const BridgeConfig = "BridgeConfig"
   export const TimeLock = "TimeLock"
   export const Registry = "Registry"
@@ -117,12 +120,10 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
     [EVMEndpointContract.BridgeConfig]:
       "0xdbe8BBA9C95140bc4F5e3480Fe6a958Cd1C7E6CC",
   },
-  [EVMChain.BisonTestnet]: {
+  [EVMChain.BlifeTestnet]: {
     [EVMEndpointContract.BridgeEndpoint]:
       "0xf9dFCEDf0D4eCe3c9F7CD2F3C0c70556EfAA1665",
-    [EVMToken.sUSDT]: "0x8EcfD0a81c2965d16b78e86b8E4Dc71D0109e0e1",
-    [EVMToken.aBTC]: "0xC64DC7855F0FC571578D6226C058798AE86DCb77",
-    [EVMToken.ALEX]: "0x6c74Bc8c54114b8Fed89686cC345eBCd838Fa0b9",
+    [EVMToken.WBTC]: nativeCurrencyAddress,
   },
   [EVMChain.BitboyTestnet]: {
     [EVMEndpointContract.BridgeEndpoint]:

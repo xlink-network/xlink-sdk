@@ -1,11 +1,16 @@
 import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
+import { nativeCurrencyAddress } from "./evmUtils/addressHelpers"
 import { defaultEvmClients } from "./evmUtils/evmClients"
 import {
   getEVMContractCallInfo,
   getEVMToken,
   getEVMTokenContractInfo,
 } from "./evmUtils/xlinkContractHelpers"
+import {
+  getBRC20SupportedRoutes,
+  getRunesSupportedRoutes,
+} from "./metaUtils/xlinkContractHelpers"
 import {
   getStacksToken,
   getStacksTokenContractInfo,
@@ -67,14 +72,12 @@ import {
 import {
   ChainId,
   EVMAddress,
+  EVMNativeCurrencyAddress,
   PublicEVMContractType,
   StacksContractAddress,
+  evmNativeCurrencyAddress,
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "./metaUtils/xlinkContractHelpers"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -304,10 +307,14 @@ export class XLinkSDK {
   async evmAddressFromEVMToken(
     chain: ChainId,
     token: KnownTokenId.EVMToken,
-  ): Promise<undefined | EVMAddress> {
+  ): Promise<undefined | EVMAddress | EVMNativeCurrencyAddress> {
     if (!KnownChainId.isEVMChain(chain)) return
     const info = await getEVMTokenContractInfo(this.sdkContext, chain, token)
-    return info?.tokenContractAddress
+    const addr = info?.tokenContractAddress
+    if (addr === nativeCurrencyAddress) {
+      return evmNativeCurrencyAddress
+    }
+    return addr
   }
 
   /**
@@ -320,9 +327,12 @@ export class XLinkSDK {
    */
   async evmAddressToEVMToken(
     chain: ChainId,
-    address: EVMAddress,
+    address: EVMAddress | EVMNativeCurrencyAddress,
   ): Promise<undefined | KnownTokenId.EVMToken> {
     if (!KnownChainId.isEVMChain(chain)) return
+    if (address === evmNativeCurrencyAddress) {
+      address = nativeCurrencyAddress
+    }
     return getEVMToken(this.sdkContext, chain, address)
   }
 

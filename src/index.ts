@@ -7,6 +7,8 @@ export {
   SDKNumberifyNestly,
   toSDKNumberOrUndefined,
   EVMAddress,
+  evmNativeCurrencyAddress,
+  EVMNativeCurrencyAddress,
   StacksContractAddress,
   PublicEVMContractType as EVMContractType,
 } from "./xlinkSdkUtils/types"
