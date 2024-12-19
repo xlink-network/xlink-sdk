@@ -31,6 +31,7 @@ import {
   KnownTokenId,
 } from "../utils/types/knownIds"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { nativeCurrencyAddress } from "./addressHelpers"
 import { BridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { BridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
@@ -59,6 +60,10 @@ export const getEvm2StacksFeeInfo = async (
     evmTokenContractCallInfo == null
   ) {
     return
+  }
+
+  if (evmTokenContractCallInfo.tokenContractAddress === nativeCurrencyAddress) {
+    return getEvm2StacksNativeBridgeFeeInfo(ctx, route)
   }
 
   const executeOptions = {
@@ -143,6 +148,49 @@ export const getEvm2StacksFeeInfo = async (
     ],
     minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
     maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
+  }
+}
+
+const getEvm2StacksNativeBridgeFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromEVM_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(
+    route.toChain,
+    "cross-peg-in-endpoint-v2-04",
+  )
+  const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
+  if (
+    stacksContractCallInfo == null ||
+    evmContractCallInfo?.nativeBridgeEndpointContractAddress == null
+  ) {
+    return
+  }
+
+  const executeOptions = {
+    deployerAddress: stacksContractCallInfo.deployerAddress,
+    callReadOnlyFunction: (callOptions =>
+      callReadOnlyFunction({
+        ...callOptions,
+        network: stacksContractCallInfo.network,
+      })) satisfies CallReadOnlyFunctionFn,
+  }
+
+  const resp = await props({
+    isPaused: executeReadonlyCallXLINK(
+      stacksContractCallInfo.contractName,
+      "get-paused",
+      {},
+      executeOptions,
+    ),
+  })
+
+  return {
+    isPaused: resp.isPaused,
+    bridgeToken: route.fromToken,
+    fees: [],
+    minBridgeAmount: null,
+    maxBridgeAmount: null,
   }
 }
 
@@ -367,8 +415,16 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   }
   if (!KnownChainId.isKnownChain(toChain)) return false
 
+  const fromContractInfo = await getEVMContractCallInfo(ctx, fromChain)
+  if (fromContractInfo == null) return false
+
   const fromTokenInfo = await getEVMTokenContractInfo(ctx, fromChain, fromToken)
   if (fromTokenInfo == null) return false
+
+  if (fromTokenInfo.tokenContractAddress === nativeCurrencyAddress) {
+    if (fromContractInfo.bridgeEndpointContractAddress == null) return false
+    if (!KnownChainId.isBitcoinChain(toChain)) return false
+  }
 
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
@@ -386,8 +442,8 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
-    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
-    if (info == null) return false
+    const toTokenInfo = await getEVMTokenContractInfo(ctx, toChain, toToken)
+    if (toTokenInfo == null) return false
 
     const transitStacksToken = await toCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false

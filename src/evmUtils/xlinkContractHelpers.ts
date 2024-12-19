@@ -43,6 +43,7 @@ export async function getEVMContractCallInfo(
   | {
       client: Client
       bridgeEndpointContractAddress: Address
+      nativeBridgeEndpointContractAddress?: Address
       registryContractAddress?: Address
       timeLockContractAddress?: Address
     }
@@ -55,6 +56,9 @@ export async function getEVMContractCallInfo(
     addresses.localAddresses[EVMEndpointContract.BridgeEndpoint]
   if (bridgeEndpointContractAddress == null) return
 
+  const nativeBridgeEndpointContractAddress =
+    addresses.onChainAddresses?.[EVMEndpointContract.NativeBridgeEndpoint] ??
+    addresses.localAddresses[EVMEndpointContract.NativeBridgeEndpoint]
   const registryContractAddress =
     addresses.onChainAddresses?.[EVMEndpointContract.Registry] ??
     addresses.localAddresses[EVMEndpointContract.Registry]
@@ -65,6 +69,7 @@ export async function getEVMContractCallInfo(
   return {
     client: addresses.client,
     bridgeEndpointContractAddress,
+    nativeBridgeEndpointContractAddress,
     registryContractAddress,
     timeLockContractAddress,
   }
@@ -206,6 +211,7 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_WUBTC,
         ONCHAIN_CONFIG_KEY.TOKEN_DB20,
         ONCHAIN_CONFIG_KEY.TOKEN_DOG,
+        ONCHAIN_CONFIG_KEY.ENDPOINT_NATIVE,
       ],
     ],
   }).catch(err => {
@@ -249,6 +255,7 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.wuBTC]: maybeAddress(configs[13]),
     [EVMToken.DB20]: maybeAddress(configs[14]),
     [EVMToken.DOG]: maybeAddress(configs[15]),
+    [EVMEndpointContract.NativeBridgeEndpoint]: maybeAddress(configs[16]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -282,6 +289,9 @@ enum ONCHAIN_CONFIG_KEY {
   MIGRATE_BOB = "MIGRATE_BOB",
   MIGRATE_BOB_L2 = "MIGRATE_BOB_L2",
   MIGRATE_BOB_L2_S = "MIGRATE_BOB_L2_S",
+
+  // https://github.com/xlink-network/xlink/blob/9e6e268d820f2f9756ca15a36f8580e4f98c087e/packages/contracts/bridge-solidity/scripts/params.ts
+  ENDPOINT_NATIVE = "ENDPOINT_NATIVE",
 
   // https://github.com/xlink-network/xlink/pull/299/commits/22b23c9ff3ea65eeb7c632db4255afe803f97fef#diff-8302902f9863ee3c7928a0fa6eb6ca22edd10f5553708459cdd072c1ea3ef696
   TOKEN_UBTC = "TOKEN_UBTC",

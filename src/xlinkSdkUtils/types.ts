@@ -58,6 +58,11 @@ export function toSDKNumberOrUndefined<
 
 export type EVMAddress = `0x${string}`
 
+export const evmNativeCurrencyAddress = Symbol(
+  "[XLinkSDK] EVM Native Currency Address",
+)
+export type EVMNativeCurrencyAddress = typeof evmNativeCurrencyAddress
+
 export interface StacksContractAddress {
   deployerAddress: string
   contractName: string

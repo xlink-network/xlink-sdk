@@ -18,6 +18,7 @@ import {
 } from "../utils/types/knownIds"
 import { EVMAddress, SDKNumber, toSDKNumberOrUndefined } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { nativeCurrencyAddress } from "../evmUtils/addressHelpers"
 
 export interface TimeLockedAsset {
   id: string
@@ -78,7 +79,9 @@ export async function getTimeLockedAssetsFromEVM(
       await Promise.all(
         _allKnownEVMTokens.map(token =>
           getEVMTokenContractInfo(ctx, chain, token).then(info =>
-            info == null ? info : { ...info, chain, token },
+            info == null || info.tokenContractAddress === nativeCurrencyAddress
+              ? null
+              : { ...info, chain, token },
           ),
         ),
       )
