@@ -418,6 +418,7 @@ async function bridgeFromEVM_toBitcoin(
 ): Promise<BridgeFromEVMOutput> {
   const { bridgeEndpointContractAddress, nativeBridgeEndpointContractAddress } =
     (await getEVMContractCallInfo(ctx, info.fromChain)) ?? {}
+
   const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,

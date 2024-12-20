@@ -415,8 +415,16 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   }
   if (!KnownChainId.isKnownChain(toChain)) return false
 
+  const fromContractInfo = await getEVMContractCallInfo(ctx, fromChain)
+  if (fromContractInfo == null) return false
+
   const fromTokenInfo = await getEVMTokenContractInfo(ctx, fromChain, fromToken)
   if (fromTokenInfo == null) return false
+
+  if (fromTokenInfo.tokenContractAddress === nativeCurrencyAddress) {
+    if (fromContractInfo.bridgeEndpointContractAddress == null) return false
+    if (!KnownChainId.isBitcoinChain(toChain)) return false
+  }
 
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
@@ -434,8 +442,8 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
-    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
-    if (info == null) return false
+    const toTokenInfo = await getEVMTokenContractInfo(ctx, toChain, toToken)
+    if (toTokenInfo == null) return false
 
     const transitStacksToken = await toCorrespondingStacksToken(fromToken)
     if (transitStacksToken == null) return false
