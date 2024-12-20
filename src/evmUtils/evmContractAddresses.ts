@@ -121,8 +121,8 @@ export const evmContractAddresses: Record<EVMChain, EVMOnChainAddresses> = {
       "0xdbe8BBA9C95140bc4F5e3480Fe6a958Cd1C7E6CC",
   },
   [EVMChain.BlifeTestnet]: {
-    [EVMEndpointContract.BridgeEndpoint]:
-      "0xf9dFCEDf0D4eCe3c9F7CD2F3C0c70556EfAA1665",
+    [EVMEndpointContract.BridgeConfig]:
+      "0x643F9D448BC0F8D365bd0DbEEcB5BC6A7b96d922",
     [EVMToken.WBTC]: nativeCurrencyAddress,
   },
   [EVMChain.BitboyTestnet]: {
