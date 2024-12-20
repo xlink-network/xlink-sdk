@@ -320,7 +320,7 @@ export const blifeTestnet = defineChain({
   },
   rpcUrls: {
     default: {
-      http: ["http://3.81.85.249:12345"],
+      http: ["https://private-testnet.blifeprotocol.com:25600"],
     },
   },
   blockExplorers: {
