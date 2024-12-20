@@ -416,14 +416,14 @@ async function bridgeFromEVM_toBitcoin(
   > &
     KnownRoute_FromEVM_ToBitcoin,
 ): Promise<BridgeFromEVMOutput> {
-  const { bridgeEndpointContractAddress: bridgeEndpointAddress } =
+  const { bridgeEndpointContractAddress, nativeBridgeEndpointContractAddress } =
     (await getEVMContractCallInfo(ctx, info.fromChain)) ?? {}
   const fromTokenContractInfo = await getEVMTokenContractInfo(
     ctx,
     info.fromChain,
     info.fromToken,
   )
-  if (bridgeEndpointAddress == null || fromTokenContractInfo == null) {
+  if (fromTokenContractInfo == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -452,6 +452,7 @@ async function bridgeFromEVM_toBitcoin(
     functionName: "transferToBTC",
     args: [toAddressHex],
   })
+  let bridgeEndpointAddress: undefined | EVMAddress
   let functionData: Hex
   let value: undefined | SDKNumber
   if (fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress) {
@@ -474,6 +475,7 @@ async function bridgeFromEVM_toBitcoin(
       )
     }
 
+    bridgeEndpointAddress = nativeBridgeEndpointContractAddress
     value = toSDKNumberOrUndefined(
       BigNumber.rightMoveDecimals(nativeCurrencyDecimals, info.amount),
     )
@@ -487,6 +489,17 @@ async function bridgeFromEVM_toBitcoin(
         message,
       ],
     })
+
+    bridgeEndpointAddress = bridgeEndpointContractAddress
+  }
+
+  if (bridgeEndpointAddress == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
   }
 
   const fallbackGasLimit = 200_000

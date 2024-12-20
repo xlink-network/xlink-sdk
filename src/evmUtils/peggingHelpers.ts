@@ -160,7 +160,10 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
     "cross-peg-in-endpoint-v2-04",
   )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
-  if (stacksContractCallInfo == null || evmContractCallInfo == null) {
+  if (
+    stacksContractCallInfo == null ||
+    evmContractCallInfo?.nativeBridgeEndpointContractAddress == null
+  ) {
     return
   }
 
