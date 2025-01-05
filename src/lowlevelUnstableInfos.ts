@@ -45,6 +45,7 @@ export {
   CreateBridgeOrderResult,
   createBridgeOrderFromBitcoin,
 } from "./stacksUtils/createBridgeOrderFromBitcoin"
+export { createBridgeOrderFromMeta } from "./stacksUtils/createBridgeOrderFromMeta"
 export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
 
 export const getXLinkSDKContext = (
