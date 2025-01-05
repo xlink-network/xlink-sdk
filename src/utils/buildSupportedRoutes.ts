@@ -183,6 +183,26 @@ export type _KnownRoute_FromRunes =
   | KnownRoute_FromRunes_ToBRC20
   | KnownRoute_FromRunes_ToRunes
 
+export type KnownRoute_FromMeta_ToStacks =
+  | KnownRoute_FromBRC20_ToStacks
+  | KnownRoute_FromRunes_ToStacks
+export type KnownRoute_FromMeta_ToEVM =
+  | KnownRoute_FromBRC20_ToEVM
+  | KnownRoute_FromRunes_ToEVM
+export type KnownRoute_FromMeta_ToBitcoin =
+  | KnownRoute_FromBRC20_ToBitcoin
+  | KnownRoute_FromRunes_ToBitcoin
+export type KnownRoute_FromMeta_ToBRC20 =
+  | KnownRoute_FromBRC20_ToBRC20
+  | KnownRoute_FromRunes_ToBRC20
+export type KnownRoute_FromMeta_ToRunes =
+  | KnownRoute_FromBRC20_ToRunes
+  | KnownRoute_FromRunes_ToRunes
+export type KnownRoute_FromMeta_ToMeta =
+  | KnownRoute_FromMeta_ToBRC20
+  | KnownRoute_FromMeta_ToRunes
+export type _KnownRoute_FromMeta = _KnownRoute_FromBRC20 | _KnownRoute_FromRunes
+
 export type KnownRoute =
   | KnownRoute_FromStacks
   | KnownRoute_FromBitcoin
