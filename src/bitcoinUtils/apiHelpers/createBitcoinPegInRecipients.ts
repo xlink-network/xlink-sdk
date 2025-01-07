@@ -7,9 +7,10 @@ import { decodeHex } from "../../utils/hexHelpers"
 import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
 import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 import { getBTCPegInAddress } from "../btcAddresses"
+import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../constants"
 import { calculateFee } from "../prepareTransaction"
 
-const REVEAL_TX_OUTPUT_AMOUNT = 546n
+const REVEAL_TX_OUTPUT_AMOUNT = BITCOIN_OUTPUT_MINIMUM_AMOUNT
 
 export async function createBitcoinPegInRecipients(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
