@@ -3,7 +3,10 @@ import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broad
 import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
 import { bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
-import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
+import {
+  getBitcoinHardLinkageAddress,
+  getBTCPegInAddress,
+} from "../bitcoinUtils/btcAddresses"
 import { createTransaction } from "../bitcoinUtils/createTransaction"
 import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
@@ -48,6 +51,7 @@ import { ChainId, SDKNumber, TokenId } from "./types"
 import { SwapRoute_WithMinimumAmountsToReceive_Public } from "../utils/SwapRouteHelpers"
 import { SwapRoute } from "../utils/SwapRouteHelpers"
 import { SDKGlobalContext } from "./types.internal"
+import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../bitcoinUtils/constants"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -242,7 +246,11 @@ async function bridgeFromBitcoin_toStacks(
     )
   }
 
-  return broadcastBitcoinTransaction(sdkContext, info, createdOrder)
+  return broadcastBitcoinTransaction(
+    sdkContext,
+    { ...info, withHardLinkageOutput: false },
+    createdOrder,
+  )
 }
 
 async function bridgeFromBitcoin_toEVM(
@@ -277,7 +285,11 @@ async function bridgeFromBitcoin_toEVM(
     )
   }
 
-  return broadcastBitcoinTransaction(sdkContext, info, createdOrder)
+  return broadcastBitcoinTransaction(
+    sdkContext,
+    { ...info, withHardLinkageOutput: false },
+    createdOrder,
+  )
 }
 
 async function bridgeFromBitcoin_toMeta(
@@ -326,15 +338,20 @@ async function bridgeFromBitcoin_toMeta(
     )
   }
 
-  return broadcastBitcoinTransaction(sdkContext, info, createdOrder)
+  return broadcastBitcoinTransaction(
+    sdkContext,
+    { ...info, withHardLinkageOutput: true },
+    createdOrder,
+  )
 }
 
 async function broadcastBitcoinTransaction(
   sdkContext: SDKGlobalContext,
   info: Omit<
     ConstructBitcoinTransactionInput,
-    "validateBridgeOrder" | "orderData" | "pegInAddress"
+    "validateBridgeOrder" | "orderData" | "pegInAddress" | "hardLinkageOutput"
   > & {
+    withHardLinkageOutput: boolean
     sendTransaction: BridgeFromBitcoinInput["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
@@ -369,6 +386,9 @@ async function broadcastBitcoinTransaction(
     },
     orderData: createdOrder.data,
     pegInAddress,
+    hardLinkageOutput: info.withHardLinkageOutput
+      ? await getBitcoinHardLinkageAddress(info.fromChain, info.toChain as any)
+      : null,
   })
 
   if (tx.revealOutput == null) {
@@ -493,11 +513,25 @@ export type PrepareBitcoinTransactionInput = KnownRoute_FromBitcoin & {
   networkFeeRate: BridgeFromBitcoinInput["networkFeeRate"]
   reselectSpendableUTXOs: BridgeFromBitcoinInput["reselectSpendableUTXOs"]
   orderData: Uint8Array
+  hardLinkageOutput: null | {
+    address: string
+    scriptPubKey: Uint8Array
+  }
   pegInAddress: {
     address: string
     scriptPubKey: Uint8Array
   }
 }
+/**
+ * Bitcoin Tx Structure:
+ *
+ * * Inputs: ...
+ * * Outputs:
+ *    * Order data
+ *    * Send to ALEX
+ *    * Hard linkage
+ *    * Changes
+ */
 export async function prepareBitcoinTransaction(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: PrepareBitcoinTransactionInput,
@@ -505,6 +539,10 @@ export async function prepareBitcoinTransaction(
   BitcoinTransactionPrepareResult & {
     bitcoinNetwork: typeof btc.NETWORK
     revealOutput?: {
+      index: number
+      satsAmount: bigint
+    }
+    hardLinkageOutput?: {
       index: number
       satsAmount: bigint
     }
@@ -540,6 +578,14 @@ export async function prepareBitcoinTransaction(
         addressScriptPubKey: info.pegInAddress.scriptPubKey,
         satsAmount: bitcoinToSatoshi(info.amount),
       },
+      ...(info.hardLinkageOutput == null
+        ? []
+        : [
+            {
+              addressScriptPubKey: info.hardLinkageOutput.scriptPubKey,
+              satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
+            },
+          ]),
     ],
     changeAddressScriptPubKey: info.fromAddressScriptPubKey,
     feeRate: info.networkFeeRate,
@@ -553,5 +599,12 @@ export async function prepareBitcoinTransaction(
       index: 0,
       satsAmount: recipient.satsAmount,
     },
+    hardLinkageOutput:
+      info.hardLinkageOutput == null
+        ? undefined
+        : {
+            index: 2,
+            satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
+          },
   }
 }

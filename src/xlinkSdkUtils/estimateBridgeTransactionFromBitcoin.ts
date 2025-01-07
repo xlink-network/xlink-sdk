@@ -1,4 +1,7 @@
-import { getBTCPegInAddress } from "../bitcoinUtils/btcAddresses"
+import {
+  getBitcoinHardLinkageAddress,
+  getBTCPegInAddress,
+} from "../bitcoinUtils/btcAddresses"
 import { ReselectSpendableUTXOsFn } from "../bitcoinUtils/prepareTransaction"
 import {
   createBridgeOrder_BitcoinToEVM,
@@ -22,7 +25,11 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { prepareBitcoinTransaction, supportedRoutes } from "./bridgeFromBitcoin"
+import {
+  prepareBitcoinTransaction,
+  PrepareBitcoinTransactionInput,
+  supportedRoutes,
+} from "./bridgeFromBitcoin"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
 import { SwapRoute_WithMinimumAmountsToReceive_Public } from "../utils/SwapRouteHelpers"
 import { SDKGlobalContext } from "./types.internal"
@@ -135,15 +142,6 @@ async function estimateFromBitcoin_toStacks(
   > &
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
-  const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  if (pegInAddress == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      KnownTokenId.Bitcoin.BTC,
-    )
-  }
-
   const createdOrder = await createBridgeOrder_BitcoinToStacks(sdkContext, {
     fromChain: info.fromChain,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
@@ -168,16 +166,11 @@ async function estimateFromBitcoin_toStacks(
     )
   }
 
-  const resp = await prepareBitcoinTransaction(sdkContext, {
+  return estimateBitcoinTransaction(sdkContext, {
     ...info,
     orderData: createdOrder.data,
-    pegInAddress,
+    withHardLinkageOutput: true,
   })
-
-  return {
-    fee: toSDKNumberOrUndefined(resp.fee),
-    estimatedVSize: toSDKNumberOrUndefined(resp.estimatedVSize),
-  }
 }
 
 async function estimateFromBitcoin_toEVM(
@@ -188,15 +181,6 @@ async function estimateFromBitcoin_toEVM(
   > &
     KnownRoute_FromBitcoin_ToEVM,
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
-  const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  if (pegInAddress == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      KnownTokenId.Bitcoin.BTC,
-    )
-  }
-
   const createdOrder = await createBridgeOrder_BitcoinToEVM(sdkContext, {
     fromChain: info.fromChain,
     toChain: info.toChain,
@@ -221,16 +205,11 @@ async function estimateFromBitcoin_toEVM(
     )
   }
 
-  const resp = await prepareBitcoinTransaction(sdkContext, {
+  return estimateBitcoinTransaction(sdkContext, {
     ...info,
     orderData: createdOrder.data,
-    pegInAddress,
+    withHardLinkageOutput: true,
   })
-
-  return {
-    fee: toSDKNumberOrUndefined(resp.fee),
-    estimatedVSize: toSDKNumberOrUndefined(resp.estimatedVSize),
-  }
 }
 
 async function estimateFromBitcoin_toMeta(
@@ -257,15 +236,6 @@ async function estimateFromBitcoin_toMeta(
     )
   }
 
-  const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
-  if (pegInAddress == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      KnownTokenId.Bitcoin.BTC,
-    )
-  }
-
   const createdOrder = await createBridgeOrder_BitcoinToMeta(sdkContext, {
     ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
@@ -288,10 +258,40 @@ async function estimateFromBitcoin_toMeta(
     )
   }
 
-  const resp = await prepareBitcoinTransaction(sdkContext, {
+  return estimateBitcoinTransaction(sdkContext, {
     ...info,
     orderData: createdOrder.data,
+    withHardLinkageOutput: true,
+  })
+}
+
+type EstimateBitcoinTransactionInput = Omit<
+  PrepareBitcoinTransactionInput,
+  "hardLinkageOutput" | "pegInAddress"
+> & {
+  withHardLinkageOutput: boolean
+  orderData: Uint8Array
+}
+async function estimateBitcoinTransaction(
+  sdkContext: SDKGlobalContext,
+  info: EstimateBitcoinTransactionInput,
+): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
+  const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
+  if (pegInAddress == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      KnownTokenId.Bitcoin.BTC,
+    )
+  }
+
+  const resp = await prepareBitcoinTransaction(sdkContext, {
+    ...(info as any),
     pegInAddress,
+    hardLinkageOutput: await getBitcoinHardLinkageAddress(
+      info.fromChain,
+      info.toChain as any,
+    ),
   })
 
   return {
