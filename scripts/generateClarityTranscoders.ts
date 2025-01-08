@@ -1,8 +1,8 @@
 import { generateContracts } from "clarity-codegen/lib/generate"
 import * as path from "node:path"
 import {
-  contractNameOverrides,
-  envName,
+  contractNameOverrides_mainnet,
+  contractNameOverrides_testnet,
   STACKS_MAINNET,
   STACKS_TESTNET,
 } from "../src/config"
@@ -13,6 +13,9 @@ import {
   xlinkContractsMultisigTestnet,
 } from "../src/stacksUtils/stxContractAddresses"
 import { KnownChainId } from "../src/utils/types/knownIds"
+
+const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
+
 ;(async function main(): Promise<void> {
   const stacksChainId =
     envName === "prod"
@@ -47,6 +50,8 @@ import { KnownChainId } from "../src/utils/types/knownIds"
     path.resolve(__dirname, "../generated/smartContract/"),
     "xlink",
     "../smartContractHelpers/codegenImport",
-    contractNameOverrides,
+    envName === "prod"
+      ? contractNameOverrides_mainnet
+      : contractNameOverrides_testnet,
   )
 })().catch(console.error)
