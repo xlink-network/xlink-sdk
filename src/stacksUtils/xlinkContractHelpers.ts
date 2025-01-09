@@ -45,16 +45,6 @@ export const numberToStacksContractNumber = (
   )
 }
 
-// const _composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
-// export const composeTxXLINK: typeof _composeTxXLINK = (...args) => {
-//   const res = _composeTxXLINK(...args)
-//   return {
-//     ...res,
-//     contractName:
-//       (contractNameOverrides as any)?.[res.contractName] ?? res.contractName,
-//   }
-// }
-
 export const composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
 
 export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
