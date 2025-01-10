@@ -387,7 +387,7 @@ async function broadcastBitcoinTransaction(
     orderData: createdOrder.data,
     pegInAddress,
     hardLinkageOutput: info.withHardLinkageOutput
-      ? await getBitcoinHardLinkageAddress(info.fromChain, info.toChain as any)
+      ? await getBitcoinHardLinkageAddress(info.fromChain, info.toChain)
       : null,
   })
 
