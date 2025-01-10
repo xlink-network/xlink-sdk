@@ -48,6 +48,8 @@ export {
 export { createBridgeOrderFromMeta } from "./stacksUtils/createBridgeOrderFromMeta"
 export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
 
+export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
+
 export const getXLinkSDKContext = (
   sdk: import("./XLinkSDK").XLinkSDK,
 ): SDKGlobalContext => {
@@ -55,25 +57,27 @@ export const getXLinkSDKContext = (
 }
 
 export const evmTokensFromStacksToken = async (options: {
-  toEVMChain: KnownChainId.EVMChain
+  fromStacksChain: KnownChainId.StacksChain
   fromStacksToken: KnownTokenId.StacksToken
+  toChain: KnownChainId.EVMChain
 }): Promise<{
   evmTokens: KnownTokenId.EVMToken[]
 }> => {
   const evmTokens = await evmTokenFromCorrespondingStacksToken(
-    options.toEVMChain,
+    options.toChain,
     options.fromStacksToken,
   )
   return { evmTokens }
 }
 export const evmTokenToStacksToken = async (options: {
+  fromChain: KnownChainId.EVMChain
+  fromToken: KnownTokenId.EVMToken
   toStacksChain: KnownChainId.StacksChain
-  fromEVMToken: KnownTokenId.EVMToken
 }): Promise<{
   stacksTokens: KnownTokenId.StacksToken[]
 }> => {
   const stacksTokens = await evmTokenToCorrespondingStacksToken(
-    options.fromEVMToken,
+    options.fromToken,
   )
   return { stacksTokens: stacksTokens == null ? [] : [stacksTokens] }
 }
@@ -81,6 +85,7 @@ export const evmTokenToStacksToken = async (options: {
 export const metaTokensFromStacksToken = async (
   sdk: import("./XLinkSDK").XLinkSDK,
   options: {
+    fromStacksChain: KnownChainId.StacksChain
     fromStacksToken: KnownTokenId.StacksToken
     toChain: KnownChainId.BRC20Chain | KnownChainId.RunesChain
   },
