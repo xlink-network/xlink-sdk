@@ -290,7 +290,7 @@ async function estimateBitcoinTransaction(
     pegInAddress,
     hardLinkageOutput: await getBitcoinHardLinkageAddress(
       info.fromChain,
-      info.toChain as any,
+      info.toChain,
     ),
   })
 

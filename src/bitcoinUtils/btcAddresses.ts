@@ -51,26 +51,30 @@ export const getBitcoinHardLinkageAddress = (
     | KnownChainId.BRC20Chain
     | KnownChainId.RunesChain,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  toChain:
-    | KnownChainId.BitcoinChain
-    | KnownChainId.BRC20Chain
-    | KnownChainId.RunesChain,
+  toChain: KnownChainId.KnownChain,
 ): undefined | BitcoinAddress => {
   const pubKey =
     "1ab1c25de20e4f186a405abb7430e05439269c53d99938741961ee9db83ee58d"
 
-  const btcNetwork =
-    fromChain === KnownChainId.Bitcoin.Mainnet ||
-    fromChain === KnownChainId.BRC20.Mainnet ||
-    fromChain === KnownChainId.Runes.Mainnet
-      ? NETWORK
-      : fromChain === KnownChainId.Bitcoin.Testnet ||
-          fromChain === KnownChainId.BRC20.Testnet ||
-          fromChain === KnownChainId.Runes.Testnet
-        ? TEST_NETWORK
-        : (checkNever(fromChain), NETWORK)
+  let bitcoinNetwork: undefined | typeof NETWORK | typeof TEST_NETWORK
+  switch (fromChain) {
+    case KnownChainId.Bitcoin.Mainnet:
+    case KnownChainId.BRC20.Mainnet:
+    case KnownChainId.Runes.Mainnet:
+      bitcoinNetwork = NETWORK
+      break
+    case KnownChainId.Bitcoin.Testnet:
+    case KnownChainId.BRC20.Testnet:
+    case KnownChainId.Runes.Testnet:
+      bitcoinNetwork = TEST_NETWORK
+      break
+    default:
+      checkNever(fromChain)
+  }
 
-  const payment = p2tr(pubKey, undefined, btcNetwork)
+  if (bitcoinNetwork == null) return undefined
+
+  const payment = p2tr(pubKey, undefined, bitcoinNetwork)
 
   return {
     address: payment.address!,
