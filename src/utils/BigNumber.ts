@@ -3,6 +3,9 @@ import { OneOrMore } from "./typeHelpers"
 import { last } from "./arrayHelpers"
 import { reduce } from "./arrayHelpers"
 
+Big.PE = 21
+Big.NE = -21
+
 export type BigNumberSource = number | bigint | string | Big | BigNumber
 
 const toBig = (num: BigNumberSource): Big => {
