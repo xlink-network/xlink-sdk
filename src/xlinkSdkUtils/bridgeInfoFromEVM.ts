@@ -354,3 +354,32 @@ async function bridgeInfoFromEVM_toMeta(
     BigNumber.ONE,
   )
 }
+
+export async function bridgeInfoFromEVM_toLaunchpad(
+  ctx: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.EVMChain
+    fromToken: KnownTokenId.EVMToken
+    launchId: SDKNumber
+    amount: SDKNumber
+  },
+): Promise<BridgeInfoFromEVMOutput> {
+  const toChain = KnownChainId.isEVMMainnetChain(info.fromChain)
+    ? KnownChainId.Stacks.Mainnet
+    : KnownChainId.Stacks.Testnet
+  const toToken = await evmTokenToCorrespondingStacksToken(info.fromToken)
+
+  if (toToken == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      toChain,
+      info.fromToken,
+    )
+  }
+
+  return bridgeInfoFromEVM_toStacks(ctx, {
+    ...info,
+    toChain,
+    toToken,
+  })
+}

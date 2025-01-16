@@ -48,6 +48,9 @@ export {
 export { createBridgeOrderFromMeta } from "./stacksUtils/createBridgeOrderFromMeta"
 export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
 
+export { bridgeInfoFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromEVM"
+export { bridgeInfoFromBitcoin_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
 
 export const getXLinkSDKContext = (

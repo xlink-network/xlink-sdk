@@ -7,8 +7,8 @@ import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
 export interface DefinedRoute {
   fromChain: ChainId
-  toChain: ChainId
   fromToken: TokenId
+  toChain: ChainId
   toToken: TokenId
 }
 

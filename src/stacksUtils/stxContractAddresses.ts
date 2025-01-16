@@ -55,6 +55,7 @@ const wrapContractAddress = (
 export enum StacksContractName {
   BTCPegInEndpoint = "btc-peg-in-endpoint-v2-05",
   BTCPegInEndpointSwap = "btc-peg-in-endpoint-v2-07-swap",
+  BTCPegInEndpointLaunchpad = "btc-peg-in-endpoint-v2-05-launchpad",
   BTCPegOutEndpoint = "btc-peg-out-endpoint-v2-01",
   MetaPegInEndpoint = "meta-peg-in-endpoint-v2-04",
   MetaPegInEndpointSwap = "meta-peg-in-endpoint-v2-06-swap",
@@ -82,6 +83,16 @@ export const stxContractAddresses = {
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
       deployerAddress: xlinkContractsMultisigTestnet,
       contractName: StacksContractName.BTCPegInEndpointSwap,
+    }),
+  },
+  [StacksContractName.BTCPegInEndpointLaunchpad]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: StacksContractName.BTCPegInEndpointLaunchpad,
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: StacksContractName.BTCPegInEndpointLaunchpad,
     }),
   },
   [StacksContractName.BTCPegOutEndpoint]: {
