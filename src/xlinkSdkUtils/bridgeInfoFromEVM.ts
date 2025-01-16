@@ -360,12 +360,6 @@ export async function bridgeInfoFromEVM_toLaunchpad(
   info: {
     fromChain: KnownChainId.EVMChain
     fromToken: KnownTokenId.EVMToken
-    receiverChain: KnownChainId.KnownChain
-    receiverAddress: string
-    /**
-     * **Required** when `receiverChain` is one of bitcoin chains
-     */
-    receiverAddressScriptPubKey?: Uint8Array
     launchId: SDKNumber
     amount: SDKNumber
   },
