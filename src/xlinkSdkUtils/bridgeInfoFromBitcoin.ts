@@ -1,6 +1,12 @@
 import { getBtc2StacksFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import {
+  executeReadonlyCallXLINK,
+  getStacksContractCallInfo,
+  numberFromStacksContractNumber,
+} from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getTransitStacksChainTransitStepInfos,
@@ -16,9 +22,11 @@ import {
   KnownRoute_FromStacks_ToRunes,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
+import { props } from "../utils/promiseHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   PublicTransferProphetAggregated,
+  TransferProphet,
   transformToPublicTransferProphet,
   transformToPublicTransferProphetAggregated2,
 } from "../utils/types/TransferProphet"
@@ -252,4 +260,89 @@ async function bridgeInfoFromBitcoin_toMeta(
     BigNumber.from(info.amount),
     BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
   )
+}
+
+export async function bridgeInfoFromBitcoin_toLaunchpad(
+  ctx: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    fromToken: KnownTokenId.BitcoinToken
+    receiverChain: KnownChainId.KnownChain
+    receiverAddress: string
+    /**
+     * **Required** when `receiverChain` is one of bitcoin chains
+     */
+    receiverAddressScriptPubKey?: Uint8Array
+    launchId: SDKNumber
+    amount: SDKNumber
+  },
+): Promise<BridgeInfoFromBitcoinOutput> {
+  const toChain =
+    info.fromChain === KnownChainId.Bitcoin.Mainnet
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet
+  const toToken = KnownTokenId.Stacks.aBTC
+
+  const contractCallInfo = getStacksContractCallInfo(
+    toChain,
+    StacksContractName.BTCPegInEndpointLaunchpad,
+  )
+  if (contractCallInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      toChain,
+      info.fromToken,
+      toToken,
+    )
+  }
+
+  const route: KnownRoute = {
+    fromChain: info.fromChain,
+    fromToken: info.fromToken,
+    toChain,
+    toToken,
+  }
+
+  const resp = await props({
+    isPaused: executeReadonlyCallXLINK(
+      contractCallInfo.contractName,
+      "is-peg-in-paused",
+      {},
+      contractCallInfo.executeOptions,
+    ),
+    feeRate: executeReadonlyCallXLINK(
+      contractCallInfo.contractName,
+      "get-peg-in-fee",
+      {},
+      contractCallInfo.executeOptions,
+    ).then(numberFromStacksContractNumber),
+    minFeeAmount: executeReadonlyCallXLINK(
+      contractCallInfo.contractName,
+      "get-peg-in-min-fee",
+      {},
+      contractCallInfo.executeOptions,
+    ).then(numberFromStacksContractNumber),
+  })
+
+  const transferProphet: TransferProphet = {
+    isPaused: resp.isPaused,
+    bridgeToken: info.fromToken,
+    fees: [
+      {
+        type: "rate",
+        token: info.fromToken,
+        rate: resp.feeRate,
+        minimumAmount: resp.minFeeAmount,
+      },
+    ],
+    minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
+      ? null
+      : resp.minFeeAmount,
+    maxBridgeAmount: null,
+  }
+
+  return {
+    ...transformToPublicTransferProphet(route, info.amount, transferProphet),
+    transferProphets: [],
+  }
 }

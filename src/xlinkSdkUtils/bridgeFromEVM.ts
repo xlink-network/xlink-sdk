@@ -713,6 +713,7 @@ export async function bridgeFromEVM_toLaunchpad(
       to: EVMAddress
       data: Uint8Array
       recommendedGasLimit: SDKNumber
+      value?: SDKNumber
     }) => Promise<{
       txHash: string
     }>
