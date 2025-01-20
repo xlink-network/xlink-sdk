@@ -11,6 +11,9 @@ export function createTransaction(
   inputUTXOs: Array<UTXOSpendable>,
   recipients: Array<Recipient>,
   opReturnData: Uint8Array[],
+  options?: {
+    enableRBF?: boolean
+  },
 ): btc.Transaction {
   const tx = new btc.Transaction({
     allowUnknownOutputs: true,
@@ -32,7 +35,7 @@ export function createTransaction(
         "tapInternalKey" in utxo ? utxo.tapInternalKey : undefined,
       redeemScript: "redeemScript" in utxo ? utxo.redeemScript : undefined,
       // Enable RBF
-      sequence: btc.DEFAULT_SEQUENCE - 2,
+      sequence: options?.enableRBF ? btc.DEFAULT_SEQUENCE - 2 : undefined,
     })
   })
 
