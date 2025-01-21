@@ -4,13 +4,11 @@ import {
   getBRC20SupportedRoutes,
   getRunesSupportedRoutes,
 } from "../metaUtils/xlinkContractHelpers"
-import {
-  StacksContractName,
-  stxTokenContractAddresses,
-} from "../stacksUtils/stxContractAddresses"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
+  getStacksTokenContractInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
@@ -268,7 +266,13 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     if (!KnownTokenId.isStacksToken(toToken)) return false
 
     if (fromToken !== KnownTokenId.Bitcoin.BTC) return false
-    if (stxTokenContractAddresses[toToken]?.[toChain] == null) return false
+
+    const stacksTokenContractInfo = await getStacksTokenContractInfo(
+      ctx,
+      toChain,
+      toToken,
+    )
+    if (stacksTokenContractInfo == null) return false
 
     return toToken === finalStepStacksToken
   }
