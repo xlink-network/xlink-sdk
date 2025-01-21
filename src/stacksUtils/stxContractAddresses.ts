@@ -160,6 +160,11 @@ export const stxContractAddresses = {
   Record<KnownChainId.StacksChain, StacksContractAddress>
 >
 
+/**
+ * @deprecated
+ *
+ * use `getStacksTokenContractInfo` instead
+ */
 export const stxTokenContractAddresses: Record<
   string,
   Record<KnownChainId.StacksChain, StacksContractAddress>
@@ -272,6 +277,16 @@ export const stxTokenContractAddresses: Record<
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
       deployerAddress: legacyAlexContractDeployerTestnet,
       contractName: "runes-dog",
+    }),
+  },
+  [KnownTokenId.Stacks.STX]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: alexContractDeployerMainnet,
+      contractName: "token-wstx-v2",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: alexContractDeployerTestnet,
+      contractName: "token-wstx-v2",
     }),
   },
 }

@@ -8,7 +8,6 @@ import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContr
 import {
   getTerminatingStacksTokenContractAddress,
   StacksContractName,
-  stxTokenContractAddresses,
 } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
@@ -320,6 +319,11 @@ export async function evmTokenFromCorrespondingStacksToken(
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.DOG)
 
+  if (stacksToken === StacksToken.STX) {
+    return [EVMToken.STX]
+  }
+  assertExclude(restEVMTokenPossibilities, EVMToken.STX)
+
   checkNever(restEVMTokenPossibilities)
   return []
 }
@@ -356,6 +360,8 @@ export async function evmTokenToCorrespondingStacksToken(
       return StacksToken.DB20
     case EVMToken.DOG:
       return StacksToken.DOG
+    case EVMToken.STX:
+      return StacksToken.STX
     default:
       checkNever(evmToken)
       return
@@ -407,9 +413,12 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
     const stacksToken = await evmTokenToCorrespondingStacksToken(fromToken)
     if (stacksToken == null) return false
 
-    if (stxTokenContractAddresses[stacksToken]?.[toChain] == null) {
-      return false
-    }
+    const stacksTokenContractInfo = await getStacksTokenContractInfo(
+      ctx,
+      toChain,
+      stacksToken,
+    )
+    if (stacksTokenContractInfo == null) return false
 
     return stacksToken === toToken
   }

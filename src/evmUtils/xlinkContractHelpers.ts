@@ -212,6 +212,7 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_DB20,
         ONCHAIN_CONFIG_KEY.TOKEN_DOG,
         ONCHAIN_CONFIG_KEY.ENDPOINT_NATIVE,
+        ONCHAIN_CONFIG_KEY.TOKEN_STX,
       ],
     ],
   }).catch(err => {
@@ -256,6 +257,7 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.DB20]: maybeAddress(configs[14]),
     [EVMToken.DOG]: maybeAddress(configs[15]),
     [EVMEndpointContract.NativeBridgeEndpoint]: maybeAddress(configs[16]),
+    [EVMToken.STX]: maybeAddress(configs[17]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -296,4 +298,7 @@ enum ONCHAIN_CONFIG_KEY {
   // https://github.com/xlink-network/xlink/pull/299/commits/22b23c9ff3ea65eeb7c632db4255afe803f97fef#diff-8302902f9863ee3c7928a0fa6eb6ca22edd10f5553708459cdd072c1ea3ef696
   TOKEN_UBTC = "TOKEN_UBTC",
   TOKEN_WUBTC = "TOKEN_WUBTC",
+
+  // https://github.com/xlink-network/xlink/pull/366/files#diff-84d6042780ec5ce60f8e5349d20baf5f577f9d878feb8a703748ad37a91e31fd
+  TOKEN_STX = "TOKEN_STX",
 }

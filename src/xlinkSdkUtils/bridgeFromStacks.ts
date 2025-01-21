@@ -62,6 +62,7 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
         [KnownTokenId.Stacks.DB20, KnownTokenId.EVM.DB20],
         [KnownTokenId.Stacks.DOG, KnownTokenId.EVM.DOG],
+        [KnownTokenId.Stacks.STX, KnownTokenId.EVM.STX],
       ],
     ),
 
@@ -92,6 +93,7 @@ export const supportedRoutes = buildSupportedRoutes(
         [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
         [KnownTokenId.Stacks.DB20, KnownTokenId.EVM.DB20],
         [KnownTokenId.Stacks.DOG, KnownTokenId.EVM.DOG],
+        [KnownTokenId.Stacks.STX, KnownTokenId.EVM.STX],
       ],
     ),
   ],
