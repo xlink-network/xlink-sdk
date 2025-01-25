@@ -40,6 +40,14 @@ export const btcPegInEndpointV207Swap = defineContract({
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
       },
+      {
+        name: 'reveal-block',
+        type: tupleT({ header: bufferT, height: uintT }, )
+      },
+      {
+        name: 'reveal-proof',
+        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
+      },
       { name: 'routing-traits', type: listT(traitT, ) },
       { name: 'token-out-trait', type: traitT }
     ],
