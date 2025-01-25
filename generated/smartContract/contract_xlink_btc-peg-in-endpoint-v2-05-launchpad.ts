@@ -38,6 +38,14 @@ export const btcPegInEndpointV205Launchpad = defineContract({
       {
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
+      },
+      {
+        name: 'reveal-block',
+        type: tupleT({ header: bufferT, height: uintT }, )
+      },
+      {
+        name: 'reveal-proof',
+        type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
       }
     ],
     output: responseSimpleT(tupleT({ end: uintT, start: uintT }, ), ),
