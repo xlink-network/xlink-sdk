@@ -324,6 +324,11 @@ export async function evmTokenFromCorrespondingStacksToken(
   }
   assertExclude(restEVMTokenPossibilities, EVMToken.STX)
 
+  if (stacksToken === StacksToken.TRUMP) {
+    return [EVMToken.TRUMP]
+  }
+  assertExclude(restEVMTokenPossibilities, EVMToken.TRUMP)
+
   checkNever(restEVMTokenPossibilities)
   return []
 }
@@ -362,6 +367,8 @@ export async function evmTokenToCorrespondingStacksToken(
       return StacksToken.DOG
     case EVMToken.STX:
       return StacksToken.STX
+    case EVMToken.TRUMP:
+      return StacksToken.TRUMP
     default:
       checkNever(evmToken)
       return

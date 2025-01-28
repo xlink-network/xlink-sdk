@@ -289,6 +289,16 @@ export const stxTokenContractAddresses: Record<
       contractName: "token-wstx-v2",
     }),
   },
+  [KnownTokenId.Stacks.TRUMP]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "runes-trump",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "runes-trump",
+    }),
+  },
 }
 
 const terminatingStacksTokenContractAddresses = {

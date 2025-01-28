@@ -213,6 +213,7 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_DOG,
         ONCHAIN_CONFIG_KEY.ENDPOINT_NATIVE,
         ONCHAIN_CONFIG_KEY.TOKEN_STX,
+        ONCHAIN_CONFIG_KEY.TOKEN_TRUMP,
       ],
     ],
   }).catch(err => {
@@ -258,6 +259,7 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.DOG]: maybeAddress(configs[15]),
     [EVMEndpointContract.NativeBridgeEndpoint]: maybeAddress(configs[16]),
     [EVMToken.STX]: maybeAddress(configs[17]),
+    [EVMToken.TRUMP]: maybeAddress(configs[18]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -301,4 +303,7 @@ enum ONCHAIN_CONFIG_KEY {
 
   // https://github.com/xlink-network/xlink/pull/366/files#diff-84d6042780ec5ce60f8e5349d20baf5f577f9d878feb8a703748ad37a91e31fd
   TOKEN_STX = "TOKEN_STX",
+
+  // https://t.me/c/1599543687/69562
+  TOKEN_TRUMP = "TOKEN_TRUMP",
 }

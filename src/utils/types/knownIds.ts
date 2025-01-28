@@ -82,6 +82,7 @@ export namespace KnownTokenId {
     export const DB20 = tokenId("evm-db20")
     export const DOG = tokenId("evm-dog")
     export const STX = tokenId("evm-stx")
+    export const TRUMP = tokenId("evm-trump")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
@@ -110,6 +111,7 @@ export namespace KnownTokenId {
     export const DB20 = tokenId("stx-db20")
     export const DOG = tokenId("stx-dog")
     export const STX = tokenId("stx-stx")
+    export const TRUMP = tokenId("stx-trump")
   }
   export type StacksToken = TokenId<`stx-${string}`>
   export function isStacksToken(value: TokenId): value is StacksToken {
