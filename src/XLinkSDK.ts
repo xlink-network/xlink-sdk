@@ -11,10 +11,8 @@ import {
   getEVMToken,
   getEVMTokenContractInfo,
 } from "./evmUtils/xlinkContractHelpers"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "./metaUtils/xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "./metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "./metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import {
   getStacksToken,
   getStacksTokenContractInfo,
@@ -193,6 +191,7 @@ export class XLinkSDK {
           options.__experimental?.runes?.ignoreValidateResult ?? false,
       },
       evm: {
+        routesConfigCache: new Map(),
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
         viemClients: {
           ...defaultEvmClients,

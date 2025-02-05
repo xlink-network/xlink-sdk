@@ -11,8 +11,14 @@ import {
   metaTokenFromCorrespondingStacksToken,
   metaTokenToCorrespondingStacksToken,
 } from "./metaUtils/peggingHelpers"
+import { KnownRoute_FromStacks_ToEVM } from "./utils/buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
+import { StacksContractAddress } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+import {
+  getEVMTokenIdFromTerminatingStacksTokenContractAddress as _getEVMTokenIdFromTerminatingStacksTokenContractAddress,
+  getTerminatingStacksTokenContractAddress as _getTerminatingStacksTokenContractAddress,
+} from "./stacksUtils/stxContractAddresses"
 
 export {
   contractAssignedChainIdFromKnownChain,
@@ -20,8 +26,6 @@ export {
 } from "./stacksUtils/crossContractDataMapping"
 
 export {
-  getEVMTokenIdFromTerminatingStacksTokenContractAddress,
-  getTerminatingStacksTokenContractAddress,
   wrapContractAddress,
   alexContractDeployerMainnet,
   alexContractDeployerTestnet,
@@ -99,27 +103,59 @@ export const getXLinkSDKContext = (
   return sdk["sdkContext"]
 }
 
-export const evmTokensFromStacksToken = async (options: {
-  fromStacksChain: KnownChainId.StacksChain
-  fromStacksToken: KnownTokenId.StacksToken
-  toChain: KnownChainId.EVMChain
-}): Promise<{
+export const getTerminatingStacksTokenContractAddress = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  route: KnownRoute_FromStacks_ToEVM,
+): Promise<undefined | StacksContractAddress> => {
+  return _getTerminatingStacksTokenContractAddress(
+    getXLinkSDKContext(sdk),
+    route,
+  )
+}
+export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  route: {
+    evmChain: KnownChainId.EVMChain
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.EVMToken> => {
+  return _getEVMTokenIdFromTerminatingStacksTokenContractAddress(
+    getXLinkSDKContext(sdk),
+    route,
+  )
+}
+
+export const evmTokensFromStacksToken = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  options: {
+    fromStacksChain: KnownChainId.StacksChain
+    fromStacksToken: KnownTokenId.StacksToken
+    toChain: KnownChainId.EVMChain
+  },
+): Promise<{
   evmTokens: KnownTokenId.EVMToken[]
 }> => {
   const evmTokens = await evmTokenFromCorrespondingStacksToken(
+    getXLinkSDKContext(sdk),
     options.toChain,
     options.fromStacksToken,
   )
   return { evmTokens }
 }
-export const evmTokenToStacksToken = async (options: {
-  fromChain: KnownChainId.EVMChain
-  fromToken: KnownTokenId.EVMToken
-  toStacksChain: KnownChainId.StacksChain
-}): Promise<{
+export const evmTokenToStacksToken = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  options: {
+    fromChain: KnownChainId.EVMChain
+    fromToken: KnownTokenId.EVMToken
+    toStacksChain: KnownChainId.StacksChain
+  },
+): Promise<{
   stacksTokens: KnownTokenId.StacksToken[]
 }> => {
   const stacksTokens = await evmTokenToCorrespondingStacksToken(
+    getXLinkSDKContext(sdk),
+    options.fromChain,
     options.fromToken,
   )
   return { stacksTokens: stacksTokens == null ? [] : [stacksTokens] }

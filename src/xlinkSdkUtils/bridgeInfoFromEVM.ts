@@ -174,6 +174,8 @@ async function bridgeInfoFromEVM_toBitcoin(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
   const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    ctx,
+    info.fromChain,
     info.fromToken,
   )
   if (transitStacksToken == null) {
@@ -240,6 +242,8 @@ async function bridgeInfoFromEVM_toEVM(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
   const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    ctx,
+    info.fromChain,
     info.fromToken,
   )
   if (
@@ -306,6 +310,8 @@ async function bridgeInfoFromEVM_toMeta(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
   const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+    ctx,
+    info.fromChain,
     info.fromToken,
   )
   if (
@@ -371,7 +377,11 @@ export async function bridgeInfoFromEVM_toLaunchpad(
   const toChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const toToken = await evmTokenToCorrespondingStacksToken(info.fromToken)
+  const toToken = await evmTokenToCorrespondingStacksToken(
+    ctx,
+    info.fromChain,
+    info.fromToken,
+  )
 
   if (toToken == null) {
     throw new UnsupportedBridgeRouteError(

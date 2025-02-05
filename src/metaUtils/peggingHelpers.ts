@@ -37,10 +37,8 @@ import {
 } from "../utils/types/knownIds"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { getMetaPegInAddress } from "./btcAddresses"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "./xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 
 export async function metaTokenFromCorrespondingStacksToken(
   ctx: SDKGlobalContext,
@@ -324,7 +322,11 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
     const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
     if (info == null) return false
 
-    const transitStacksToken = await evmTokenToCorrespondingStacksToken(toToken)
+    const transitStacksToken = await evmTokenToCorrespondingStacksToken(
+      ctx,
+      toChain,
+      toToken,
+    )
     if (transitStacksToken == null) return false
 
     if (KnownChainId.isRunesChain(fromChain)) {
