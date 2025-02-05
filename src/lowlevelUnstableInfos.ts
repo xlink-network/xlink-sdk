@@ -22,7 +22,47 @@ export {
 export {
   getEVMTokenIdFromTerminatingStacksTokenContractAddress,
   getTerminatingStacksTokenContractAddress,
+  wrapContractAddress,
+  alexContractDeployerMainnet,
+  alexContractDeployerTestnet,
+  alexContractMultisigMainnet,
+  alexContractMultisigTestnet,
+  legacyAlexContractDeployerMainnet,
+  legacyAlexContractDeployerTestnet,
+  xlinkContractsDeployerMainnet,
+  xlinkContractsDeployerTestnet,
+  xlinkContractsMultisigMainnet,
+  xlinkContractsMultisigTestnet,
 } from "./stacksUtils/stxContractAddresses"
+
+export {
+  KnownRoute_FromStacks,
+  KnownRoute_FromStacks_ToEVM,
+  KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_FromStacks_ToBRC20,
+  KnownRoute_FromStacks_ToRunes,
+  KnownRoute_FromEVM,
+  KnownRoute_FromEVM_ToStacks,
+  KnownRoute_FromEVM_ToEVM,
+  KnownRoute_FromEVM_ToBitcoin,
+  KnownRoute_FromEVM_ToBRC20,
+  KnownRoute_FromEVM_ToRunes,
+  KnownRoute_FromBitcoin,
+  KnownRoute_FromBitcoin_ToStacks,
+  KnownRoute_FromBitcoin_ToEVM,
+  KnownRoute_FromBitcoin_ToBRC20,
+  KnownRoute_FromBitcoin_ToRunes,
+  _KnownRoute_FromBRC20 as KnownRoute_FromBRC20,
+  KnownRoute_FromBRC20_ToEVM,
+  KnownRoute_FromBRC20_ToStacks,
+  KnownRoute_FromBRC20_ToBitcoin,
+  KnownRoute_FromBRC20_ToRunes,
+  _KnownRoute_FromRunes as KnownRoute_FromRunes,
+  KnownRoute_FromRunes_ToEVM,
+  KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromRunes_ToBitcoin,
+  KnownRoute_FromRunes_ToBRC20,
+} from "./utils/buildSupportedRoutes"
 
 export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
 export {

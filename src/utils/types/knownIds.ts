@@ -89,6 +89,7 @@ export namespace KnownTokenId {
   export function isEVMToken(value: TokenId): value is EVMToken {
     return _allKnownEVMTokens.includes(value as any)
   }
+
   /** A namespace that contains constants and types for Stacks tokens. */
   export namespace Stacks {
     /** Represents the sUSDT token ID on the Stacks blockchain. */
@@ -106,14 +107,32 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("stx-vlistx")
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
     export const vLiALEX = tokenId("stx-vlialex")
+    /** Represents the vLiaBTC token ID on the Stacks blockchain. */
     export const vLiaBTC = tokenId("stx-vliabtc")
-    export const uBTC = tokenId("stx-ubtc")
     export const DB20 = tokenId("stx-db20")
+    export const uBTC = tokenId("stx-ubtc")
     export const DOG = tokenId("stx-dog")
     export const STX = tokenId("stx-stx")
     export const TRUMP = tokenId("stx-trump")
   }
-  export type StacksToken = TokenId<`stx-${string}`>
+  const _allKnownStacksTokens = [
+    Stacks.sUSDT,
+    Stacks.sLUNR,
+    Stacks.aBTC,
+    Stacks.ALEX,
+    Stacks.sSKO,
+    Stacks.vLiSTX,
+    Stacks.vLiALEX,
+    Stacks.vLiaBTC,
+    Stacks.DB20,
+    Stacks.uBTC,
+    Stacks.DOG,
+    Stacks.STX,
+    Stacks.TRUMP,
+  ] as const
+  export type StacksToken =
+    | TokenId<`a Stacks token`>
+    | (typeof _allKnownStacksTokens)[number]
   export function isStacksToken(value: TokenId): value is StacksToken {
     return value.startsWith("stx-")
   }

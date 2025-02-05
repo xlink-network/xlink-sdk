@@ -76,7 +76,7 @@ export const getEvm2StacksFeeInfo = async (
     }))
 
   const resp = await props({
-    isApproved: readContract(client, {
+    isApprovedOnEVMSide: readContract(client, {
       abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "APPROVED_TOKEN",
@@ -120,7 +120,7 @@ export const getEvm2StacksFeeInfo = async (
     ),
   })
 
-  if (!resp.isApproved) return undefined
+  if (!resp.isApprovedOnEVMSide) return undefined
 
   const minAmount = BigNumber.max([resp.minAmount, resp.minFeeAmount])
   const maxAmount = BigNumber.min([resp.maxAmount])

@@ -35,7 +35,7 @@ export const legacyAlexContractDeployerMainnet =
 export const legacyAlexContractDeployerTestnet =
   "ST1J2JTYXGRMZYNKE40GM87ZCACSPSSEEQVSNB7DC"
 
-const wrapContractAddress = (
+export const wrapContractAddress = (
   network: "mainnet" | "testnet",
   address: StacksContractAddress,
 ): StacksContractAddress => {
