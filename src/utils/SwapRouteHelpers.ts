@@ -90,7 +90,11 @@ export async function getFirstStepStacksTokenAddress(
       info.swap.fromTokenAddress,
     )
   } else if (info.via === "evmDexAggregator") {
-    return evmTokenToCorrespondingStacksToken(info.swap.fromEVMToken)
+    return evmTokenToCorrespondingStacksToken(
+      sdkContext,
+      info.swap.evmChain,
+      info.swap.fromEVMToken,
+    )
   } else {
     checkNever(info)
     return undefined
@@ -117,7 +121,11 @@ export async function getFinalStepStacksTokenAddress(
       last(info.swap.swapPools).toTokenAddress,
     )
   } else if (info.via === "evmDexAggregator") {
-    return evmTokenToCorrespondingStacksToken(info.swap.toEVMToken)
+    return evmTokenToCorrespondingStacksToken(
+      sdkContext,
+      info.swap.evmChain,
+      info.swap.toEVMToken,
+    )
   } else {
     checkNever(info)
     return undefined
@@ -276,7 +284,11 @@ async function toCorrespondingStacksToken(
     }
   } else if (KnownChainId.isEVMChain(chain)) {
     if (KnownTokenId.isEVMToken(token)) {
-      toStacksTokenPromise = evmTokenToCorrespondingStacksToken(token)
+      toStacksTokenPromise = evmTokenToCorrespondingStacksToken(
+        ctx,
+        chain,
+        token,
+      )
     }
   } else if (KnownChainId.isStacksChain(chain)) {
     if (KnownTokenId.isStacksToken(token)) {

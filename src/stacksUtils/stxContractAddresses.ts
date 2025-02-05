@@ -2,13 +2,14 @@ import {
   contractNameOverrides_mainnet,
   contractNameOverrides_testnet,
 } from "../config"
+import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { KnownRoute_FromStacks_ToEVM } from "../utils/buildSupportedRoutes"
-import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import {
   isStacksContractAddressEqual,
   StacksContractAddress,
 } from "../xlinkSdkUtils/types"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 
 export const xlinkContractsDeployerMainnet =
   "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK"
@@ -176,7 +177,7 @@ export const stxContractAddresses = {
  *
  * use `getStacksTokenContractInfo` instead
  */
-export const stxTokenContractAddresses: Record<
+export const stxTokenContractAddresses_legacy: Record<
   string,
   Record<KnownChainId.StacksChain, StacksContractAddress>
 > = {
@@ -312,219 +313,38 @@ export const stxTokenContractAddresses: Record<
   },
 }
 
-const terminatingStacksTokenContractAddresses = {
-  wbtc: {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "token-wbtc",
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "token-wbtc",
-    }),
-  },
-  btcb: {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "token-wbtc",
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "token-btcb",
-    }),
-  },
-  cbBTC: {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "token-wbtc",
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "token-wbtc",
-    }),
-  },
-  usdt: {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "token-usdt",
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "token-usdt",
-    }),
-  },
-  usdc: {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
-      contractName: "token-usdt",
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
-      contractName: "token-usdt",
-    }),
-  },
-} satisfies Record<
-  string,
-  Record<KnownChainId.StacksChain, StacksContractAddress>
->
-export const getTerminatingStacksTokenContractAddress = (
+export const getTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToEVM,
-): undefined | StacksContractAddress => {
-  const { fromToken, toChain, toToken } = route
-  if (fromToken === KnownTokenId.Stacks.aBTC) {
-    const restChains = assertExclude.i<ChainsHaveAlternativeBTC>()
+): Promise<undefined | StacksContractAddress> => {
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, route.toChain)
 
-    if (
-      (toChain === KnownChainId.EVM.Ethereum ||
-        toChain === KnownChainId.EVM.Sepolia ||
-        toChain === KnownChainId.EVM.Arbitrum) &&
-      toToken === KnownTokenId.EVM.WBTC
-    ) {
-      return terminatingStacksTokenContractAddresses.wbtc[route.fromChain]
-    }
-    assertExclude(restChains, KnownChainId.EVM.Ethereum)
-    assertExclude(restChains, KnownChainId.EVM.Sepolia)
-    assertExclude(restChains, KnownChainId.EVM.Arbitrum)
-
-    if (
-      (toChain === KnownChainId.EVM.BSC ||
-        toChain === KnownChainId.EVM.BSCTestnet) &&
-      toToken === KnownTokenId.EVM.BTCB
-    ) {
-      return terminatingStacksTokenContractAddresses.btcb[route.fromChain]
-    }
-    assertExclude(restChains, KnownChainId.EVM.BSC)
-    assertExclude(restChains, KnownChainId.EVM.BSCTestnet)
-
-    if (
-      toChain === KnownChainId.EVM.Base &&
-      toToken === KnownTokenId.EVM.cbBTC
-    ) {
-      return terminatingStacksTokenContractAddresses.cbBTC[route.fromChain]
-    }
-    assertExclude(restChains, KnownChainId.EVM.Base)
-
-    checkNever(restChains)
-  }
-
-  if (fromToken === KnownTokenId.Stacks.sUSDT) {
-    const restChains = assertExclude.i<ChainsHaveAlternativeStableUSD>()
-
-    if (
-      (toChain === KnownChainId.EVM.Ethereum ||
-        toChain === KnownChainId.EVM.Sepolia ||
-        toChain === KnownChainId.EVM.BSC ||
-        toChain === KnownChainId.EVM.BSCTestnet) &&
-      toToken === KnownTokenId.EVM.USDT
-    ) {
-      return terminatingStacksTokenContractAddresses.usdt[route.fromChain]
-    }
-    assertExclude(restChains, KnownChainId.EVM.Ethereum)
-    assertExclude(restChains, KnownChainId.EVM.Sepolia)
-    assertExclude(restChains, KnownChainId.EVM.BSC)
-    assertExclude(restChains, KnownChainId.EVM.BSCTestnet)
-
-    if (
-      toChain === KnownChainId.EVM.Base &&
-      toToken === KnownTokenId.EVM.USDC
-    ) {
-      return terminatingStacksTokenContractAddresses.usdc[route.fromChain]
-    }
-    assertExclude(restChains, KnownChainId.EVM.Base)
-
-    checkNever(restChains)
-  }
-  return undefined
+  return (
+    supportedRoutes.find(r => r.evmToken === route.toToken)
+      ?.proxyStacksTokenContractAddress ?? undefined
+  )
 }
-export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
-  evmChain: KnownChainId.EVMChain
-  stacksChain: KnownChainId.StacksChain
-  stacksTokenAddress: StacksContractAddress
-}): undefined | KnownTokenId.EVMToken => {
-  const restStableUSDChains = assertExclude.i<ChainsHaveAlternativeStableUSD>()
-  const restBTCChains = assertExclude.i<ChainsHaveAlternativeBTC>()
+export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  route: {
+    evmChain: KnownChainId.EVMChain
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.EVMToken> => {
+  const supportedRoutes = await getEVMSupportedRoutes(
+    sdkContext,
+    route.evmChain,
+  )
 
-  if (
-    (route.evmChain === KnownChainId.EVM.Ethereum ||
-      route.evmChain === KnownChainId.EVM.Sepolia ||
-      route.evmChain === KnownChainId.EVM.Arbitrum) &&
-    isStacksContractAddressEqual(
-      route.stacksTokenAddress,
-      terminatingStacksTokenContractAddresses.wbtc[route.stacksChain],
-    )
-  ) {
-    return KnownTokenId.EVM.WBTC
-  }
-  assertExclude(restBTCChains, KnownChainId.EVM.Ethereum)
-  assertExclude(restBTCChains, KnownChainId.EVM.Sepolia)
-  assertExclude(restBTCChains, KnownChainId.EVM.Arbitrum)
-
-  if (
-    (route.evmChain === KnownChainId.EVM.BSC ||
-      route.evmChain === KnownChainId.EVM.BSCTestnet) &&
-    isStacksContractAddressEqual(
-      route.stacksTokenAddress,
-      terminatingStacksTokenContractAddresses.btcb[route.stacksChain],
-    )
-  ) {
-    return KnownTokenId.EVM.BTCB
-  }
-  assertExclude(restBTCChains, KnownChainId.EVM.BSC)
-  assertExclude(restBTCChains, KnownChainId.EVM.BSCTestnet)
-
-  if (
-    route.evmChain === KnownChainId.EVM.Base &&
-    isStacksContractAddressEqual(
-      route.stacksTokenAddress,
-      terminatingStacksTokenContractAddresses.cbBTC[route.stacksChain],
-    )
-  ) {
-    return KnownTokenId.EVM.cbBTC
-  }
-  assertExclude(restBTCChains, KnownChainId.EVM.Base)
-
-  if (
-    (route.evmChain === KnownChainId.EVM.Ethereum ||
-      route.evmChain === KnownChainId.EVM.Sepolia ||
-      route.evmChain === KnownChainId.EVM.BSC ||
-      route.evmChain === KnownChainId.EVM.BSCTestnet) &&
-    isStacksContractAddressEqual(
-      route.stacksTokenAddress,
-      terminatingStacksTokenContractAddresses.usdt[route.stacksChain],
-    )
-  ) {
-    return KnownTokenId.EVM.USDT
-  }
-  assertExclude(restStableUSDChains, KnownChainId.EVM.Ethereum)
-  assertExclude(restStableUSDChains, KnownChainId.EVM.Sepolia)
-  assertExclude(restStableUSDChains, KnownChainId.EVM.BSC)
-  assertExclude(restStableUSDChains, KnownChainId.EVM.BSCTestnet)
-
-  if (
-    route.evmChain === KnownChainId.EVM.Base &&
-    isStacksContractAddressEqual(
-      route.stacksTokenAddress,
-      terminatingStacksTokenContractAddresses.usdc[route.stacksChain],
-    )
-  ) {
-    return KnownTokenId.EVM.USDC
-  }
-  assertExclude(restStableUSDChains, KnownChainId.EVM.Base)
-
-  checkNever(restStableUSDChains)
-  checkNever(restBTCChains)
-  return undefined
+  return (
+    supportedRoutes.find(r =>
+      r.proxyStacksTokenContractAddress == null
+        ? false
+        : isStacksContractAddressEqual(
+            r.proxyStacksTokenContractAddress,
+            route.stacksTokenAddress,
+          ),
+    )?.evmToken ?? undefined
+  )
 }
-type ChainsHaveAlternativeStableUSD =
-  | typeof KnownChainId.EVM.Ethereum
-  | typeof KnownChainId.EVM.Sepolia
-  | typeof KnownChainId.EVM.BSC
-  | typeof KnownChainId.EVM.BSCTestnet
-  | typeof KnownChainId.EVM.Base
-type ChainsHaveAlternativeBTC =
-  | typeof KnownChainId.EVM.Ethereum
-  | typeof KnownChainId.EVM.Sepolia
-  | typeof KnownChainId.EVM.BSC
-  | typeof KnownChainId.EVM.BSCTestnet
-  | typeof KnownChainId.EVM.Arbitrum
-  | typeof KnownChainId.EVM.Base

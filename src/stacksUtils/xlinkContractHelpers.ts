@@ -22,7 +22,7 @@ import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import {
   StacksContractName,
   stxContractAddresses,
-  stxTokenContractAddresses,
+  stxTokenContractAddresses_legacy,
 } from "./stxContractAddresses"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
@@ -102,8 +102,8 @@ export const getStacksTokenContractInfo = async (
   undefined | (StacksContractAddress & { network: StacksNetwork })
 > => {
   let address: StacksContractAddress | undefined
-  if (stxTokenContractAddresses[tokenId]?.[chainId] != null) {
-    address = stxTokenContractAddresses[tokenId][chainId]
+  if (stxTokenContractAddresses_legacy[tokenId]?.[chainId] != null) {
+    address = stxTokenContractAddresses_legacy[tokenId][chainId]
   } else {
     const allTokens = await getAllStacksTokens(ctx, chainId)
     for (const token of allTokens) {
@@ -130,9 +130,9 @@ export async function getStacksToken(
   tokenAddress: StacksContractAddress,
 ): Promise<undefined | KnownTokenId.StacksToken> {
   for (const token of Object.keys(
-    stxTokenContractAddresses,
-  ) as (keyof typeof stxTokenContractAddresses)[]) {
-    const info = stxTokenContractAddresses[token]?.[chain]
+    stxTokenContractAddresses_legacy,
+  ) as (keyof typeof stxTokenContractAddresses_legacy)[]) {
+    const info = stxTokenContractAddresses_legacy[token]?.[chain]
     if (info == null) continue
 
     if (isStacksContractAddressEqual(info, tokenAddress)) {

@@ -1,9 +1,7 @@
 import { evmTokenFromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "../metaUtils/xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
@@ -267,6 +265,7 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     if (finalStepStacksToken == null) return false
 
     return evmTokenFromCorrespondingStacksToken(
+      ctx,
       toChain,
       finalStepStacksToken,
     ).then(toEVMTokens => toEVMTokens.includes(toToken))

@@ -1,9 +1,7 @@
 import { unwrapResponse } from "clarity-codegen"
 import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "../metaUtils/xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { addressToBuffer } from "../utils/addressHelpers"
 import {
   _KnownRoute_FromMeta,
@@ -224,6 +222,8 @@ export async function createBridgeOrder_MetaToEVM(
   const targetChainId = contractAssignedChainIdFromKnownChain(info.toChain)
 
   const swappedStacksToken = await evmTokenToCorrespondingStacksToken(
+    sdkContext,
+    info.toChain,
     info.toToken,
   )
   if (swappedStacksToken == null) return undefined
@@ -235,12 +235,12 @@ export async function createBridgeOrder_MetaToEVM(
   if (swappedStacksTokenAddress == null) return undefined
 
   const terminatingStacksTokenAddress =
-    getTerminatingStacksTokenContractAddress({
+    (await getTerminatingStacksTokenContractAddress(sdkContext, {
       fromChain: transitStacksChain,
       fromToken: swappedStacksToken,
       toChain: info.toChain,
       toToken: info.toToken,
-    }) ?? swappedStacksTokenAddress
+    })) ?? swappedStacksTokenAddress
 
   let data: undefined | Uint8Array
   if (swapInfo == null) {

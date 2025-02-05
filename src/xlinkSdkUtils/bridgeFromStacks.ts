@@ -261,7 +261,8 @@ async function bridgeFromStacks_toEVM(
   }
 
   const terminatingTokenContractAddress =
-    getTerminatingStacksTokenContractAddress(info) ?? fromTokenContractInfo
+    (await getTerminatingStacksTokenContractAddress(ctx, info)) ??
+    fromTokenContractInfo
 
   const options = composeTxXLINK(
     contractCallInfo.contractName,

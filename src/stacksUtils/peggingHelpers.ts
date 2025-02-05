@@ -1,9 +1,7 @@
 import { evmTokenFromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "../metaUtils/xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { hasAny } from "../utils/arrayHelpers"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { checkNever } from "../utils/typeHelpers"
@@ -83,6 +81,7 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     if (info == null) return false
 
     const toEVMTokens = await evmTokenFromCorrespondingStacksToken(
+      ctx,
       toChain,
       fromToken,
     )

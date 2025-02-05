@@ -1,9 +1,7 @@
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "./xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 
 export const brc20TokenFromTick = async (
   sdkContext: SDKGlobalContext,
