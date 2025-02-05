@@ -1,12 +1,11 @@
 import { Client } from "viem"
 import { EVMOnChainAddresses } from "../evmUtils/evmContractAddresses"
-import type {
-  BRC20SupportedRoute,
-  RunesSupportedRoute,
-} from "../metaUtils/xlinkContractHelpers"
+import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { StacksTokenInfo } from "../stacksUtils/xlinkContractHelpers"
 import { KnownChainId } from "../utils/types/knownIds"
 import { EVMAddress } from "./types"
+import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 
 export interface SDKGlobalContextCache<K, T> {
   get: (key: K) => T | null
@@ -43,6 +42,10 @@ export interface SDKGlobalContext {
   }
   evm: {
     enableMulticall?: boolean
+    routesConfigCache?: SDKGlobalContextCache<
+      "mainnet" | "testnet",
+      Promise<EVMSupportedRoute[]>
+    >
     onChainConfigCache?: SDKGlobalContextCache<
       `${KnownChainId.EVMChain}:${EVMAddress}`,
       Promise<EVMOnChainAddresses>

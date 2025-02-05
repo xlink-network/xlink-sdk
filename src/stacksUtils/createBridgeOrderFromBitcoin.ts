@@ -1,9 +1,7 @@
 import { unwrapResponse } from "clarity-codegen"
 import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "../metaUtils/xlinkContractHelpers"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import {
   KnownRoute_FromBitcoin_ToBRC20,
   KnownRoute_FromBitcoin_ToRunes,
@@ -234,6 +232,8 @@ export async function createBridgeOrder_BitcoinToEVM(
   const targetChainId = contractAssignedChainIdFromKnownChain(info.toChain)
 
   const swappedStacksToken = await evmTokenToCorrespondingStacksToken(
+    sdkContext,
+    info.toChain,
     info.toToken,
   )
   if (swappedStacksToken == null) return undefined
@@ -247,14 +247,14 @@ export async function createBridgeOrder_BitcoinToEVM(
   if (swappedStacksTokenAddress == null) return undefined
 
   const terminatingStacksTokenAddress =
-    getTerminatingStacksTokenContractAddress({
+    (await getTerminatingStacksTokenContractAddress(sdkContext, {
       fromChain: contractBaseCallInfo.network.isMainnet()
         ? KnownChainId.Stacks.Mainnet
         : KnownChainId.Stacks.Testnet,
       fromToken: swappedStacksToken,
       toChain: info.toChain,
       toToken: info.toToken,
-    }) ?? swappedStacksTokenAddress
+    })) ?? swappedStacksTokenAddress
 
   let data: undefined | Uint8Array
   if (swapInfo == null) {
