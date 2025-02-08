@@ -1,8 +1,6 @@
-import { evmTokenFromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
-import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
-import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
-import { hasAny } from "../utils/arrayHelpers"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { checkNever } from "../utils/typeHelpers"
 import {
@@ -18,15 +16,13 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     return false
   }
 
+  if (!KnownChainId.isKnownChain(toChain)) return false
+
   if (
-    KnownChainId.isEVMChain(fromChain) &&
-    _allNoLongerSupportedEVMChains.includes(fromChain)
-  ) {
-    return false
-  }
-  if (
-    KnownChainId.isEVMChain(toChain) &&
-    _allNoLongerSupportedEVMChains.includes(toChain)
+    (KnownChainId.isEVMChain(fromChain) &&
+      _allNoLongerSupportedEVMChains.includes(fromChain)) ||
+    (KnownChainId.isEVMChain(toChain) &&
+      _allNoLongerSupportedEVMChains.includes(toChain))
   ) {
     return false
   }
@@ -37,10 +33,19 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
   ) {
     return false
   }
-  if (!KnownChainId.isKnownChain(toChain)) return false
 
   if (KnownChainId.isStacksChain(toChain)) {
     return false
+  }
+
+  if (KnownChainId.isEVMChain(toChain)) {
+    if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const supportedRoutes = await getEVMSupportedRoutes(ctx, toChain)
+
+    return supportedRoutes.some(
+      route => route.stacksToken === fromToken && route.evmToken === toToken,
+    )
   }
 
   if (KnownChainId.isBitcoinChain(toChain)) {
@@ -56,7 +61,6 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     if (!KnownTokenId.isRunesToken(toToken)) return false
 
     const supportedRoutes = await getRunesSupportedRoutes(ctx, toChain)
-    if (supportedRoutes == null || !hasAny(supportedRoutes)) return false
 
     return supportedRoutes.some(
       route => route.stacksToken === fromToken && route.runesToken === toToken,
@@ -67,25 +71,10 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
     const supportedRoutes = await getBRC20SupportedRoutes(ctx, toChain)
-    if (supportedRoutes == null || !hasAny(supportedRoutes)) return false
 
     return supportedRoutes.some(
       route => route.stacksToken === fromToken && route.brc20Token === toToken,
     )
-  }
-
-  if (KnownChainId.isEVMChain(toChain)) {
-    if (!KnownTokenId.isEVMToken(toToken)) return false
-
-    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
-    if (info == null) return false
-
-    const toEVMTokens = await evmTokenFromCorrespondingStacksToken(
-      ctx,
-      toChain,
-      fromToken,
-    )
-    return toEVMTokens.includes(toToken)
   }
 
   checkNever(toChain)

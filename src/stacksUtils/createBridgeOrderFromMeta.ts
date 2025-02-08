@@ -19,10 +19,8 @@ import { EVMAddress } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { CreateBridgeOrderResult } from "./createBridgeOrderFromBitcoin"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
-import {
-  getTerminatingStacksTokenContractAddress,
-  StacksContractName,
-} from "./stxContractAddresses"
+import { StacksContractName } from "./stxContractAddresses"
+import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
@@ -236,10 +234,9 @@ export async function createBridgeOrder_MetaToEVM(
 
   const terminatingStacksTokenAddress =
     (await getTerminatingStacksTokenContractAddress(sdkContext, {
-      fromChain: transitStacksChain,
-      fromToken: swappedStacksToken,
-      toChain: info.toChain,
-      toToken: info.toToken,
+      stacksChain: transitStacksChain,
+      evmChain: info.toChain,
+      evmToken: info.toToken,
     })) ?? swappedStacksTokenAddress
 
   let data: undefined | Uint8Array

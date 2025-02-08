@@ -3,10 +3,8 @@ import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
-import {
-  getTerminatingStacksTokenContractAddress,
-  StacksContractName,
-} from "../stacksUtils/stxContractAddresses"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
 import {
   composeTxXLINK,
   getStacksContractCallInfo,
@@ -261,8 +259,11 @@ async function bridgeFromStacks_toEVM(
   }
 
   const terminatingTokenContractAddress =
-    (await getTerminatingStacksTokenContractAddress(ctx, info)) ??
-    fromTokenContractInfo
+    (await getTerminatingStacksTokenContractAddress(ctx, {
+      stacksChain: info.fromChain,
+      evmChain: info.toChain,
+      evmToken: info.toToken,
+    })) ?? fromTokenContractInfo
 
   const options = composeTxXLINK(
     contractCallInfo.contractName,

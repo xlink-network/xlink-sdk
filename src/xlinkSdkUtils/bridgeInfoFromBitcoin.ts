@@ -11,6 +11,7 @@ import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
   SwapRoute_WithExchangeRate_Public,
+  SwapRouteViaEVMDexAggregator_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
 import {
   KnownRoute,
@@ -41,7 +42,9 @@ export interface BridgeInfoFromBitcoinInput {
   fromToken: TokenId
   toToken: TokenId
   amount: SDKNumber
-  swapRoute?: SwapRoute_WithExchangeRate_Public
+  swapRoute?:
+    | SwapRoute_WithExchangeRate_Public
+    | SwapRouteViaEVMDexAggregator_WithExchangeRate_Public
 }
 
 export interface BridgeInfoFromBitcoinOutput
@@ -162,27 +165,22 @@ async function bridgeInfoFromBitcoin_toEVM(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
+
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
-    fromToken: KnownTokenId.Bitcoin.BTC,
+    fromToken: info.fromToken,
     toChain: transitStacksChainId,
-    toToken: KnownTokenId.Stacks.aBTC,
+    toToken: step1ToStacksToken,
   }
   const step2Route: KnownRoute = {
     fromChain: transitStacksChainId,
-    fromToken: KnownTokenId.Stacks.aBTC,
+    fromToken: step2FromStacksToken,
     toChain: info.toChain,
     toToken: info.toToken,
-  }
-
-  // TODO: add support for Bitcoin -> EVM with swap
-  if (info.swapRoute != null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
   }
 
   const [step1, step2] = await Promise.all([
@@ -204,7 +202,7 @@ async function bridgeInfoFromBitcoin_toEVM(
     [step1Route, step2Route],
     [step1, step2],
     BigNumber.from(info.amount),
-    BigNumber.ONE,
+    BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
   )
 }
 
