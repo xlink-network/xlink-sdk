@@ -6,7 +6,11 @@ import {
   KnownTokenId,
   _allKnownEVMTokens,
 } from "../utils/types/knownIds"
-import { EVMAddress } from "../xlinkSdkUtils/types"
+import {
+  EVMAddress,
+  EVMNativeCurrencyAddress,
+  evmNativeCurrencyAddress,
+} from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { BridgeConfigAbi } from "./contractAbi/bridgeConfig"
 import {
@@ -14,6 +18,7 @@ import {
   EVMOnChainAddresses,
   evmContractAddresses,
 } from "./evmContractAddresses"
+import { nativeCurrencyAddress } from "./addressHelpers"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 18
 export const numberFromSolidityContractNumber = (
@@ -83,7 +88,7 @@ export async function getEVMTokenContractInfo(
   | undefined
   | {
       client: Client
-      tokenContractAddress: Address
+      tokenContractAddress: Address | EVMNativeCurrencyAddress
     }
 > {
   const addresses = await getAllAddresses(sdkContext, chainId)
@@ -96,7 +101,10 @@ export async function getEVMTokenContractInfo(
 
   return {
     client: addresses.client,
-    tokenContractAddress,
+    tokenContractAddress:
+      tokenContractAddress === nativeCurrencyAddress
+        ? evmNativeCurrencyAddress
+        : tokenContractAddress,
   }
 }
 

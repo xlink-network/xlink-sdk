@@ -2,14 +2,8 @@ import {
   contractNameOverrides_mainnet,
   contractNameOverrides_testnet,
 } from "../config"
-import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
-import { KnownRoute_FromStacks_ToEVM } from "../utils/buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import {
-  isStacksContractAddressEqual,
-  StacksContractAddress,
-} from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { StacksContractAddress } from "../xlinkSdkUtils/types"
 
 export const xlinkContractsDeployerMainnet =
   "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK"
@@ -56,6 +50,7 @@ export const wrapContractAddress = (
 export enum StacksContractName {
   BTCPegInEndpoint = "btc-peg-in-endpoint-v2-07",
   BTCPegInEndpointSwap = "btc-peg-in-endpoint-v2-07-swap",
+  BTCPegInEndpointAggregator = "btc-peg-in-endpoint-v2-07-agg",
   BTCPegInEndpointLaunchpad = "btc-peg-in-endpoint-v2-05-launchpad",
   BTCPegOutEndpoint = "btc-peg-out-endpoint-v2-01",
   MetaPegInEndpoint = "meta-peg-in-endpoint-v2-04",
@@ -64,6 +59,7 @@ export enum StacksContractName {
   EVMPegInEndpoint = "cross-peg-in-endpoint-v2-04",
   EVMPegInEndpointSwap = "cross-peg-in-endpoint-v2-04-swap",
   EVMPegOutEndpoint = "cross-peg-out-endpoint-v2-01",
+  EVMPegOutEndpointAggregator = "cross-peg-out-endpoint-v2-01-agg",
 }
 
 export const stxContractAddresses = {
@@ -85,6 +81,16 @@ export const stxContractAddresses = {
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
       deployerAddress: xlinkContractsMultisigTestnet,
       contractName: StacksContractName.BTCPegInEndpointSwap,
+    }),
+  },
+  [StacksContractName.BTCPegInEndpointAggregator]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: StacksContractName.BTCPegInEndpointAggregator,
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: StacksContractName.BTCPegInEndpointAggregator,
     }),
   },
   [StacksContractName.BTCPegInEndpointLaunchpad]: {
@@ -135,6 +141,16 @@ export const stxContractAddresses = {
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
       deployerAddress: xlinkContractsDeployerTestnet,
       contractName: StacksContractName.EVMPegOutEndpoint,
+    }),
+  },
+  [StacksContractName.EVMPegOutEndpointAggregator]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: StacksContractName.EVMPegOutEndpointAggregator,
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: StacksContractName.EVMPegOutEndpointAggregator,
     }),
   },
   [StacksContractName.MetaPegInEndpoint]: {
@@ -311,40 +327,4 @@ export const stxTokenContractAddresses_legacy: Record<
       contractName: "runes-trump",
     }),
   },
-}
-
-export const getTerminatingStacksTokenContractAddress = async (
-  sdkContext: SDKGlobalContext,
-  route: KnownRoute_FromStacks_ToEVM,
-): Promise<undefined | StacksContractAddress> => {
-  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, route.toChain)
-
-  return (
-    supportedRoutes.find(r => r.evmToken === route.toToken)
-      ?.proxyStacksTokenContractAddress ?? undefined
-  )
-}
-export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
-  sdkContext: SDKGlobalContext,
-  route: {
-    evmChain: KnownChainId.EVMChain
-    stacksChain: KnownChainId.StacksChain
-    stacksTokenAddress: StacksContractAddress
-  },
-): Promise<undefined | KnownTokenId.EVMToken> => {
-  const supportedRoutes = await getEVMSupportedRoutes(
-    sdkContext,
-    route.evmChain,
-  )
-
-  return (
-    supportedRoutes.find(r =>
-      r.proxyStacksTokenContractAddress == null
-        ? false
-        : isStacksContractAddressEqual(
-            r.proxyStacksTokenContractAddress,
-            route.stacksTokenAddress,
-          ),
-    )?.evmToken ?? undefined
-  )
 }

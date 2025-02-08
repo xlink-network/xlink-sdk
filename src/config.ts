@@ -12,12 +12,12 @@ export const STACKS_TESTNET = new StacksMocknet({
 export const contractNameOverrides_mainnet: Record<string, string> = {
   "btc-peg-in-endpoint-v2-07": "btc-peg-in-v2-07a",
   "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07e-swap",
-  "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07b-agg",
+  "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07d-agg",
   "btc-peg-in-endpoint-v2-05-launchpad": "btc-peg-in-v2-05-launchpad-3c",
   "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06d-swap",
   "cross-peg-in-endpoint-v2-04-swap": "cross-peg-in-v2-04b-swap",
   "cross-peg-in-endpoint-v2-04-launchpad": "cross-peg-in-v2-04-launchpad-3c",
-  "cross-peg-out-endpoint-v2-01-agg": "cross-peg-out-v2-01a-agg",
+  "cross-peg-out-endpoint-v2-01-agg": "cross-peg-out-v2-01b-agg",
 }
 export const contractNameOverrides_testnet: Record<string, string> = {
   "token-wliabtc": "token-wliabtc-dk",

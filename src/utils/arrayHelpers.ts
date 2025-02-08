@@ -92,6 +92,31 @@ export function oneOf<T extends any[]>(
   return ((input: unknown) => coll.includes(input)) as any
 }
 
+export function groupBy<T, K extends string>(
+  iteratee: (item: T) => K,
+  ary: T[],
+): Partial<Record<K, T[]>> {
+  const result: Partial<Record<K, T[]>> = {}
+  ary.forEach(i => {
+    const key = iteratee(i)
+    if (result[key] == null) {
+      result[key] = []
+    }
+    result[key].push(i)
+  })
+  return result
+}
+
+export function uniqBy<T>(iteratee: (item: T) => string, ary: T[]): T[] {
+  const existed = new Set<string>()
+  return ary.flatMap(i => {
+    const id = iteratee(i)
+    if (existed.has(id)) return []
+    existed.add(id)
+    return [i]
+  })
+}
+
 export type SortByIteratee<T> = (
   item: T,
   index: number,

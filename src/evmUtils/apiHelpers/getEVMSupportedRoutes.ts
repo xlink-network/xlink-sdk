@@ -20,30 +20,33 @@ export async function getEVMSupportedRoutes(
   sdkContext: SDKGlobalContext,
   chainId: KnownChainId.EVMChain,
 ): Promise<EVMSupportedRoute[]> {
-  const network = KnownChainId.isEVMMainnetChain(chainId)
-    ? "mainnet"
-    : "testnet"
+  const routes = await getEVMSupportedRoutesByChainType(
+    sdkContext,
+    KnownChainId.isEVMMainnetChain(chainId) ? "mainnet" : "testnet",
+  )
 
-  let promise: Promise<EVMSupportedRoute[]>
-
+  return routes.filter(r => r.evmChain === chainId)
+}
+export async function getEVMSupportedRoutesByChainType(
+  sdkContext: SDKGlobalContext,
+  network: "mainnet" | "testnet",
+): Promise<EVMSupportedRoute[]> {
   if (
     sdkContext.evm.routesConfigCache != null &&
     sdkContext.evm.routesConfigCache.get(network) != null
   ) {
-    promise = sdkContext.evm.routesConfigCache.get(network)!
-  } else {
-    promise = _getEVMSupportedRoutes(sdkContext, network).catch(err => {
-      const cachedPromise = sdkContext.evm.routesConfigCache?.get(network)
-      if (promise === cachedPromise) {
-        sdkContext.evm.routesConfigCache?.delete(network)
-      }
-      throw err
-    })
-    sdkContext.evm.routesConfigCache?.set(network, promise)
+    return sdkContext.evm.routesConfigCache.get(network)!
   }
 
-  const routes = await promise
-  return routes.filter(r => r.evmChain === chainId)
+  const promise = _getEVMSupportedRoutes(sdkContext, network).catch(err => {
+    const cachedPromise = sdkContext.evm.routesConfigCache?.get(network)
+    if (promise === cachedPromise) {
+      sdkContext.evm.routesConfigCache?.delete(network)
+    }
+    throw err
+  })
+  sdkContext.evm.routesConfigCache?.set(network, promise)
+  return promise
 }
 async function _getEVMSupportedRoutes(
   sdkContext: SDKGlobalContext,

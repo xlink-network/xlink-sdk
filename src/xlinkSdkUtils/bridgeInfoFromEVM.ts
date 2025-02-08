@@ -1,13 +1,12 @@
 import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
-import { nativeCurrencyAddress } from "../evmUtils/addressHelpers"
 import {
+  evmTokenToCorrespondingStacksToken,
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
-  evmTokenToCorrespondingStacksToken,
 } from "../evmUtils/peggingHelpers"
-import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import { BigNumber } from "../utils/BigNumber"
+import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
 import {
   KnownRoute,
   KnownRoute_FromEVM_ToBitcoin,
@@ -139,15 +138,7 @@ async function bridgeInfoFromEVM_toStacks(
     KnownRoute_FromEVM_ToStacks,
 ): Promise<BridgeInfoFromEVMOutput> {
   const step1 = await getEvm2StacksFeeInfo(ctx, info)
-  const evmTokenContractCallInfo = await getEVMTokenContractInfo(
-    ctx,
-    info.fromChain,
-    info.fromToken,
-  )
-  if (
-    step1 == null ||
-    evmTokenContractCallInfo?.tokenContractAddress === nativeCurrencyAddress
-  ) {
+  if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -173,29 +164,21 @@ async function bridgeInfoFromEVM_toBitcoin(
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
-    ctx,
-    info.fromChain,
-    info.fromToken,
-  )
-  if (transitStacksToken == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
+
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
     toChain: transitStacksChain,
-    toToken: transitStacksToken,
+    toToken: step1ToStacksToken,
   }
   const step2Route: KnownRoute = {
     fromChain: transitStacksChain,
-    fromToken: transitStacksToken,
+    fromToken: step2FromStacksToken,
     toChain: info.toChain,
     toToken: info.toToken,
   }
@@ -232,48 +215,33 @@ async function bridgeInfoFromEVM_toEVM(
   > &
     KnownRoute_FromEVM_ToEVM,
 ): Promise<BridgeInfoFromEVMOutput> {
-  const evmTokenContractCallInfo = await getEVMTokenContractInfo(
-    ctx,
-    info.fromChain,
-    info.fromToken,
-  )
-
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
-    ctx,
-    info.fromChain,
-    info.fromToken,
-  )
-  if (
-    transitStacksToken == null ||
-    evmTokenContractCallInfo?.tokenContractAddress === nativeCurrencyAddress
-  ) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
+
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
     toChain: transitStacksChain,
-    toToken: transitStacksToken,
+    toToken: step1ToStacksToken,
   }
   const step2Route: KnownRoute = {
     fromChain: transitStacksChain,
-    fromToken: transitStacksToken,
+    fromToken: step2FromStacksToken,
     toChain: info.toChain,
     toToken: info.toToken,
   }
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2EvmFeeInfo(ctx, step2Route),
+    getStacks2EvmFeeInfo(ctx, step2Route, {
+      toDexAggregator: false,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
@@ -300,43 +268,26 @@ async function bridgeInfoFromEVM_toMeta(
   > &
     (KnownRoute_FromEVM_ToBRC20 | KnownRoute_FromEVM_ToRunes),
 ): Promise<BridgeInfoFromEVMOutput> {
-  const evmTokenContractCallInfo = await getEVMTokenContractInfo(
-    ctx,
-    info.fromChain,
-    info.fromToken,
-  )
-
   const transitStacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
-  const transitStacksToken = await evmTokenToCorrespondingStacksToken(
-    ctx,
-    info.fromChain,
-    info.fromToken,
-  )
-  if (
-    transitStacksToken == null ||
-    evmTokenContractCallInfo?.tokenContractAddress === nativeCurrencyAddress
-  ) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
+
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
     toChain: transitStacksChain,
-    toToken: transitStacksToken,
+    toToken: step1ToStacksToken,
   }
   const step2Route:
     | KnownRoute_FromStacks_ToBRC20
     | KnownRoute_FromStacks_ToRunes = {
     fromChain: transitStacksChain,
-    fromToken: transitStacksToken,
+    fromToken: step2FromStacksToken,
     toChain: info.toChain as any,
     toToken: info.toToken as any,
   }

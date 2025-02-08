@@ -9,7 +9,7 @@ import { KnownRoute_WithMetaProtocol } from "../buildSupportedRoutes"
 import {
   applyTransferProphet,
   applyTransferProphets,
-  composeTransferProphet2,
+  composeTransferProphets,
 } from "../feeRateHelpers"
 import { checkNever, isNotNull, OneOrMore } from "../typeHelpers"
 import { KnownChainId, KnownTokenId } from "./knownIds"
@@ -155,27 +155,21 @@ export function transformToPublicTransferProphet(
  *   ],
  * )
  */
-export const transformToPublicTransferProphetAggregated2 = (
-  routes: [KnownRoute_WithMetaProtocol, KnownRoute_WithMetaProtocol],
-  transferProphets: [TransferProphet, TransferProphet],
+export const transformToPublicTransferProphetAggregated = (
+  routes: OneOrMore<KnownRoute_WithMetaProtocol>,
+  transferProphets: OneOrMore<TransferProphet>,
   fromAmount: BigNumber,
-  exchangeRate: BigNumber,
-): PublicTransferProphetAggregated<
-  [PublicTransferProphet, PublicTransferProphet]
-> => {
+  exchangeRates: OneOrMore<BigNumber>,
+): PublicTransferProphetAggregated<PublicTransferProphet[]> => {
   if (routes.length !== transferProphets.length) {
     throw new Error(
       `[XLinkSDK#transformToPublicTransferProphetAggregated2] route count not match with transferProphet count, which is not expected`,
     )
   }
 
-  const composed = composeTransferProphet2(
-    transferProphets[0],
-    transferProphets[1],
-    exchangeRate,
-  )
+  const composed = composeTransferProphets(transferProphets, exchangeRates)
   const applyResult = applyTransferProphets(transferProphets, fromAmount, {
-    exchangeRates: [exchangeRate],
+    exchangeRates,
   })
 
   const fees: PublicTransferProphet["fees"] = applyResult
@@ -199,6 +193,14 @@ export const transformToPublicTransferProphetAggregated2 = (
 
   const firstRoute = first(routes)
   const lastRoute = last(routes)
+  const publicTransferProphets = applyResult.map(
+    (r, idx): PublicTransferProphet =>
+      transformToPublicTransferProphet(
+        routes[idx],
+        applyResult[idx].fromAmount,
+        transferProphets[idx],
+      ),
+  )
   return {
     fromChain: firstRoute.fromChain,
     fromToken: firstRoute.fromToken,
@@ -210,17 +212,22 @@ export const transformToPublicTransferProphetAggregated2 = (
     fees,
     minBridgeAmount: toSDKNumberOrUndefined(composed.minBridgeAmount),
     maxBridgeAmount: toSDKNumberOrUndefined(composed.maxBridgeAmount),
-    transferProphets: [
-      transformToPublicTransferProphet(
-        routes[0],
-        fromAmount,
-        transferProphets[0],
-      ),
-      transformToPublicTransferProphet(
-        routes[1],
-        applyResult[1].netAmount,
-        transferProphets[1],
-      ),
-    ],
+    transferProphets: publicTransferProphets,
   }
+}
+
+export const transformToPublicTransferProphetAggregated2 = (
+  routes: [KnownRoute_WithMetaProtocol, KnownRoute_WithMetaProtocol],
+  transferProphets: [TransferProphet, TransferProphet],
+  fromAmount: BigNumber,
+  exchangeRate: BigNumber,
+): PublicTransferProphetAggregated<
+  [PublicTransferProphet, PublicTransferProphet]
+> => {
+  return transformToPublicTransferProphetAggregated(
+    routes,
+    transferProphets,
+    fromAmount,
+    [exchangeRate],
+  ) as any
 }

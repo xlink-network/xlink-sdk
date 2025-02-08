@@ -21,7 +21,9 @@ import { props } from "./promiseHelpers"
 import { checkNever, OneOrMore } from "./typeHelpers"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
-export interface SwapRoute {
+// ----------- SwapRouteViaALEX start -----------
+
+export interface SwapRouteViaALEX {
   via: "ALEX"
   fromTokenAddress: StacksContractAddress
   swapPools: OneOrMore<{
@@ -30,26 +32,32 @@ export interface SwapRoute {
   }>
 }
 
+export interface SwapRouteViaALEX_WithExchangeRate extends SwapRouteViaALEX {
+  composedExchangeRate: BigNumber
+}
+export interface SwapRouteViaALEX_WithExchangeRate_Public
+  extends SwapRouteViaALEX {
+  composedExchangeRate: SDKNumber
+}
+
+export interface SwapRouteViaALEX_WithMinimumAmountsToReceive
+  extends SwapRouteViaALEX {
+  minimumAmountsToReceive: BigNumber
+}
+export interface SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
+  extends SwapRouteViaALEX {
+  minimumAmountsToReceive: SDKNumber
+}
+
+// ----------- SwapRouteViaALEX end -----------
+
+// ----------- SwapRouteViaEVMDexAggregator start -----------
+
 export interface SwapRouteViaEVMDexAggregator {
   via: "evmDexAggregator"
   evmChain: KnownChainId.EVMChain
   fromEVMToken: KnownTokenId.EVMToken
   toEVMToken: KnownTokenId.EVMToken
-}
-
-export interface SwapRoute_WithExchangeRate extends SwapRoute {
-  composedExchangeRate: BigNumber
-}
-export interface SwapRoute_WithExchangeRate_Public extends SwapRoute {
-  composedExchangeRate: SDKNumber
-}
-
-export interface SwapRoute_WithMinimumAmountsToReceive extends SwapRoute {
-  minimumAmountsToReceive: BigNumber
-}
-export interface SwapRoute_WithMinimumAmountsToReceive_Public
-  extends SwapRoute {
-  minimumAmountsToReceive: SDKNumber
 }
 
 export interface SwapRouteViaEVMDexAggregator_WithExchangeRate
@@ -70,12 +78,36 @@ export interface SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   minimumAmountsToReceive: SDKNumber
 }
 
+// ----------- SwapRouteViaEVMDexAggregator end -----------
+
+// ----------- SwapRoute start -----------
+
+export type SwapRoute = SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+
+export type SwapRoute_WithExchangeRate =
+  | SwapRouteViaALEX_WithExchangeRate
+  | SwapRouteViaEVMDexAggregator_WithExchangeRate
+
+export type SwapRoute_WithExchangeRate_Public =
+  | SwapRouteViaALEX_WithExchangeRate_Public
+  | SwapRouteViaEVMDexAggregator_WithExchangeRate_Public
+
+export type SwapRoute_WithMinimumAmountsToReceive =
+  | SwapRouteViaALEX_WithMinimumAmountsToReceive
+  | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive
+
+export type SwapRoute_WithMinimumAmountsToReceive_Public =
+  | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
+  | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
+
+// ----------- SwapRoute end -----------
+
 export async function getFirstStepStacksTokenAddress(
   sdkContext: SDKGlobalContext,
   info:
     | {
-        via: SwapRoute["via"]
-        swap: SwapRoute
+        via: SwapRouteViaALEX["via"]
+        swap: SwapRouteViaALEX
         stacksChain: KnownChainId.StacksChain
       }
     | {
@@ -105,8 +137,8 @@ export async function getFinalStepStacksTokenAddress(
   sdkContext: SDKGlobalContext,
   info:
     | {
-        via: SwapRoute["via"]
-        swap: SwapRoute
+        via: SwapRouteViaALEX["via"]
+        swap: SwapRouteViaALEX
         stacksChain: KnownChainId.StacksChain
       }
     | {
@@ -135,7 +167,7 @@ export async function getFinalStepStacksTokenAddress(
 export async function getAndCheckTransitStacksTokens(
   ctx: SDKGlobalContext,
   info: KnownRoute_WithMetaProtocol & {
-    swapRoute?: SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ): Promise<{
   firstStepToStacksToken: KnownTokenId.StacksToken
@@ -255,7 +287,7 @@ async function toCorrespondingStacksChain(
   return undefined
 }
 
-async function toCorrespondingStacksToken(
+export async function toCorrespondingStacksToken(
   ctx: SDKGlobalContext,
   chain: KnownChainId.KnownChain,
   token: KnownTokenId.KnownToken,
@@ -317,7 +349,7 @@ export async function getSpecialFeeDetailsForSwapRoute(
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ): Promise<undefined | SpecialFeeDetailsForSwapRoute> {
   const stacksContractCallInfo = getStacksContractCallInfo(

@@ -22,7 +22,7 @@ export const applyTransferProphets = (
   options: {
     exchangeRates?: readonly BigNumber[]
   } = {},
-): OneOrMore<TransferProphetAppliedResult> => {
+): OneOrMore<TransferProphetAppliedResult & { fromAmount: BigNumber }> => {
   const { exchangeRates } = options
 
   if (
@@ -35,17 +35,21 @@ export const applyTransferProphets = (
   }
 
   return reduce(
-    (acc, transferProphet, idx) =>
-      concat(acc, [
-        applyTransferProphet(
-          transferProphet,
-          BigNumber.mul(
-            last(acc).netAmount,
-            exchangeRates?.[idx] ?? BigNumber.ONE,
-          ),
-        ),
-      ]),
-    [applyTransferProphet(transferProphets[0], amount)],
+    (acc, transferProphet, idx) => {
+      const fromAmount = BigNumber.mul(
+        last(acc).netAmount,
+        exchangeRates?.[idx] ?? BigNumber.ONE,
+      )
+      return concat(acc, [
+        { ...applyTransferProphet(transferProphet, fromAmount), fromAmount },
+      ])
+    },
+    [
+      {
+        ...applyTransferProphet(transferProphets[0], amount),
+        fromAmount: amount,
+      },
+    ],
     transferProphets.slice(1),
   )
 }
@@ -92,9 +96,6 @@ export const applyTransferProphet = (
 }
 
 /**
- * @deprecated
- * **DO NOT** use this function before we created it's unit tests
- *
  * @example
  * composeTransferProphets(
  *   [

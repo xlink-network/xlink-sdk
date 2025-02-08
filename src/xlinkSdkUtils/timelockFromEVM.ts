@@ -12,13 +12,17 @@ import { UnsupportedChainError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { isNotNull } from "../utils/typeHelpers"
 import {
+  _allKnownEVMTokens,
   KnownChainId,
   KnownTokenId,
-  _allKnownEVMTokens,
 } from "../utils/types/knownIds"
-import { EVMAddress, SDKNumber, toSDKNumberOrUndefined } from "./types"
+import {
+  EVMAddress,
+  evmNativeCurrencyAddress,
+  SDKNumber,
+  toSDKNumberOrUndefined,
+} from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { nativeCurrencyAddress } from "../evmUtils/addressHelpers"
 
 export interface TimeLockedAsset {
   id: string
@@ -79,9 +83,15 @@ export async function getTimeLockedAssetsFromEVM(
       await Promise.all(
         _allKnownEVMTokens.map(token =>
           getEVMTokenContractInfo(ctx, chain, token).then(info =>
-            info == null || info.tokenContractAddress === nativeCurrencyAddress
+            info == null ||
+            info.tokenContractAddress === evmNativeCurrencyAddress
               ? null
-              : { ...info, chain, token },
+              : {
+                  ...info,
+                  chain,
+                  token,
+                  tokenContractAddress: info.tokenContractAddress,
+                },
           ),
         ),
       )

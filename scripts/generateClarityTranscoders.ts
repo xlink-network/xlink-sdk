@@ -40,11 +40,13 @@ const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
     [
       "btc-peg-in-endpoint-v2-07",
       "btc-peg-in-endpoint-v2-07-swap",
+      "btc-peg-in-endpoint-v2-07-agg",
       "btc-peg-in-endpoint-v2-05-launchpad",
       "btc-peg-out-endpoint-v2-01",
       "cross-peg-in-endpoint-v2-04",
       "cross-peg-in-endpoint-v2-04-swap",
       "cross-peg-out-endpoint-v2-01",
+      "cross-peg-out-endpoint-v2-01-agg",
       "meta-peg-in-endpoint-v2-04",
       "meta-peg-in-endpoint-v2-06-swap",
       "meta-peg-out-endpoint-v2-04",

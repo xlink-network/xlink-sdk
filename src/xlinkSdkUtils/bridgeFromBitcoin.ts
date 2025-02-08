@@ -4,9 +4,10 @@ import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createB
 import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
 import { bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
 import {
-  getBitcoinHardLinkageAddress,
   getBTCPegInAddress,
+  getBitcoinHardLinkageAddress,
 } from "../bitcoinUtils/btcAddresses"
+import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../bitcoinUtils/constants"
 import { createTransaction } from "../bitcoinUtils/createTransaction"
 import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
@@ -39,6 +40,13 @@ import {
   UnsupportedBridgeRouteError,
 } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
+import {
+  SwapRouteViaALEX,
+  SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
+  SwapRouteViaEVMDexAggregator,
+  SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
+  SwapRoute_WithMinimumAmountsToReceive_Public,
+} from "../utils/SwapRouteHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   KnownChainId,
@@ -48,10 +56,7 @@ import {
   _knownChainIdToErrorMessagePart,
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
-import { SwapRoute_WithMinimumAmountsToReceive_Public } from "../utils/SwapRouteHelpers"
-import { SwapRoute } from "../utils/SwapRouteHelpers"
 import { SDKGlobalContext } from "./types.internal"
-import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../bitcoinUtils/constants"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -208,6 +213,8 @@ async function bridgeFromBitcoin_toStacks(
   > &
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeFromBitcoinOutput> {
+  const swapRoute = info.swapRoute
+
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const toTokenContractInfo = await getStacksTokenContractInfo(
     sdkContext,
@@ -218,23 +225,25 @@ async function bridgeFromBitcoin_toStacks(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
   const createdOrder = await createBridgeOrder_BitcoinToStacks(sdkContext, {
     fromChain: info.fromChain,
+    fromToken: info.fromToken,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
     toChain: info.toChain,
     toToken: info.toToken,
     toStacksAddress: info.toAddress,
     swap:
-      info.swapRoute == null
+      swapRoute == null
         ? undefined
         : {
-            ...info.swapRoute,
+            ...swapRoute,
             minimumAmountsToReceive: BigNumber.from(
-              info.swapRoute.minimumAmountsToReceive,
+              swapRoute.minimumAmountsToReceive,
             ),
           },
   })
@@ -242,13 +251,14 @@ async function bridgeFromBitcoin_toStacks(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
   return broadcastBitcoinTransaction(
     sdkContext,
-    { ...info, withHardLinkageOutput: false },
+    { ...info, withHardLinkageOutput: false, swapRoute: info.swapRoute },
     createdOrder,
   )
 }
@@ -261,19 +271,19 @@ async function bridgeFromBitcoin_toEVM(
   > &
     KnownRoute_FromBitcoin_ToEVM,
 ): Promise<BridgeFromBitcoinOutput> {
+  const swapRoute = info.swapRoute
+
   const createdOrder = await createBridgeOrder_BitcoinToEVM(sdkContext, {
-    fromChain: info.fromChain,
-    toChain: info.toChain,
-    toToken: info.toToken,
+    ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
     toEVMAddress: info.toAddress,
     swap:
-      info.swapRoute == null
+      swapRoute == null
         ? undefined
         : {
-            ...info.swapRoute,
+            ...swapRoute,
             minimumAmountsToReceive: BigNumber.from(
-              info.swapRoute.minimumAmountsToReceive,
+              swapRoute.minimumAmountsToReceive,
             ),
           },
   })
@@ -281,13 +291,14 @@ async function bridgeFromBitcoin_toEVM(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
   return broadcastBitcoinTransaction(
     sdkContext,
-    { ...info, withHardLinkageOutput: false },
+    { ...info, withHardLinkageOutput: false, swapRoute: info.swapRoute },
     createdOrder,
   )
 }
@@ -316,17 +327,18 @@ async function bridgeFromBitcoin_toMeta(
     )
   }
 
+  const swapRoute = info.swapRoute
   const createdOrder = await createBridgeOrder_BitcoinToMeta(sdkContext, {
     ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
     toBitcoinScriptPubKey: info.toAddressScriptPubKey,
     swap:
-      info.swapRoute == null
+      swapRoute == null
         ? undefined
         : {
-            ...info.swapRoute,
+            ...swapRoute,
             minimumAmountsToReceive: BigNumber.from(
-              info.swapRoute.minimumAmountsToReceive,
+              swapRoute.minimumAmountsToReceive,
             ),
           },
   })
@@ -334,13 +346,14 @@ async function bridgeFromBitcoin_toMeta(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
   return broadcastBitcoinTransaction(
     sdkContext,
-    { ...info, withHardLinkageOutput: true },
+    { ...info, withHardLinkageOutput: true, swapRoute: info.swapRoute },
     createdOrder,
   )
 }
@@ -361,18 +374,28 @@ async function broadcastBitcoinTransaction(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
+  const route: KnownRoute_FromBitcoin = {
+    fromChain: info.fromChain,
+    fromToken: info.fromToken,
+    toChain: info.toChain,
+    toToken: info.toToken,
+  } as any
+
   const tx = await constructBitcoinTransaction(sdkContext, {
-    ...(info as any),
+    ...info,
+    ...route,
     validateBridgeOrder: (btcTx, revealTx, swapRoute) => {
       if (revealTx == null) {
         throw new UnsupportedBridgeRouteError(
           info.fromChain,
           info.toChain,
-          KnownTokenId.Bitcoin.BTC,
+          info.fromToken,
+          info.toToken,
         )
       }
 
@@ -387,7 +410,8 @@ async function broadcastBitcoinTransaction(
     orderData: createdOrder.data,
     pegInAddress,
     hardLinkageOutput: info.withHardLinkageOutput
-      ? await getBitcoinHardLinkageAddress(info.fromChain, info.toChain)
+      ? ((await getBitcoinHardLinkageAddress(info.fromChain, info.toChain)) ??
+        null)
       : null,
   })
 
@@ -395,7 +419,8 @@ async function broadcastBitcoinTransaction(
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
@@ -427,6 +452,10 @@ async function broadcastBitcoinTransaction(
 }
 
 type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
+  swapRoute:
+    | undefined
+    | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
+    | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   signPsbt: BridgeFromBitcoinInput["signPsbt"]
   pegInAddress: {
     address: string
@@ -435,7 +464,7 @@ type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
   validateBridgeOrder: (
     pegInTx: Uint8Array,
     revealTx: undefined | Uint8Array,
-    swapRoute?: SwapRoute,
+    swapRoute: undefined | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator,
   ) => Promise<void>
 }
 async function constructBitcoinTransaction(
@@ -509,7 +538,6 @@ export type PrepareBitcoinTransactionInput = KnownRoute_FromBitcoin & {
   fromAddress: BridgeFromBitcoinInput["fromAddress"]
   toAddress: BridgeFromBitcoinInput["toAddress"]
   amount: BridgeFromBitcoinInput["amount"]
-  swapRoute?: BridgeFromBitcoinInput["swapRoute"]
   networkFeeRate: BridgeFromBitcoinInput["networkFeeRate"]
   reselectSpendableUTXOs: BridgeFromBitcoinInput["reselectSpendableUTXOs"]
   orderData: Uint8Array

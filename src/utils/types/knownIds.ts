@@ -360,6 +360,27 @@ export const _allKnownRunesChains = Object.values(KnownChainId.Runes)
 export const _allKnownBRC20Chains = Object.values(KnownChainId.BRC20)
 export const _allKnownEVMChains = Object.values(KnownChainId.EVM)
 export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
+export const getChainIdNetworkType = (
+  chainId: KnownChainId.KnownChain,
+): "mainnet" | "testnet" => {
+  if (chainId === KnownChainId.Stacks.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Stacks.Testnet) return "testnet"
+
+  if (KnownChainId.isEVMMainnetChain(chainId)) return "mainnet"
+  if (KnownChainId.isEVMTestnetChain(chainId)) return "testnet"
+
+  if (chainId === KnownChainId.Bitcoin.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Bitcoin.Testnet) return "testnet"
+
+  if (chainId === KnownChainId.BRC20.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.BRC20.Testnet) return "testnet"
+
+  if (chainId === KnownChainId.Runes.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Runes.Testnet) return "testnet"
+
+  checkNever(chainId)
+  return "mainnet"
+}
 
 export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Ethereum,

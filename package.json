@@ -30,6 +30,11 @@
       "require": "./lib/bitcoinHelpers.js",
       "types": "./lib/bitcoinHelpers.d.ts"
     },
+    "./swapHelpers": {
+      "import": "./lib/swapHelpers.mjs",
+      "require": "./lib/swapHelpers.js",
+      "types": "./lib/swapHelpers.d.ts"
+    },
     "./lowlevelUnstableInfos": {
       "import": "./lib/lowlevelUnstableInfos.mjs",
       "require": "./lib/lowlevelUnstableInfos.js",

@@ -31,7 +31,10 @@ import {
   supportedRoutes,
 } from "./bridgeFromBitcoin"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
-import { SwapRoute_WithMinimumAmountsToReceive_Public } from "../utils/SwapRouteHelpers"
+import {
+  SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
+  SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
+} from "../utils/SwapRouteHelpers"
 import { SDKGlobalContext } from "./types.internal"
 
 export interface EstimateBridgeTransactionFromBitcoinInput {
@@ -47,7 +50,9 @@ export interface EstimateBridgeTransactionFromBitcoinInput {
    */
   toAddressScriptPubKey?: Uint8Array
   amount: SDKNumber
-  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
+  swapRoute?:
+    | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
+    | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   networkFeeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
 }
@@ -143,10 +148,8 @@ async function estimateFromBitcoin_toStacks(
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
   const createdOrder = await createBridgeOrder_BitcoinToStacks(sdkContext, {
-    fromChain: info.fromChain,
+    ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
-    toChain: info.toChain,
-    toToken: info.toToken,
     toStacksAddress: info.toAddress,
     swap:
       info.swapRoute == null
@@ -182,9 +185,7 @@ async function estimateFromBitcoin_toEVM(
     KnownRoute_FromBitcoin_ToEVM,
 ): Promise<EstimateBridgeTransactionFromBitcoinOutput> {
   const createdOrder = await createBridgeOrder_BitcoinToEVM(sdkContext, {
-    fromChain: info.fromChain,
-    toChain: info.toChain,
-    toToken: info.toToken,
+    ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
     toEVMAddress: info.toAddress,
     swap:

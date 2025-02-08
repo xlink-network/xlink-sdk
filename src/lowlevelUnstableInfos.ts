@@ -4,6 +4,8 @@
  */
 
 import {
+  getEVMTokenIdFromTerminatingStacksTokenContractAddress as _getEVMTokenIdFromTerminatingStacksTokenContractAddress,
+  getTerminatingStacksTokenContractAddress as _getTerminatingStacksTokenContractAddress,
   evmTokenFromCorrespondingStacksToken,
   evmTokenToCorrespondingStacksToken,
 } from "./evmUtils/peggingHelpers"
@@ -11,64 +13,59 @@ import {
   metaTokenFromCorrespondingStacksToken,
   metaTokenToCorrespondingStacksToken,
 } from "./metaUtils/peggingHelpers"
-import { KnownRoute_FromStacks_ToEVM } from "./utils/buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import { StacksContractAddress } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
-import {
-  getEVMTokenIdFromTerminatingStacksTokenContractAddress as _getEVMTokenIdFromTerminatingStacksTokenContractAddress,
-  getTerminatingStacksTokenContractAddress as _getTerminatingStacksTokenContractAddress,
-} from "./stacksUtils/stxContractAddresses"
 
 export {
   contractAssignedChainIdFromKnownChain,
   contractAssignedChainIdToKnownChain,
 } from "./stacksUtils/crossContractDataMapping"
-
 export {
-  wrapContractAddress,
   alexContractDeployerMainnet,
   alexContractDeployerTestnet,
   alexContractMultisigMainnet,
   alexContractMultisigTestnet,
   legacyAlexContractDeployerMainnet,
   legacyAlexContractDeployerTestnet,
+  wrapContractAddress,
   xlinkContractsDeployerMainnet,
   xlinkContractsDeployerTestnet,
   xlinkContractsMultisigMainnet,
   xlinkContractsMultisigTestnet,
 } from "./stacksUtils/stxContractAddresses"
 
+export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
+
 export {
-  KnownRoute_FromStacks,
-  KnownRoute_FromStacks_ToEVM,
-  KnownRoute_FromStacks_ToBitcoin,
-  KnownRoute_FromStacks_ToBRC20,
-  KnownRoute_FromStacks_ToRunes,
+  KnownRoute_FromBitcoin,
+  KnownRoute_FromBitcoin_ToBRC20,
+  KnownRoute_FromBitcoin_ToEVM,
+  KnownRoute_FromBitcoin_ToRunes,
+  KnownRoute_FromBitcoin_ToStacks,
+  _KnownRoute_FromBRC20 as KnownRoute_FromBRC20,
+  KnownRoute_FromBRC20_ToBitcoin,
+  KnownRoute_FromBRC20_ToEVM,
+  KnownRoute_FromBRC20_ToRunes,
+  KnownRoute_FromBRC20_ToStacks,
   KnownRoute_FromEVM,
-  KnownRoute_FromEVM_ToStacks,
-  KnownRoute_FromEVM_ToEVM,
   KnownRoute_FromEVM_ToBitcoin,
   KnownRoute_FromEVM_ToBRC20,
+  KnownRoute_FromEVM_ToEVM,
   KnownRoute_FromEVM_ToRunes,
-  KnownRoute_FromBitcoin,
-  KnownRoute_FromBitcoin_ToStacks,
-  KnownRoute_FromBitcoin_ToEVM,
-  KnownRoute_FromBitcoin_ToBRC20,
-  KnownRoute_FromBitcoin_ToRunes,
-  _KnownRoute_FromBRC20 as KnownRoute_FromBRC20,
-  KnownRoute_FromBRC20_ToEVM,
-  KnownRoute_FromBRC20_ToStacks,
-  KnownRoute_FromBRC20_ToBitcoin,
-  KnownRoute_FromBRC20_ToRunes,
+  KnownRoute_FromEVM_ToStacks,
   _KnownRoute_FromRunes as KnownRoute_FromRunes,
-  KnownRoute_FromRunes_ToEVM,
-  KnownRoute_FromRunes_ToStacks,
   KnownRoute_FromRunes_ToBitcoin,
   KnownRoute_FromRunes_ToBRC20,
+  KnownRoute_FromRunes_ToEVM,
+  KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromStacks,
+  KnownRoute_FromStacks_ToBitcoin,
+  KnownRoute_FromStacks_ToBRC20,
+  KnownRoute_FromStacks_ToEVM,
+  KnownRoute_FromStacks_ToRunes,
 } from "./utils/buildSupportedRoutes"
 
-export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
 export {
   bridgeInfoFromMeta,
   BridgeInfoFromMetaInput,
@@ -86,14 +83,14 @@ export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
 
 export {
   BridgeSwapRouteNode,
-  CreateBridgeOrderResult,
   createBridgeOrderFromBitcoin,
+  CreateBridgeOrderResult,
 } from "./stacksUtils/createBridgeOrderFromBitcoin"
 export { createBridgeOrderFromMeta } from "./stacksUtils/createBridgeOrderFromMeta"
 export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
 
-export { bridgeInfoFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromEVM"
 export { bridgeInfoFromBitcoin_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+export { bridgeInfoFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromEVM"
 
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
 
@@ -105,7 +102,11 @@ export const getXLinkSDKContext = (
 
 export const getTerminatingStacksTokenContractAddress = async (
   sdk: import("./XLinkSDK").XLinkSDK,
-  route: KnownRoute_FromStacks_ToEVM,
+  route: {
+    evmChain: KnownChainId.EVMChain
+    evmToken: KnownTokenId.EVMToken
+    stacksChain: KnownChainId.StacksChain
+  },
 ): Promise<undefined | StacksContractAddress> => {
   return _getTerminatingStacksTokenContractAddress(
     getXLinkSDKContext(sdk),

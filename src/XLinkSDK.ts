@@ -357,11 +357,7 @@ export class XLinkSDK {
   ): Promise<undefined | EVMAddress | EVMNativeCurrencyAddress> {
     if (!KnownChainId.isEVMChain(chain)) return
     const info = await getEVMTokenContractInfo(this.sdkContext, chain, token)
-    const addr = info?.tokenContractAddress
-    if (addr === nativeCurrencyAddress) {
-      return evmNativeCurrencyAddress
-    }
-    return addr
+    return info?.tokenContractAddress
   }
 
   /**

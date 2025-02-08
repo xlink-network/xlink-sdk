@@ -1,9 +1,13 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
-import { SwapRoute } from "./SwapRouteHelpers"
+import {
+  SwapRouteViaALEX,
+  SwapRouteViaEVMDexAggregator,
+} from "./SwapRouteHelpers"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
 import { pMemoize } from "./pMemoize"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
+import { checkNever } from "./typeHelpers"
 
 export interface DefinedRoute {
   fromChain: ChainId
@@ -246,7 +250,7 @@ export function defineRoute(
 export type IsSupportedFn = (
   ctx: SDKGlobalContext,
   route: DefinedRoute & {
-    swapRoute?: SwapRoute
+    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ) => Promise<boolean>
 const memoizedIsSupportedFactory = (
@@ -259,7 +263,15 @@ const memoizedIsSupportedFactory = (
         const to = `${route.toChain}:${route.toToken}`
         if (route.swapRoute == null) return `${from}->${to}`
 
-        const swap = route.swapRoute.swapPools.map(p => p.poolId).join("->")
+        let swap: string
+        if (route.swapRoute.via === "ALEX") {
+          swap = route.swapRoute.swapPools.map(p => p.poolId).join("->")
+        } else if (route.swapRoute.via === "evmDexAggregator") {
+          swap = `${route.swapRoute.fromEVMToken}->${route.swapRoute.toEVMToken}`
+        } else {
+          checkNever(route.swapRoute)
+          swap = JSON.stringify(route.swapRoute)
+        }
         return `${from}->(${swap})->${to}`
       },
       skipCache: true,
@@ -282,7 +294,7 @@ export type GetSupportedRoutesFn = (
 export type CheckRouteValidFn = (
   ctx: SDKGlobalContext,
   route: DefinedRoute & {
-    swapRoute?: SwapRoute
+    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ) => Promise<KnownRoute>
 

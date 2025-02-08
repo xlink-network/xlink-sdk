@@ -1,7 +1,6 @@
-import { evmTokenFromCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
-import { getEVMTokenContractInfo } from "../evmUtils/xlinkContractHelpers"
-import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
@@ -18,10 +17,11 @@ import {
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
 import {
-  getFinalStepStacksTokenAddress,
+  getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
   SpecialFeeDetailsForSwapRoute,
   SwapRoute,
+  SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
@@ -41,7 +41,7 @@ import { getBTCPegInAddress } from "./btcAddresses"
 export const getBtc2StacksFeeInfo = async (
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
-    swapRoute: null | SwapRoute
+    swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksBaseContractCallInfo = getStacksContractCallInfo(
@@ -52,17 +52,24 @@ export const getBtc2StacksFeeInfo = async (
     route.toChain,
     StacksContractName.BTCPegInEndpointSwap,
   )
+  const stacksAggContractCallInfo = getStacksContractCallInfo(
+    route.toChain,
+    StacksContractName.BTCPegInEndpointAggregator,
+  )
   if (
     stacksBaseContractCallInfo == null ||
-    stacksSwapContractCallInfo == null
+    stacksSwapContractCallInfo == null ||
+    stacksAggContractCallInfo == null
   ) {
     return
   }
 
+  // prettier-ignore
   const contractCallInfo =
-    options.swapRoute == null
-      ? stacksBaseContractCallInfo
-      : stacksSwapContractCallInfo
+    options.swapRoute?.via === 'ALEX' ? stacksSwapContractCallInfo :
+    options.swapRoute?.via === 'evmDexAggregator' ? stacksAggContractCallInfo :
+    options.swapRoute == null ? stacksBaseContractCallInfo :
+    (checkNever(options.swapRoute.via), stacksBaseContractCallInfo)
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
@@ -114,7 +121,7 @@ export const getStacks2BtcFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
@@ -201,15 +208,13 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     return false
   }
 
+  if (!KnownChainId.isKnownChain(toChain)) return false
+
   if (
-    KnownChainId.isEVMChain(fromChain) &&
-    _allNoLongerSupportedEVMChains.includes(fromChain)
-  ) {
-    return false
-  }
-  if (
-    KnownChainId.isEVMChain(toChain) &&
-    _allNoLongerSupportedEVMChains.includes(toChain)
+    (KnownChainId.isEVMChain(fromChain) &&
+      _allNoLongerSupportedEVMChains.includes(fromChain)) ||
+    (KnownChainId.isEVMChain(toChain) &&
+      _allNoLongerSupportedEVMChains.includes(toChain))
   ) {
     return false
   }
@@ -220,7 +225,6 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   ) {
     return false
   }
-  if (!KnownChainId.isKnownChain(toChain)) return false
 
   const pegInAddress = getBTCPegInAddress(fromChain, toChain)
   if (pegInAddress == null) return false
@@ -228,18 +232,6 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isBitcoinChain(toChain)) {
     return false
   }
-
-  const finalStepStacksToken =
-    route.swapRoute == null
-      ? KnownTokenId.Stacks.aBTC
-      : await getFinalStepStacksTokenAddress(ctx, {
-          via: route.swapRoute.via,
-          swap: route.swapRoute,
-          stacksChain:
-            fromChain === KnownChainId.Bitcoin.Mainnet
-              ? KnownChainId.Stacks.Mainnet
-              : KnownChainId.Stacks.Testnet,
-        })
 
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
@@ -253,39 +245,78 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     )
     if (stacksTokenContractInfo == null) return false
 
-    return toToken === finalStepStacksToken
+    return toToken === KnownTokenId.Stacks.aBTC
   }
 
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
-    const info = await getEVMTokenContractInfo(ctx, toChain, toToken)
-    if (info == null) return false
+    const { firstStepToStacksToken, lastStepFromStacksToken } =
+      await getAndCheckTransitStacksTokens(ctx, {
+        ...route,
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+      })
 
-    if (finalStepStacksToken == null) return false
+    const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
 
-    return evmTokenFromCorrespondingStacksToken(
-      ctx,
-      toChain,
-      finalStepStacksToken,
-    ).then(toEVMTokens => toEVMTokens.includes(toToken))
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.evmToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
+    )
   }
 
   if (KnownChainId.isRunesChain(toChain)) {
-    const routes = await getRunesSupportedRoutes(ctx, toChain)
-    return routes.some(
-      route =>
-        route.runesToken === toToken &&
-        route.stacksToken === finalStepStacksToken,
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
+    const { firstStepToStacksToken, lastStepFromStacksToken } =
+      await getAndCheckTransitStacksTokens(ctx, {
+        ...route,
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+      })
+
+    const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
+
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.runesToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
     )
   }
 
   if (KnownChainId.isBRC20Chain(toChain)) {
-    const routes = await getBRC20SupportedRoutes(ctx, toChain)
-    return routes.some(
-      route =>
-        route.brc20Token === toToken &&
-        route.stacksToken === finalStepStacksToken,
+    if (!KnownTokenId.isBRC20Token(toToken)) return false
+
+    const { firstStepToStacksToken, lastStepFromStacksToken } =
+      await getAndCheckTransitStacksTokens(ctx, {
+        ...route,
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+      })
+
+    const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
+
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.brc20Token === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
     )
   }
 
