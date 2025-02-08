@@ -205,16 +205,6 @@ async function bridgeInfoFromMeta_toEVM(
     toToken: info.toToken,
   } satisfies KnownRoute_WithMetaProtocol
 
-  // TODO: add support for Meta -> EVM with swap
-  if (info.swapRoute != null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
-
   const [step1, step2] = await Promise.all([
     getMeta2StacksFeeInfo(ctx, step1Route, {
       swapRoute: info.swapRoute ?? null,
@@ -234,7 +224,7 @@ async function bridgeInfoFromMeta_toEVM(
     [step1Route, step2Route],
     [step1, step2],
     BigNumber.from(info.amount),
-    BigNumber.ONE,
+    BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
   )
 }
 

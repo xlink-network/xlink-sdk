@@ -3,10 +3,7 @@ import { readContract } from "viem/actions"
 import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import {
-  getTerminatingStacksTokenContractAddress,
-  StacksContractName,
-} from "../stacksUtils/stxContractAddresses"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
@@ -37,6 +34,11 @@ import {
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
 import { getEVMSupportedRoutes } from "./apiHelpers/getEVMSupportedRoutes"
+import {
+  StacksContractAddress,
+  isStacksContractAddressEqual,
+} from "../xlinkSdkUtils/types"
+import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
@@ -201,8 +203,11 @@ export const getStacks2EvmFeeInfo = async (
   }
 
   const terminatingStacksTokenAddress =
-    (await getTerminatingStacksTokenContractAddress(ctx, route)) ??
-    stacksTokenContractCallInfo
+    (await getTerminatingStacksTokenContractAddress(ctx, {
+      evmChain: route.toChain,
+      evmToken: route.toToken,
+      stacksChain: route.fromChain,
+    })) ?? stacksTokenContractCallInfo
 
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
@@ -262,13 +267,168 @@ export const getStacks2EvmFeeInfo = async (
   }
 }
 
+export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
+  const { fromChain, fromToken, toChain, toToken } = route
+
+  if (fromChain === toChain && fromToken === toToken) {
+    return false
+  }
+
+  if (!KnownChainId.isKnownChain(toChain)) return false
+
+  if (
+    (KnownChainId.isEVMChain(fromChain) &&
+      _allNoLongerSupportedEVMChains.includes(fromChain)) ||
+    (KnownChainId.isEVMChain(toChain) &&
+      _allNoLongerSupportedEVMChains.includes(toChain))
+  ) {
+    return false
+  }
+
+  if (
+    !KnownChainId.isEVMChain(fromChain) ||
+    !KnownTokenId.isEVMToken(fromToken)
+  ) {
+    return false
+  }
+
+  const fromContractInfo = await getEVMContractCallInfo(ctx, fromChain)
+  if (fromContractInfo == null) return false
+
+  const fromTokenInfo = await getEVMTokenContractInfo(ctx, fromChain, fromToken)
+  if (fromTokenInfo == null) return false
+
+  if (fromTokenInfo.tokenContractAddress === nativeCurrencyAddress) {
+    if (fromContractInfo.bridgeEndpointContractAddress == null) return false
+    if (!KnownChainId.isBitcoinChain(toChain)) return false
+  }
+
+  if (KnownChainId.isStacksChain(toChain)) {
+    if (!KnownTokenId.isStacksToken(toToken)) return false
+
+    const evmRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    return evmRoutes.some(
+      route => route.evmToken === fromToken && route.stacksToken === toToken,
+    )
+  }
+
+  if (KnownChainId.isEVMChain(toChain)) {
+    if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const {
+      firstStepToStacksToken: step1ToStacksToken,
+      lastStepFromStacksToken: step2FromStacksToken,
+    } = await getAndCheckTransitStacksTokens(ctx, {
+      ...route,
+      fromChain,
+      fromToken,
+      toChain,
+      toToken,
+    })
+
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === step1ToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.evmToken === toToken &&
+          route.stacksToken === step2FromStacksToken,
+      )
+    )
+  }
+
+  if (KnownChainId.isBitcoinChain(toChain)) {
+    if (!KnownTokenId.isBitcoinToken(toToken)) return false
+
+    await getAndCheckTransitStacksTokens(ctx, {
+      ...route,
+      fromChain,
+      fromToken,
+      toChain,
+      toToken,
+    })
+
+    return toToken === KnownTokenId.Bitcoin.BTC
+  }
+
+  if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
+    const {
+      firstStepToStacksToken: step1ToStacksToken,
+      lastStepFromStacksToken: step2FromStacksToken,
+    } = await getAndCheckTransitStacksTokens(ctx, {
+      ...route,
+      fromChain,
+      fromToken,
+      toChain,
+      toToken,
+    })
+
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === step1ToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.stacksToken === step2FromStacksToken &&
+          route.runesToken === toToken,
+      )
+    )
+  }
+
+  if (KnownChainId.isBRC20Chain(toChain)) {
+    if (!KnownTokenId.isBRC20Token(toToken)) return false
+
+    const {
+      firstStepToStacksToken: step1ToStacksToken,
+      lastStepFromStacksToken: step2FromStacksToken,
+    } = await getAndCheckTransitStacksTokens(ctx, {
+      ...route,
+      fromChain,
+      fromToken,
+      toChain,
+      toToken,
+    })
+
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === step1ToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.stacksToken === step2FromStacksToken &&
+          route.brc20Token === toToken,
+      )
+    )
+  }
+
+  checkNever(toChain)
+  return false
+}
+
 export async function evmTokenFromCorrespondingStacksToken(
   sdkContext: SDKGlobalContext,
   toChain: KnownChainId.EVMChain,
   fromStacksToken: KnownTokenId.StacksToken,
 ): Promise<KnownTokenId.EVMToken[]> {
   const supportedRoutes = await getEVMSupportedRoutes(sdkContext, toChain)
-
   return supportedRoutes.reduce((acc, route) => {
     if (route.stacksToken === fromStacksToken) {
       acc.push(route.evmToken)
@@ -286,124 +446,45 @@ export async function evmTokenToCorrespondingStacksToken(
     ?.stacksToken
 }
 
-export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
-  const { fromChain, fromToken, toChain, toToken } = route
+export const getTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  route: {
+    evmChain: KnownChainId.EVMChain
+    evmToken: KnownTokenId.EVMToken
+    stacksChain: KnownChainId.StacksChain
+  },
+): Promise<undefined | StacksContractAddress> => {
+  const supportedRoutes = await getEVMSupportedRoutes(
+    sdkContext,
+    route.evmChain,
+  )
 
-  if (fromChain === toChain && fromToken === toToken) {
-    return false
-  }
+  return (
+    supportedRoutes.find(r => r.evmToken === route.evmToken)
+      ?.proxyStacksTokenContractAddress ?? undefined
+  )
+}
+export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  route: {
+    evmChain: KnownChainId.EVMChain
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.EVMToken> => {
+  const supportedRoutes = await getEVMSupportedRoutes(
+    sdkContext,
+    route.evmChain,
+  )
 
-  if (
-    KnownChainId.isEVMChain(fromChain) &&
-    _allNoLongerSupportedEVMChains.includes(fromChain)
-  ) {
-    return false
-  }
-  if (
-    KnownChainId.isEVMChain(toChain) &&
-    _allNoLongerSupportedEVMChains.includes(toChain)
-  ) {
-    return false
-  }
-
-  if (
-    !KnownChainId.isEVMChain(fromChain) ||
-    !KnownTokenId.isEVMToken(fromToken)
-  ) {
-    return false
-  }
-  if (!KnownChainId.isKnownChain(toChain)) return false
-
-  const fromContractInfo = await getEVMContractCallInfo(ctx, fromChain)
-  if (fromContractInfo == null) return false
-
-  const fromTokenInfo = await getEVMTokenContractInfo(ctx, fromChain, fromToken)
-  if (fromTokenInfo == null) return false
-
-  if (fromTokenInfo.tokenContractAddress === nativeCurrencyAddress) {
-    if (fromContractInfo.bridgeEndpointContractAddress == null) return false
-    if (!KnownChainId.isBitcoinChain(toChain)) return false
-  }
-
-  if (KnownChainId.isStacksChain(toChain)) {
-    if (!KnownTokenId.isStacksToken(toToken)) return false
-
-    const stacksToken = await evmTokenToCorrespondingStacksToken(
-      ctx,
-      fromChain,
-      fromToken,
-    )
-    if (stacksToken == null) return false
-
-    const stacksTokenContractInfo = await getStacksTokenContractInfo(
-      ctx,
-      toChain,
-      stacksToken,
-    )
-    if (stacksTokenContractInfo == null) return false
-
-    return stacksToken === toToken
-  }
-
-  if (KnownChainId.isEVMChain(toChain)) {
-    if (!KnownTokenId.isEVMToken(toToken)) return false
-
-    const toTokenInfo = await getEVMTokenContractInfo(ctx, toChain, toToken)
-    if (toTokenInfo == null) return false
-
-    const transitStacksToken = await evmTokenToCorrespondingStacksToken(
-      ctx,
-      fromChain,
-      fromToken,
-    )
-    if (transitStacksToken == null) return false
-
-    const toEVMTokens = await evmTokenFromCorrespondingStacksToken(
-      ctx,
-      toChain,
-      transitStacksToken,
-    )
-    return toEVMTokens.includes(toToken)
-  }
-
-  if (KnownChainId.isBitcoinChain(toChain)) {
-    if (!KnownTokenId.isBitcoinToken(toToken)) return false
-    const stacksToken = await evmTokenToCorrespondingStacksToken(
-      ctx,
-      fromChain,
-      fromToken,
-    )
-    return stacksToken === KnownTokenId.Stacks.aBTC
-  }
-
-  if (KnownChainId.isRunesChain(toChain)) {
-    if (!KnownTokenId.isRunesToken(toToken)) return false
-
-    const transitStacksToken = await evmTokenToCorrespondingStacksToken(
-      ctx,
-      fromChain,
-      fromToken,
-    )
-    if (transitStacksToken == null) return false
-
-    const runesRoutes = await getRunesSupportedRoutes(ctx, toChain)
-    return runesRoutes.some(route => route.stacksToken === transitStacksToken)
-  }
-
-  if (KnownChainId.isBRC20Chain(toChain)) {
-    if (!KnownTokenId.isBRC20Token(toToken)) return false
-
-    const transitStacksToken = await evmTokenToCorrespondingStacksToken(
-      ctx,
-      fromChain,
-      fromToken,
-    )
-    if (transitStacksToken == null) return false
-
-    const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
-    return brc20Routes.some(route => route.stacksToken === transitStacksToken)
-  }
-
-  checkNever(toChain)
-  return false
+  return (
+    supportedRoutes.find(r =>
+      r.proxyStacksTokenContractAddress == null
+        ? false
+        : isStacksContractAddressEqual(
+            r.proxyStacksTokenContractAddress,
+            route.stacksTokenAddress,
+          ),
+    )?.evmToken ?? undefined
+  )
 }
