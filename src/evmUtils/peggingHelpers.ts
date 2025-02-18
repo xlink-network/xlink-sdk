@@ -1,7 +1,7 @@
 import { unwrapResponse } from "clarity-codegen"
 import { readContract } from "viem/actions"
-import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
@@ -11,6 +11,7 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
+import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
   KnownRoute_FromEVM_ToStacks,
@@ -24,8 +25,13 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
+import {
+  isStacksContractAddressEqual,
+  StacksContractAddress,
+} from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { nativeCurrencyAddress } from "./addressHelpers"
+import { getEVMSupportedRoutes } from "./apiHelpers/getEVMSupportedRoutes"
 import { BridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { BridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
@@ -33,12 +39,6 @@ import {
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
-import { getEVMSupportedRoutes } from "./apiHelpers/getEVMSupportedRoutes"
-import {
-  StacksContractAddress,
-  isStacksContractAddressEqual,
-} from "../xlinkSdkUtils/types"
-import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
@@ -187,10 +187,17 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
 export const getStacks2EvmFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToEVM,
+  options: {
+    toDexAggregator: boolean
+  },
 ): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(
+  const stacksBaseContractCallInfo = getStacksContractCallInfo(
     route.fromChain,
     StacksContractName.EVMPegOutEndpoint,
+  )
+  const stacksAggContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    StacksContractName.EVMPegOutEndpointAggregator,
   )
   const stacksTokenContractCallInfo = await getStacksTokenContractInfo(
     ctx,
@@ -198,9 +205,17 @@ export const getStacks2EvmFeeInfo = async (
     route.fromToken,
   )
   const toChainId = contractAssignedChainIdFromKnownChain(route.toChain)
-  if (stacksContractCallInfo == null || stacksTokenContractCallInfo == null) {
+  if (
+    stacksBaseContractCallInfo == null ||
+    stacksAggContractCallInfo == null ||
+    stacksTokenContractCallInfo == null
+  ) {
     return
   }
+
+  const stacksContractCallInfo = options.toDexAggregator
+    ? stacksAggContractCallInfo
+    : stacksBaseContractCallInfo
 
   const terminatingStacksTokenAddress =
     (await getTerminatingStacksTokenContractAddress(ctx, {

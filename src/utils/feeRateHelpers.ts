@@ -92,9 +92,6 @@ export const applyTransferProphet = (
 }
 
 /**
- * @deprecated
- * **DO NOT** use this function before we created it's unit tests
- *
  * @example
  * composeTransferProphets(
  *   [

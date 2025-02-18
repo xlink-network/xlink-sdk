@@ -239,7 +239,9 @@ async function bridgeInfoFromEVM_toEVM(
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2EvmFeeInfo(ctx, step2Route),
+    getStacks2EvmFeeInfo(ctx, step2Route, {
+      toDexAggregator: false,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(

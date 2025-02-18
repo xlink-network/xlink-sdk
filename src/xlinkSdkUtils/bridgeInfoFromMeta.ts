@@ -209,7 +209,9 @@ async function bridgeInfoFromMeta_toEVM(
     getMeta2StacksFeeInfo(ctx, step1Route, {
       swapRoute: info.swapRoute ?? null,
     }),
-    getStacks2EvmFeeInfo(ctx, step2Route),
+    getStacks2EvmFeeInfo(ctx, step2Route, {
+      toDexAggregator: false,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(

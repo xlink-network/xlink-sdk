@@ -250,25 +250,23 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
-    const {
-      firstStepToStacksToken: step1ToStacksToken,
-      lastStepFromStacksToken: step2FromStacksToken,
-    } = await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-    })
+    const { firstStepToStacksToken, lastStepFromStacksToken } =
+      await getAndCheckTransitStacksTokens(ctx, {
+        ...route,
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+      })
 
     const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
 
     return (
-      step1ToStacksToken === KnownTokenId.Stacks.aBTC &&
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
       toRoutes.some(
         route =>
           route.evmToken === toToken &&
-          route.stacksToken === step2FromStacksToken,
+          route.stacksToken === lastStepFromStacksToken,
       )
     )
   }
@@ -276,25 +274,23 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isRunesChain(toChain)) {
     if (!KnownTokenId.isRunesToken(toToken)) return false
 
-    const {
-      firstStepToStacksToken: step1ToStacksToken,
-      lastStepFromStacksToken: step2FromStacksToken,
-    } = await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-    })
+    const { firstStepToStacksToken, lastStepFromStacksToken } =
+      await getAndCheckTransitStacksTokens(ctx, {
+        ...route,
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+      })
 
     const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
 
     return (
-      step1ToStacksToken === KnownTokenId.Stacks.aBTC &&
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
       toRoutes.some(
         route =>
           route.runesToken === toToken &&
-          route.stacksToken === step2FromStacksToken,
+          route.stacksToken === lastStepFromStacksToken,
       )
     )
   }
@@ -302,25 +298,23 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
-    const {
-      firstStepToStacksToken: step1ToStacksToken,
-      lastStepFromStacksToken: step2FromStacksToken,
-    } = await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      toChain,
-      fromToken,
-      toToken,
-    })
+    const { firstStepToStacksToken, lastStepFromStacksToken } =
+      await getAndCheckTransitStacksTokens(ctx, {
+        ...route,
+        fromChain,
+        toChain,
+        fromToken,
+        toToken,
+      })
 
     const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
 
     return (
-      step1ToStacksToken === KnownTokenId.Stacks.aBTC &&
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
       toRoutes.some(
         route =>
           route.brc20Token === toToken &&
-          route.stacksToken === step2FromStacksToken,
+          route.stacksToken === lastStepFromStacksToken,
       )
     )
   }

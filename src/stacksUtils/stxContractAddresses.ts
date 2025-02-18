@@ -59,6 +59,7 @@ export enum StacksContractName {
   EVMPegInEndpoint = "cross-peg-in-endpoint-v2-04",
   EVMPegInEndpointSwap = "cross-peg-in-endpoint-v2-04-swap",
   EVMPegOutEndpoint = "cross-peg-out-endpoint-v2-01",
+  EVMPegOutEndpointAggregator = "cross-peg-out-endpoint-v2-01-agg",
 }
 
 export const stxContractAddresses = {
@@ -140,6 +141,16 @@ export const stxContractAddresses = {
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
       deployerAddress: xlinkContractsDeployerTestnet,
       contractName: StacksContractName.EVMPegOutEndpoint,
+    }),
+  },
+  [StacksContractName.EVMPegOutEndpointAggregator]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: StacksContractName.EVMPegOutEndpointAggregator,
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: StacksContractName.EVMPegOutEndpointAggregator,
     }),
   },
   [StacksContractName.MetaPegInEndpoint]: {
