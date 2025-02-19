@@ -21,15 +21,23 @@ import {
 import { props } from "../utils/promiseHelpers"
 import {
   getFinalStepStacksTokenAddress,
+  getSpecialFeeDetailsForSwapRoute,
+  SpecialFeeDetailsForSwapRoute,
   SwapRoute,
+  SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
-import { assertExclude, checkNever } from "../utils/typeHelpers"
+import { checkNever, isNotNull } from "../utils/typeHelpers"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { TransferProphet } from "../utils/types/TransferProphet"
+import {
+  TransferProphet,
+  TransferProphet_Fee_Fixed,
+  TransferProphet_Fee_Rate,
+} from "../utils/types/TransferProphet"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (
@@ -98,9 +106,17 @@ export const getBtc2StacksFeeInfo = async (
 }
 
 export const getStacks2BtcFeeInfo = async (
+  ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToBitcoin,
   options: {
-    swappedFromRoute: null | KnownRoute_ToStacks
+    /**
+     * the initial route step
+     */
+    initialRoute: null | KnownRoute_ToStacks
+    /**
+     * the swap step between the previous route and the current one
+     */
+    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
@@ -123,73 +139,30 @@ export const getStacks2BtcFeeInfo = async (
     return
   }
 
-  let feeInfo:
-    | undefined
-    | {
-        feeRate: Promise<BigNumber>
-        minFeeAmount: Promise<BigNumber>
-      }
-  if (options.swappedFromRoute != null) {
-    if (KnownChainId.isBitcoinChain(options.swappedFromRoute.fromChain)) {
-      feeInfo = {
+  const feeDetails = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+    initialRoute: options.initialRoute,
+    swapRoute: options.swapRoute,
+  }).then(
+    async (info): Promise<SpecialFeeDetailsForSwapRoute> =>
+      info ??
+      props({
         feeRate: executeReadonlyCallXLINK(
-          btcPegInSwapContractCallInfo.contractName,
-          "get-btc-peg-out-fee",
+          stacksContractCallInfo.contractName,
+          "get-peg-out-fee",
           {},
-          btcPegInSwapContractCallInfo.executeOptions,
+          stacksContractCallInfo.executeOptions,
         ).then(numberFromStacksContractNumber),
         minFeeAmount: executeReadonlyCallXLINK(
-          btcPegInSwapContractCallInfo.contractName,
-          "get-btc-peg-out-min-fee",
+          stacksContractCallInfo.contractName,
+          "get-peg-out-min-fee",
           {},
-          btcPegInSwapContractCallInfo.executeOptions,
+          stacksContractCallInfo.executeOptions,
         ).then(numberFromStacksContractNumber),
-      }
-    } else if (
-      KnownChainId.isBRC20Chain(options.swappedFromRoute.fromChain) ||
-      KnownChainId.isRunesChain(options.swappedFromRoute.fromChain)
-    ) {
-      feeInfo = {
-        feeRate: executeReadonlyCallXLINK(
-          metaPegInSwapContractCallInfo.contractName,
-          "get-btc-peg-out-fee",
-          {},
-          metaPegInSwapContractCallInfo.executeOptions,
-        ).then(numberFromStacksContractNumber),
-        minFeeAmount: executeReadonlyCallXLINK(
-          metaPegInSwapContractCallInfo.contractName,
-          "get-btc-peg-out-min-fee",
-          {},
-          metaPegInSwapContractCallInfo.executeOptions,
-        ).then(numberFromStacksContractNumber),
-      }
-    } else {
-      assertExclude(
-        options.swappedFromRoute.fromChain,
-        assertExclude.i<KnownChainId.EVMChain>(),
-      )
-      checkNever(options.swappedFromRoute)
-    }
-  }
-  if (feeInfo == null) {
-    feeInfo = {
-      feeRate: executeReadonlyCallXLINK(
-        stacksContractCallInfo.contractName,
-        "get-peg-out-fee",
-        {},
-        stacksContractCallInfo.executeOptions,
-      ).then(numberFromStacksContractNumber),
-      minFeeAmount: executeReadonlyCallXLINK(
-        stacksContractCallInfo.contractName,
-        "get-peg-out-min-fee",
-        {},
-        stacksContractCallInfo.executeOptions,
-      ).then(numberFromStacksContractNumber),
-    }
-  }
+      }),
+  )
 
   const resp = await props({
-    ...feeInfo,
+    ...feeDetails,
     isPaused: executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "is-peg-out-paused",
@@ -207,8 +180,15 @@ export const getStacks2BtcFeeInfo = async (
         token: route.fromToken,
         rate: resp.feeRate,
         minimumAmount: resp.minFeeAmount,
-      },
-    ],
+      } satisfies TransferProphet_Fee_Rate,
+      feeDetails.gasFee == null
+        ? null
+        : ({
+            type: "fixed",
+            token: feeDetails.gasFee.token,
+            amount: feeDetails.gasFee.amount,
+          } satisfies TransferProphet_Fee_Fixed),
+    ].filter(isNotNull),
     minBridgeAmount: BigNumber.isZero(resp.minFeeAmount)
       ? null
       : resp.minFeeAmount,
@@ -255,6 +235,7 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     route.swapRoute == null
       ? KnownTokenId.Stacks.aBTC
       : await getFinalStepStacksTokenAddress(ctx, {
+          via: route.swapRoute.via,
           swap: route.swapRoute,
           stacksChain:
             fromChain === KnownChainId.Bitcoin.Mainnet

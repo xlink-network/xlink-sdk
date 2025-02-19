@@ -41,7 +41,7 @@ export async function bridgeInfoFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isBitcoinToken(route.toToken)
       ) {
-        return bridgeInfoFromStacks_toBitcoin({
+        return bridgeInfoFromStacks_toBitcoin(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -107,14 +107,16 @@ export async function bridgeInfoFromStacks(
 }
 
 async function bridgeInfoFromStacks_toBitcoin(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
     KnownRoute_FromStacks_ToBitcoin,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const step1 = await getStacks2BtcFeeInfo(info, {
-    swappedFromRoute: null,
+  const step1 = await getStacks2BtcFeeInfo(ctx, info, {
+    initialRoute: null,
+    swapRoute: null,
   })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
@@ -163,7 +165,10 @@ async function bridgeInfoFromStacks_toMeta(
   > &
     (KnownRoute_FromStacks_ToBRC20 | KnownRoute_FromStacks_ToRunes),
 ): Promise<BridgeInfoFromStacksOutput> {
-  const step1 = await getStacks2MetaFeeInfo(ctx, info)
+  const step1 = await getStacks2MetaFeeInfo(ctx, info, {
+    initialRoute: null,
+    swapRoute: null,
+  })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,

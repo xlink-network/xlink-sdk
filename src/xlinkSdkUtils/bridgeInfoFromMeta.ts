@@ -6,7 +6,7 @@ import {
 } from "../metaUtils/peggingHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
-  getTransitStacksChainTransitStepInfos,
+  getAndCheckTransitStacksTokens,
   SwapRoute_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
 import {
@@ -187,8 +187,10 @@ async function bridgeInfoFromMeta_toEVM(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const { step1ToStacksToken, step2FromStacksToken } =
-    await getTransitStacksChainTransitStepInfos(ctx, info)
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route = {
     fromChain: info.fromChain as KnownChainId.BRC20Chain,
@@ -250,8 +252,10 @@ async function bridgeInfoFromMeta_toBitcoin(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const { step1ToStacksToken, step2FromStacksToken } =
-    await getTransitStacksChainTransitStepInfos(ctx, info)
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route = {
     fromChain: info.fromChain as KnownChainId.BRC20Chain,
@@ -270,8 +274,9 @@ async function bridgeInfoFromMeta_toBitcoin(
     getMeta2StacksFeeInfo(ctx, step1Route, {
       swapRoute: info.swapRoute ?? null,
     }),
-    getStacks2BtcFeeInfo(step2Route, {
-      swappedFromRoute: step1Route,
+    getStacks2BtcFeeInfo(ctx, step2Route, {
+      initialRoute: step1Route,
+      swapRoute: info.swapRoute ?? null,
     }),
   ])
   if (step1 == null || step2 == null) {
@@ -310,8 +315,10 @@ async function bridgeInfoFromMeta_toMeta(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const { step1ToStacksToken, step2FromStacksToken } =
-    await getTransitStacksChainTransitStepInfos(ctx, info)
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route:
     | KnownRoute_FromBRC20_ToStacks
@@ -334,7 +341,10 @@ async function bridgeInfoFromMeta_toMeta(
     getMeta2StacksFeeInfo(ctx, step1Route, {
       swapRoute: info.swapRoute ?? null,
     }),
-    getStacks2MetaFeeInfo(ctx, step2Route),
+    getStacks2MetaFeeInfo(ctx, step2Route, {
+      initialRoute: step1Route,
+      swapRoute: info.swapRoute ?? null,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(

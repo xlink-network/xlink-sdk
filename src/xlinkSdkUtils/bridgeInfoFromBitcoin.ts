@@ -9,7 +9,7 @@ import {
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
-  getTransitStacksChainTransitStepInfos,
+  getAndCheckTransitStacksTokens,
   SwapRoute_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
 import {
@@ -221,8 +221,10 @@ async function bridgeInfoFromBitcoin_toMeta(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const { step1ToStacksToken, step2FromStacksToken } =
-    await getTransitStacksChainTransitStepInfos(ctx, info)
+  const {
+    firstStepToStacksToken: step1ToStacksToken,
+    lastStepFromStacksToken: step2FromStacksToken,
+  } = await getAndCheckTransitStacksTokens(ctx, info)
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
@@ -243,7 +245,10 @@ async function bridgeInfoFromBitcoin_toMeta(
     getBtc2StacksFeeInfo(step1Route, {
       swapRoute: info.swapRoute ?? null,
     }),
-    getStacks2MetaFeeInfo(ctx, step2Route),
+    getStacks2MetaFeeInfo(ctx, step2Route, {
+      initialRoute: step1Route,
+      swapRoute: info.swapRoute ?? null,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(
