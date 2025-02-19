@@ -11,33 +11,38 @@ export const STACKS_TESTNET = new StacksMocknet({
 
 export const contractNameOverrides_mainnet: Record<string, string> = {
   "btc-peg-in-endpoint-v2-07": "btc-peg-in-v2-07a",
-  "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07a-swap",
+  "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07e-swap",
+  "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07b-agg",
   "btc-peg-in-endpoint-v2-05-launchpad": "btc-peg-in-v2-05-launchpad-3c",
-  "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06-swap",
+  "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06d-swap",
+  "cross-peg-in-endpoint-v2-04-swap": "cross-peg-in-v2-04-swap",
   "cross-peg-in-endpoint-v2-04-launchpad": "cross-peg-in-v2-04-launchpad-3c",
+  "cross-peg-out-endpoint-v2-01-agg": "cross-peg-out-v2-01a-agg",
 }
 export const contractNameOverrides_testnet: Record<string, string> = {
-  "token-wliabtc": "token-wliabtc-dd",
-  "token-wvliabtc": "token-wvliabtc-dd",
-  "token-liabtc": "token-liabtc-dd",
-  "token-vliabtc": "token-vliabtc-dd",
+  "token-wliabtc": "token-wliabtc-dk",
+  "token-wvliabtc": "token-wvliabtc-dk",
+  "token-liabtc": "token-liabtc-dk",
+  "token-vliabtc": "token-vliabtc-dk",
 
   // btc bridge
-  "btc-peg-in-endpoint-v2-05": "btc-peg-in-endpoint-v2-05-dd",
-  "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07-swap-01",
-  "btc-peg-in-endpoint-v2-05-lisa": "btc-peg-in-endpoint-v2-05-lisa-dd",
-  "btc-peg-in-endpoint-v2-05-launchpad": "btc-peg-in-v2-05-launchpad-dd",
-  "btc-peg-out-endpoint-v2-01": "btc-peg-out-endpoint-v2-01-dd",
+  "btc-peg-in-endpoint-v2-05": "btc-peg-in-endpoint-v2-05-dk",
+  "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07-swap-dk",
+  "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07b-agg-dk",
+  "btc-peg-in-endpoint-v2-05-lisa": "btc-peg-in-endpoint-v2-05-lisa-dk",
+  "btc-peg-in-endpoint-v2-05-launchpad": "btc-peg-in-v2-05-launchpad-3c-dk",
+  "btc-peg-out-endpoint-v2-01": "btc-peg-out-endpoint-v2-01-dk",
   // meta bridge
-  "meta-peg-in-endpoint-v2-04": "meta-peg-in-endpoint-v2-04-dd",
+  "meta-peg-in-endpoint-v2-04": "meta-peg-in-endpoint-v2-04-dk",
   "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06-swap-01",
-  "meta-peg-in-endpoint-v2-04-lisa": "meta-peg-in-endpoint-v2-04-lisa-dd",
-  "meta-peg-out-endpoint-v2-04": "meta-peg-out-endpoint-v2-04-dd",
+  "meta-peg-in-endpoint-v2-04-lisa": "meta-peg-in-endpoint-v2-04-lisa-dk",
+  "meta-peg-out-endpoint-v2-04": "meta-peg-out-endpoint-v2-04-dk",
   // cross bridge
-  "cross-peg-in-endpoint-v2-04": "cross-peg-in-endpoint-v2-04-dd",
-  "cross-peg-in-endpoint-v2-04-swap": "cross-peg-in-v2-04-swap-da",
+  "cross-peg-in-endpoint-v2-04": "cross-peg-in-endpoint-v2-04-dk",
+  "cross-peg-in-endpoint-v2-04-swap": "cross-peg-in-v2-04-swap-dk",
   "cross-peg-in-endpoint-v2-04-launchpad":
-    "cross-peg-in-endpoint-v2-04-launchpad-dd",
+    "cross-peg-in-endpoint-v2-04-launchpad-3c-dk",
+  "cross-peg-out-endpoint-v2-01-agg": "cross-peg-out-v2-01a-agg-dk",
   // cross router
-  "cross-router-v2-03": "cross-router-v2-03-dd",
+  "cross-router-v2-03": "cross-router-v2-03-dk",
 }

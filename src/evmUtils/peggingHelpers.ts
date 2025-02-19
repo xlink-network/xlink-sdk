@@ -47,6 +47,10 @@ export const getEvm2StacksFeeInfo = async (
     route.toChain,
     StacksContractName.EVMPegInEndpoint,
   )
+  const stacksSwapContractCallInfo = getStacksContractCallInfo(
+    route.toChain,
+    StacksContractName.EVMPegInEndpointSwap,
+  )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   const evmTokenContractCallInfo = await getEVMTokenContractInfo(
     ctx,
@@ -55,6 +59,7 @@ export const getEvm2StacksFeeInfo = async (
   )
   if (
     stacksContractCallInfo == null ||
+    stacksSwapContractCallInfo == null ||
     evmContractCallInfo == null ||
     evmTokenContractCallInfo == null
   ) {
@@ -112,11 +117,14 @@ export const getEvm2StacksFeeInfo = async (
       functionName: "maxAmountPerToken",
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
+    /**
+     * temp fix, should be back to `stacksContractCallInfo` in the future
+     */
     isPaused: executeReadonlyCallXLINK(
-      stacksContractCallInfo.contractName,
+      stacksSwapContractCallInfo.contractName,
       "get-paused",
       {},
-      stacksContractCallInfo.executeOptions,
+      stacksSwapContractCallInfo.executeOptions,
     ),
   })
 

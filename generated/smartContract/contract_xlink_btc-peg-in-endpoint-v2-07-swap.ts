@@ -59,16 +59,6 @@ export const btcPegInEndpointV207Swap = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
-  'set-btc-peg-out-fee': {
-    input: [ { name: 'fee', type: uintT } ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
-  'set-btc-peg-out-min-fee': {
-    input: [ { name: 'fee', type: uintT } ],
-    output: responseSimpleT(booleanT, ),
-    mode: 'public'
-  },
   'set-fee-to-address': {
     input: [ { name: 'new-fee-to-address', type: principalT } ],
     output: responseSimpleT(booleanT, ),
@@ -80,6 +70,16 @@ export const btcPegInEndpointV207Swap = defineContract({
     mode: 'public'
   },
   'set-peg-in-min-fee': {
+    input: [ { name: 'fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-peg-out-fee': {
+    input: [ { name: 'fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-peg-out-gas-fee': {
     input: [ { name: 'fee', type: uintT } ],
     output: responseSimpleT(booleanT, ),
     mode: 'public'
@@ -173,8 +173,16 @@ export const btcPegInEndpointV207Swap = defineContract({
     }, ), ),
     mode: 'readonly'
   },
-  'get-btc-peg-out-fee': { input: [], output: uintT, mode: 'readonly' },
-  'get-btc-peg-out-min-fee': { input: [], output: uintT, mode: 'readonly' },
+  'get-default-peg-out-fee': {
+    input: [
+      {
+        name: 'pair-tuple',
+        type: tupleT({ 'chain-id': optionalT(uintT, ), token: principalT }, )
+      }
+    ],
+    output: responseSimpleT(tupleT({ 'peg-out-fee': uintT, 'peg-out-gas-fee': uintT }, ), ),
+    mode: 'readonly'
+  },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
   'get-peg-in-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-peg-in-min-fee': { input: [], output: uintT, mode: 'readonly' },
@@ -183,6 +191,8 @@ export const btcPegInEndpointV207Swap = defineContract({
     output: booleanT,
     mode: 'readonly'
   },
+  'get-peg-out-fee': { input: [], output: uintT, mode: 'readonly' },
+  'get-peg-out-gas-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-txid': {
     input: [ { name: 'tx', type: bufferT } ],
     output: responseSimpleT(bufferT, ),
@@ -239,12 +249,12 @@ export const btcPegInEndpointV207Swap = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'readonly'
   },
-  'btc-peg-out-min-fee': { input: noneT, output: uintT, mode: 'variable' },
-  'btc-peg-outfee': { input: noneT, output: uintT, mode: 'variable' },
   'fee-to-address': { input: noneT, output: principalT, mode: 'variable' },
   'peg-in-fee': { input: noneT, output: uintT, mode: 'variable' },
   'peg-in-min-fee': { input: noneT, output: uintT, mode: 'variable' },
-  'peg-in-paused': { input: noneT, output: booleanT, mode: 'variable' }
+  'peg-in-paused': { input: noneT, output: booleanT, mode: 'variable' },
+  'peg-out-fee': { input: noneT, output: uintT, mode: 'variable' },
+  'peg-out-gas-fee': { input: noneT, output: uintT, mode: 'variable' }
 }
 } as const)
 
