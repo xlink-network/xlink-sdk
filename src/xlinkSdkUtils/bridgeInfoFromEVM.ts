@@ -200,8 +200,9 @@ async function bridgeInfoFromEVM_toBitcoin(
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2BtcFeeInfo(step2Route, {
-      swappedFromRoute: step1Route,
+    getStacks2BtcFeeInfo(ctx, step2Route, {
+      initialRoute: step1Route,
+      swapRoute: null,
     }),
   ])
   if (step1 == null || step2 == null) {
@@ -336,7 +337,10 @@ async function bridgeInfoFromEVM_toMeta(
 
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
-    getStacks2MetaFeeInfo(ctx, step2Route),
+    getStacks2MetaFeeInfo(ctx, step2Route, {
+      initialRoute: step1Route,
+      swapRoute: null,
+    }),
   ])
   if (step1 == null || step2 == null) {
     throw new UnsupportedBridgeRouteError(

@@ -10,7 +10,10 @@ import { BigNumber } from "../utils/BigNumber"
 import {
   getFinalStepStacksTokenAddress,
   getFirstStepStacksTokenAddress,
+  getSpecialFeeDetailsForSwapRoute,
+  SpecialFeeDetailsForSwapRoute,
   SwapRoute,
+  SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
@@ -18,10 +21,15 @@ import {
   KnownRoute_FromRunes_ToStacks,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToRunes,
+  KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
-import { TransferProphet } from "../utils/types/TransferProphet"
+import {
+  TransferProphet,
+  TransferProphet_Fee_Fixed,
+  TransferProphet_Fee_Rate,
+} from "../utils/types/TransferProphet"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
@@ -172,6 +180,16 @@ const getMeta2StacksSwapFeeInfo = async (
 export const getStacks2MetaFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToBRC20 | KnownRoute_FromStacks_ToRunes,
+  options: {
+    /**
+     * the initial route step
+     */
+    initialRoute: null | KnownRoute_ToStacks
+    /**
+     * the swap step between the previous route and the current one
+     */
+    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
+  },
 ): Promise<undefined | TransferProphet> => {
   const filteredRoutes = KnownChainId.isBRC20Chain(route.toChain)
     ? await getBRC20SupportedRoutes(ctx, route.toChain).then(routes =>
@@ -191,23 +209,42 @@ export const getStacks2MetaFeeInfo = async (
   const filteredRoute = filteredRoutes[0]
   if (filteredRoute == null) return
 
+  const feeDetails = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+    initialRoute: options.initialRoute,
+    swapRoute: options.swapRoute,
+  }).then(
+    async (info): Promise<SpecialFeeDetailsForSwapRoute> =>
+      info ??
+      props({
+        feeRate: filteredRoute.pegOutFeeRate,
+        minFeeAmount: BigNumber.ZERO,
+        gasFee:
+          filteredRoute.pegOutFeeBitcoinAmount == null
+            ? undefined
+            : props({
+                token: KnownTokenId.Stacks.aBTC,
+                amount: filteredRoute.pegOutFeeBitcoinAmount,
+              }),
+      }),
+  )
+
   return {
     isPaused: filteredRoute.pegOutPaused,
     bridgeToken: route.fromToken,
     fees: [
       {
-        type: "rate" as const,
+        type: "rate",
         token: route.fromToken,
-        rate: filteredRoute.pegOutFeeRate,
-        minimumAmount: BigNumber.ZERO,
-      },
-      filteredRoute.pegOutFeeBitcoinAmount == null
+        rate: feeDetails.feeRate,
+        minimumAmount: feeDetails.minFeeAmount,
+      } satisfies TransferProphet_Fee_Rate,
+      feeDetails.gasFee == null
         ? null
-        : {
-            type: "fixed" as const,
-            token: KnownTokenId.Stacks.aBTC,
-            amount: filteredRoute.pegOutFeeBitcoinAmount,
-          },
+        : ({
+            type: "fixed",
+            token: feeDetails.gasFee.token,
+            amount: feeDetails.gasFee.amount,
+          } satisfies TransferProphet_Fee_Fixed),
     ].filter(isNotNull),
     minBridgeAmount: BigNumber.ZERO,
     maxBridgeAmount: null,
@@ -326,6 +363,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
             token: toToken,
           })
         : await getFinalStepStacksTokenAddress(ctx, {
+            via: route.swapRoute.via,
             swap: route.swapRoute,
             stacksChain:
               toChain === KnownChainId.Runes.Mainnet
@@ -345,6 +383,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
               token: fromToken,
             })
           : await getFirstStepStacksTokenAddress(ctx, {
+              via: route.swapRoute.via,
               swap: route.swapRoute,
               stacksChain:
                 fromChain === KnownChainId.Runes.Mainnet
@@ -384,6 +423,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
               token: fromToken,
             })
           : await getFirstStepStacksTokenAddress(ctx, {
+              via: route.swapRoute.via,
               swap: route.swapRoute,
               stacksChain:
                 fromChain === KnownChainId.BRC20.Mainnet
@@ -427,6 +467,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
             token: toToken,
           })
         : await getFinalStepStacksTokenAddress(ctx, {
+            via: route.swapRoute.via,
             swap: route.swapRoute,
             stacksChain:
               toChain === KnownChainId.BRC20.Mainnet
@@ -446,6 +487,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
               token: fromToken,
             })
           : await getFirstStepStacksTokenAddress(ctx, {
+              via: route.swapRoute.via,
               swap: route.swapRoute,
               stacksChain:
                 fromChain === KnownChainId.BRC20.Mainnet
@@ -485,6 +527,7 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
               token: fromToken,
             })
           : await getFirstStepStacksTokenAddress(ctx, {
+              via: route.swapRoute.via,
               swap: route.swapRoute,
               stacksChain:
                 fromChain === KnownChainId.Runes.Mainnet
