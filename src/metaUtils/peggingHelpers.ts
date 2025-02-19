@@ -205,7 +205,7 @@ export const getStacks2MetaFeeInfo = async (
         ? null
         : {
             type: "fixed" as const,
-            token: KnownTokenId.Bitcoin.BTC,
+            token: KnownTokenId.Stacks.aBTC,
             amount: filteredRoute.pegOutFeeBitcoinAmount,
           },
     ].filter(isNotNull),
