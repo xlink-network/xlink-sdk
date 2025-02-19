@@ -14,7 +14,7 @@ export const contractNameOverrides_mainnet: Record<string, string> = {
   "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07a-swap",
   "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07b-agg",
   "btc-peg-in-endpoint-v2-05-launchpad": "btc-peg-in-v2-05-launchpad-3c",
-  "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06-swap",
+  "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06a-swap",
   "cross-peg-in-endpoint-v2-04-launchpad": "cross-peg-in-v2-04-launchpad-3c",
   "cross-peg-out-endpoint-v2-01-agg": "cross-peg-out-v2-01a-agg",
 }
