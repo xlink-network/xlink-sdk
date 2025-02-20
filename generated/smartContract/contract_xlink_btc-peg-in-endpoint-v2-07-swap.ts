@@ -173,6 +173,16 @@ export const btcPegInEndpointV207Swap = defineContract({
     }, ), ),
     mode: 'readonly'
   },
+  'get-default-peg-out-fee': {
+    input: [
+      {
+        name: 'pair-tuple',
+        type: tupleT({ 'chain-id': uintT, token: principalT }, )
+      }
+    ],
+    output: responseSimpleT(tupleT({ 'peg-out-fee': uintT, 'peg-out-gas-fee': uintT }, ), ),
+    mode: 'readonly'
+  },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
   'get-peg-in-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-peg-in-min-fee': { input: [], output: uintT, mode: 'readonly' },
