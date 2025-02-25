@@ -10,7 +10,7 @@ import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
   SpecialFeeDetailsForSwapRoute,
-  SwapRoute,
+  SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import {
@@ -77,7 +77,7 @@ export const getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
-    swapRoute: null | SwapRoute
+    swapRoute: null | SwapRouteViaALEX
   },
 ): Promise<undefined | TransferProphet> => {
   if (options.swapRoute != null) {
@@ -184,7 +184,7 @@ export const getStacks2MetaFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ): Promise<undefined | TransferProphet> => {
   const filteredRoutes = KnownChainId.isBRC20Chain(route.toChain)

@@ -21,6 +21,7 @@ import {
   getSpecialFeeDetailsForSwapRoute,
   SpecialFeeDetailsForSwapRoute,
   SwapRoute,
+  SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
@@ -40,7 +41,7 @@ import { getBTCPegInAddress } from "./btcAddresses"
 export const getBtc2StacksFeeInfo = async (
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
-    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksBaseContractCallInfo = getStacksContractCallInfo(
@@ -68,7 +69,7 @@ export const getBtc2StacksFeeInfo = async (
     options.swapRoute?.via === 'ALEX' ? stacksSwapContractCallInfo :
     options.swapRoute?.via === 'evmDexAggregator' ? stacksAggContractCallInfo :
     options.swapRoute == null ? stacksBaseContractCallInfo :
-    (checkNever(options.swapRoute), stacksBaseContractCallInfo)
+    (checkNever(options.swapRoute.via), stacksBaseContractCallInfo)
 
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
@@ -120,7 +121,7 @@ export const getStacks2BtcFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(

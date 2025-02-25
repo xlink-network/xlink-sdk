@@ -12,10 +12,7 @@ import {
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
-import {
-  SwapRoute_WithMinimumAmountsToReceive,
-  SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive,
-} from "../utils/SwapRouteHelpers"
+import { SwapRoute_WithMinimumAmountsToReceive } from "../utils/SwapRouteHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
@@ -56,9 +53,7 @@ export async function createBridgeOrderFromBitcoin(
       | KnownTokenId.RunesToken
     toAddress: string
     toBitcoinScriptPubKey: Uint8Array
-    swap?:
-      | SwapRoute_WithMinimumAmountsToReceive
-      | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive
+    swap?: SwapRoute_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   if (KnownChainId.isStacksChain(info.toChain)) {
@@ -126,9 +121,7 @@ export async function createBridgeOrder_BitcoinToStacks(
     toChain: KnownChainId.StacksChain
     toToken: KnownTokenId.StacksToken
     toStacksAddress: string
-    swap?:
-      | SwapRoute_WithMinimumAmountsToReceive
-      | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive
+    swap?: SwapRoute_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   let data: undefined | Uint8Array
@@ -235,9 +228,7 @@ export async function createBridgeOrder_BitcoinToEVM(
     toChain: KnownChainId.EVMChain
     toToken: KnownTokenId.EVMToken
     toEVMAddress: string
-    swap?:
-      | SwapRoute_WithMinimumAmountsToReceive
-      | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive
+    swap?: SwapRoute_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   const contractBaseCallInfo = getStacksContractCallInfo(
@@ -391,9 +382,7 @@ export async function createBridgeOrder_BitcoinToMeta(
   > & {
     fromBitcoinScriptPubKey: Uint8Array
     toBitcoinScriptPubKey: Uint8Array
-    swap?:
-      | SwapRoute_WithMinimumAmountsToReceive
-      | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive
+    swap?: SwapRoute_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   const contractBaseCallInfo = getStacksContractCallInfo(

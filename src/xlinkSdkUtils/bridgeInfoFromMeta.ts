@@ -7,7 +7,7 @@ import {
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
-  SwapRoute_WithExchangeRate_Public,
+  SwapRouteViaALEX_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
 import {
   KnownRoute,
@@ -42,7 +42,7 @@ export interface BridgeInfoFromMetaInput {
   fromToken: TokenId
   toToken: TokenId
   amount: SDKNumber
-  swapRoute?: SwapRoute_WithExchangeRate_Public
+  swapRoute?: SwapRouteViaALEX_WithExchangeRate_Public
 }
 
 export interface BridgeInfoFromMetaOutput

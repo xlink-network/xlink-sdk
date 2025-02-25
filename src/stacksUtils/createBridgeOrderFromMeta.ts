@@ -12,7 +12,7 @@ import {
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
-import { SwapRoute_WithMinimumAmountsToReceive } from "../utils/SwapRouteHelpers"
+import { SwapRouteViaALEX_WithMinimumAmountsToReceive } from "../utils/SwapRouteHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { EVMAddress } from "../xlinkSdkUtils/types"
@@ -34,7 +34,7 @@ export async function createBridgeOrderFromMeta(
     fromBitcoinScriptPubKey: Uint8Array
     toBitcoinScriptPubKey: Uint8Array
     toAddress: string
-    swap?: SwapRoute_WithMinimumAmountsToReceive
+    swap?: SwapRouteViaALEX_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   if (KnownChainId.isStacksChain(info.toChain)) {
@@ -111,7 +111,7 @@ export async function createBridgeOrder_MetaToStacks(
   info: KnownRoute_FromMeta_ToStacks & {
     fromBitcoinScriptPubKey: Uint8Array
     toStacksAddress: string
-    swap?: SwapRoute_WithMinimumAmountsToReceive
+    swap?: SwapRouteViaALEX_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   let data: undefined | Uint8Array
@@ -190,7 +190,7 @@ export async function createBridgeOrder_MetaToEVM(
   info: KnownRoute_FromMeta_ToEVM & {
     fromBitcoinScriptPubKey: Uint8Array
     toEVMAddress: EVMAddress
-    swap?: SwapRoute_WithMinimumAmountsToReceive
+    swap?: SwapRouteViaALEX_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   const transitStacksChain =
@@ -289,7 +289,7 @@ export async function createBridgeOrder_MetaToBitcoin(
   info: KnownRoute_FromMeta_ToBitcoin & {
     fromBitcoinScriptPubKey: Uint8Array
     toBitcoinScriptPubKey: Uint8Array
-    swap?: SwapRoute_WithMinimumAmountsToReceive
+    swap?: SwapRouteViaALEX_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   const transitStacksChain =
@@ -376,7 +376,7 @@ export async function createBridgeOrder_MetaToMeta(
   info: KnownRoute_FromMeta_ToMeta & {
     fromBitcoinScriptPubKey: Uint8Array
     toBitcoinScriptPubKey: Uint8Array
-    swap?: SwapRoute_WithMinimumAmountsToReceive
+    swap?: SwapRouteViaALEX_WithMinimumAmountsToReceive
   },
 ): Promise<undefined | CreateBridgeOrderResult> {
   const transitStacksChain =

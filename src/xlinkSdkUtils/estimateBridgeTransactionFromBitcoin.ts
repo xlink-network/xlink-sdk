@@ -32,7 +32,7 @@ import {
 } from "./bridgeFromBitcoin"
 import { ChainId, SDKNumber, TokenId, toSDKNumberOrUndefined } from "./types"
 import {
-  SwapRoute_WithMinimumAmountsToReceive_Public,
+  SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
 } from "../utils/SwapRouteHelpers"
 import { SDKGlobalContext } from "./types.internal"
@@ -51,7 +51,7 @@ export interface EstimateBridgeTransactionFromBitcoinInput {
   toAddressScriptPubKey?: Uint8Array
   amount: SDKNumber
   swapRoute?:
-    | SwapRoute_WithMinimumAmountsToReceive_Public
+    | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
     | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   networkFeeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn

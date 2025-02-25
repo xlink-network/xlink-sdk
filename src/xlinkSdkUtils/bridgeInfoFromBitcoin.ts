@@ -46,9 +46,7 @@ export interface BridgeInfoFromBitcoinInput {
   fromToken: TokenId
   toToken: TokenId
   amount: SDKNumber
-  swapRoute?:
-    | SwapRoute_WithExchangeRate_Public
-    | SwapRouteViaEVMDexAggregator_WithExchangeRate_Public
+  swapRoute?: SwapRoute_WithExchangeRate_Public
 }
 
 export interface BridgeInfoFromBitcoinOutput

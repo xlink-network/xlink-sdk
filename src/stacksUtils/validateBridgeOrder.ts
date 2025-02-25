@@ -1,7 +1,7 @@
 import { Response } from "clarity-codegen"
 import { hasLength } from "../utils/arrayHelpers"
 import {
-  SwapRoute,
+  SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import { KnownChainId } from "../utils/types/knownIds"
@@ -18,7 +18,7 @@ export async function validateBridgeOrder(info: {
   commitTx: Uint8Array
   revealTx: Uint8Array
   terminatingStacksToken: StacksContractAddress
-  swapRoute?: SwapRoute | SwapRouteViaEVMDexAggregator
+  swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
 }): Promise<void> {
   const contractBaseCallInfo = getStacksContractCallInfo(
     info.chainId === KnownChainId.Bitcoin.Mainnet

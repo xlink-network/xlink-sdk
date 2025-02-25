@@ -1,5 +1,8 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
-import { SwapRoute, SwapRouteViaEVMDexAggregator } from "./SwapRouteHelpers"
+import {
+  SwapRouteViaALEX,
+  SwapRouteViaEVMDexAggregator,
+} from "./SwapRouteHelpers"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
 import { pMemoize } from "./pMemoize"
@@ -247,7 +250,7 @@ export function defineRoute(
 export type IsSupportedFn = (
   ctx: SDKGlobalContext,
   route: DefinedRoute & {
-    swapRoute?: SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ) => Promise<boolean>
 const memoizedIsSupportedFactory = (
@@ -291,7 +294,7 @@ export type GetSupportedRoutesFn = (
 export type CheckRouteValidFn = (
   ctx: SDKGlobalContext,
   route: DefinedRoute & {
-    swapRoute?: SwapRoute | SwapRouteViaEVMDexAggregator
+    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ) => Promise<KnownRoute>
 

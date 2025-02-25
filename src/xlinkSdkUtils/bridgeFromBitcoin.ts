@@ -41,7 +41,8 @@ import {
 } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import {
-  SwapRoute,
+  SwapRouteViaALEX,
+  SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
   SwapRouteViaEVMDexAggregator,
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
   SwapRoute_WithMinimumAmountsToReceive_Public,
@@ -115,9 +116,7 @@ export interface BridgeFromBitcoinInput {
   toAddressScriptPubKey?: Uint8Array
   amount: SDKNumber
   networkFeeRate: bigint
-  swapRoute?:
-    | SwapRoute_WithMinimumAmountsToReceive_Public
-    | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
+  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
   signPsbt: BridgeFromBitcoinInput_signPsbtFn
   sendTransaction: (tx: { hex: string }) => Promise<{
@@ -214,6 +213,8 @@ async function bridgeFromBitcoin_toStacks(
   > &
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeFromBitcoinOutput> {
+  const swapRoute = info.swapRoute
+
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   const toTokenContractInfo = await getStacksTokenContractInfo(
     sdkContext,
@@ -235,6 +236,15 @@ async function bridgeFromBitcoin_toStacks(
     toChain: info.toChain,
     toToken: info.toToken,
     toStacksAddress: info.toAddress,
+    swap:
+      swapRoute == null
+        ? undefined
+        : {
+            ...swapRoute,
+            minimumAmountsToReceive: BigNumber.from(
+              swapRoute.minimumAmountsToReceive,
+            ),
+          },
   })
   if (createdOrder == null) {
     throw new UnsupportedBridgeRouteError(
@@ -261,6 +271,7 @@ async function bridgeFromBitcoin_toEVM(
     KnownRoute_FromBitcoin_ToEVM,
 ): Promise<BridgeFromBitcoinOutput> {
   const swapRoute = info.swapRoute
+
   const createdOrder = await createBridgeOrder_BitcoinToEVM(sdkContext, {
     fromChain: info.fromChain,
     toChain: info.toChain,
@@ -444,7 +455,7 @@ async function broadcastBitcoinTransaction(
 type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
   swapRoute:
     | undefined
-    | SwapRoute_WithMinimumAmountsToReceive_Public
+    | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
     | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   signPsbt: BridgeFromBitcoinInput["signPsbt"]
   pegInAddress: {
@@ -454,7 +465,7 @@ type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
   validateBridgeOrder: (
     pegInTx: Uint8Array,
     revealTx: undefined | Uint8Array,
-    swapRoute: undefined | SwapRoute | SwapRouteViaEVMDexAggregator,
+    swapRoute: undefined | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator,
   ) => Promise<void>
 }
 async function constructBitcoinTransaction(

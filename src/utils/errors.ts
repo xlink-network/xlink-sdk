@@ -1,5 +1,8 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
-import { SwapRoute, SwapRouteViaEVMDexAggregator } from "./SwapRouteHelpers"
+import {
+  SwapRouteViaALEX,
+  SwapRouteViaEVMDexAggregator,
+} from "./SwapRouteHelpers"
 
 /** Extends the Error class and serves as the base for all custom errors within the SDK. */
 export class XLinkSDKErrorBase extends Error {
@@ -64,7 +67,7 @@ export class UnsupportedBridgeRouteError extends XLinkSDKErrorBase {
     public toChain: ChainId,
     public fromToken: TokenId,
     public toToken?: TokenId,
-    public swap?: SwapRoute | SwapRouteViaEVMDexAggregator,
+    public swap?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator,
   ) {
     super(
       `Unsupported chain combination: ${fromToken}(${fromChain})${swap ? ` via ${swap.via}` : ""} -> ${toToken ?? "Unknown Token"}(${toChain})`,
