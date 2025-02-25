@@ -726,6 +726,9 @@ export async function bridgeFromEVM_toLaunchpad(
     info.fromChain,
     info.fromToken,
   )
+  const stacksChain = KnownChainId.isEVMMainnetChain(info.fromChain)
+    ? KnownChainId.Stacks.Mainnet
+    : KnownChainId.Stacks.Testnet
   if (
     bridgeEndpointAddress == null ||
     fromTokenContractInfo == null ||
@@ -733,7 +736,7 @@ export async function bridgeFromEVM_toLaunchpad(
   ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
-      info.receiverChain,
+      stacksChain,
       info.fromToken,
     )
   }
