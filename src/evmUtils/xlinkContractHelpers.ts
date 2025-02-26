@@ -220,7 +220,7 @@ const _getOnChainConfigsImpl = async (
     console.groupCollapsed(
       `Failed to read on-chain configs from ${configContractAddress} (${chain})`,
     )
-    console.debug(err)
+    console.error(err)
     console.groupEnd()
     return null
   })
