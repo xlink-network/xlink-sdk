@@ -1,5 +1,6 @@
-import { defaultEvmClients } from "../src/evmUtils/evmClients"
+import { XLinkSDK } from "../src"
 import { getAllAddresses } from "../src/evmUtils/xlinkContractHelpers"
+import { getXLinkSDKContext } from "../src/lowlevelUnstableInfos"
 import { _allKnownEVMChains } from "../src/utils/types/knownIds"
 
 async function print(matchers: { chain: string[] }): Promise<void> {
@@ -7,23 +8,12 @@ async function print(matchers: { chain: string[] }): Promise<void> {
     matchers.chain.some(m => c.includes(m)),
   )
 
+  const sdk = new XLinkSDK()
+  const ctx = getXLinkSDKContext(sdk)
+
   await Promise.all(
     chainIds.map(chainId =>
-      getAllAddresses(
-        {
-          backendAPI: {
-            runtimeEnv: "prod",
-          },
-          stacks: {},
-          btc: {},
-          brc20: {},
-          runes: {},
-          evm: {
-            viemClients: defaultEvmClients,
-          },
-        },
-        chainId,
-      ).then(resp => {
+      getAllAddresses(ctx, chainId).then(resp => {
         console.log(chainId, resp?.onChainAddresses ?? "undefined")
         return resp
       }),
