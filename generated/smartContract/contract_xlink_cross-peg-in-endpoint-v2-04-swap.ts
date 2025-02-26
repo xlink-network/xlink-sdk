@@ -155,7 +155,7 @@ export const crossPegInEndpointV204Swap = defineContract({
     input: [
       {
         name: 'pair-tuple',
-        type: tupleT({ 'chain-id': uintT, token: principalT }, )
+        type: tupleT({ 'chain-id': optionalT(uintT, ), token: principalT }, )
       }
     ],
     output: responseSimpleT(tupleT({ 'peg-out-fee': uintT, 'peg-out-gas-fee': uintT }, ), ),

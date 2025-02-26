@@ -145,6 +145,8 @@ export interface XLinkSDKOptions {
     cacheOnChainConfig?: boolean
 
     /**
+     * You can assign your custom viem clients here
+     *
      * @default undefined
      */
     viemClients?: Record<KnownChainId.EVMChain, Client>
