@@ -26,7 +26,7 @@ export const contractNameOverrides_testnet: Record<string, string> = {
   "token-vliabtc": "token-vliabtc-dk",
 
   // btc bridge
-  "btc-peg-in-endpoint-v2-05": "btc-peg-in-endpoint-v2-05-dk",
+  "btc-peg-in-endpoint-v2-07": "btc-peg-in-endpoint-v2-07-dk",
   "btc-peg-in-endpoint-v2-07-swap": "btc-peg-in-v2-07-swap-dk",
   "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07b-agg-dk",
   "btc-peg-in-endpoint-v2-05-lisa": "btc-peg-in-endpoint-v2-05-lisa-dk",

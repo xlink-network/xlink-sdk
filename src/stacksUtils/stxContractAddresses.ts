@@ -53,7 +53,7 @@ export const wrapContractAddress = (
 }
 
 export enum StacksContractName {
-  BTCPegInEndpoint = "btc-peg-in-endpoint-v2-05",
+  BTCPegInEndpoint = "btc-peg-in-endpoint-v2-07",
   BTCPegInEndpointSwap = "btc-peg-in-endpoint-v2-07-swap",
   BTCPegInEndpointLaunchpad = "btc-peg-in-endpoint-v2-05-launchpad",
   BTCPegOutEndpoint = "btc-peg-out-endpoint-v2-01",
