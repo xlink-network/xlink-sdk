@@ -259,7 +259,7 @@ export const getStacks2EvmFeeInfo = async (
       },
     ],
     minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
-    maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
+    maxBridgeAmount: maxAmount,
   }
 }
 
