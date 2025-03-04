@@ -31,7 +31,10 @@ import {
   StacksContractAddress,
 } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
-import { getEVMSupportedRoutes } from "./apiHelpers/getEVMSupportedRoutes"
+import {
+  getEVMSupportedRoutes,
+  getEVMSupportedRoutesByChainType,
+} from "./apiHelpers/getEVMSupportedRoutes"
 import { BridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { BridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
@@ -463,34 +466,53 @@ export async function evmTokenToCorrespondingStacksToken(
 
 export const getTerminatingStacksTokenContractAddress = async (
   sdkContext: SDKGlobalContext,
-  route: {
+  info: {
     evmChain: KnownChainId.EVMChain
     evmToken: KnownTokenId.EVMToken
     stacksChain: KnownChainId.StacksChain
   },
 ): Promise<undefined | StacksContractAddress> => {
-  const supportedRoutes = await getEVMSupportedRoutes(
-    sdkContext,
-    route.evmChain,
-  )
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, info.evmChain)
 
   return (
-    supportedRoutes.find(r => r.evmToken === route.evmToken)
+    supportedRoutes.find(r => r.evmToken === info.evmToken)
       ?.proxyStacksTokenContractAddress ?? undefined
   )
 }
-export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
+
+export const getStacksTokenFromTerminatingStacksTokenContractAddress = async (
   sdkContext: SDKGlobalContext,
-  route: {
+  info: {
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.StacksToken> => {
+  const routes = await getEVMSupportedRoutesByChainType(
+    sdkContext,
+    info.stacksChain === KnownChainId.Stacks.Mainnet ? "mainnet" : "testnet",
+  )
+
+  return (
+    routes.find(r =>
+      r.proxyStacksTokenContractAddress == null
+        ? false
+        : isStacksContractAddressEqual(
+            r.proxyStacksTokenContractAddress,
+            info.stacksTokenAddress,
+          ),
+    )?.stacksToken ?? undefined
+  )
+}
+
+export const getEVMTokenFromTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  info: {
     evmChain: KnownChainId.EVMChain
     stacksChain: KnownChainId.StacksChain
     stacksTokenAddress: StacksContractAddress
   },
 ): Promise<undefined | KnownTokenId.EVMToken> => {
-  const supportedRoutes = await getEVMSupportedRoutes(
-    sdkContext,
-    route.evmChain,
-  )
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, info.evmChain)
 
   return (
     supportedRoutes.find(r =>
@@ -498,7 +520,7 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
         ? false
         : isStacksContractAddressEqual(
             r.proxyStacksTokenContractAddress,
-            route.stacksTokenAddress,
+            info.stacksTokenAddress,
           ),
     )?.evmToken ?? undefined
   )

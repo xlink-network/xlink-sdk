@@ -4,7 +4,8 @@
  */
 
 import {
-  getEVMTokenIdFromTerminatingStacksTokenContractAddress as _getEVMTokenIdFromTerminatingStacksTokenContractAddress,
+  getEVMTokenFromTerminatingStacksTokenContractAddress as _getEVMTokenFromTerminatingStacksTokenContractAddress,
+  getStacksTokenFromTerminatingStacksTokenContractAddress as _getStacksTokenFromTerminatingStacksTokenContractAddress,
   getTerminatingStacksTokenContractAddress as _getTerminatingStacksTokenContractAddress,
   evmTokenFromCorrespondingStacksToken,
   evmTokenToCorrespondingStacksToken,
@@ -102,7 +103,7 @@ export const getXLinkSDKContext = (
 
 export const getTerminatingStacksTokenContractAddress = async (
   sdk: import("./XLinkSDK").XLinkSDK,
-  route: {
+  info: {
     evmChain: KnownChainId.EVMChain
     evmToken: KnownTokenId.EVMToken
     stacksChain: KnownChainId.StacksChain
@@ -110,20 +111,32 @@ export const getTerminatingStacksTokenContractAddress = async (
 ): Promise<undefined | StacksContractAddress> => {
   return _getTerminatingStacksTokenContractAddress(
     getXLinkSDKContext(sdk),
-    route,
+    info,
+  )
+}
+export const getStacksTokenFromTerminatingStacksTokenContractAddress = async (
+  sdk: import("./XLinkSDK").XLinkSDK,
+  info: {
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.StacksToken> => {
+  return _getStacksTokenFromTerminatingStacksTokenContractAddress(
+    getXLinkSDKContext(sdk),
+    info,
   )
 }
 export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
   sdk: import("./XLinkSDK").XLinkSDK,
-  route: {
+  info: {
     evmChain: KnownChainId.EVMChain
     stacksChain: KnownChainId.StacksChain
     stacksTokenAddress: StacksContractAddress
   },
 ): Promise<undefined | KnownTokenId.EVMToken> => {
-  return _getEVMTokenIdFromTerminatingStacksTokenContractAddress(
+  return _getEVMTokenFromTerminatingStacksTokenContractAddress(
     getXLinkSDKContext(sdk),
-    route,
+    info,
   )
 }
 
