@@ -233,3 +233,21 @@ const getRoutesOverlapping = (
   }
   return null
 }
+
+export async function metaTokenToCorrespondingStacksToken(
+  ctx: SDKGlobalContext,
+  route:
+    | { chain: KnownChainId.BRC20Chain; token: KnownTokenId.BRC20Token }
+    | { chain: KnownChainId.RunesChain; token: KnownTokenId.RunesToken },
+): Promise<undefined | KnownTokenId.StacksToken> {
+  if (KnownChainId.isBRC20Chain(route.chain)) {
+    const routes = await getBRC20SupportedRoutes(ctx, route.chain)
+    return routes.find(r => r.brc20Token === route.token)?.stacksToken
+  } else if (KnownChainId.isRunesChain(route.chain)) {
+    const routes = await getRunesSupportedRoutes(ctx, route.chain)
+    return routes.find(r => r.runesToken === route.token)?.stacksToken
+  } else {
+    checkNever(route.chain)
+    return
+  }
+}

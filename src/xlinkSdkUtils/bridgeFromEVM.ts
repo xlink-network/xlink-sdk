@@ -46,6 +46,7 @@ import {
   toSDKNumberOrUndefined,
 } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
 
 export const supportedRoutes = buildSupportedRoutes(
   [
@@ -622,10 +623,28 @@ async function bridgeFromEVM_toMeta(
     info.fromChain,
     info.fromToken,
   )
+
+  const toTokenCorrespondingStacksToken =
+    await metaTokenToCorrespondingStacksToken(ctx, {
+      chain: info.toChain as any,
+      token: info.toToken as any,
+    })
+  const toTokenStacksAddress =
+    toTokenCorrespondingStacksToken == null
+      ? undefined
+      : await getStacksTokenContractInfo(
+          KnownChainId.isEVMMainnetChain(info.fromChain)
+            ? KnownChainId.Stacks.Mainnet
+            : KnownChainId.Stacks.Testnet,
+          toTokenCorrespondingStacksToken,
+        )
+
   if (
     bridgeEndpointAddress == null ||
     fromTokenContractInfo == null ||
-    fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress
+    fromTokenContractInfo.tokenContractAddress === nativeCurrencyAddress ||
+    toTokenCorrespondingStacksToken == null ||
+    toTokenStacksAddress == null
   ) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -639,7 +658,7 @@ async function bridgeFromEVM_toMeta(
     throw new InvalidMethodParametersError(
       [
         "XLinkSDK",
-        `bridgeFromEVM (to ${KnownChainId.isBRC20Chain(info.toChain) ? "BRC20" : "Runes"})`,
+        `bridgeFromEVM (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
         {
@@ -658,7 +677,10 @@ async function bridgeFromEVM_toMeta(
     functionName: KnownChainId.isBRC20Chain(info.toChain)
       ? "transferToBRC20"
       : "transferToRunes",
-    args: [toAddressHex],
+    args: [
+      toAddressHex,
+      `${toTokenStacksAddress.deployerAddress}.${toTokenStacksAddress.contractName}`,
+    ],
   })
   const functionData = await encodeFunctionData({
     abi: BridgeEndpointAbi,
