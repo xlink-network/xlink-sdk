@@ -11,7 +11,9 @@ import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 
 export interface RunesSupportedRoute {
   runesId: `${number}:${number}`
+  runesChain: KnownChainId.RunesChain
   runesToken: KnownTokenId.RunesToken
+  stacksChain: KnownChainId.StacksChain
   stacksToken: KnownTokenId.StacksToken
   pegInPaused: boolean
   pegInFeeRate: BigNumber
@@ -43,10 +45,10 @@ export async function getRunesSupportedRoutes(
 }
 async function _getRunesSupportedRoutes(
   sdkContext: SDKGlobalContext,
-  chainId: KnownChainId.RunesChain,
+  runesChain: KnownChainId.RunesChain,
 ): Promise<RunesSupportedRoute[]> {
-  const stacksChainId =
-    chainId === KnownChainId.Runes.Mainnet
+  const stacksChain =
+    runesChain === KnownChainId.Runes.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
@@ -56,7 +58,8 @@ async function _getRunesSupportedRoutes(
       method: "GET",
       path: "/2024-10-01/runes/supported-routes",
       query: {
-        network: chainId === KnownChainId.Runes.Mainnet ? "mainnet" : "testnet",
+        network:
+          runesChain === KnownChainId.Runes.Mainnet ? "mainnet" : "testnet",
       },
     },
   )
@@ -65,7 +68,7 @@ async function _getRunesSupportedRoutes(
     resp.routes.map(async (route): Promise<null | RunesSupportedRoute> => {
       const stacksToken = await getStacksToken(
         sdkContext,
-        stacksChainId,
+        stacksChain,
         route.stacksTokenContractAddress,
       )
 
@@ -73,7 +76,9 @@ async function _getRunesSupportedRoutes(
 
       return {
         runesId: route.runesId,
+        runesChain,
         runesToken: createRunesToken(route.runesId),
+        stacksChain,
         stacksToken,
         pegInPaused: route.pegInPaused,
         pegInFeeRate: BigNumber.from(route.pegInFeeRate),

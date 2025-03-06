@@ -1,18 +1,22 @@
 import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
+import { isSupportedBitcoinRoute } from "./bitcoinUtils/peggingHelpers"
 import { nativeCurrencyAddress } from "./evmUtils/addressHelpers"
 import {
   defaultEvmClients,
   evmChainIdFromKnownChainId,
   evmChainIdToKnownChainId,
 } from "./evmUtils/evmClients"
+import { isSupportedEVMRoute } from "./evmUtils/peggingHelpers"
 import {
   getEVMContractCallInfo,
   getEVMToken,
   getEVMTokenContractInfo,
 } from "./evmUtils/xlinkContractHelpers"
-import { getRunesSupportedRoutes } from "./metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { isSupportedMetaRoute } from "./lowlevelUnstableInfos"
 import { getBRC20SupportedRoutes } from "./metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import { getRunesSupportedRoutes } from "./metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { isSupportedStacksRoute } from "./stacksUtils/peggingHelpers"
 import {
   getStacksToken,
   getStacksTokenContractInfo,
@@ -23,46 +27,63 @@ import {
   GetSupportedRoutesFn_Conditions,
   KnownRoute,
 } from "./utils/buildSupportedRoutes"
+import { detectSupportedRoutes } from "./utils/detectSupportedRoutes"
 import { TooFrequentlyError } from "./utils/errors"
-import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import {
-  BridgeFromBitcoinInput,
-  BridgeFromBitcoinOutput,
-  bridgeFromBitcoin,
-  supportedRoutes as supportedRoutesFromBitcoin,
-} from "./xlinkSdkUtils/bridgeFromBitcoin"
-import {
-  BridgeFromEVMInput,
-  BridgeFromEVMOutput,
-  bridgeFromEVM,
-  supportedRoutes as supportedRoutesFromEVM,
-} from "./xlinkSdkUtils/bridgeFromEVM"
+  KnownChainId,
+  KnownTokenId,
+  getChainIdNetworkType,
+} from "./utils/types/knownIds"
 import {
   BridgeFromStacksInput,
   BridgeFromStacksOutput,
   bridgeFromStacks,
-  supportedRoutes as supportedRoutesFromStacks,
 } from "./xlinkSdkUtils/bridgeFromStacks"
 import {
-  BridgeInfoFromBitcoinInput,
-  BridgeInfoFromBitcoinOutput,
-  bridgeInfoFromBitcoin,
-} from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+  BridgeFromEVMInput,
+  BridgeFromEVMOutput,
+  bridgeFromEVM,
+} from "./xlinkSdkUtils/bridgeFromEVM"
 import {
-  BridgeInfoFromEVMInput,
-  BridgeInfoFromEVMOutput,
-  bridgeInfoFromEVM,
-} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+  BridgeFromBitcoinInput,
+  BridgeFromBitcoinOutput,
+  bridgeFromBitcoin,
+} from "./xlinkSdkUtils/bridgeFromBitcoin"
+import {
+  BridgeFromBRC20Input,
+  BridgeFromBRC20Output,
+  bridgeFromBRC20,
+} from "./xlinkSdkUtils/bridgeFromBRC20"
 import {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
   bridgeInfoFromStacks,
 } from "./xlinkSdkUtils/bridgeInfoFromStacks"
 import {
+  BridgeInfoFromEVMInput,
+  BridgeInfoFromEVMOutput,
+  bridgeInfoFromEVM,
+} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+import {
+  BridgeInfoFromBitcoinInput,
+  BridgeInfoFromBitcoinOutput,
+  bridgeInfoFromBitcoin,
+} from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+import {
+  BridgeInfoFromBRC20Input,
+  BridgeInfoFromBRC20Output,
+  bridgeInfoFromBRC20,
+} from "./xlinkSdkUtils/bridgeInfoFromMeta"
+import {
   EstimateBridgeTransactionFromBitcoinInput,
   EstimateBridgeTransactionFromBitcoinOutput,
   estimateBridgeTransactionFromBitcoin,
 } from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
+import {
+  EstimateBridgeTransactionFromBRC20Input,
+  EstimateBridgeTransactionFromBRC20Output,
+  estimateBridgeTransactionFromBRC20,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
 import {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
@@ -91,6 +112,11 @@ export {
   BridgeFromBitcoinOutput,
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
 export {
+  BridgeFromBRC20Input,
+  BridgeFromBRC20Input_signPsbtFn,
+  BridgeFromBRC20Output,
+} from "./xlinkSdkUtils/bridgeFromBRC20"
+export {
   BridgeFromEVMInput,
   BridgeFromEVMOutput,
 } from "./xlinkSdkUtils/bridgeFromEVM"
@@ -102,6 +128,10 @@ export {
   BridgeInfoFromBitcoinInput,
   BridgeInfoFromBitcoinOutput,
 } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+export {
+  BridgeInfoFromBRC20Input,
+  BridgeInfoFromBRC20Output,
+} from "./xlinkSdkUtils/bridgeInfoFromMeta"
 export {
   BridgeInfoFromEVMInput,
   BridgeInfoFromEVMOutput,
@@ -169,6 +199,9 @@ export class XLinkSDK {
       options.evm?.cacheOnChainConfig ?? defaultConfig.evm?.cacheOnChainConfig
 
     this.sdkContext = {
+      routes: {
+        detectedCache: new Map(),
+      },
       backendAPI: {
         ...options.__experimental?.backendAPI,
         runtimeEnv: options.__experimental?.backendAPI?.runtimeEnv ?? "prod",
@@ -217,28 +250,46 @@ export class XLinkSDK {
   async getSupportedRoutes(
     conditions?: GetSupportedRoutesFn_Conditions,
   ): Promise<KnownRoute[]> {
-    const promises = [
-      supportedRoutesFromStacks,
-      supportedRoutesFromEVM,
-      supportedRoutesFromBitcoin,
-    ].map(async rules => rules.getSupportedRoutes(this.sdkContext, conditions))
+    const specifiedChain = conditions?.fromChain ?? conditions?.toChain
 
-    return (await Promise.all(promises)).flat()
+    if (specifiedChain != null && !KnownChainId.isKnownChain(specifiedChain)) {
+      return []
+    }
+
+    const networkType =
+      specifiedChain == null ? null : getChainIdNetworkType(specifiedChain)
+
+    let resultRoutesPromise: Promise<KnownRoute[]>
+    if (networkType == null) {
+      resultRoutesPromise = Promise.all([
+        detectSupportedRoutes(this.sdkContext, "mainnet"),
+        detectSupportedRoutes(this.sdkContext, "testnet"),
+      ]).then(res => res.flat())
+    } else {
+      resultRoutesPromise = detectSupportedRoutes(this.sdkContext, networkType)
+    }
+
+    const resultRoutes = await resultRoutesPromise
+    if (conditions == null || Object.keys(conditions).length === 0) {
+      return resultRoutes
+    }
+
+    return resultRoutes.filter(
+      r =>
+        r.fromChain === conditions.fromChain &&
+        r.toChain === conditions.toChain &&
+        r.fromToken === conditions.fromToken &&
+        r.toToken === conditions.toToken,
+    )
   }
 
   async isSupportedRoute(route: DefinedRoute): Promise<boolean> {
-    const checkingResult = await Promise.all(
-      [
-        supportedRoutesFromStacks,
-        supportedRoutesFromEVM,
-        supportedRoutesFromBitcoin,
-      ].map(rule =>
-        rule
-          .checkRouteValid(this.sdkContext, route)
-          .then(() => true)
-          .catch(() => false),
-      ),
-    )
+    const checkingResult = await Promise.all([
+      isSupportedEVMRoute(this.sdkContext, route),
+      isSupportedStacksRoute(this.sdkContext, route),
+      isSupportedBitcoinRoute(this.sdkContext, route),
+      isSupportedMetaRoute(this.sdkContext, route),
+    ])
 
     return checkingResult.some(r => r)
   }
@@ -589,6 +640,46 @@ export class XLinkSDK {
     })
   }
 
+  bridgeInfoFromBRC20(
+    input: BridgeInfoFromBRC20Input,
+  ): Promise<BridgeInfoFromBRC20Output> {
+    return bridgeInfoFromBRC20(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeInfoFromBRC20"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
+  estimateBridgeTransactionFromBRC20(
+    input: EstimateBridgeTransactionFromBRC20Input,
+  ): Promise<EstimateBridgeTransactionFromBRC20Output> {
+    return estimateBridgeTransactionFromBRC20(this.sdkContext, input).catch(
+      err => {
+        if (err instanceof TooManyRequestsError) {
+          throw new TooFrequentlyError(
+            ["estimateBridgeTransactionFromBRC20"],
+            err.retryAfter,
+            {
+              cause: err,
+            },
+          )
+        }
+        throw err
+      },
+    )
+  }
+  bridgeFromBRC20(input: BridgeFromBRC20Input): Promise<BridgeFromBRC20Output> {
+    return bridgeFromBRC20(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeFromBRC20"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
   brc20TickFromBRC20Token(
     chain: ChainId,
     token: KnownTokenId.BRC20Token,

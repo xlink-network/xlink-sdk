@@ -2,7 +2,7 @@ import { BigNumber } from "../utils/BigNumber"
 import { KnownRoute_FromEVM } from "../utils/buildSupportedRoutes"
 import {
   ALEXSwapParameters,
-  getALEXSwapParametersImpl
+  getALEXSwapParametersImpl,
 } from "../utils/swapHelpers/alexSwapParametersHelpers"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { getEvm2StacksFeeInfo } from "./peggingHelpers"

@@ -9,6 +9,7 @@ import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 export interface EVMSupportedRoute {
   evmChain: KnownChainId.EVMChain
   evmToken: KnownTokenId.EVMToken
+  stacksChain: KnownChainId.StacksChain
   stacksToken: KnownTokenId.StacksToken
   proxyStacksTokenContractAddress: null | StacksContractAddress
   pegOutFeeRate: BigNumber
@@ -52,7 +53,7 @@ async function _getEVMSupportedRoutes(
   sdkContext: SDKGlobalContext,
   network: "mainnet" | "testnet",
 ): Promise<EVMSupportedRoute[]> {
-  const stacksChainId =
+  const stacksChain =
     network === "mainnet"
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
@@ -74,7 +75,7 @@ async function _getEVMSupportedRoutes(
       const evmToken = route.evmToken as KnownTokenId.KnownToken
       const stacksToken = await getStacksToken(
         sdkContext,
-        stacksChainId,
+        stacksChain,
         route.stacksTokenContractAddress,
       )
 
@@ -85,6 +86,7 @@ async function _getEVMSupportedRoutes(
       return {
         evmChain,
         evmToken,
+        stacksChain,
         stacksToken,
         proxyStacksTokenContractAddress: route.proxyStacksTokenContractAddress,
         pegOutFeeRate: BigNumber.from(route.pegOutFeeRate),

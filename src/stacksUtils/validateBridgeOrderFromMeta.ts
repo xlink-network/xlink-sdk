@@ -4,7 +4,7 @@ import {
   SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
-import { KnownChainId } from "../utils/types/knownIds"
+import { getChainIdNetworkType, KnownChainId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import { StacksContractName } from "./stxContractAddresses"
 import {
@@ -13,30 +13,32 @@ import {
 } from "./xlinkContractHelpers"
 import { checkNever } from "../utils/typeHelpers"
 
-export async function validateBridgeOrder(info: {
-  chainId: KnownChainId.BitcoinChain
+export async function validateBridgeOrderFromMeta(info: {
+  chainId: KnownChainId.BRC20Chain | KnownChainId.RunesChain
   commitTx: Uint8Array
   revealTx: Uint8Array
   terminatingStacksToken: StacksContractAddress
+  transferOutputIndex: number
+  bridgeFeeOutputIndex: undefined | number
   swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
 }): Promise<void> {
   const contractBaseCallInfo = getStacksContractCallInfo(
-    info.chainId === KnownChainId.Bitcoin.Mainnet
+    getChainIdNetworkType(info.chainId) === "mainnet"
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    StacksContractName.BTCPegInEndpoint,
+    StacksContractName.MetaPegInEndpoint,
   )
   const contractSwapCallInfo = getStacksContractCallInfo(
-    info.chainId === KnownChainId.Bitcoin.Mainnet
+    getChainIdNetworkType(info.chainId) === "mainnet"
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    StacksContractName.BTCPegInEndpointSwap,
+    StacksContractName.MetaPegInEndpointSwap,
   )
   const contractAggCallInfo = getStacksContractCallInfo(
-    info.chainId === KnownChainId.Bitcoin.Mainnet
+    getChainIdNetworkType(info.chainId) === "mainnet"
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet,
-    StacksContractName.BTCPegInEndpointAggregator,
+    StacksContractName.MetaPegInEndpointAggregator,
   )
   if (
     contractBaseCallInfo == null ||
@@ -44,7 +46,7 @@ export async function validateBridgeOrder(info: {
     contractAggCallInfo == null
   ) {
     throw new Error(
-      "[validateBridgeOrder_BitcoinToEVM] stacks contract information not found",
+      "[validateBridgeOrderFromMeta] stacks contract information not found",
     )
   }
 
@@ -60,7 +62,11 @@ export async function validateBridgeOrder(info: {
         {
           "commit-tx": {
             tx: commitTx,
-            "output-idx": 1n,
+            "output-idx": BigInt(info.transferOutputIndex),
+            "fee-idx":
+              info.bridgeFeeOutputIndex == null
+                ? undefined
+                : BigInt(info.bridgeFeeOutputIndex),
           },
           "reveal-tx": {
             tx: revealTx,
@@ -77,7 +83,11 @@ export async function validateBridgeOrder(info: {
         {
           "commit-tx": {
             tx: commitTx,
-            "output-idx": 1n,
+            "output-idx": BigInt(info.transferOutputIndex),
+            "fee-idx":
+              info.bridgeFeeOutputIndex == null
+                ? undefined
+                : BigInt(info.bridgeFeeOutputIndex),
           },
           "reveal-tx": {
             tx: revealTx,
@@ -102,7 +112,11 @@ export async function validateBridgeOrder(info: {
       {
         "commit-tx": {
           tx: commitTx,
-          "output-idx": 1n,
+          "output-idx": BigInt(info.transferOutputIndex),
+          "fee-idx":
+            info.bridgeFeeOutputIndex == null
+              ? undefined
+              : BigInt(info.bridgeFeeOutputIndex),
         },
         "reveal-tx": {
           tx: revealTx,
@@ -114,7 +128,9 @@ export async function validateBridgeOrder(info: {
   } else {
     checkNever(swapRoute)
     throw new Error(
-      `[validateBridgeOrder_BitcoinToEVM] unsupported swap route length: ${(swapRoute as any).length}`,
+      `[validateBridgeOrderFromMeta] unsupported swap route: ${JSON.stringify(
+        swapRoute,
+      )}`,
     )
   }
 

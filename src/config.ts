@@ -15,6 +15,7 @@ export const contractNameOverrides_mainnet: Record<string, string> = {
   "btc-peg-in-endpoint-v2-07-agg": "btc-peg-in-v2-07d-agg",
   "btc-peg-in-endpoint-v2-05-launchpad": "btc-peg-in-v2-05-launchpad-3c",
   "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06d-swap",
+  "meta-peg-in-endpoint-v2-06-agg": "meta-peg-in-v2-06c-agg",
   "cross-peg-in-endpoint-v2-04-swap": "cross-peg-in-v2-04b-swap",
   "cross-peg-in-endpoint-v2-04-launchpad": "cross-peg-in-v2-04-launchpad-3c",
   "cross-peg-out-endpoint-v2-01-agg": "cross-peg-out-v2-01b-agg",
@@ -35,6 +36,7 @@ export const contractNameOverrides_testnet: Record<string, string> = {
   // meta bridge
   "meta-peg-in-endpoint-v2-04": "meta-peg-in-endpoint-v2-04-dk",
   "meta-peg-in-endpoint-v2-06-swap": "meta-peg-in-v2-06-swap-01",
+  "meta-peg-in-endpoint-v2-06-agg": "meta-peg-in-v2-06-agg",
   "meta-peg-in-endpoint-v2-04-lisa": "meta-peg-in-endpoint-v2-04-lisa-dk",
   "meta-peg-out-endpoint-v2-04": "meta-peg-out-endpoint-v2-04-dk",
   // cross bridge

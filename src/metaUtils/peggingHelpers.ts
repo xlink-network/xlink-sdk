@@ -10,6 +10,7 @@ import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
   SpecialFeeDetailsForSwapRoute,
+  SwapRoute,
   SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
@@ -77,11 +78,13 @@ export const getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
-    swapRoute: null | { via: "ALEX" }
+    swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   if (options.swapRoute != null) {
-    return getMeta2StacksSwapFeeInfo(route)
+    return getMeta2StacksSwapFeeInfo(route, {
+      swapRoute: options.swapRoute,
+    })
   } else {
     return getMeta2StacksBaseFeeInfo(ctx, route)
   }
@@ -134,27 +137,41 @@ const getMeta2StacksBaseFeeInfo = async (
 
 const getMeta2StacksSwapFeeInfo = async (
   route1: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
+  options: {
+    swapRoute: Pick<SwapRoute, "via">
+  },
 ): Promise<undefined | TransferProphet> => {
   const stacksSwapContractCallInfo = getStacksContractCallInfo(
     route1.toChain,
     StacksContractName.MetaPegInEndpointSwap,
   )
-  if (stacksSwapContractCallInfo == null) {
+  const stacksAggContractCallInfo = getStacksContractCallInfo(
+    route1.toChain,
+    StacksContractName.MetaPegInEndpointAggregator,
+  )
+  if (stacksSwapContractCallInfo == null || stacksAggContractCallInfo == null) {
     return
   }
 
+  // prettier-ignore
+  const contractCallInfo =
+    options.swapRoute.via === 'ALEX' ? stacksSwapContractCallInfo :
+    options.swapRoute.via === 'evmDexAggregator' ? stacksAggContractCallInfo :
+    (checkNever(options.swapRoute.via), null)
+  if (contractCallInfo == null) return
+
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
-      stacksSwapContractCallInfo.contractName,
+      contractCallInfo.contractName,
       "is-paused",
       {},
-      stacksSwapContractCallInfo.executeOptions,
+      contractCallInfo.executeOptions,
     ),
     fixedBtcFee: executeReadonlyCallXLINK(
-      stacksSwapContractCallInfo.contractName,
+      contractCallInfo.contractName,
       "get-peg-in-fee",
       {},
-      stacksSwapContractCallInfo.executeOptions,
+      contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
   })
 
@@ -247,7 +264,7 @@ export const getStacks2MetaFeeInfo = async (
   }
 }
 
-export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
+export const isSupportedBRC20Route: IsSupportedFn = async (ctx, route) => {
   const { fromChain, toChain, fromToken, toToken } = route
 
   if (fromChain === toChain && fromToken === toToken) {
@@ -266,8 +283,8 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
   }
 
   if (
-    !KnownChainId.isRunesChain(fromChain) &&
-    !KnownChainId.isBRC20Chain(fromChain)
+    !KnownChainId.isBRC20Chain(fromChain) ||
+    !KnownTokenId.isBRC20Token(fromToken)
   ) {
     return false
   }
@@ -275,287 +292,226 @@ export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
   const pegInAddress = getMetaPegInAddress(fromChain, toChain)
   if (pegInAddress == null) return false
 
-  if (KnownChainId.isBitcoinChain(toChain)) {
-    return false
-  }
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(ctx, {
+    ...route,
+    fromChain,
+    fromToken,
+    toChain: toChain as any,
+    toToken: toToken as any,
+  })
+  if (headAndTailStacksTokens == null) return false
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
 
+  // brc20 -> stacks
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
 
-    // runes -> stacks
-    if (KnownChainId.isRunesChain(fromChain)) {
-      if (!KnownTokenId.isRunesToken(fromToken)) return false
-
-      const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-      return runesRoutes.some(
-        route =>
-          route.runesToken === fromToken && route.stacksToken === toToken,
-      )
-    }
-
-    // brc20 -> stacks
-    if (KnownChainId.isBRC20Chain(fromChain)) {
-      if (!KnownTokenId.isBRC20Token(fromToken)) return false
-
-      const brc20Routes = await getBRC20SupportedRoutes(ctx, fromChain)
-      return brc20Routes.some(
-        route =>
-          route.brc20Token === fromToken && route.stacksToken === toToken,
-      )
-    }
-
-    checkNever(fromChain)
-    return false
+    const brc20Routes = await getBRC20SupportedRoutes(ctx, fromChain)
+    return brc20Routes.some(
+      route => route.brc20Token === fromToken && route.stacksToken === toToken,
+    )
   }
 
+  // brc20 -> evm
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
-    // runes -> evm
-    if (KnownChainId.isRunesChain(fromChain)) {
-      if (!KnownTokenId.isRunesToken(fromToken)) return false
+    const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
+    const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
 
-      const {
-        firstStepToStacksToken: step1ToStacksToken,
-        lastStepFromStacksToken: step2FromStacksToken,
-      } = await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-      const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
-
-      return (
-        fromRoutes.some(
-          route =>
-            route.runesToken === fromToken &&
-            route.stacksToken === step1ToStacksToken,
-        ) &&
-        toRoutes.some(
-          route =>
-            route.evmToken === toToken &&
-            route.stacksToken === step2FromStacksToken,
-        )
+    return (
+      fromRoutes.some(
+        route =>
+          route.brc20Token === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.evmToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
       )
-    }
-
-    // brc20 -> evm
-    if (KnownChainId.isBRC20Chain(fromChain)) {
-      if (!KnownTokenId.isBRC20Token(fromToken)) return false
-
-      const {
-        firstStepToStacksToken: step1ToStacksToken,
-        lastStepFromStacksToken: step2FromStacksToken,
-      } = await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
-      const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
-
-      return (
-        fromRoutes.some(
-          route =>
-            route.brc20Token === fromToken &&
-            route.stacksToken === step1ToStacksToken,
-        ) &&
-        toRoutes.some(
-          route =>
-            route.evmToken === toToken &&
-            route.stacksToken === step2FromStacksToken,
-        )
-      )
-    }
-
-    checkNever(fromChain)
-    return false
+    )
   }
 
+  // brc20 -> btc
   if (KnownChainId.isBitcoinChain(toChain)) {
     if (!KnownTokenId.isBitcoinToken(toToken)) return false
 
-    // runes -> btc
-    if (KnownChainId.isRunesChain(fromChain)) {
-      if (!KnownTokenId.isRunesToken(fromToken)) return false
-
-      await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      return toToken === KnownTokenId.Bitcoin.BTC
-    }
-
-    // brc20 -> btc
-    if (KnownChainId.isBRC20Chain(fromChain)) {
-      if (!KnownTokenId.isBRC20Token(fromToken)) return false
-
-      await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      return toToken === KnownTokenId.Bitcoin.BTC
-    }
-
-    checkNever(fromChain)
-    return false
+    return toToken === KnownTokenId.Bitcoin.BTC
   }
 
-  if (KnownChainId.isRunesChain(toChain)) {
-    if (!KnownTokenId.isRunesToken(toToken)) return false
-
-    // runes -> runes
-    if (KnownChainId.isRunesChain(fromChain)) {
-      if (!KnownTokenId.isRunesToken(fromToken)) return false
-
-      const {
-        firstStepToStacksToken: step1ToStacksToken,
-        lastStepFromStacksToken: step2FromStacksToken,
-      } = await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-
-      return (
-        runesRoutes.find(
-          route =>
-            route.runesToken === fromToken &&
-            route.stacksToken === step1ToStacksToken,
-        ) != null &&
-        runesRoutes.find(
-          route =>
-            route.runesToken === toToken &&
-            route.stacksToken === step2FromStacksToken,
-        ) != null
-      )
-    }
-
-    // brc20 -> runes
-    if (KnownChainId.isBRC20Chain(fromChain)) {
-      if (!KnownTokenId.isBRC20Token(fromToken)) return false
-
-      const {
-        firstStepToStacksToken: step1ToStacksToken,
-        lastStepFromStacksToken: step2FromStacksToken,
-      } = await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
-      const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
-
-      return (
-        fromRoutes.find(
-          route =>
-            route.brc20Token === fromToken &&
-            route.stacksToken === step1ToStacksToken,
-        ) != null &&
-        toRoutes.find(
-          route =>
-            route.runesToken === toToken &&
-            route.stacksToken === step2FromStacksToken,
-        ) != null
-      )
-    }
-
-    checkNever(fromChain)
-    return false
-  }
-
+  // brc20 -> brc20
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
-    // brc20 -> brc20
-    if (KnownChainId.isBRC20Chain(fromChain)) {
-      if (!KnownTokenId.isBRC20Token(fromToken)) return false
+    const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
 
-      const {
-        firstStepToStacksToken: step1ToStacksToken,
-        lastStepFromStacksToken: step2FromStacksToken,
-      } = await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
+    return (
+      brc20Routes.find(
+        route =>
+          route.brc20Token === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      brc20Routes.find(
+        route =>
+          route.brc20Token === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
+  }
 
-      const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
+  // brc20 -> runes
+  if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
 
-      return (
-        brc20Routes.find(
-          route =>
-            route.brc20Token === fromToken &&
-            route.stacksToken === step1ToStacksToken,
-        ) != null &&
-        brc20Routes.find(
-          route =>
-            route.brc20Token === toToken &&
-            route.stacksToken === step2FromStacksToken,
-        ) != null
-      )
-    }
+    const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
+    const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
 
-    // runes -> brc20
-    if (KnownChainId.isRunesChain(fromChain)) {
-      if (!KnownTokenId.isRunesToken(fromToken)) return false
-
-      const {
-        firstStepToStacksToken: step1ToStacksToken,
-        lastStepFromStacksToken: step2FromStacksToken,
-      } = await getAndCheckTransitStacksTokens(ctx, {
-        ...route,
-        fromChain,
-        fromToken,
-        toChain,
-        toToken,
-      })
-
-      const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
-      const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
-
-      return (
-        fromRoutes.find(
-          route =>
-            route.runesToken === fromToken &&
-            route.stacksToken === step1ToStacksToken,
-        ) != null &&
-        toRoutes.find(
-          route =>
-            route.brc20Token === toToken &&
-            route.stacksToken === step2FromStacksToken,
-        ) != null
-      )
-    }
-
-    checkNever(fromChain)
-    return false
+    return (
+      fromRoutes.find(
+        route =>
+          route.brc20Token === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      toRoutes.find(
+        route =>
+          route.runesToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
   }
 
   checkNever(toChain)
   return false
+}
+
+export const isSupportedRunesRoute: IsSupportedFn = async (ctx, route) => {
+  const { fromChain, toChain, fromToken, toToken } = route
+
+  if (fromChain === toChain && fromToken === toToken) {
+    return false
+  }
+
+  if (!KnownChainId.isKnownChain(toChain)) return false
+
+  if (
+    (KnownChainId.isEVMChain(fromChain) &&
+      _allNoLongerSupportedEVMChains.includes(fromChain)) ||
+    (KnownChainId.isEVMChain(toChain) &&
+      _allNoLongerSupportedEVMChains.includes(toChain))
+  ) {
+    return false
+  }
+
+  if (
+    !KnownChainId.isRunesChain(fromChain) ||
+    !KnownTokenId.isRunesToken(fromToken)
+  ) {
+    return false
+  }
+
+  const pegInAddress = getMetaPegInAddress(fromChain, toChain)
+  if (pegInAddress == null) return false
+
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(ctx, {
+    ...route,
+    fromChain,
+    fromToken,
+    toChain: toChain as any,
+    toToken: toToken as any,
+  })
+  if (headAndTailStacksTokens == null) return false
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
+
+  // runes -> stacks
+  if (KnownChainId.isStacksChain(toChain)) {
+    if (!KnownTokenId.isStacksToken(toToken)) return false
+
+    const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+    return runesRoutes.some(
+      route => route.runesToken === fromToken && route.stacksToken === toToken,
+    )
+  }
+
+  // runes -> evm
+  if (KnownChainId.isEVMChain(toChain)) {
+    if (!KnownTokenId.isEVMToken(toToken)) return false
+
+    const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.some(
+        route =>
+          route.runesToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.evmToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
+    )
+  }
+
+  // runes -> btc
+  if (KnownChainId.isBitcoinChain(toChain)) {
+    if (!KnownTokenId.isBitcoinToken(toToken)) return false
+
+    return toToken === KnownTokenId.Bitcoin.BTC
+  }
+
+  // runes -> brc20
+  if (KnownChainId.isBRC20Chain(toChain)) {
+    if (!KnownTokenId.isBRC20Token(toToken)) return false
+
+    const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.find(
+        route =>
+          route.runesToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      toRoutes.find(
+        route =>
+          route.brc20Token === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
+  }
+
+  // runes -> runes
+  if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
+    const runesRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+
+    return (
+      runesRoutes.find(
+        route =>
+          route.runesToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      runesRoutes.find(
+        route =>
+          route.runesToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
+  }
+
+  checkNever(toChain)
+  return false
+}
+
+export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
+  const [support1, supported2] = await Promise.all([
+    isSupportedBRC20Route(ctx, route),
+    isSupportedRunesRoute(ctx, route),
+  ])
+  return support1 || supported2
 }

@@ -1,7 +1,7 @@
 import { getStacksTokenContractInfo } from "../../stacksUtils/xlinkContractHelpers"
 import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 import { BigNumber } from "../BigNumber"
-import { KnownRoute_WithMetaProtocol } from "../buildSupportedRoutes"
+import { KnownRoute } from "../buildSupportedRoutes"
 import { applyTransferProphet } from "../feeRateHelpers"
 import { toCorrespondingStacksToken } from "../SwapRouteHelpers"
 import {
@@ -20,7 +20,7 @@ export interface ALEXSwapParameters {
 
 export async function getALEXSwapParametersImpl(
   sdkContext: SDKGlobalContext,
-  info: KnownRoute_WithMetaProtocol & {
+  info: KnownRoute & {
     amount: BigNumber
     getInitialToStacksTransferProphet: (info: {
       transitStacksChain: KnownChainId.StacksChain
@@ -39,7 +39,7 @@ export async function getALEXSwapParametersImpl(
   ])
   if (firstStepToStacksToken == null || lastStepFromStacksToken == null) return
 
-  const [fromToken, toToken, feeInfo] = await Promise.all([
+  const [fromToken, toToken, initialStepFeeInfo] = await Promise.all([
     getStacksTokenContractInfo(
       sdkContext,
       transitStacksChain,
@@ -56,10 +56,10 @@ export async function getALEXSwapParametersImpl(
     }),
   ])
 
-  if (fromToken == null || toToken == null || feeInfo == null) return
+  if (fromToken == null || toToken == null || initialStepFeeInfo == null) return
 
   const fromAmount = applyTransferProphet(
-    feeInfo,
+    initialStepFeeInfo,
     BigNumber.from(info.amount),
   ).netAmount
 

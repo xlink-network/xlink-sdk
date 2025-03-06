@@ -48,7 +48,7 @@ export async function createSendInscriptionTransaction(options: {
     changeAddressScriptPubKey: options.changeAddressScriptPubKey,
     opReturnData,
     feeRate: options.feeRate,
-    selectedUTXOs,
+    pinnedUTXOs: selectedUTXOs,
     reselectSpendableUTXOs: reselectSpendableUTXOsFactory(
       options.availableFeeUtxos.filter(
         u => !selectedUTXOs.find(_u => isSameUTXO(u, _u)),

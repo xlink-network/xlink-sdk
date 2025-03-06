@@ -33,7 +33,7 @@ export async function prepareTransaction(txInfo: {
   recipients: Array<BitcoinRecipient>
   changeAddressScriptPubKey: Uint8Array
   opReturnData?: Uint8Array[]
-  selectedUTXOs?: Array<UTXOSpendable>
+  pinnedUTXOs?: Array<UTXOSpendable>
   feeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
 }): Promise<BitcoinTransactionPrepareResult> {
@@ -41,7 +41,7 @@ export async function prepareTransaction(txInfo: {
     recipients,
     changeAddressScriptPubKey,
     opReturnData = [],
-    selectedUTXOs = [],
+    pinnedUTXOs: selectedUTXOs = [],
     feeRate,
     reselectSpendableUTXOs,
   } = txInfo

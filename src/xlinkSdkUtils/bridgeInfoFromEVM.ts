@@ -3,11 +3,13 @@ import {
   evmTokenToCorrespondingStacksToken,
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
+  isSupportedEVMRoute,
 } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
 import {
+  checkRouteValid,
   KnownRoute,
   KnownRoute_FromEVM_ToBitcoin,
   KnownRoute_FromEVM_ToBRC20,
@@ -25,7 +27,6 @@ import {
   transformToPublicTransferProphetAggregated2,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { supportedRoutes } from "./bridgeFromEVM"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
 
@@ -44,7 +45,7 @@ export async function bridgeInfoFromEVM(
   ctx: SDKGlobalContext,
   info: BridgeInfoFromEVMInput,
 ): Promise<BridgeInfoFromEVMOutput> {
-  const route = await supportedRoutes.checkRouteValid(ctx, info)
+  const route = await checkRouteValid(ctx, isSupportedEVMRoute, info)
 
   if (KnownChainId.isEVMChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
@@ -118,6 +119,8 @@ export async function bridgeInfoFromEVM(
   } else {
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
     checkNever(route)
   }
 
@@ -165,20 +168,31 @@ async function bridgeInfoFromEVM_toBitcoin(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
 
-  const {
-    firstStepToStacksToken: step1ToStacksToken,
-    lastStepFromStacksToken: step2FromStacksToken,
-  } = await getAndCheckTransitStacksTokens(ctx, info)
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(
+    ctx,
+    info,
+  )
+  if (headAndTailStacksTokens == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
     toChain: transitStacksChain,
-    toToken: step1ToStacksToken,
+    toToken: firstStepToStacksToken,
   }
   const step2Route: KnownRoute = {
     fromChain: transitStacksChain,
-    fromToken: step2FromStacksToken,
+    fromToken: lastStepFromStacksToken,
     toChain: info.toChain,
     toToken: info.toToken,
   }
@@ -219,20 +233,31 @@ async function bridgeInfoFromEVM_toEVM(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
 
-  const {
-    firstStepToStacksToken: step1ToStacksToken,
-    lastStepFromStacksToken: step2FromStacksToken,
-  } = await getAndCheckTransitStacksTokens(ctx, info)
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(
+    ctx,
+    info,
+  )
+  if (headAndTailStacksTokens == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
     toChain: transitStacksChain,
-    toToken: step1ToStacksToken,
+    toToken: firstStepToStacksToken,
   }
   const step2Route: KnownRoute = {
     fromChain: transitStacksChain,
-    fromToken: step2FromStacksToken,
+    fromToken: lastStepFromStacksToken,
     toChain: info.toChain,
     toToken: info.toToken,
   }
@@ -272,22 +297,33 @@ async function bridgeInfoFromEVM_toMeta(
     ? KnownChainId.Stacks.Mainnet
     : KnownChainId.Stacks.Testnet
 
-  const {
-    firstStepToStacksToken: step1ToStacksToken,
-    lastStepFromStacksToken: step2FromStacksToken,
-  } = await getAndCheckTransitStacksTokens(ctx, info)
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(
+    ctx,
+    info,
+  )
+  if (headAndTailStacksTokens == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
 
   const step1Route: KnownRoute = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
     toChain: transitStacksChain,
-    toToken: step1ToStacksToken,
+    toToken: firstStepToStacksToken,
   }
   const step2Route:
     | KnownRoute_FromStacks_ToBRC20
     | KnownRoute_FromStacks_ToRunes = {
     fromChain: transitStacksChain,
-    fromToken: step2FromStacksToken,
+    fromToken: lastStepFromStacksToken,
     toChain: info.toChain as any,
     toToken: info.toToken as any,
   }

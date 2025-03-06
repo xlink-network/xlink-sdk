@@ -1,5 +1,7 @@
-import { hasAny, sortBy } from "../utils/arrayHelpers"
+import { sortBy } from "../utils/arrayHelpers"
 import { MAX_BIGINT, sum } from "../utils/bigintHelpers"
+import { decodeHex } from "../utils/hexHelpers"
+import { isNotNull } from "../utils/typeHelpers"
 import {
   isSameUTXO,
   sumUTXO,
@@ -7,8 +9,6 @@ import {
   UTXOConfirmed,
   UTXOSpendable,
 } from "./bitcoinHelpers"
-import { decodeHex } from "../utils/hexHelpers"
-import { isNotNull } from "../utils/typeHelpers"
 import { ReselectSpendableUTXOsFn } from "./prepareTransaction"
 
 export type GetConfirmedSpendableUTXOFn = (
@@ -21,7 +21,12 @@ export const reselectSpendableUTXOsFactory = (
 ): ReselectSpendableUTXOsFn => {
   return async (satsToSend, pinnedUTXOs, _lastTimeSelectedUTXOs) => {
     const lastTimeSelectedUTXOs = await Promise.all(
-      _lastTimeSelectedUTXOs.map(getUTXOSpendable),
+      _lastTimeSelectedUTXOs.map(async fetchingUtxo => {
+        const fromPinnedUTXO = pinnedUTXOs.find(pinnedUTXO =>
+          isSameUTXO(pinnedUTXO, fetchingUtxo),
+        )
+        return fromPinnedUTXO ?? getUTXOSpendable(fetchingUtxo)
+      }),
     ).then(utxos => utxos.filter(isNotNull))
 
     const otherAvailableUTXOs = await Promise.all(
@@ -35,7 +40,19 @@ export const reselectSpendableUTXOsFactory = (
         .map(getUTXOSpendable),
     ).then(utxos => utxos.filter(isNotNull))
 
-    return selectUTXOs(satsToSend, lastTimeSelectedUTXOs, otherAvailableUTXOs)
+    const allUTXOSpendable = [
+      ...pinnedUTXOs,
+      ...lastTimeSelectedUTXOs,
+      ...otherAvailableUTXOs,
+    ]
+    const finalSelectedBasicUTXOs = selectUTXOs(
+      satsToSend,
+      lastTimeSelectedUTXOs,
+      otherAvailableUTXOs,
+    )
+    return finalSelectedBasicUTXOs
+      .map(utxo => allUTXOSpendable.find(u => isSameUTXO(u, utxo)))
+      .filter(isNotNull)
   }
 }
 
@@ -79,31 +96,24 @@ export const reselectSpendableUTXOsWithSafePadFactory = (
   }
 }
 
-export function selectUTXOs<T extends UTXOConfirmed>(
+export function selectUTXOs(
   satsToSend: bigint,
-  selectedUTXOs: T[],
-  otherAvailableUTXOs: T[],
-): T[] {
-  const inputs: Array<T> = []
+  selectedUTXOs: UTXOBasic[],
+  otherAvailableUTXOs: UTXOConfirmed[],
+): UTXOBasic[] {
+  const inputs: Array<UTXOBasic> = selectedUTXOs.slice()
 
-  let sumValue = 0n
-
-  otherAvailableUTXOs = otherAvailableUTXOs.slice()
-
-  if (hasAny(selectedUTXOs)) {
-    inputs.push(...selectedUTXOs)
-    sumValue = sum([sumValue, ...selectedUTXOs.map(o => o.amount)])
-  }
+  let sumValue = sum(selectedUTXOs.map(o => o.amount))
 
   // Sort UTXOs:
   // 1. By amount in descending order
   // 2. By block height in ascending order
-  otherAvailableUTXOs = sortBy(
+  const otherAvailableUTXOsSorted = sortBy(
     [o => -o.amount, o => o.blockHeight],
     otherAvailableUTXOs,
   )
 
-  for (const utxo of otherAvailableUTXOs) {
+  for (const utxo of otherAvailableUTXOsSorted) {
     inputs.push(utxo)
     sumValue = sumValue + utxo.amount
 

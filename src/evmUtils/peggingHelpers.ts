@@ -321,6 +321,18 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
     if (!KnownChainId.isBitcoinChain(toChain)) return false
   }
 
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(ctx, {
+    ...route,
+    fromChain,
+    fromToken,
+    toChain: toChain as any,
+    toToken: toToken as any,
+  })
+  if (headAndTailStacksTokens == null) return false
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
+
+  // evm -> stacks
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
 
@@ -330,19 +342,9 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
     )
   }
 
+  // evm -> evm
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
-
-    const {
-      firstStepToStacksToken: step1ToStacksToken,
-      lastStepFromStacksToken: step2FromStacksToken,
-    } = await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      fromToken,
-      toChain,
-      toToken,
-    })
 
     const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
     const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
@@ -351,74 +353,26 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
       fromRoutes.some(
         route =>
           route.evmToken === fromToken &&
-          route.stacksToken === step1ToStacksToken,
+          route.stacksToken === firstStepToStacksToken,
       ) &&
       toRoutes.some(
         route =>
           route.evmToken === toToken &&
-          route.stacksToken === step2FromStacksToken,
+          route.stacksToken === lastStepFromStacksToken,
       )
     )
   }
 
+  // evm -> btc
   if (KnownChainId.isBitcoinChain(toChain)) {
     if (!KnownTokenId.isBitcoinToken(toToken)) return false
-
-    await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      fromToken,
-      toChain,
-      toToken,
-    })
 
     return toToken === KnownTokenId.Bitcoin.BTC
   }
 
-  if (KnownChainId.isRunesChain(toChain)) {
-    if (!KnownTokenId.isRunesToken(toToken)) return false
-
-    const {
-      firstStepToStacksToken: step1ToStacksToken,
-      lastStepFromStacksToken: step2FromStacksToken,
-    } = await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      fromToken,
-      toChain,
-      toToken,
-    })
-
-    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
-    const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
-
-    return (
-      fromRoutes.some(
-        route =>
-          route.evmToken === fromToken &&
-          route.stacksToken === step1ToStacksToken,
-      ) &&
-      toRoutes.some(
-        route =>
-          route.stacksToken === step2FromStacksToken &&
-          route.runesToken === toToken,
-      )
-    )
-  }
-
+  // evm -> brc20
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
-
-    const {
-      firstStepToStacksToken: step1ToStacksToken,
-      lastStepFromStacksToken: step2FromStacksToken,
-    } = await getAndCheckTransitStacksTokens(ctx, {
-      ...route,
-      fromChain,
-      fromToken,
-      toChain,
-      toToken,
-    })
 
     const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
     const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
@@ -427,12 +381,33 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
       fromRoutes.some(
         route =>
           route.evmToken === fromToken &&
-          route.stacksToken === step1ToStacksToken,
+          route.stacksToken === firstStepToStacksToken,
       ) &&
       toRoutes.some(
         route =>
-          route.stacksToken === step2FromStacksToken &&
+          route.stacksToken === lastStepFromStacksToken &&
           route.brc20Token === toToken,
+      )
+    )
+  }
+
+  // evm -> runes
+  if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.stacksToken === lastStepFromStacksToken &&
+          route.runesToken === toToken,
       )
     )
   }
@@ -447,12 +422,11 @@ export async function evmTokenFromCorrespondingStacksToken(
   fromStacksToken: KnownTokenId.StacksToken,
 ): Promise<KnownTokenId.EVMToken[]> {
   const supportedRoutes = await getEVMSupportedRoutes(sdkContext, toChain)
-  return supportedRoutes.reduce((acc, route) => {
-    if (route.stacksToken === fromStacksToken) {
-      acc.push(route.evmToken)
-    }
-    return acc
-  }, [] as KnownTokenId.EVMToken[])
+  return supportedRoutes.reduce(
+    (acc, route) =>
+      route.stacksToken === fromStacksToken ? [...acc, route.evmToken] : acc,
+    [] as KnownTokenId.EVMToken[],
+  )
 }
 export async function evmTokenToCorrespondingStacksToken(
   sdkContext: SDKGlobalContext,

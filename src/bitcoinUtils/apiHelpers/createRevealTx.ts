@@ -6,7 +6,10 @@ import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 export async function createRevealTx(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: {
-    fromChain: KnownChainId.BitcoinChain
+    fromChain:
+      | KnownChainId.BitcoinChain
+      | KnownChainId.BRC20Chain
+      | KnownChainId.RunesChain
     txId: string
     vout: number
     satsAmount: bigint

@@ -49,6 +49,7 @@ const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
       "cross-peg-out-endpoint-v2-01-agg",
       "meta-peg-in-endpoint-v2-04",
       "meta-peg-in-endpoint-v2-06-swap",
+      "meta-peg-in-endpoint-v2-06-agg",
       "meta-peg-out-endpoint-v2-04",
     ],
     path.resolve(__dirname, "../generated/smartContract/"),

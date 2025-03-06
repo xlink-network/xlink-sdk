@@ -1,4 +1,7 @@
-import { getBtc2StacksFeeInfo } from "../bitcoinUtils/peggingHelpers"
+import {
+  getBtc2StacksFeeInfo,
+  isSupportedBitcoinRoute,
+} from "../bitcoinUtils/peggingHelpers"
 import {
   evmTokenFromCorrespondingStacksToken,
   getEvm2StacksFeeInfo,
@@ -19,12 +22,12 @@ import {
 } from "../utils/SwapRouteHelpers"
 import { hasAny } from "../utils/arrayHelpers"
 import {
+  checkRouteValid,
   KnownRoute,
   KnownRoute_FromBitcoin_ToBRC20,
   KnownRoute_FromBitcoin_ToEVM,
   KnownRoute_FromBitcoin_ToRunes,
   KnownRoute_FromBitcoin_ToStacks,
-  KnownRoute_WithMetaProtocol,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { props } from "../utils/promiseHelpers"
@@ -36,7 +39,6 @@ import {
   transformToPublicTransferProphetAggregated,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { supportedRoutes } from "./bridgeFromBitcoin"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
 
@@ -56,7 +58,7 @@ export const bridgeInfoFromBitcoin = async (
   ctx: SDKGlobalContext,
   info: BridgeInfoFromBitcoinInput,
 ): Promise<BridgeInfoFromBitcoinOutput> => {
-  const route = await supportedRoutes.checkRouteValid(ctx, info)
+  const route = await checkRouteValid(ctx, isSupportedBitcoinRoute, info)
 
   if (KnownChainId.isBitcoinChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
@@ -118,6 +120,8 @@ export const bridgeInfoFromBitcoin = async (
   } else {
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
     checkNever(route)
   }
 
@@ -158,8 +162,23 @@ async function bridgeInfoFromBitcoin_toStacks(
 
   if (info.swapRoute.via === "evmDexAggregator") {
     const transitStacksChainId = info.toChain
+
+    const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(
+      ctx,
+      info,
+    )
+    if (headAndTailStacksTokens == null) {
+      throw new UnsupportedBridgeRouteError(
+        info.fromChain,
+        info.toChain,
+        info.fromToken,
+        info.toToken,
+        info.swapRoute,
+      )
+    }
+
     const { firstStepToStacksToken, lastStepFromStacksToken } =
-      await getAndCheckTransitStacksTokens(ctx, info)
+      headAndTailStacksTokens
 
     const intermediaryInfo = await constructDexAggregatorIntermediaryInfo(
       ctx,
@@ -185,11 +204,11 @@ async function bridgeInfoFromBitcoin_toStacks(
       fromToken: info.fromToken,
       toChain: transitStacksChainId,
       toToken: firstStepToStacksToken,
-    } satisfies KnownRoute_WithMetaProtocol
+    } satisfies KnownRoute
     const routes = [
       btcPegInRoute,
       ...intermediaryInfo.routes,
-    ] as const satisfies KnownRoute_WithMetaProtocol[]
+    ] as const satisfies KnownRoute[]
 
     const steps = await Promise.all([
       getBtc2StacksFeeInfo(routes[0], {
@@ -240,10 +259,24 @@ async function bridgeInfoFromBitcoin_toEVM(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const { firstStepToStacksToken, lastStepFromStacksToken } =
-    await getAndCheckTransitStacksTokens(ctx, info)
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(
+    ctx,
+    info,
+  )
+  if (headAndTailStacksTokens == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
 
-  let routes: (undefined | KnownRoute_WithMetaProtocol)[]
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
+
+  let routes: (undefined | KnownRoute)[]
   let steps: (undefined | TransferProphet)[]
   let exchangeRates: BigNumber[]
   if (info.swapRoute == null || info.swapRoute.via === "ALEX") {
@@ -301,20 +334,20 @@ async function bridgeInfoFromBitcoin_toEVM(
       fromToken: info.fromToken,
       toChain: transitStacksChainId,
       toToken: firstStepToStacksToken,
-    } satisfies KnownRoute_WithMetaProtocol
+    } satisfies KnownRoute
     const evmPegOutRoute = {
       fromChain: transitStacksChainId,
       fromToken: lastStepFromStacksToken,
       toChain: info.toChain,
       toToken: info.toToken,
-    } satisfies KnownRoute_WithMetaProtocol
+    } satisfies KnownRoute
     const _routes = [
       // btc peg in agg
       btcPegInRoute,
       ...intermediaryInfo.routes,
       // evm peg out
       evmPegOutRoute,
-    ] as const satisfies KnownRoute_WithMetaProtocol[]
+    ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
       getBtc2StacksFeeInfo(btcPegInRoute, {
@@ -380,10 +413,24 @@ async function bridgeInfoFromBitcoin_toMeta(
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
-  const { firstStepToStacksToken, lastStepFromStacksToken } =
-    await getAndCheckTransitStacksTokens(ctx, info)
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(
+    ctx,
+    info,
+  )
+  if (headAndTailStacksTokens == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
 
-  let routes: (undefined | KnownRoute_WithMetaProtocol)[]
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
+
+  let routes: (undefined | KnownRoute)[]
   let steps: (undefined | TransferProphet)[]
   let exchangeRates: BigNumber[]
   if (info.swapRoute == null || info.swapRoute.via === "ALEX") {
@@ -400,7 +447,7 @@ async function bridgeInfoFromBitcoin_toMeta(
         toChain: info.toChain as any,
         toToken: info.toToken as any,
       },
-    ] as const satisfies KnownRoute_WithMetaProtocol[]
+    ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
       getBtc2StacksFeeInfo(_routes[0], {
@@ -442,20 +489,20 @@ async function bridgeInfoFromBitcoin_toMeta(
       fromToken: info.fromToken,
       toChain: transitStacksChainId,
       toToken: firstStepToStacksToken,
-    } satisfies KnownRoute_WithMetaProtocol
+    } satisfies KnownRoute
     const metaPegOutRoute = {
       fromChain: transitStacksChainId,
       fromToken: lastStepFromStacksToken,
-      toChain: info.toChain,
-      toToken: info.toToken,
-    } as KnownRoute_WithMetaProtocol
+      toChain: info.toChain as KnownChainId.BRC20Chain,
+      toToken: info.toToken as KnownTokenId.BRC20Token,
+    } satisfies KnownRoute
     const _routes = [
       // btc peg in agg
       btcPegInRoute,
       ...intermediaryInfo.routes,
       // meta peg out
       metaPegOutRoute,
-    ] as const satisfies KnownRoute_WithMetaProtocol[]
+    ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
       getBtc2StacksFeeInfo(btcPegInRoute, {
@@ -509,7 +556,7 @@ async function bridgeInfoFromBitcoin_toMeta(
   )
 }
 
-async function constructDexAggregatorIntermediaryInfo(
+export async function constructDexAggregatorIntermediaryInfo(
   ctx: SDKGlobalContext,
   swapRoute: SwapRouteViaEVMDexAggregator_WithExchangeRate_Public,
   info: {
@@ -518,7 +565,7 @@ async function constructDexAggregatorIntermediaryInfo(
     lastStepFromStacksToken: KnownTokenId.StacksToken
   },
 ): Promise<null | {
-  routes: readonly KnownRoute_WithMetaProtocol[]
+  routes: readonly KnownRoute[]
   steps: Promise<undefined | TransferProphet>[]
 }> {
   const {

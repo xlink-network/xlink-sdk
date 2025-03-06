@@ -11,7 +11,9 @@ import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 
 export interface BRC20SupportedRoute {
   brc20Tick: string
+  brc20Chain: KnownChainId.BRC20Chain
   brc20Token: KnownTokenId.BRC20Token
+  stacksChain: KnownChainId.StacksChain
   stacksToken: KnownTokenId.StacksToken
   pegInPaused: boolean
   pegInFeeRate: BigNumber
@@ -44,10 +46,10 @@ export async function getBRC20SupportedRoutes(
 }
 async function _getBRC20SupportedRoutes(
   sdkContext: SDKGlobalContext,
-  chainId: KnownChainId.BRC20Chain,
+  brc20Chain: KnownChainId.BRC20Chain,
 ): Promise<BRC20SupportedRoute[]> {
-  const stacksChainId =
-    chainId === KnownChainId.BRC20.Mainnet
+  const stacksChain =
+    brc20Chain === KnownChainId.BRC20.Mainnet
       ? KnownChainId.Stacks.Mainnet
       : KnownChainId.Stacks.Testnet
 
@@ -57,7 +59,8 @@ async function _getBRC20SupportedRoutes(
       method: "GET",
       path: "/2024-10-01/brc20/supported-routes",
       query: {
-        network: chainId === KnownChainId.BRC20.Mainnet ? "mainnet" : "testnet",
+        network:
+          brc20Chain === KnownChainId.BRC20.Mainnet ? "mainnet" : "testnet",
       },
     },
   )
@@ -66,7 +69,7 @@ async function _getBRC20SupportedRoutes(
     resp.routes.map(async (route): Promise<null | BRC20SupportedRoute> => {
       const stacksToken = await getStacksToken(
         sdkContext,
-        stacksChainId,
+        stacksChain,
         route.stacksTokenContractAddress,
       )
 
@@ -74,7 +77,9 @@ async function _getBRC20SupportedRoutes(
 
       return {
         brc20Tick: route.brc20Tick,
+        brc20Chain,
         brc20Token: createBRC20Token(route.brc20Tick),
+        stacksChain,
         stacksToken,
         pegInPaused: route.pegInPaused,
         pegInFeeRate: BigNumber.from(route.pegInFeeRate),

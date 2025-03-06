@@ -44,7 +44,7 @@ export {
   KnownRoute_FromBitcoin_ToEVM,
   KnownRoute_FromBitcoin_ToRunes,
   KnownRoute_FromBitcoin_ToStacks,
-  _KnownRoute_FromBRC20 as KnownRoute_FromBRC20,
+  KnownRoute_FromBRC20,
   KnownRoute_FromBRC20_ToBitcoin,
   KnownRoute_FromBRC20_ToEVM,
   KnownRoute_FromBRC20_ToRunes,
@@ -55,7 +55,7 @@ export {
   KnownRoute_FromEVM_ToEVM,
   KnownRoute_FromEVM_ToRunes,
   KnownRoute_FromEVM_ToStacks,
-  _KnownRoute_FromRunes as KnownRoute_FromRunes,
+  KnownRoute_FromRunes,
   KnownRoute_FromRunes_ToBitcoin,
   KnownRoute_FromRunes_ToBRC20,
   KnownRoute_FromRunes_ToEVM,
@@ -66,12 +66,6 @@ export {
   KnownRoute_FromStacks_ToEVM,
   KnownRoute_FromStacks_ToRunes,
 } from "./utils/buildSupportedRoutes"
-
-export {
-  bridgeInfoFromMeta,
-  BridgeInfoFromMetaInput,
-  BridgeInfoFromMetaOutput,
-} from "./xlinkSdkUtils/bridgeInfoFromMeta"
 
 export {
   brc20TokenFromTick,

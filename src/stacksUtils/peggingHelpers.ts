@@ -34,10 +34,12 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     return false
   }
 
+  // stacks -> stacks
   if (KnownChainId.isStacksChain(toChain)) {
     return false
   }
 
+  // stacks -> evm
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
@@ -48,6 +50,7 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     )
   }
 
+  // stacks -> btc
   if (KnownChainId.isBitcoinChain(toChain)) {
     if (!KnownTokenId.isBitcoinToken(toToken)) return false
 
@@ -57,16 +60,7 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     )
   }
 
-  if (KnownChainId.isRunesChain(toChain)) {
-    if (!KnownTokenId.isRunesToken(toToken)) return false
-
-    const supportedRoutes = await getRunesSupportedRoutes(ctx, toChain)
-
-    return supportedRoutes.some(
-      route => route.stacksToken === fromToken && route.runesToken === toToken,
-    )
-  }
-
+  // stacks -> brc20
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
@@ -74,6 +68,17 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
 
     return supportedRoutes.some(
       route => route.stacksToken === fromToken && route.brc20Token === toToken,
+    )
+  }
+
+  // stacks -> runes
+  if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
+    const supportedRoutes = await getRunesSupportedRoutes(ctx, toChain)
+
+    return supportedRoutes.some(
+      route => route.stacksToken === fromToken && route.runesToken === toToken,
     )
   }
 

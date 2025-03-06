@@ -12,11 +12,10 @@ import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { last } from "./arrayHelpers"
 import { BigNumber } from "./BigNumber"
 import {
+  KnownRoute,
   KnownRoute_FromStacks,
   KnownRoute_ToStacks,
-  KnownRoute_WithMetaProtocol,
 } from "./buildSupportedRoutes"
-import { UnsupportedBridgeRouteError } from "./errors"
 import { props } from "./promiseHelpers"
 import { checkNever, OneOrMore } from "./typeHelpers"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
@@ -166,21 +165,13 @@ export async function getFinalStepStacksTokenAddress(
 
 export async function getAndCheckTransitStacksTokens(
   ctx: SDKGlobalContext,
-  info: KnownRoute_WithMetaProtocol & {
+  info: KnownRoute & {
     swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
-): Promise<{
+): Promise<null | {
   firstStepToStacksToken: KnownTokenId.StacksToken
   lastStepFromStacksToken: KnownTokenId.StacksToken
 }> {
-  const unsupportedRouteError = (): Error =>
-    new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-
   let swapStartTokenPromise: Promise<undefined | KnownTokenId.StacksToken> =
     Promise.resolve(undefined)
   let swapEndTokenPromise: Promise<undefined | KnownTokenId.StacksToken> =
@@ -189,7 +180,8 @@ export async function getAndCheckTransitStacksTokens(
     // do nothing
   } else if (info.swapRoute.via === "ALEX") {
     const stacksChain = await toCorrespondingStacksChain(info.fromChain)
-    if (stacksChain == null) throw unsupportedRouteError()
+    if (stacksChain == null) return null
+
     swapStartTokenPromise = getFirstStepStacksTokenAddress(ctx, {
       via: "ALEX",
       swap: info.swapRoute,
@@ -226,19 +218,19 @@ export async function getAndCheckTransitStacksTokens(
   ])
 
   if (firstStepToStacksToken == null || lastStepFromStacksToken == null) {
-    throw unsupportedRouteError()
+    return null
   }
 
   if (info.swapRoute == null) {
     if (firstStepToStacksToken !== lastStepFromStacksToken) {
-      throw unsupportedRouteError()
+      return null
     }
   } else {
     if (
       swapStartToken !== firstStepToStacksToken ||
       swapEndToken !== lastStepFromStacksToken
     ) {
-      throw unsupportedRouteError()
+      return null
     }
   }
 

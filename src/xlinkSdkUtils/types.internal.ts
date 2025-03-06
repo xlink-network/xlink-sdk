@@ -1,11 +1,12 @@
 import { Client } from "viem"
+import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { EVMOnChainAddresses } from "../evmUtils/evmContractAddresses"
-import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { StacksTokenInfo } from "../stacksUtils/apiHelpers/getAllStacksTokens"
 import { KnownChainId } from "../utils/types/knownIds"
 import { EVMAddress } from "./types"
-import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
+import { KnownRoute } from "../utils/buildSupportedRoutes"
 
 export interface SDKGlobalContextCache<K, T> {
   get: (key: K) => T | null
@@ -14,6 +15,9 @@ export interface SDKGlobalContextCache<K, T> {
 }
 
 export interface SDKGlobalContext {
+  routes: {
+    detectedCache: SDKGlobalContextCache<"mainnet" | "testnet", KnownRoute[]>
+  }
   backendAPI: {
     runtimeEnv: "prod" | "dev"
   }

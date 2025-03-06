@@ -4,9 +4,12 @@ import {
 } from "./bitcoinUtils/swapHelpers"
 import { getALEXSwapParameters_FromEVM } from "./evmUtils/swapHelpers"
 import { getXLinkSDKContext } from "./lowlevelUnstableInfos"
-import { getALEXSwapParameters_FromMeta } from "./metaUtils/swapHelpers"
+import {
+  getALEXSwapParameters_FromMeta,
+  getPossibleEVMDexAggregatorSwapParameters_FromBRC20,
+} from "./metaUtils/swapHelpers"
 import { BigNumber } from "./utils/BigNumber"
-import { KnownRoute_WithMetaProtocol } from "./utils/buildSupportedRoutes"
+import { KnownRoute } from "./utils/buildSupportedRoutes"
 import { ALEXSwapParameters as _ALEXSwapParameters } from "./utils/swapHelpers/alexSwapParametersHelpers"
 import { EVMDexAggregatorSwapParameters as _EVMDexAggregatorSwapParameters } from "./utils/swapHelpers/evmDexAggregatorSwapParametersHelpers"
 import {
@@ -32,7 +35,7 @@ export interface ALEXSwapParameters
  */
 export async function getALEXSwapParameters(
   sdk: XLinkSDK,
-  info: KnownRoute_WithMetaProtocol & {
+  info: KnownRoute & {
     amount: SDKNumber
   },
 ): Promise<undefined | ALEXSwapParameters> {
@@ -103,7 +106,7 @@ export interface EVMDexAggregatorSwapParameters
  */
 export async function getPossibleEVMDexAggregatorSwapParameters(
   sdk: XLinkSDK,
-  info: KnownRoute_WithMetaProtocol & {
+  info: KnownRoute & {
     amount: SDKNumber
   },
 ): Promise<EVMDexAggregatorSwapParameters[]> {
@@ -143,7 +146,26 @@ export async function getPossibleEVMDexAggregatorSwapParameters(
   }
 
   if (KnownChainId.isBRC20Chain(info.fromChain)) {
-    return []
+    if (!KnownTokenId.isBRC20Token(info.fromToken)) return []
+
+    const res = await getPossibleEVMDexAggregatorSwapParameters_FromBRC20(
+      getXLinkSDKContext(sdk),
+      {
+        fromChain: info.fromChain,
+        fromToken: info.fromToken,
+        toChain: info.toChain as any,
+        toToken: info.toToken as any,
+        amount: BigNumber.from(info.amount),
+      },
+    )
+    if (res == null) return []
+
+    return res.map(
+      (r): EVMDexAggregatorSwapParameters => ({
+        ...r,
+        fromAmount: toSDKNumberOrUndefined(r.fromAmount),
+      }),
+    )
   }
 
   checkNever(info.fromChain)

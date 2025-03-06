@@ -6,7 +6,10 @@ import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 export async function broadcastRevealableTransaction(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: {
-    fromChain: KnownChainId.BitcoinChain
+    fromChain:
+      | KnownChainId.BitcoinChain
+      | KnownChainId.BRC20Chain
+      | KnownChainId.RunesChain
     transactionHex: `0x${string}`
     orderData: Uint8Array
     orderOutputIndex: number

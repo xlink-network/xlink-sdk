@@ -1,3 +1,4 @@
+import { isAddress } from "viem"
 import { EVMEndpointContract } from "../evmUtils/evmContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import { InvalidMethodParametersError } from "../utils/errors"
@@ -57,6 +58,7 @@ export function toSDKNumberOrUndefined<
 }
 
 export type EVMAddress = `0x${string}`
+export const isEVMAddress = isAddress
 
 export const evmNativeCurrencyAddress = Symbol(
   "[XLinkSDK] EVM Native Currency Address",

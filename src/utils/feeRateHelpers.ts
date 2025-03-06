@@ -22,7 +22,12 @@ export const applyTransferProphets = (
   options: {
     exchangeRates?: readonly BigNumber[]
   } = {},
-): OneOrMore<TransferProphetAppliedResult & { fromAmount: BigNumber }> => {
+): OneOrMore<
+  TransferProphetAppliedResult & {
+    fromAmount: BigNumber
+    transferProphetIndex: number
+  }
+> => {
   const { exchangeRates } = options
 
   if (
@@ -41,13 +46,18 @@ export const applyTransferProphets = (
         exchangeRates?.[idx] ?? BigNumber.ONE,
       )
       return concat(acc, [
-        { ...applyTransferProphet(transferProphet, fromAmount), fromAmount },
+        {
+          ...applyTransferProphet(transferProphet, fromAmount),
+          fromAmount,
+          transferProphetIndex: idx + 1,
+        },
       ])
     },
     [
       {
         ...applyTransferProphet(transferProphets[0], amount),
         fromAmount: amount,
+        transferProphetIndex: 0,
       },
     ],
     transferProphets.slice(1),

@@ -1,10 +1,9 @@
 import * as btc from "@scure/btc-signer"
 import { ContractCallOptions } from "clarity-codegen"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
-import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
+import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   composeTxXLINK,
   getStacksContractCallInfo,
@@ -12,8 +11,7 @@ import {
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import {
-  buildSupportedRoutes,
-  defineRoute,
+  checkRouteValid,
   KnownRoute_FromStacks_ToBitcoin,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToEVM,
@@ -22,83 +20,10 @@ import {
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import {
-  _allKnownEVMMainnetChains,
-  _allKnownEVMTestnetChains,
-  KnownChainId,
-  KnownTokenId,
-} from "../utils/types/knownIds"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-
-export const supportedRoutes = buildSupportedRoutes(
-  [
-    // from mainnet
-    ...defineRoute(
-      // to Bitcoin
-      [[KnownChainId.Stacks.Mainnet], [KnownChainId.Bitcoin.Mainnet]],
-      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
-    ),
-    ...defineRoute(
-      // to rest EVM chains
-      [[KnownChainId.Stacks.Mainnet], [..._allKnownEVMMainnetChains]],
-      [
-        // BTCs
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.cbBTC],
-        // USDTs
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
-        // others
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
-        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
-        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
-        [KnownTokenId.Stacks.DB20, KnownTokenId.EVM.DB20],
-        [KnownTokenId.Stacks.DOG, KnownTokenId.EVM.DOG],
-        [KnownTokenId.Stacks.STX, KnownTokenId.EVM.STX],
-      ],
-    ),
-
-    // from testnet
-    ...defineRoute(
-      // to Bitcoin
-      [[KnownChainId.Stacks.Testnet], [KnownChainId.Bitcoin.Testnet]],
-      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
-    ),
-    ...defineRoute(
-      // to rest EVM chains
-      [[KnownChainId.Stacks.Testnet], [..._allKnownEVMTestnetChains]],
-      [
-        // BTCs
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.cbBTC],
-        // USDTs
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
-        // others
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
-        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
-        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
-        [KnownTokenId.Stacks.DB20, KnownTokenId.EVM.DB20],
-        [KnownTokenId.Stacks.DOG, KnownTokenId.EVM.DOG],
-        [KnownTokenId.Stacks.STX, KnownTokenId.EVM.STX],
-      ],
-    ),
-  ],
-  {
-    isSupported: isSupportedStacksRoute,
-  },
-)
+import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 
 export interface BridgeFromStacksInput {
   fromChain: ChainId
@@ -121,7 +46,7 @@ export async function bridgeFromStacks(
   ctx: SDKGlobalContext,
   info: BridgeFromStacksInput,
 ): Promise<BridgeFromStacksOutput> {
-  const route = await supportedRoutes.checkRouteValid(ctx, info)
+  const route = await checkRouteValid(ctx, isSupportedStacksRoute, info)
 
   if (KnownChainId.isStacksChain(route.fromChain)) {
     if (KnownChainId.isBitcoinChain(route.toChain)) {
@@ -183,6 +108,8 @@ export async function bridgeFromStacks(
   } else {
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
     checkNever(route)
   }
 

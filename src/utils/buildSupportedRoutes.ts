@@ -143,7 +143,7 @@ export type KnownRoute_FromBRC20_ToRunes = {
   toChain: KnownChainId.RunesChain
   toToken: KnownTokenId.RunesToken
 }
-export type _KnownRoute_FromBRC20 =
+export type KnownRoute_FromBRC20 =
   | KnownRoute_FromBRC20_ToStacks
   | KnownRoute_FromBRC20_ToEVM
   | KnownRoute_FromBRC20_ToBitcoin
@@ -180,7 +180,7 @@ export type KnownRoute_FromRunes_ToRunes = {
   toChain: KnownChainId.RunesChain
   toToken: KnownTokenId.RunesToken
 }
-export type _KnownRoute_FromRunes =
+export type KnownRoute_FromRunes =
   | KnownRoute_FromRunes_ToStacks
   | KnownRoute_FromRunes_ToEVM
   | KnownRoute_FromRunes_ToBitcoin
@@ -205,19 +205,14 @@ export type KnownRoute_FromMeta_ToRunes =
 export type KnownRoute_FromMeta_ToMeta =
   | KnownRoute_FromMeta_ToBRC20
   | KnownRoute_FromMeta_ToRunes
-export type _KnownRoute_FromMeta = _KnownRoute_FromBRC20 | _KnownRoute_FromRunes
+export type KnownRoute_FromMeta = KnownRoute_FromBRC20 | KnownRoute_FromRunes
 
 export type KnownRoute =
   | KnownRoute_FromStacks
-  | KnownRoute_FromBitcoin
-  | KnownRoute_FromEVM
-
-export type KnownRoute_WithMetaProtocol =
-  | KnownRoute_FromStacks
   | KnownRoute_FromEVM
   | KnownRoute_FromBitcoin
-  | _KnownRoute_FromBRC20
-  | _KnownRoute_FromRunes
+  | KnownRoute_FromBRC20
+  | KnownRoute_FromRunes
 
 export type KnownRoute_ToStacks =
   | KnownRoute_FromBitcoin_ToStacks
@@ -253,7 +248,7 @@ export type IsSupportedFn = (
     swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
   },
 ) => Promise<boolean>
-const memoizedIsSupportedFactory = (
+export const memoizedIsSupportedFactory = (
   isSupported: IsSupportedFn,
 ): IsSupportedFn => {
   return pMemoize(
@@ -280,89 +275,41 @@ const memoizedIsSupportedFactory = (
   )
 }
 
+export type CheckRouteValidFn = (
+  ctx: SDKGlobalContext,
+  isSupported: IsSupportedFn,
+  route: DefinedRoute & {
+    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+  },
+) => Promise<KnownRoute>
+export const checkRouteValid: CheckRouteValidFn = async (
+  ctx,
+  isSupported,
+  route,
+) => {
+  const isValid = await isSupported(ctx, route)
+
+  if (!isValid) {
+    throw new UnsupportedBridgeRouteError(
+      route.fromChain,
+      route.toChain,
+      route.fromToken,
+      route.toToken,
+      route.swapRoute,
+    )
+  }
+
+  return route as any
+}
+
 export interface GetSupportedRoutesFn_Conditions {
   fromChain?: ChainId
   fromToken?: TokenId
   toChain?: ChainId
   toToken?: TokenId
 }
+
 export type GetSupportedRoutesFn = (
   ctx: SDKGlobalContext,
   conditions?: GetSupportedRoutesFn_Conditions,
 ) => Promise<KnownRoute[]>
-
-export type CheckRouteValidFn = (
-  ctx: SDKGlobalContext,
-  route: DefinedRoute & {
-    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
-  },
-) => Promise<KnownRoute>
-
-export function buildSupportedRoutes(
-  routes: DefinedRoute[],
-  options: {
-    isSupported?: IsSupportedFn
-  } = {},
-): {
-  getSupportedRoutes: GetSupportedRoutesFn
-  checkRouteValid: CheckRouteValidFn
-} {
-  const isSupported = memoizedIsSupportedFactory(
-    options.isSupported || (() => Promise.resolve(true)),
-  )
-
-  const getSupportedRoutes: GetSupportedRoutesFn = async (
-    ctx,
-    conditions = {},
-  ) => {
-    const filteredDefinitions = routes.filter(r => {
-      if (
-        conditions.fromChain != null &&
-        conditions.fromChain !== r.fromChain
-      ) {
-        return false
-      }
-      if (conditions.toChain != null && conditions.toChain !== r.toChain) {
-        return false
-      }
-      if (
-        conditions.fromToken != null &&
-        conditions.fromToken !== r.fromToken
-      ) {
-        return false
-      }
-      if (conditions.toToken != null && conditions.toToken !== r.toToken) {
-        return false
-      }
-
-      return true
-    })
-
-    const res = await Promise.all(
-      filteredDefinitions.map(
-        async route => [await isSupported(ctx, route), route] as const,
-      ),
-    )
-    return res
-      .filter(([isSupported]) => isSupported)
-      .map(([, route]) => route as KnownRoute)
-  }
-
-  return {
-    getSupportedRoutes,
-    async checkRouteValid(ctx, route) {
-      const isValid = await isSupported(ctx, route)
-
-      if (!isValid) {
-        throw new UnsupportedBridgeRouteError(
-          route.fromChain,
-          route.toChain,
-          route.fromToken,
-          route.toToken,
-        )
-      }
-
-      return route as any
-    },
-  }
-}
