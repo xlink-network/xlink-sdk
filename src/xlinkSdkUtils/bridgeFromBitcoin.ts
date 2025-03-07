@@ -18,6 +18,7 @@ import { createTransaction } from "../bitcoinUtils/createTransaction"
 import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
   BitcoinTransactionPrepareResult,
+  ReselectSpendableUTXOsFn,
   prepareTransaction,
 } from "../bitcoinUtils/prepareTransaction"
 import {
@@ -65,10 +66,8 @@ export type BridgeFromBitcoinInput_signPsbtFn = (tx: {
   signInputs: number[]
 }) => Promise<{ psbt: Uint8Array }>
 
-export type BridgeFromBitcoinInput_ReselectUTXOs = (
-  satsToSend: bigint,
-  lastTimeSelectedUTXOs: UTXOSpendable[],
-) => Promise<UTXOSpendable[]>
+export type BridgeFromBitcoinInput_reselectSpendableUTXOs =
+  ReselectSpendableUTXOsFn_Public
 
 export interface BridgeFromBitcoinInput {
   fromChain: ChainId
@@ -87,7 +86,7 @@ export interface BridgeFromBitcoinInput {
   amount: SDKNumber
   networkFeeRate: bigint
   swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
-  reselectSpendableUTXOs: BridgeFromBitcoinInput_ReselectUTXOs
+  reselectSpendableUTXOs: BridgeFromBitcoinInput_reselectSpendableUTXOs
   signPsbt: BridgeFromBitcoinInput_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -468,7 +467,7 @@ async function constructBitcoinTransaction(
       addressScriptPubKey: info.fromAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
-    txOptions.revealOutput ? [] : [info.orderData],
+    txOptions.opReturnScripts ?? [],
   )
 
   const { psbt } = await info.signPsbt({
@@ -484,21 +483,21 @@ async function constructBitcoinTransaction(
     signedTx.finalize()
   }
 
-  let revealTx: undefined | Uint8Array
-  if (txOptions.revealOutput != null) {
-    const created = await createRevealTx(sdkContext, {
-      fromChain: info.fromChain,
-      txId: signedTx.id,
-      vout: txOptions.revealOutput.index,
-      satsAmount: txOptions.revealOutput.satsAmount,
-      orderData: info.orderData,
-      xlinkPegInAddress: info.pegInAddress,
-    })
-    revealTx = decodeHex(created.txHex)
-  }
+  const revealTx = await createRevealTx(sdkContext, {
+    fromChain: info.fromChain,
+    txId: signedTx.id,
+    vout: txOptions.revealOutput.index,
+    satsAmount: txOptions.revealOutput.satsAmount,
+    orderData: info.orderData,
+    xlinkPegInAddress: info.pegInAddress,
+  })
 
   await info
-    .validateBridgeOrder(signedTx.extract(), revealTx, info.swapRoute)
+    .validateBridgeOrder(
+      signedTx.extract(),
+      decodeHex(revealTx.txHex),
+      info.swapRoute,
+    )
     .catch(err => {
       if (sdkContext.btc.ignoreValidateResult) {
         console.error(
@@ -543,7 +542,7 @@ export async function prepareBitcoinTransaction(
 ): Promise<
   BitcoinTransactionPrepareResult & {
     bitcoinNetwork: typeof btc.NETWORK
-    revealOutput?: {
+    revealOutput: {
       index: number
       satsAmount: bigint
     }
@@ -593,21 +592,9 @@ export async function prepareBitcoinTransaction(
     ],
     changeAddressScriptPubKey: info.fromAddressScriptPubKey,
     feeRate: info.networkFeeRate,
-    reselectSpendableUTXOs: async (
-      satsToSend,
-      pinnedUTXOs,
-      lastTimeSelectedUTXOs,
-    ) => {
-      satsToSend = satsToSend - sumUTXO(pinnedUTXOs)
-      lastTimeSelectedUTXOs = lastTimeSelectedUTXOs.filter(iterUTXO =>
-        pinnedUTXOs.find(pinnedUTXO => !isSameUTXO(iterUTXO, pinnedUTXO)),
-      )
-      const selected = await info.reselectSpendableUTXOs(
-        satsToSend,
-        lastTimeSelectedUTXOs,
-      )
-      return [...pinnedUTXOs, ...selected]
-    },
+    reselectSpendableUTXOs: reselectSpendableUTXOsFactory(
+      info.reselectSpendableUTXOs,
+    ),
   })
 
   return {
@@ -624,5 +611,26 @@ export async function prepareBitcoinTransaction(
             index: 2,
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
+  }
+}
+
+export type ReselectSpendableUTXOsFn_Public = (
+  satsToSend: bigint,
+  lastTimeSelectedUTXOs: UTXOSpendable[],
+) => Promise<UTXOSpendable[]>
+export function reselectSpendableUTXOsFactory(
+  reselectSpendableUTXOs_public: ReselectSpendableUTXOsFn_Public,
+): ReselectSpendableUTXOsFn {
+  return async (satsToSend, pinnedUTXOs, lastTimeSelectedUTXOs) => {
+    satsToSend = satsToSend - sumUTXO(pinnedUTXOs)
+    lastTimeSelectedUTXOs = lastTimeSelectedUTXOs.filter(
+      iterUTXO =>
+        !pinnedUTXOs.find(pinnedUTXO => isSameUTXO(iterUTXO, pinnedUTXO)),
+    )
+    const selected = await reselectSpendableUTXOs_public(
+      satsToSend,
+      lastTimeSelectedUTXOs,
+    )
+    return [...pinnedUTXOs, ...selected]
   }
 }

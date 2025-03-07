@@ -1,8 +1,5 @@
 import { BigNumber } from "../utils/BigNumber"
-import {
-  KnownRoute_FromBRC20,
-  KnownRoute_FromMeta,
-} from "../utils/buildSupportedRoutes"
+import { KnownRoute_FromMeta } from "../utils/buildSupportedRoutes"
 import {
   ALEXSwapParameters,
   getALEXSwapParametersImpl,
@@ -11,6 +8,7 @@ import {
   EVMDexAggregatorSwapParameters,
   getPossibleEVMDexAggregatorSwapParametersImpl,
 } from "../utils/swapHelpers/evmDexAggregatorSwapParametersHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { getMeta2StacksFeeInfo } from "./peggingHelpers"
 
@@ -26,8 +24,8 @@ export async function getALEXSwapParameters_FromMeta(
       getMeta2StacksFeeInfo(
         sdkContext,
         {
-          fromChain: info.fromChain as any,
-          fromToken: info.fromToken,
+          fromChain: info.fromChain as KnownChainId.BRC20Chain,
+          fromToken: info.fromToken as KnownTokenId.BRC20Token,
           toChain: ctx.transitStacksChain,
           toToken: ctx.firstStepToStacksToken,
         },
@@ -36,9 +34,9 @@ export async function getALEXSwapParameters_FromMeta(
   })
 }
 
-export async function getPossibleEVMDexAggregatorSwapParameters_FromBRC20(
+export async function getPossibleEVMDexAggregatorSwapParameters_FromMeta(
   sdkContext: SDKGlobalContext,
-  info: KnownRoute_FromBRC20 & {
+  info: KnownRoute_FromMeta & {
     amount: BigNumber
   },
 ): Promise<EVMDexAggregatorSwapParameters[]> {
@@ -48,8 +46,8 @@ export async function getPossibleEVMDexAggregatorSwapParameters_FromBRC20(
       getMeta2StacksFeeInfo(
         sdkContext,
         {
-          fromChain: info.fromChain,
-          fromToken: info.fromToken,
+          fromChain: info.fromChain as KnownChainId.BRC20Chain,
+          fromToken: info.fromToken as KnownTokenId.BRC20Token,
           toChain: ctx.transitStacksChain,
           toToken: ctx.firstStepToStacksToken,
         },

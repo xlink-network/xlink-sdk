@@ -13,9 +13,12 @@ import {
   getEVMToken,
   getEVMTokenContractInfo,
 } from "./evmUtils/xlinkContractHelpers"
-import { isSupportedMetaRoute } from "./lowlevelUnstableInfos"
 import { getBRC20SupportedRoutes } from "./metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./metaUtils/apiHelpers/getRunesSupportedRoutes"
+import {
+  isSupportedBRC20Route,
+  isSupportedRunesRoute,
+} from "./metaUtils/peggingHelpers"
 import { isSupportedStacksRoute } from "./stacksUtils/peggingHelpers"
 import {
   getStacksToken,
@@ -35,16 +38,6 @@ import {
   getChainIdNetworkType,
 } from "./utils/types/knownIds"
 import {
-  BridgeFromStacksInput,
-  BridgeFromStacksOutput,
-  bridgeFromStacks,
-} from "./xlinkSdkUtils/bridgeFromStacks"
-import {
-  BridgeFromEVMInput,
-  BridgeFromEVMOutput,
-  bridgeFromEVM,
-} from "./xlinkSdkUtils/bridgeFromEVM"
-import {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinOutput,
   bridgeFromBitcoin,
@@ -55,25 +48,43 @@ import {
   bridgeFromBRC20,
 } from "./xlinkSdkUtils/bridgeFromBRC20"
 import {
-  BridgeInfoFromStacksInput,
-  BridgeInfoFromStacksOutput,
-  bridgeInfoFromStacks,
-} from "./xlinkSdkUtils/bridgeInfoFromStacks"
+  BridgeFromEVMInput,
+  BridgeFromEVMOutput,
+  bridgeFromEVM,
+} from "./xlinkSdkUtils/bridgeFromEVM"
 import {
-  BridgeInfoFromEVMInput,
-  BridgeInfoFromEVMOutput,
-  bridgeInfoFromEVM,
-} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+  BridgeFromRunesInput,
+  BridgeFromRunesOutput,
+  bridgeFromRunes,
+} from "./xlinkSdkUtils/bridgeFromRunes"
+import {
+  BridgeFromStacksInput,
+  BridgeFromStacksOutput,
+  bridgeFromStacks,
+} from "./xlinkSdkUtils/bridgeFromStacks"
 import {
   BridgeInfoFromBitcoinInput,
   BridgeInfoFromBitcoinOutput,
   bridgeInfoFromBitcoin,
 } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
 import {
+  BridgeInfoFromEVMInput,
+  BridgeInfoFromEVMOutput,
+  bridgeInfoFromEVM,
+} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+import {
   BridgeInfoFromBRC20Input,
   BridgeInfoFromBRC20Output,
+  BridgeInfoFromRunesInput,
+  BridgeInfoFromRunesOutput,
   bridgeInfoFromBRC20,
+  bridgeInfoFromRunes,
 } from "./xlinkSdkUtils/bridgeInfoFromMeta"
+import {
+  BridgeInfoFromStacksInput,
+  BridgeInfoFromStacksOutput,
+  bridgeInfoFromStacks,
+} from "./xlinkSdkUtils/bridgeInfoFromStacks"
 import {
   EstimateBridgeTransactionFromBitcoinInput,
   EstimateBridgeTransactionFromBitcoinOutput,
@@ -84,6 +95,11 @@ import {
   EstimateBridgeTransactionFromBRC20Output,
   estimateBridgeTransactionFromBRC20,
 } from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
+import {
+  EstimateBridgeTransactionFromRunesInput,
+  EstimateBridgeTransactionFromRunesOutput,
+  estimateBridgeTransactionFromRunes,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromRunes"
 import {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
@@ -97,6 +113,7 @@ import {
   EVMAddress,
   EVMNativeCurrencyAddress,
   PublicEVMContractType,
+  RuneIdCombined,
   StacksContractAddress,
   evmNativeCurrencyAddress,
 } from "./xlinkSdkUtils/types"
@@ -121,6 +138,12 @@ export {
   BridgeFromEVMOutput,
 } from "./xlinkSdkUtils/bridgeFromEVM"
 export {
+  BridgeFromRunesInput,
+  BridgeFromRunesInput_signPsbtFn,
+  BridgeFromRunesOutput,
+  RunesUTXOSpendable,
+} from "./xlinkSdkUtils/bridgeFromRunes"
+export {
   BridgeFromStacksInput,
   BridgeFromStacksOutput,
 } from "./xlinkSdkUtils/bridgeFromStacks"
@@ -129,13 +152,15 @@ export {
   BridgeInfoFromBitcoinOutput,
 } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
 export {
-  BridgeInfoFromBRC20Input,
-  BridgeInfoFromBRC20Output,
-} from "./xlinkSdkUtils/bridgeInfoFromMeta"
-export {
   BridgeInfoFromEVMInput,
   BridgeInfoFromEVMOutput,
 } from "./xlinkSdkUtils/bridgeInfoFromEVM"
+export {
+  BridgeInfoFromBRC20Input,
+  BridgeInfoFromBRC20Output,
+  BridgeInfoFromRunesInput,
+  BridgeInfoFromRunesOutput,
+} from "./xlinkSdkUtils/bridgeInfoFromMeta"
 export {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
@@ -144,6 +169,14 @@ export {
   EstimateBridgeTransactionFromBitcoinInput,
   EstimateBridgeTransactionFromBitcoinOutput,
 } from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
+export {
+  EstimateBridgeTransactionFromBRC20Input,
+  EstimateBridgeTransactionFromBRC20Output,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
+export {
+  EstimateBridgeTransactionFromRunesInput,
+  EstimateBridgeTransactionFromRunesOutput,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromRunes"
 export {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
@@ -288,7 +321,8 @@ export class XLinkSDK {
       isSupportedEVMRoute(this.sdkContext, route),
       isSupportedStacksRoute(this.sdkContext, route),
       isSupportedBitcoinRoute(this.sdkContext, route),
-      isSupportedMetaRoute(this.sdkContext, route),
+      isSupportedBRC20Route(this.sdkContext, route),
+      isSupportedRunesRoute(this.sdkContext, route),
     ])
 
     return checkingResult.some(r => r)
@@ -693,15 +727,55 @@ export class XLinkSDK {
     return brc20TickToBRC20Token(this.sdkContext, chain, tick)
   }
 
+  bridgeInfoFromRunes(
+    input: BridgeInfoFromRunesInput,
+  ): Promise<BridgeInfoFromRunesOutput> {
+    return bridgeInfoFromRunes(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeInfoFromRunes"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
+  estimateBridgeTransactionFromRunes(
+    input: EstimateBridgeTransactionFromRunesInput,
+  ): Promise<EstimateBridgeTransactionFromRunesOutput> {
+    return estimateBridgeTransactionFromRunes(this.sdkContext, input).catch(
+      err => {
+        if (err instanceof TooManyRequestsError) {
+          throw new TooFrequentlyError(
+            ["estimateBridgeTransactionFromRunes"],
+            err.retryAfter,
+            {
+              cause: err,
+            },
+          )
+        }
+        throw err
+      },
+    )
+  }
+  bridgeFromRunes(input: BridgeFromRunesInput): Promise<BridgeFromRunesOutput> {
+    return bridgeFromRunes(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeFromRunes"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
   runesIdFromRunesToken(
     chain: ChainId,
     token: KnownTokenId.RunesToken,
-  ): Promise<undefined | `${number}:${number}`> {
+  ): Promise<undefined | RuneIdCombined> {
     return runesIdFromRunesToken(this.sdkContext, chain, token)
   }
   runesIdToRunesToken(
     chain: ChainId,
-    id: `${number}:${number}`,
+    id: RuneIdCombined,
   ): Promise<undefined | KnownTokenId.RunesToken> {
     return runesIdToRunesToken(this.sdkContext, chain, id)
   }
@@ -771,7 +845,7 @@ async function runesIdFromRunesToken(
   sdkContext: SDKGlobalContext,
   chain: ChainId,
   token: KnownTokenId.RunesToken,
-): Promise<undefined | `${number}:${number}`> {
+): Promise<undefined | RuneIdCombined> {
   if (!KnownChainId.isRunesChain(chain)) return
   const routes = await getRunesSupportedRoutes(sdkContext, chain)
   return routes.find(r => r.runesToken === token)?.runesId
@@ -779,7 +853,7 @@ async function runesIdFromRunesToken(
 async function runesIdToRunesToken(
   sdkContext: SDKGlobalContext,
   chain: ChainId,
-  runesId: `${number}:${number}`,
+  runesId: RuneIdCombined,
 ): Promise<undefined | KnownTokenId.RunesToken> {
   if (!KnownChainId.isRunesChain(chain)) return
   const routes = await getRunesSupportedRoutes(sdkContext, chain)

@@ -95,7 +95,7 @@ export async function createBitcoinPegInRecipients(
   })
   const { fee: newTxFee } = await calculateFee({
     recipientAddressScriptPubKeys: [pegInAddress.scriptPubKey],
-    opReturnData: [],
+    opReturnScripts: [],
     selectedUTXOs: [],
     feeRate: info.feeRate,
     extraSize: revealInputSize.inputSize + revealInputSize.witnessDataSize / 4,

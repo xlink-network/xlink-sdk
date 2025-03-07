@@ -60,6 +60,8 @@ export function toSDKNumberOrUndefined<
 export type EVMAddress = `0x${string}`
 export const isEVMAddress = isAddress
 
+export type RuneIdCombined = `${number}:${number}`
+
 export const evmNativeCurrencyAddress = Symbol(
   "[XLinkSDK] EVM Native Currency Address",
 )

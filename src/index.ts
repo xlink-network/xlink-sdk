@@ -11,6 +11,7 @@ export {
   EVMNativeCurrencyAddress,
   StacksContractAddress,
   PublicEVMContractType as EVMContractType,
+  RuneIdCombined,
 } from "./xlinkSdkUtils/types"
 export {
   SwapRoute,

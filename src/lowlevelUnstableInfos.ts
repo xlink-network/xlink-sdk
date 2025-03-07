@@ -36,8 +36,6 @@ export {
   xlinkContractsMultisigTestnet,
 } from "./stacksUtils/stxContractAddresses"
 
-export { isSupportedMetaRoute } from "./metaUtils/peggingHelpers"
-
 export {
   KnownRoute_FromBitcoin,
   KnownRoute_FromBitcoin_ToBRC20,

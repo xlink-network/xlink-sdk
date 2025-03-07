@@ -31,7 +31,7 @@ import {
   KnownTokenId,
 } from "../utils/types/knownIds"
 import {
-  BridgeFromBitcoinInput_ReselectUTXOs,
+  BridgeFromBitcoinInput_reselectSpendableUTXOs,
   prepareBitcoinTransaction,
   PrepareBitcoinTransactionInput,
 } from "./bridgeFromBitcoin"
@@ -63,7 +63,7 @@ export interface EstimateBridgeTransactionFromBitcoinInput {
     | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
     | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   networkFeeRate: bigint
-  reselectSpendableUTXOs: BridgeFromBitcoinInput_ReselectUTXOs
+  reselectSpendableUTXOs: BridgeFromBitcoinInput_reselectSpendableUTXOs
 }
 
 export interface EstimateBridgeTransactionFromBitcoinOutput {

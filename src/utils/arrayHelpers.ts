@@ -213,3 +213,24 @@ export const mapFindP: CurriedMapFindPFn = (async <T, U>(
   }
   return undefined
 }) as any
+
+/**
+ * Split an array into several arrays, based on the return value of the predicate function.
+ */
+export function arraySplit<T, U>(
+  predicate: (item: T, index: number) => U,
+  inputArray: T[],
+): T[][] {
+  return inputArray.reduce((outputArray: T[][], item, idx) => {
+    const lastGroup = last(outputArray)
+    if (
+      lastGroup == null ||
+      predicate(lastGroup[0], idx - 1) !== predicate(item, idx)
+    ) {
+      outputArray.push([item])
+    } else {
+      lastGroup.push(item)
+    }
+    return outputArray
+  }, [])
+}

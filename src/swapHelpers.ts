@@ -6,7 +6,7 @@ import { getALEXSwapParameters_FromEVM } from "./evmUtils/swapHelpers"
 import { getXLinkSDKContext } from "./lowlevelUnstableInfos"
 import {
   getALEXSwapParameters_FromMeta,
-  getPossibleEVMDexAggregatorSwapParameters_FromBRC20,
+  getPossibleEVMDexAggregatorSwapParameters_FromMeta,
 } from "./metaUtils/swapHelpers"
 import { BigNumber } from "./utils/BigNumber"
 import { KnownRoute } from "./utils/buildSupportedRoutes"
@@ -141,14 +141,33 @@ export async function getPossibleEVMDexAggregatorSwapParameters(
     )
   }
 
-  if (KnownChainId.isRunesChain(info.fromChain)) {
-    return []
-  }
-
   if (KnownChainId.isBRC20Chain(info.fromChain)) {
     if (!KnownTokenId.isBRC20Token(info.fromToken)) return []
 
-    const res = await getPossibleEVMDexAggregatorSwapParameters_FromBRC20(
+    const res = await getPossibleEVMDexAggregatorSwapParameters_FromMeta(
+      getXLinkSDKContext(sdk),
+      {
+        fromChain: info.fromChain,
+        fromToken: info.fromToken,
+        toChain: info.toChain as any,
+        toToken: info.toToken as any,
+        amount: BigNumber.from(info.amount),
+      },
+    )
+    if (res == null) return []
+
+    return res.map(
+      (r): EVMDexAggregatorSwapParameters => ({
+        ...r,
+        fromAmount: toSDKNumberOrUndefined(r.fromAmount),
+      }),
+    )
+  }
+
+  if (KnownChainId.isRunesChain(info.fromChain)) {
+    if (!KnownTokenId.isRunesToken(info.fromToken)) return []
+
+    const res = await getPossibleEVMDexAggregatorSwapParameters_FromMeta(
       getXLinkSDKContext(sdk),
       {
         fromChain: info.fromChain,

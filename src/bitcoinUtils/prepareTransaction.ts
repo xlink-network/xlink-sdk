@@ -4,7 +4,6 @@ import {
   getOutputDustThreshold,
   UnsupportedInputTypeError,
 } from "@c4/btc-utils"
-import * as btc from "@scure/btc-signer"
 import { max, sum } from "../utils/bigintHelpers"
 import { sumUTXO, UTXOSpendable } from "./bitcoinHelpers"
 import { Recipient as _Recipient } from "./createTransaction"
@@ -24,6 +23,7 @@ export type ReselectSpendableUTXOsFn = (
 export interface BitcoinTransactionPrepareResult {
   inputs: Array<UTXOSpendable>
   recipients: Array<BitcoinRecipient>
+  opReturnScripts?: Uint8Array[]
   changeAmount: bigint
   fee: bigint
   estimatedVSize: number
@@ -32,7 +32,7 @@ export interface BitcoinTransactionPrepareResult {
 export async function prepareTransaction(txInfo: {
   recipients: Array<BitcoinRecipient>
   changeAddressScriptPubKey: Uint8Array
-  opReturnData?: Uint8Array[]
+  opReturnScripts?: Uint8Array[]
   pinnedUTXOs?: Array<UTXOSpendable>
   feeRate: bigint
   reselectSpendableUTXOs: ReselectSpendableUTXOsFn
@@ -40,8 +40,8 @@ export async function prepareTransaction(txInfo: {
   const {
     recipients,
     changeAddressScriptPubKey,
-    opReturnData = [],
-    pinnedUTXOs: selectedUTXOs = [],
+    opReturnScripts = [],
+    pinnedUTXOs = [],
     feeRate,
     reselectSpendableUTXOs,
   } = txInfo
@@ -64,13 +64,13 @@ export async function prepareTransaction(txInfo: {
 
   const satsToSend = sum(newRecipients.map(r => r.satsAmount))
 
-  let lastSelectedUTXOs = selectedUTXOs.slice()
+  let lastSelectedUTXOs = pinnedUTXOs.slice()
   let lastSelectedUTXOSatsInTotal = sumUTXO(lastSelectedUTXOs)
 
   // Calculate fee
   let calculatedFee = await calculateFee({
     recipientAddressScriptPubKeys: newRecipientAddresses,
-    opReturnData,
+    opReturnScripts,
     selectedUTXOs: lastSelectedUTXOs,
     feeRate,
   })
@@ -81,7 +81,7 @@ export async function prepareTransaction(txInfo: {
 
     const newSelectedUTXOs = await reselectSpendableUTXOs(
       newSatsToSend,
-      selectedUTXOs,
+      pinnedUTXOs,
       lastSelectedUTXOs,
     )
 
@@ -99,7 +99,7 @@ export async function prepareTransaction(txInfo: {
     // Re-calculate fee
     calculatedFee = await calculateFee({
       recipientAddressScriptPubKeys: newRecipientAddresses,
-      opReturnData,
+      opReturnScripts,
       selectedUTXOs: newSelectedUTXOs,
       feeRate,
     })
@@ -130,6 +130,7 @@ export async function prepareTransaction(txInfo: {
   return {
     inputs: lastSelectedUTXOs,
     recipients: newRecipients,
+    opReturnScripts: txInfo.opReturnScripts,
     changeAmount: finalChangeAmount,
     fee: finalFeeAmount,
     estimatedVSize: calculatedFee.estimatedVSize,
@@ -156,7 +157,7 @@ const DEFAULT_MIN_RELAY_TX_FEE = 1000n
 
 export async function calculateFee(info: {
   recipientAddressScriptPubKeys: Uint8Array[]
-  opReturnData: Uint8Array[]
+  opReturnScripts: Uint8Array[]
   selectedUTXOs: Array<UTXOSpendable>
   feeRate: bigint
   extraSize?: number
@@ -168,8 +169,8 @@ export async function calculateFee(info: {
     ...info.recipientAddressScriptPubKeys.map(r => ({
       scriptPubKey: r,
     })),
-    ...info.opReturnData.map(data => ({
-      scriptPubKey: btc.Script.encode(["RETURN", data]),
+    ...info.opReturnScripts.map(script => ({
+      scriptPubKey: script,
     })),
   ]
 

@@ -507,11 +507,3 @@ export const isSupportedRunesRoute: IsSupportedFn = async (ctx, route) => {
   checkNever(toChain)
   return false
 }
-
-export const isSupportedMetaRoute: IsSupportedFn = async (ctx, route) => {
-  const [support1, supported2] = await Promise.all([
-    isSupportedBRC20Route(ctx, route),
-    isSupportedRunesRoute(ctx, route),
-  ])
-  return support1 || supported2
-}

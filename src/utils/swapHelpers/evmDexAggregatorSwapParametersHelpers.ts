@@ -11,6 +11,7 @@ import { BigNumber } from "../BigNumber"
 import {
   KnownRoute_FromBitcoin,
   KnownRoute_FromBRC20,
+  KnownRoute_FromRunes,
 } from "../buildSupportedRoutes"
 import { applyTransferProphets } from "../feeRateHelpers"
 import { toCorrespondingStacksToken } from "../SwapRouteHelpers"
@@ -37,7 +38,11 @@ export interface EVMDexAggregatorSwapParameters {
 
 export async function getPossibleEVMDexAggregatorSwapParametersImpl(
   sdkContext: SDKGlobalContext,
-  info: (KnownRoute_FromBitcoin | KnownRoute_FromBRC20) & {
+  info: (
+    | KnownRoute_FromBitcoin
+    | KnownRoute_FromBRC20
+    | KnownRoute_FromRunes
+  ) & {
     amount: BigNumber
     getInitialToStacksTransferProphet: (info: {
       transitStacksChain: KnownChainId.StacksChain
@@ -48,13 +53,14 @@ export async function getPossibleEVMDexAggregatorSwapParametersImpl(
   /**
    * currently we only support:
    *
-   *  * bitcoin, brc20 chain
+   *  * bitcoin, brc20, runes chain
    *  * most mainnet
    */
   if (
     !(
       (KnownChainId.Bitcoin.Mainnet === info.fromChain ||
-        KnownChainId.BRC20.Mainnet === info.fromChain) &&
+        KnownChainId.BRC20.Mainnet === info.fromChain ||
+        KnownChainId.Runes.Mainnet === info.fromChain) &&
       (KnownChainId.isEVMMainnetChain(info.toChain) ||
         KnownChainId.Stacks.Mainnet === info.toChain ||
         KnownChainId.Bitcoin.Mainnet === info.toChain ||

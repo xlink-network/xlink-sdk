@@ -1,4 +1,4 @@
-import { ChainId, TokenId } from "../../xlinkSdkUtils/types"
+import { ChainId, RuneIdCombined, TokenId } from "../../xlinkSdkUtils/types"
 import { checkNever } from "../typeHelpers"
 
 const chainId = <const T extends string>(value: T): ChainId<T> => value as any
@@ -148,7 +148,7 @@ export const createBRC20Token = (
   return `brc20-${brc20tick}` as any
 }
 export const createRunesToken = (
-  runeId: `${number}:${number}`,
+  runeId: RuneIdCombined,
 ): KnownTokenId.RunesToken => {
   return `runes-${runeId}` as any
 }

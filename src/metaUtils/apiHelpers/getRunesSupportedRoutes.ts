@@ -7,10 +7,11 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../../utils/types/knownIds"
+import { RuneIdCombined } from "../../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 
 export interface RunesSupportedRoute {
-  runesId: `${number}:${number}`
+  runesId: RuneIdCombined
   runesChain: KnownChainId.RunesChain
   runesToken: KnownTokenId.RunesToken
   stacksChain: KnownChainId.StacksChain
@@ -99,7 +100,7 @@ async function _getRunesSupportedRoutes(
   return routes.filter(isNotNull)
 }
 interface SupportedRunesBridgeRoute {
-  runesId: `${number}:${number}`
+  runesId: RuneIdCombined
   stacksTokenContractAddress: {
     deployerAddress: string
     contractName: string
