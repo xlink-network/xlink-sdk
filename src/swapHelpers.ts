@@ -12,6 +12,7 @@ import { BigNumber } from "./utils/BigNumber"
 import { KnownRoute } from "./utils/buildSupportedRoutes"
 import { ALEXSwapParameters as _ALEXSwapParameters } from "./utils/swapHelpers/alexSwapParametersHelpers"
 import { EVMDexAggregatorSwapParameters as _EVMDexAggregatorSwapParameters } from "./utils/swapHelpers/evmDexAggregatorSwapParametersHelpers"
+import { FetchRoutesImpl } from "./utils/swapHelpers/fetchDexAggregatorPossibleRoutes/helpers"
 import {
   DexAggregatorRoute as _DexAggregatorRoute,
   getDexAggregatorRoutes as _getDexAggregatorRoutes,
@@ -191,6 +192,15 @@ export async function getPossibleEVMDexAggregatorSwapParameters(
   return []
 }
 
+export { FetchRoutesImpl } from "./utils/swapHelpers/fetchDexAggregatorPossibleRoutes/helpers"
+export {
+  fetchIceScreamSwapPossibleRoutesFactory,
+  FetchIceScreamSwapPossibleRoutesFailedError,
+} from "./utils/swapHelpers/fetchDexAggregatorPossibleRoutes/fetchIceScreamSwapPossibleRoutes"
+export {
+  fetchMatchaPossibleRoutesFactory,
+  FetchMatchaPossibleRoutesFailedError,
+} from "./utils/swapHelpers/fetchDexAggregatorPossibleRoutes/fetchMatchaPossibleRoutes"
 export interface DexAggregatorRoute
   extends Omit<_DexAggregatorRoute, "fromAmount" | "toAmount" | "slippage"> {
   fromAmount: SDKNumber
@@ -200,6 +210,7 @@ export interface DexAggregatorRoute
 export function getDexAggregatorRoutes(
   sdk: XLinkSDK,
   info: {
+    routeFetcher: FetchRoutesImpl
     routes: {
       evmChain: KnownChainId.EVMChain
       fromToken: KnownTokenId.EVMToken
@@ -210,6 +221,7 @@ export function getDexAggregatorRoutes(
   },
 ): Promise<DexAggregatorRoute[]> {
   return _getDexAggregatorRoutes(getXLinkSDKContext(sdk), {
+    routeFetcher: info.routeFetcher,
     routes: info.routes.map(r => ({
       evmChain: r.evmChain,
       fromToken: r.fromToken,
