@@ -66,24 +66,17 @@ export {
 } from "./utils/buildSupportedRoutes"
 
 export {
-  brc20TokenFromTick,
-  brc20TokenToTick,
-  runesTokenFromId,
-  runesTokenToId,
-} from "./metaUtils/tokenAddresses"
+  applyTransferProphets,
+  applyTransferProphet,
+  TransferProphetAppliedResult,
+  composeTransferProphets,
+} from "./utils/feeRateHelpers"
 
 export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
 
-export {
-  BridgeSwapRouteNode,
-  createBridgeOrderFromBitcoin,
-  CreateBridgeOrderResult,
-} from "./stacksUtils/createBridgeOrderFromBitcoin"
-export { createBridgeOrderFromMeta } from "./stacksUtils/createBridgeOrderFromMeta"
 export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
-
-export { bridgeInfoFromBitcoin_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
 export { bridgeInfoFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromEVM"
+export { bridgeInfoFromBitcoin_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
 
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
 
