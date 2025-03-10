@@ -279,31 +279,13 @@ export const metaPegInEndpointV206Agg = defineContract({
       }
     ],
     output: responseSimpleT(tupleT({
-      'amt-net': uintT,
-      fee: uintT,
-      'order-details': tupleT({
-        'chain-id': optionalT(uintT, ),
-        'dest-chain-id': uintT,
-        from: bufferT,
-        'min-amount-out': optionalT(uintT, ),
-        'swap-token-in': principalT,
-        'swap-token-out': principalT,
-        to: bufferT,
-        'token-in': principalT,
-        'token-out': principalT
-      }, ),
-      'pair-details': tupleT({ 'chain-id': uintT, token: principalT }, ),
-      'token-details': tupleT({
-        approved: booleanT,
-        'no-burn': booleanT,
-        'peg-in-fee': uintT,
-        'peg-in-paused': booleanT,
-        'peg-out-fee': uintT,
-        'peg-out-gas-fee': uintT,
-        'peg-out-paused': booleanT,
-        tick: stringT
-      }, ),
-      'tx-idxed': tupleT({ amt: uintT, from: bufferT, tick: stringT, to: bufferT }, )
+      'amount-in-fixed': uintT,
+      'dest-chain-id': uintT,
+      'fail-settle': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, ),
+      'min-amount-out': optionalT(uintT, ),
+      'success-settle': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, ),
+      'token-in': principalT,
+      'token-out': principalT
     }, ), ),
     mode: 'readonly'
   },

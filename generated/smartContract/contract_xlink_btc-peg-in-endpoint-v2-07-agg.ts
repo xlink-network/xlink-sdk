@@ -195,18 +195,13 @@ export const btcPegInEndpointV207Agg = defineContract({
       }
     ],
     output: responseSimpleT(tupleT({
-      'amount-net': uintT,
-      fee: uintT,
-      'order-details': tupleT({
-        'chain-id': optionalT(uintT, ),
-        'dest-chain-id': uintT,
-        from: bufferT,
-        'min-amount-out': optionalT(uintT, ),
-        'swap-token-in': principalT,
-        'swap-token-out': principalT,
-        to: bufferT,
-        'token-out': principalT
-      }, )
+      'amount-in-fixed': uintT,
+      'dest-chain-id': uintT,
+      'fail-settle': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, ),
+      'min-amount-out': optionalT(uintT, ),
+      'success-settle': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, ),
+      'token-in': principalT,
+      'token-out': principalT
     }, ), ),
     mode: 'readonly'
   },
