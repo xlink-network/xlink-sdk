@@ -69,6 +69,7 @@ export interface EstimateBridgeTransactionFromBitcoinInput {
 export interface EstimateBridgeTransactionFromBitcoinOutput {
   fee: SDKNumber
   estimatedVSize: SDKNumber
+  revealTransactionSatoshiAmount?: SDKNumber
 }
 
 export async function estimateBridgeTransactionFromBitcoin(
@@ -318,5 +319,8 @@ async function estimateBitcoinTransaction(
   return {
     fee: toSDKNumberOrUndefined(resp.fee),
     estimatedVSize: toSDKNumberOrUndefined(resp.estimatedVSize),
+    revealTransactionSatoshiAmount: toSDKNumberOrUndefined(
+      resp.revealOutput.satsAmount,
+    ),
   }
 }

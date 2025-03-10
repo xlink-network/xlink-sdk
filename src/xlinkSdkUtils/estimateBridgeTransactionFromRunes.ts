@@ -68,6 +68,7 @@ export interface EstimateBridgeTransactionFromRunesInput {
 export interface EstimateBridgeTransactionFromRunesOutput {
   fee: SDKNumber
   estimatedVSize: SDKNumber
+  revealTransactionSatoshiAmount?: SDKNumber
 }
 
 export async function estimateBridgeTransactionFromRunes(
@@ -400,5 +401,8 @@ async function estimateRunesTransaction(
   return {
     fee: toSDKNumberOrUndefined(resp.fee),
     estimatedVSize: toSDKNumberOrUndefined(resp.estimatedVSize),
+    revealTransactionSatoshiAmount: toSDKNumberOrUndefined(
+      resp.revealOutput.satsAmount,
+    ),
   }
 }

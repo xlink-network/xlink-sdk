@@ -67,6 +67,7 @@ export interface EstimateBridgeTransactionFromBRC20Input {
 export interface EstimateBridgeTransactionFromBRC20Output {
   fee: SDKNumber
   estimatedVSize: SDKNumber
+  revealTransactionSatoshiAmount?: SDKNumber
 }
 
 export async function estimateBridgeTransactionFromBRC20(
@@ -395,5 +396,8 @@ async function estimateBRC20Transaction(
   return {
     fee: toSDKNumberOrUndefined(resp.fee),
     estimatedVSize: toSDKNumberOrUndefined(resp.estimatedVSize),
+    revealTransactionSatoshiAmount: toSDKNumberOrUndefined(
+      resp.revealOutput.satsAmount,
+    ),
   }
 }
