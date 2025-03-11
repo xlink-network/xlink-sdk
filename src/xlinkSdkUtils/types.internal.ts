@@ -31,18 +31,18 @@ export interface SDKGlobalContext {
     ignoreValidateResult?: boolean
   }
   brc20: {
+    ignoreValidateResult?: boolean
     routesConfigCache?: SDKGlobalContextCache<
       KnownChainId.BRC20Chain,
       Promise<BRC20SupportedRoute[]>
     >
-    ignoreValidateResult?: boolean
   }
   runes: {
+    ignoreValidateResult?: boolean
     routesConfigCache?: SDKGlobalContextCache<
       KnownChainId.RunesChain,
       Promise<RunesSupportedRoute[]>
     >
-    ignoreValidateResult?: boolean
   }
   evm: {
     enableMulticall?: boolean

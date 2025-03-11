@@ -5,7 +5,7 @@ import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
 import {
   UTXOSpendable,
   bitcoinToSatoshi,
-  isSameUTXO,
+  excludeUTXOs,
   sumUTXO,
 } from "../bitcoinUtils/bitcoinHelpers"
 import {
@@ -624,8 +624,7 @@ export function reselectSpendableUTXOsFactory(
   return async (satsToSend, pinnedUTXOs, lastTimeSelectedUTXOs) => {
     satsToSend = satsToSend - sumUTXO(pinnedUTXOs)
     lastTimeSelectedUTXOs = lastTimeSelectedUTXOs.filter(
-      iterUTXO =>
-        !pinnedUTXOs.find(pinnedUTXO => isSameUTXO(iterUTXO, pinnedUTXO)),
+      excludeUTXOs(pinnedUTXOs),
     )
     const selected = await reselectSpendableUTXOs_public(
       satsToSend,
