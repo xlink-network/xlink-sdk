@@ -30,7 +30,10 @@ import {
   isStacksContractAddressEqual,
   StacksContractAddress,
 } from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import {
+  SDKGlobalContext,
+  withGlobalContextCache,
+} from "../xlinkSdkUtils/types.internal"
 import {
   getEVMSupportedRoutes,
   getEVMSupportedRoutesByChainType,
@@ -44,6 +47,16 @@ import {
 } from "./xlinkContractHelpers"
 
 export const getEvm2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromEVM_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  return withGlobalContextCache(
+    ctx.evm.feeRateCache,
+    withGlobalContextCache.cacheKeyFromRoute(route),
+    () => _getEvm2StacksFeeInfo(ctx, route),
+  )
+}
+const _getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromEVM_ToStacks,
 ): Promise<undefined | TransferProphet> => {
@@ -188,6 +201,19 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
 }
 
 export const getStacks2EvmFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromStacks_ToEVM,
+  options: {
+    toDexAggregator: boolean
+  },
+): Promise<undefined | TransferProphet> => {
+  return withGlobalContextCache(
+    ctx.evm.feeRateCache,
+    `${withGlobalContextCache.cacheKeyFromRoute(route)}:${options.toDexAggregator ? "agg" : ""}`,
+    () => _getStacks2EvmFeeInfo(ctx, route, options),
+  )
+}
+const _getStacks2EvmFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToEVM,
   options: {

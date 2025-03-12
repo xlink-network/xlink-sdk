@@ -142,7 +142,7 @@ async function bridgeInfoFromBitcoin_toStacks(
     KnownRoute_FromBitcoin_ToStacks,
 ): Promise<BridgeInfoFromBitcoinOutput> {
   if (info.swapRoute == null || info.swapRoute.via === "ALEX") {
-    const step1 = await getBtc2StacksFeeInfo(info, {
+    const step1 = await getBtc2StacksFeeInfo(ctx, info, {
       swapRoute: info.swapRoute ?? null,
     })
     if (step1 == null) {
@@ -211,7 +211,7 @@ async function bridgeInfoFromBitcoin_toStacks(
     ] as const satisfies KnownRoute[]
 
     const steps = await Promise.all([
-      getBtc2StacksFeeInfo(routes[0], {
+      getBtc2StacksFeeInfo(ctx, routes[0], {
         swapRoute: info.swapRoute ?? null,
       }),
       ...intermediaryInfo.steps,
@@ -296,7 +296,7 @@ async function bridgeInfoFromBitcoin_toEVM(
     ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
-      getBtc2StacksFeeInfo(_routes[0], {
+      getBtc2StacksFeeInfo(ctx, _routes[0], {
         swapRoute: info.swapRoute ?? null,
       }),
       getStacks2EvmFeeInfo(ctx, _routes[1], {
@@ -350,7 +350,7 @@ async function bridgeInfoFromBitcoin_toEVM(
     ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
-      getBtc2StacksFeeInfo(btcPegInRoute, {
+      getBtc2StacksFeeInfo(ctx, btcPegInRoute, {
         swapRoute: info.swapRoute ?? null,
       }),
       ...intermediaryInfo.steps,
@@ -450,7 +450,7 @@ async function bridgeInfoFromBitcoin_toMeta(
     ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
-      getBtc2StacksFeeInfo(_routes[0], {
+      getBtc2StacksFeeInfo(ctx, _routes[0], {
         swapRoute: info.swapRoute ?? null,
       }),
       getStacks2MetaFeeInfo(ctx, _routes[1], {
@@ -505,7 +505,7 @@ async function bridgeInfoFromBitcoin_toMeta(
     ] as const satisfies KnownRoute[]
 
     const _steps = await Promise.all([
-      getBtc2StacksFeeInfo(btcPegInRoute, {
+      getBtc2StacksFeeInfo(ctx, btcPegInRoute, {
         swapRoute: info.swapRoute ?? null,
       }),
       ...intermediaryInfo.steps,

@@ -21,8 +21,6 @@ import {
   getSpecialFeeDetailsForSwapRoute,
   SpecialFeeDetailsForSwapRoute,
   SwapRoute,
-  SwapRouteViaALEX,
-  SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
 import {
@@ -35,10 +33,26 @@ import {
   TransferProphet_Fee_Fixed,
   TransferProphet_Fee_Rate,
 } from "../utils/types/TransferProphet"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import {
+  SDKGlobalContext,
+  withGlobalContextCache,
+} from "../xlinkSdkUtils/types.internal"
 import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromBitcoin_ToStacks,
+  options: {
+    swapRoute: null | Pick<SwapRoute, "via">
+  },
+): Promise<undefined | TransferProphet> => {
+  return withGlobalContextCache(
+    ctx.btc.feeRateCache,
+    `${withGlobalContextCache.cacheKeyFromRoute(route)}:${options.swapRoute?.via ?? ""}`,
+    () => _getBtc2StacksFeeInfo(route, options),
+  )
+}
+const _getBtc2StacksFeeInfo = async (
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
     swapRoute: null | Pick<SwapRoute, "via">
@@ -121,7 +135,33 @@ export const getStacks2BtcFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+    swapRoute: null | Pick<SwapRoute, "via">
+  },
+): Promise<undefined | TransferProphet> => {
+  return withGlobalContextCache(
+    ctx.btc.feeRateCache,
+    [
+      withGlobalContextCache.cacheKeyFromRoute(route),
+      options.initialRoute == null
+        ? ""
+        : withGlobalContextCache.cacheKeyFromRoute(options.initialRoute),
+      options.swapRoute == null ? "" : options.swapRoute.via,
+    ].join("#"),
+    () => _getStacks2BtcFeeInfo(ctx, route, options),
+  )
+}
+const _getStacks2BtcFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromStacks_ToBitcoin,
+  options: {
+    /**
+     * the initial route step
+     */
+    initialRoute: null | KnownRoute_ToStacks
+    /**
+     * the swap step between the previous route and the current one
+     */
+    swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(

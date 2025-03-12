@@ -21,6 +21,7 @@ export async function getALEXSwapParameters_FromBitcoin(
     ...info,
     getInitialToStacksTransferProphet: ctx =>
       getBtc2StacksFeeInfo(
+        sdkContext,
         {
           fromChain: info.fromChain,
           fromToken: info.fromToken,
@@ -42,6 +43,7 @@ export async function getPossibleEVMDexAggregatorSwapParameters_FromBitcoin(
     ...info,
     getInitialToStacksTransferProphet: ctx =>
       getBtc2StacksFeeInfo(
+        sdkContext,
         {
           fromChain: info.fromChain,
           fromToken: info.fromToken,

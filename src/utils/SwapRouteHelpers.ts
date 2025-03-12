@@ -341,7 +341,7 @@ export async function getSpecialFeeDetailsForSwapRoute(
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+    swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | SpecialFeeDetailsForSwapRoute> {
   const stacksContractCallInfo = getStacksContractCallInfo(
@@ -474,7 +474,7 @@ export async function getSpecialFeeDetailsForSwapRoute(
     } else if (options.swapRoute.via === "evmDexAggregator") {
       // do not yet have special fee rate for evm dex aggregator function, skip...
     } else {
-      checkNever(options.swapRoute)
+      checkNever(options.swapRoute.via)
     }
   }
 

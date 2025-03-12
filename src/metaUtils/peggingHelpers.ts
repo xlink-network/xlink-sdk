@@ -11,8 +11,6 @@ import {
   getSpecialFeeDetailsForSwapRoute,
   SpecialFeeDetailsForSwapRoute,
   SwapRoute,
-  SwapRouteViaALEX,
-  SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
@@ -34,7 +32,10 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import {
+  SDKGlobalContext,
+  withGlobalContextCache,
+} from "../xlinkSdkUtils/types.internal"
 import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
 import { getMetaPegInAddress } from "./btcAddresses"
@@ -75,6 +76,19 @@ export async function metaTokenToCorrespondingStacksToken(
 }
 
 export const getMeta2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
+  options: {
+    swapRoute: null | Pick<SwapRoute, "via">
+  },
+): Promise<undefined | TransferProphet> => {
+  return withGlobalContextCache(
+    ctx.brc20.feeRateCache,
+    `${withGlobalContextCache.cacheKeyFromRoute(route)}:${options.swapRoute?.via ?? ""}`,
+    () => _getMeta2StacksFeeInfo(ctx, route, options),
+  )
+}
+const _getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
@@ -201,7 +215,33 @@ export const getStacks2MetaFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+    swapRoute: null | Pick<SwapRoute, "via">
+  },
+): Promise<undefined | TransferProphet> => {
+  return withGlobalContextCache(
+    ctx.brc20.feeRateCache,
+    [
+      withGlobalContextCache.cacheKeyFromRoute(route),
+      options.initialRoute == null
+        ? ""
+        : withGlobalContextCache.cacheKeyFromRoute(options.initialRoute),
+      options.swapRoute == null ? "" : options.swapRoute.via,
+    ].join("#"),
+    () => _getStacks2MetaFeeInfo(ctx, route, options),
+  )
+}
+const _getStacks2MetaFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromStacks_ToBRC20 | KnownRoute_FromStacks_ToRunes,
+  options: {
+    /**
+     * the initial route step
+     */
+    initialRoute: null | KnownRoute_ToStacks
+    /**
+     * the swap step between the previous route and the current one
+     */
+    swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const filteredRoutes = KnownChainId.isBRC20Chain(route.toChain)

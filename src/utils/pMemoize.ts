@@ -1,3 +1,5 @@
+import { GeneralCacheInterface } from "./types/GeneralCacheInterface"
+
 type SkipCacheFn<F extends (...args: readonly any[]) => Promise<any>> = (
   args: Parameters<F>,
   value: Awaited<ReturnType<F>>,
@@ -22,32 +24,44 @@ export function pMemoize<F extends (...args: readonly any[]) => Promise<any>>(
 
   return async function (...args: Parameters<F>) {
     const key = options.cacheKey(args)
+    return pMemoizeImpl(cache, key, () => fn(...args), {
+      skipCache: value => skipCache(args, value),
+    })
+  } as any
+}
 
-    if (cache.has(key)) {
-      return cache.get(key)!
+export function pMemoizeImpl<K, V>(
+  cache: GeneralCacheInterface<K, Promise<V>>,
+  cacheKey: K,
+  promiseFactory: () => Promise<V>,
+  options?: {
+    skipCache?: (result: Awaited<V>) => Promise<boolean>
+  },
+): Promise<V> {
+  const skipCache = options?.skipCache ?? (() => false)
+
+  if (cache.has(cacheKey)) return cache.get(cacheKey)!
+
+  const promise = (async () => {
+    const cleanCache = (): void => {
+      queueMicrotask(() => {
+        if (cache.get(cacheKey) === promise) {
+          cache.delete(cacheKey)
+        }
+      })
     }
 
-    const promise = (async () => {
-      const cleanCache = (): void => {
-        queueMicrotask(() => {
-          if (cache.get(key) === promise) {
-            cache.delete(key)
-          }
-        })
-      }
-
-      try {
-        const result = await fn(...args)
-        if (await skipCache(args, result)) {
-          cleanCache()
-        }
-        return result
-      } catch (e) {
+    try {
+      const result = await promiseFactory()
+      if (await skipCache(result)) {
         cleanCache()
-        throw e
       }
-    })()
-    cache.set(key, promise)
-    return promise
-  } as any
+      return result
+    } catch (e) {
+      cleanCache()
+      throw e
+    }
+  })()
+  cache.set(cacheKey, promise)
+  return promise
 }

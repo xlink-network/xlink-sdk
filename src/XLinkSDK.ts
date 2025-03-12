@@ -245,19 +245,23 @@ export class XLinkSDK {
       btc: {
         ignoreValidateResult:
           options.__experimental?.btc?.ignoreValidateResult ?? false,
+        feeRateCache: new Map(),
       },
       brc20: {
-        routesConfigCache: new Map(),
         ignoreValidateResult:
           options.__experimental?.brc20?.ignoreValidateResult ?? false,
+        routesConfigCache: new Map(),
+        feeRateCache: new Map(),
       },
       runes: {
-        routesConfigCache: new Map(),
         ignoreValidateResult:
           options.__experimental?.runes?.ignoreValidateResult ?? false,
+        routesConfigCache: new Map(),
+        feeRateCache: new Map(),
       },
       evm: {
         routesConfigCache: new Map(),
+        feeRateCache: new Map(),
         onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
         viemClients: {
           ...defaultEvmClients,

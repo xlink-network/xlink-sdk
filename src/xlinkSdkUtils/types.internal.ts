@@ -4,14 +4,27 @@ import { EVMOnChainAddresses } from "../evmUtils/evmContractAddresses"
 import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { StacksTokenInfo } from "../stacksUtils/apiHelpers/getAllStacksTokens"
+import { DefinedRoute, KnownRoute } from "../utils/buildSupportedRoutes"
+import { pMemoizeImpl } from "../utils/pMemoize"
+import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
+import { TransferProphet } from "../utils/types/TransferProphet"
 import { EVMAddress } from "./types"
-import { KnownRoute } from "../utils/buildSupportedRoutes"
 
-export interface SDKGlobalContextCache<K, T> {
-  get: (key: K) => T | null
-  set: (key: K, value: T) => void
-  delete: (key: K) => void
+export interface SDKGlobalContextCache<K, V>
+  extends GeneralCacheInterface<K, V> {}
+export function withGlobalContextCache<K, V>(
+  cache: undefined | SDKGlobalContextCache<K, Promise<V>>,
+  cacheKey: K,
+  promiseFactory: () => Promise<V>,
+): Promise<V> {
+  if (cache == null) return promiseFactory()
+  return pMemoizeImpl(cache, cacheKey, promiseFactory)
+}
+export namespace withGlobalContextCache {
+  export const cacheKeyFromRoute = (route: DefinedRoute): string => {
+    return `${route.fromChain}:${route.fromToken}:${route.toChain}:${route.toToken}`
+  }
 }
 
 export interface SDKGlobalContext {
@@ -29,9 +42,17 @@ export interface SDKGlobalContext {
   }
   btc: {
     ignoreValidateResult?: boolean
+    feeRateCache?: SDKGlobalContextCache<
+      string,
+      Promise<undefined | TransferProphet>
+    >
   }
   brc20: {
     ignoreValidateResult?: boolean
+    feeRateCache?: SDKGlobalContextCache<
+      string,
+      Promise<undefined | TransferProphet>
+    >
     routesConfigCache?: SDKGlobalContextCache<
       KnownChainId.BRC20Chain,
       Promise<BRC20SupportedRoute[]>
@@ -39,6 +60,10 @@ export interface SDKGlobalContext {
   }
   runes: {
     ignoreValidateResult?: boolean
+    feeRateCache?: SDKGlobalContextCache<
+      string,
+      Promise<undefined | TransferProphet>
+    >
     routesConfigCache?: SDKGlobalContextCache<
       KnownChainId.RunesChain,
       Promise<RunesSupportedRoute[]>
@@ -46,6 +71,10 @@ export interface SDKGlobalContext {
   }
   evm: {
     enableMulticall?: boolean
+    feeRateCache?: SDKGlobalContextCache<
+      string,
+      Promise<undefined | TransferProphet>
+    >
     routesConfigCache?: SDKGlobalContextCache<
       "mainnet" | "testnet",
       Promise<EVMSupportedRoute[]>
