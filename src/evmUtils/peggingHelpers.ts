@@ -1,5 +1,6 @@
 import { unwrapResponse } from "clarity-codegen"
 import { readContract } from "viem/actions"
+import { EVM_BARE_PEG_IN_USE_SWAP_CONTRACT } from "../config"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
@@ -11,15 +12,22 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
-import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
+import {
+  getAndCheckTransitStacksTokens,
+  getSpecialFeeDetailsForSwapRoute,
+} from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
   KnownRoute_FromEVM_ToStacks,
   KnownRoute_FromStacks_ToEVM,
+  KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
 import { checkNever } from "../utils/typeHelpers"
-import { TransferProphet } from "../utils/types/TransferProphet"
+import {
+  TransferProphet,
+  TransferProphet_Fee_Fixed,
+} from "../utils/types/TransferProphet"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
@@ -60,14 +68,15 @@ const _getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromEVM_ToStacks,
 ): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(
-    route.toChain,
-    StacksContractName.EVMPegInEndpoint,
-  )
-  const stacksSwapContractCallInfo = getStacksContractCallInfo(
-    route.toChain,
-    StacksContractName.EVMPegInEndpointSwap,
-  )
+  const stacksContractCallInfo = EVM_BARE_PEG_IN_USE_SWAP_CONTRACT
+    ? getStacksContractCallInfo(
+        route.toChain,
+        StacksContractName.EVMPegInEndpointSwap,
+      )
+    : getStacksContractCallInfo(
+        route.toChain,
+        StacksContractName.EVMPegInEndpoint,
+      )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   const evmTokenContractCallInfo = await getEVMTokenContractInfo(
     ctx,
@@ -76,7 +85,6 @@ const _getEvm2StacksFeeInfo = async (
   )
   if (
     stacksContractCallInfo == null ||
-    stacksSwapContractCallInfo == null ||
     evmContractCallInfo == null ||
     evmTokenContractCallInfo == null
   ) {
@@ -134,14 +142,11 @@ const _getEvm2StacksFeeInfo = async (
       functionName: "maxAmountPerToken",
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
-    /**
-     * temp fix, should be back to `stacksContractCallInfo` in the future
-     */
     isPaused: executeReadonlyCallXLINK(
-      stacksSwapContractCallInfo.contractName,
+      stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      stacksSwapContractCallInfo.executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
   })
 
@@ -205,11 +210,21 @@ export const getStacks2EvmFeeInfo = async (
   route: KnownRoute_FromStacks_ToEVM,
   options: {
     toDexAggregator: boolean
+    /**
+     * checkout the comments in getSpecialFeeDetailsForSwapRoute
+     */
+    initialRoute: null | KnownRoute_ToStacks
   },
 ): Promise<undefined | TransferProphet> => {
   return withGlobalContextCache(
     ctx.evm.feeRateCache,
-    `${withGlobalContextCache.cacheKeyFromRoute(route)}:${options.toDexAggregator ? "agg" : ""}`,
+    [
+      withGlobalContextCache.cacheKeyFromRoute(route),
+      options.toDexAggregator ? "agg" : "",
+      options.initialRoute == null
+        ? ""
+        : withGlobalContextCache.cacheKeyFromRoute(options.initialRoute),
+    ].join("#"),
     () => _getStacks2EvmFeeInfo(ctx, route, options),
   )
 }
@@ -218,6 +233,10 @@ const _getStacks2EvmFeeInfo = async (
   route: KnownRoute_FromStacks_ToEVM,
   options: {
     toDexAggregator: boolean
+    /**
+     * checkout the comments in getSpecialFeeDetailsForSwapRoute
+     */
+    initialRoute: null | KnownRoute_ToStacks
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksBaseContractCallInfo = getStacksContractCallInfo(
@@ -253,6 +272,13 @@ const _getStacks2EvmFeeInfo = async (
       stacksChain: route.fromChain,
     })) ?? stacksTokenContractCallInfo
 
+  const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+    initialRoute: options.initialRoute,
+    swapRoute: {
+      via: options.toDexAggregator ? "evmDexAggregator" : "ALEX",
+    },
+  })
+
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
@@ -282,21 +308,48 @@ const _getStacks2EvmFeeInfo = async (
 
   if (tokenConf == null) return undefined
 
-  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
-  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
+  const isPaused = tokenConf.isPaused || tokenConf.approved === false
   const reserve = numberFromStacksContractNumber(tokenConf.reserve)
 
-  const minAmount = BigNumber.max([
-    numberFromStacksContractNumber(tokenConf["min-amount"]),
-    minFee,
-  ])
+  const minAmount = numberFromStacksContractNumber(tokenConf["min-amount"])
   const maxAmount = BigNumber.min([
     numberFromStacksContractNumber(tokenConf["max-amount"]),
     reserve,
   ])
 
+  if (specialFeeInfo != null) {
+    return {
+      isPaused,
+      bridgeToken: route.fromToken,
+      fees: [
+        {
+          type: "rate",
+          token: route.fromToken,
+          rate: specialFeeInfo.feeRate,
+          minimumAmount: specialFeeInfo.minFeeAmount,
+        },
+        ...(specialFeeInfo.gasFee == null
+          ? []
+          : [
+              {
+                type: "fixed",
+                token: specialFeeInfo.gasFee.token,
+                amount: specialFeeInfo.gasFee.amount,
+              } satisfies TransferProphet_Fee_Fixed,
+            ]),
+      ],
+      minBridgeAmount: BigNumber.isZero(minAmount)
+        ? specialFeeInfo.minFeeAmount
+        : BigNumber.max([minAmount, specialFeeInfo.minFeeAmount]),
+      maxBridgeAmount: maxAmount,
+    }
+  }
+
+  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
+  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
+
   return {
-    isPaused: tokenConf.isPaused || tokenConf.approved === false,
+    isPaused,
     bridgeToken: route.fromToken,
     fees: [
       {
@@ -306,7 +359,9 @@ const _getStacks2EvmFeeInfo = async (
         minimumAmount: minFee,
       },
     ],
-    minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
+    minBridgeAmount: BigNumber.isZero(minAmount)
+      ? minFee
+      : BigNumber.max([minAmount, minFee]),
     maxBridgeAmount: maxAmount,
   }
 }

@@ -12,6 +12,7 @@ import {
   KnownRoute_FromBitcoin,
   KnownRoute_FromBRC20,
   KnownRoute_FromRunes,
+  KnownRoute_ToStacks,
 } from "../buildSupportedRoutes"
 import { applyTransferProphets } from "../feeRateHelpers"
 import { toCorrespondingStacksToken } from "../SwapRouteHelpers"
@@ -99,6 +100,12 @@ export async function getPossibleEVMDexAggregatorSwapParametersImpl(
   return Promise.all(
     possibleSwapOnEVMChains.map(async evmChain =>
       _getEVMDexAggregatorSwapParametersImpl(sdkContext, {
+        initialToStacksRoute: {
+          fromChain: info.fromChain as KnownChainId.BitcoinChain,
+          fromToken: info.fromToken as KnownTokenId.BitcoinToken,
+          toChain: transitStacksChain,
+          toToken: firstStepToStacksToken,
+        },
         initialToStacksTransferProphet,
         transitStacksChain,
         firstStepToStacksToken,
@@ -112,6 +119,7 @@ export async function getPossibleEVMDexAggregatorSwapParametersImpl(
 async function _getEVMDexAggregatorSwapParametersImpl(
   sdkContext: SDKGlobalContext,
   info: {
+    initialToStacksRoute: KnownRoute_ToStacks
     initialToStacksTransferProphet: TransferProphet
     transitStacksChain: KnownChainId.StacksChain
     firstStepToStacksToken: KnownTokenId.StacksToken
@@ -164,7 +172,10 @@ async function _getEVMDexAggregatorSwapParametersImpl(
           toChain: evmChain,
           toToken: token,
         },
-        { toDexAggregator: true },
+        {
+          toDexAggregator: true,
+          initialRoute: info.initialToStacksRoute,
+        },
       ).then(info =>
         info == null || info.isPaused ? null : { token, transferProphet: info },
       ),

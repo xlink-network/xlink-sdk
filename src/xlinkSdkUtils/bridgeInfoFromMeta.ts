@@ -11,7 +11,7 @@ import {
   getAndCheckTransitStacksTokens,
   SwapRoute_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
-import { hasAny } from "../utils/arrayHelpers"
+import { hasAny, last } from "../utils/arrayHelpers"
 import {
   checkRouteValid,
   KnownRoute,
@@ -25,6 +25,7 @@ import {
   KnownRoute_FromRunes_ToEVM,
   KnownRoute_FromRunes_ToRunes,
   KnownRoute_FromRunes_ToStacks,
+  KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { assertExclude, checkNever, isNotNull } from "../utils/typeHelpers"
@@ -410,6 +411,7 @@ async function bridgeInfoFromMeta_toEVM(
         swapRoute: info.swapRoute ?? null,
       }),
       getStacks2EvmFeeInfo(ctx, _routes[1], {
+        initialRoute: _routes[0],
         toDexAggregator: false,
       }),
     ])
@@ -465,6 +467,7 @@ async function bridgeInfoFromMeta_toEVM(
       }),
       ...intermediaryInfo.steps,
       getStacks2EvmFeeInfo(ctx, evmPegOutRoute, {
+        initialRoute: last(intermediaryInfo.routes) as KnownRoute_ToStacks,
         toDexAggregator: false,
       }),
     ])

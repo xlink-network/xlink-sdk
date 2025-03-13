@@ -53,10 +53,12 @@ export enum StacksContractName {
   BTCPegInEndpointAggregator = "btc-peg-in-endpoint-v2-07-agg",
   BTCPegInEndpointLaunchpad = "btc-peg-in-endpoint-v2-05-launchpad",
   BTCPegOutEndpoint = "btc-peg-out-endpoint-v2-01",
+
   MetaPegInEndpoint = "meta-peg-in-endpoint-v2-04",
   MetaPegInEndpointSwap = "meta-peg-in-endpoint-v2-06-swap",
   MetaPegInEndpointAggregator = "meta-peg-in-endpoint-v2-06-agg",
   MetaPegOutEndpoint = "meta-peg-out-endpoint-v2-04",
+
   EVMPegInEndpoint = "cross-peg-in-endpoint-v2-04",
   EVMPegInEndpointSwap = "cross-peg-in-endpoint-v2-04-swap",
   EVMPegOutEndpoint = "cross-peg-out-endpoint-v2-01",

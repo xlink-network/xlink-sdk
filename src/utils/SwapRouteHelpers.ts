@@ -1,3 +1,4 @@
+import { EVM_BARE_PEG_IN_USE_SWAP_CONTRACT } from "../config"
 import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
@@ -335,7 +336,21 @@ export async function getSpecialFeeDetailsForSwapRoute(
   route: KnownRoute_FromStacks,
   options: {
     /**
-     * the initial route step
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
     /**
@@ -344,135 +359,125 @@ export async function getSpecialFeeDetailsForSwapRoute(
     swapRoute: null | Pick<SwapRoute, "via">
   },
 ): Promise<undefined | SpecialFeeDetailsForSwapRoute> {
-  const stacksContractCallInfo = getStacksContractCallInfo(
-    route.fromChain,
-    StacksContractName.BTCPegOutEndpoint,
-  )
-  const btcPegInSwapContractCallInfo = getStacksContractCallInfo(
-    route.fromChain,
-    StacksContractName.BTCPegInEndpointSwap,
-  )
-  const metaPegInSwapContractCallInfo = getStacksContractCallInfo(
-    route.fromChain,
-    StacksContractName.MetaPegInEndpointSwap,
-  )
-  if (
-    stacksContractCallInfo == null ||
-    btcPegInSwapContractCallInfo == null ||
-    metaPegInSwapContractCallInfo == null
-  ) {
-    return
-  }
-
   let feeInfo: undefined | SpecialFeeDetailsForSwapRoute
   if (options.initialRoute != null) {
-    if (options.swapRoute == null) {
-      // not a swap route, skip...
-    } else if (options.swapRoute.via === "ALEX") {
-      if (KnownChainId.isBitcoinChain(options.initialRoute.fromChain)) {
-        const feeRate = executeReadonlyCallXLINK(
-          btcPegInSwapContractCallInfo.contractName,
-          "get-peg-out-fee",
-          {},
-          btcPegInSwapContractCallInfo.executeOptions,
-        ).then(numberFromStacksContractNumber)
+    if (
+      options.swapRoute == null ||
+      options.swapRoute.via === "evmDexAggregator"
+    ) {
+      /**
+       * most of the bare peg in contract doesn't yet support this feature
+       */
+      if (!EVM_BARE_PEG_IN_USE_SWAP_CONTRACT) return
 
-        let minFeeAmount: Promise<
-          SpecialFeeDetailsForSwapRoute["minFeeAmount"]
-        > = Promise.resolve(BigNumber.ZERO)
-        let gasFee: Promise<SpecialFeeDetailsForSwapRoute["gasFee"]> =
-          Promise.resolve(undefined)
-        if (
-          KnownChainId.isBitcoinChain(route.toChain) ||
-          KnownChainId.isBRC20Chain(route.toChain) ||
-          KnownChainId.isRunesChain(route.toChain)
-        ) {
-          gasFee = executeReadonlyCallXLINK(
-            btcPegInSwapContractCallInfo.contractName,
-            "get-peg-out-gas-fee",
-            {},
-            btcPegInSwapContractCallInfo.executeOptions,
-          )
-            .then(numberFromStacksContractNumber)
-            .then(amount =>
-              props({
-                token: KnownTokenId.Bitcoin.BTC,
-                amount,
-              }),
-            )
-        } else if (KnownChainId.isEVMChain(route.toChain)) {
-          minFeeAmount = executeReadonlyCallXLINK(
-            btcPegInSwapContractCallInfo.contractName,
-            "get-peg-out-gas-fee",
-            {},
-            btcPegInSwapContractCallInfo.executeOptions,
-          ).then(numberFromStacksContractNumber)
-        } else {
-          checkNever(route.toChain)
-        }
-
-        feeInfo = await props({
-          feeRate,
-          minFeeAmount,
-          gasFee,
-        })
-      } else if (
-        KnownChainId.isBRC20Chain(options.initialRoute.fromChain) ||
-        KnownChainId.isRunesChain(options.initialRoute.fromChain)
-      ) {
-        const feeRate = executeReadonlyCallXLINK(
-          metaPegInSwapContractCallInfo.contractName,
-          "get-peg-out-fee",
-          {},
-          metaPegInSwapContractCallInfo.executeOptions,
-        ).then(numberFromStacksContractNumber)
-
-        let minFeeAmount: Promise<
-          SpecialFeeDetailsForSwapRoute["minFeeAmount"]
-        > = Promise.resolve(BigNumber.ZERO)
-        let gasFee: Promise<SpecialFeeDetailsForSwapRoute["gasFee"]> =
-          Promise.resolve(undefined)
-        if (
-          KnownChainId.isBitcoinChain(route.toChain) ||
-          KnownChainId.isBRC20Chain(route.toChain) ||
-          KnownChainId.isRunesChain(route.toChain)
-        ) {
-          gasFee = executeReadonlyCallXLINK(
-            metaPegInSwapContractCallInfo.contractName,
-            "get-peg-out-gas-fee",
-            {},
-            metaPegInSwapContractCallInfo.executeOptions,
-          )
-            .then(numberFromStacksContractNumber)
-            .then(amount =>
-              props({
-                token: KnownTokenId.Bitcoin.BTC,
-                amount,
-              }),
-            )
-        } else if (KnownChainId.isEVMChain(route.toChain)) {
-          minFeeAmount = executeReadonlyCallXLINK(
-            metaPegInSwapContractCallInfo.contractName,
-            "get-peg-out-gas-fee",
-            {},
-            metaPegInSwapContractCallInfo.executeOptions,
-          ).then(numberFromStacksContractNumber)
-        } else {
-          checkNever(route.toChain)
-        }
-
-        feeInfo = await props({
-          feeRate,
-          minFeeAmount,
-          gasFee,
-        })
-      } else if (KnownChainId.isEVMChain(options.initialRoute.fromChain)) {
-        // we don't have evm-peg-in-swap contract yet, skip...
-      } else {
-        checkNever(options.initialRoute.fromChain)
+      const evmPegInContractCallInfo = getStacksContractCallInfo(
+        route.fromChain,
+        StacksContractName.EVMPegInEndpointSwap,
+      )
+      if (evmPegInContractCallInfo == null) {
+        return
       }
-    } else if (options.swapRoute.via === "evmDexAggregator") {
-      // do not yet have special fee rate for evm dex aggregator function, skip...
+
+      return getFeeInfo(
+        {
+          fromEVM: {
+            getFeeRate: () =>
+              executeReadonlyCallXLINK(
+                evmPegInContractCallInfo.contractName,
+                "get-peg-out-fee",
+                {},
+                evmPegInContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+            getFixedFeeAmount: () =>
+              executeReadonlyCallXLINK(
+                evmPegInContractCallInfo.contractName,
+                "get-peg-out-gas-fee",
+                {},
+                evmPegInContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+          },
+        },
+        {
+          initialRoute: options.initialRoute,
+        },
+      )
+    } else if (options.swapRoute.via === "ALEX") {
+      const btcPegInSwapContractCallInfo = getStacksContractCallInfo(
+        route.fromChain,
+        StacksContractName.BTCPegInEndpointSwap,
+      )
+      const metaPegInSwapContractCallInfo = getStacksContractCallInfo(
+        route.fromChain,
+        StacksContractName.MetaPegInEndpointSwap,
+      )
+      const evmPegInSwapContractCallInfo = getStacksContractCallInfo(
+        route.fromChain,
+        StacksContractName.EVMPegInEndpointSwap,
+      )
+
+      if (
+        btcPegInSwapContractCallInfo == null ||
+        metaPegInSwapContractCallInfo == null ||
+        evmPegInSwapContractCallInfo == null
+      ) {
+        return
+      }
+
+      return getFeeInfo(
+        {
+          fromBitcoin: {
+            getFeeRate: () =>
+              executeReadonlyCallXLINK(
+                btcPegInSwapContractCallInfo.contractName,
+                "get-peg-out-fee",
+                {},
+                btcPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+            getFixedFeeAmount: () =>
+              executeReadonlyCallXLINK(
+                btcPegInSwapContractCallInfo.contractName,
+                "get-peg-out-gas-fee",
+                {},
+                btcPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+          },
+          fromMeta: {
+            getFeeRate: () =>
+              executeReadonlyCallXLINK(
+                metaPegInSwapContractCallInfo.contractName,
+                "get-peg-out-fee",
+                {},
+                metaPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+            getFixedFeeAmount: () =>
+              executeReadonlyCallXLINK(
+                metaPegInSwapContractCallInfo.contractName,
+                "get-peg-out-gas-fee",
+                {},
+                metaPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+          },
+          fromEVM: {
+            getFeeRate: () =>
+              executeReadonlyCallXLINK(
+                evmPegInSwapContractCallInfo.contractName,
+                "get-peg-out-fee",
+                {},
+                evmPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+            getFixedFeeAmount: () =>
+              executeReadonlyCallXLINK(
+                evmPegInSwapContractCallInfo.contractName,
+                "get-peg-out-gas-fee",
+                {},
+                evmPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+          },
+        },
+        {
+          initialRoute: options.initialRoute,
+        },
+      )
     } else {
       checkNever(options.swapRoute.via)
     }
@@ -481,4 +486,134 @@ export async function getSpecialFeeDetailsForSwapRoute(
   if (feeInfo == null) return undefined
 
   return props(feeInfo)
+
+  async function getFeeInfo(
+    context: {
+      fromBitcoin?: {
+        getFeeRate: () => Promise<BigNumber>
+        getFixedFeeAmount: () => Promise<BigNumber>
+      }
+      fromMeta?: {
+        getFeeRate: () => Promise<BigNumber>
+        getFixedFeeAmount: () => Promise<BigNumber>
+      }
+      fromEVM?: {
+        getFeeRate: () => Promise<BigNumber>
+        getFixedFeeAmount: () => Promise<BigNumber>
+      }
+    },
+    options: {
+      initialRoute: KnownRoute_ToStacks
+    },
+  ): Promise<undefined | SpecialFeeDetailsForSwapRoute> {
+    let feeInfo: undefined | SpecialFeeDetailsForSwapRoute
+
+    if (KnownChainId.isBitcoinChain(options.initialRoute.fromChain)) {
+      if (context.fromBitcoin == null) return
+
+      const feeRate = context.fromBitcoin.getFeeRate()
+
+      let minFeeAmount: Promise<SpecialFeeDetailsForSwapRoute["minFeeAmount"]> =
+        Promise.resolve(BigNumber.ZERO)
+
+      let gasFee: Promise<SpecialFeeDetailsForSwapRoute["gasFee"]> =
+        Promise.resolve(undefined)
+
+      if (
+        KnownChainId.isBitcoinChain(route.toChain) ||
+        KnownChainId.isBRC20Chain(route.toChain) ||
+        KnownChainId.isRunesChain(route.toChain)
+      ) {
+        gasFee = context.fromBitcoin.getFixedFeeAmount().then(amount =>
+          props({
+            token: KnownTokenId.Bitcoin.BTC,
+            amount,
+          }),
+        )
+      } else if (KnownChainId.isEVMChain(route.toChain)) {
+        minFeeAmount = context.fromBitcoin.getFixedFeeAmount()
+      } else {
+        checkNever(route.toChain)
+      }
+
+      feeInfo = await props({
+        feeRate,
+        minFeeAmount,
+        gasFee,
+      })
+    } else if (
+      KnownChainId.isBRC20Chain(options.initialRoute.fromChain) ||
+      KnownChainId.isRunesChain(options.initialRoute.fromChain)
+    ) {
+      if (context.fromMeta == null) return
+
+      const feeRate = context.fromMeta.getFeeRate()
+
+      let minFeeAmount: Promise<SpecialFeeDetailsForSwapRoute["minFeeAmount"]> =
+        Promise.resolve(BigNumber.ZERO)
+
+      let gasFee: Promise<SpecialFeeDetailsForSwapRoute["gasFee"]> =
+        Promise.resolve(undefined)
+
+      if (
+        KnownChainId.isBitcoinChain(route.toChain) ||
+        KnownChainId.isBRC20Chain(route.toChain) ||
+        KnownChainId.isRunesChain(route.toChain)
+      ) {
+        gasFee = context.fromMeta.getFixedFeeAmount().then(amount =>
+          props({
+            token: KnownTokenId.Bitcoin.BTC,
+            amount,
+          }),
+        )
+      } else if (KnownChainId.isEVMChain(route.toChain)) {
+        minFeeAmount = context.fromMeta.getFixedFeeAmount()
+      } else {
+        checkNever(route.toChain)
+      }
+
+      feeInfo = await props({
+        feeRate,
+        minFeeAmount,
+        gasFee,
+      })
+    } else if (KnownChainId.isEVMChain(options.initialRoute.fromChain)) {
+      if (context.fromEVM == null) return
+
+      const feeRate = context.fromEVM.getFeeRate()
+
+      let minFeeAmount: Promise<SpecialFeeDetailsForSwapRoute["minFeeAmount"]> =
+        Promise.resolve(BigNumber.ZERO)
+
+      let gasFee: Promise<SpecialFeeDetailsForSwapRoute["gasFee"]> =
+        Promise.resolve(undefined)
+
+      if (
+        KnownChainId.isBitcoinChain(route.toChain) ||
+        KnownChainId.isBRC20Chain(route.toChain) ||
+        KnownChainId.isRunesChain(route.toChain)
+      ) {
+        gasFee = context.fromEVM.getFixedFeeAmount().then(amount =>
+          props({
+            token: KnownTokenId.Bitcoin.BTC,
+            amount,
+          }),
+        )
+      } else if (KnownChainId.isEVMChain(route.toChain)) {
+        minFeeAmount = context.fromEVM.getFixedFeeAmount()
+      } else {
+        checkNever(route.toChain)
+      }
+
+      feeInfo = await props({
+        feeRate,
+        minFeeAmount,
+        gasFee,
+      })
+    } else {
+      checkNever(options.initialRoute.fromChain)
+    }
+
+    return feeInfo
+  }
 }

@@ -48,3 +48,9 @@ export const contractNameOverrides_testnet: Record<string, string> = {
   // cross router
   "cross-router-v2-03": "cross-router-v2-03-dk",
 }
+
+/**
+ * Currently, we use the swap contract to retrieve fee information for the basic peg-in process.
+ * This approach is temporary and will be reverted to the standard contract in the future.
+ */
+export const EVM_BARE_PEG_IN_USE_SWAP_CONTRACT = true

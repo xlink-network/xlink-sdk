@@ -20,7 +20,7 @@ import {
   SwapRoute_WithExchangeRate_Public,
   SwapRouteViaEVMDexAggregator_WithExchangeRate_Public,
 } from "../utils/SwapRouteHelpers"
-import { hasAny } from "../utils/arrayHelpers"
+import { hasAny, last } from "../utils/arrayHelpers"
 import {
   checkRouteValid,
   KnownRoute,
@@ -28,6 +28,7 @@ import {
   KnownRoute_FromBitcoin_ToEVM,
   KnownRoute_FromBitcoin_ToRunes,
   KnownRoute_FromBitcoin_ToStacks,
+  KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { props } from "../utils/promiseHelpers"
@@ -300,6 +301,7 @@ async function bridgeInfoFromBitcoin_toEVM(
         swapRoute: info.swapRoute ?? null,
       }),
       getStacks2EvmFeeInfo(ctx, _routes[1], {
+        initialRoute: _routes[0],
         toDexAggregator: false,
       }),
     ])
@@ -355,6 +357,7 @@ async function bridgeInfoFromBitcoin_toEVM(
       }),
       ...intermediaryInfo.steps,
       getStacks2EvmFeeInfo(ctx, evmPegOutRoute, {
+        initialRoute: last(intermediaryInfo.routes) as KnownRoute_ToStacks,
         toDexAggregator: false,
       }),
     ])
@@ -615,6 +618,7 @@ export async function constructDexAggregatorIntermediaryInfo(
   const steps = [
     // evm peg out agg
     getStacks2EvmFeeInfo(ctx, routes[0], {
+      initialRoute: null,
       toDexAggregator: true,
     }),
     //

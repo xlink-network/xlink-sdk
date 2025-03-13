@@ -145,6 +145,7 @@ async function bridgeInfoFromStacks_toEVM(
     KnownRoute_FromStacks_ToEVM,
 ): Promise<BridgeInfoFromStacksOutput> {
   const step1 = await getStacks2EvmFeeInfo(ctx, info, {
+    initialRoute: null,
     toDexAggregator: false,
   })
   if (step1 == null) {

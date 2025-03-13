@@ -265,6 +265,7 @@ async function bridgeInfoFromEVM_toEVM(
   const [step1, step2] = await Promise.all([
     getEvm2StacksFeeInfo(ctx, step1Route),
     getStacks2EvmFeeInfo(ctx, step2Route, {
+      initialRoute: step1Route,
       toDexAggregator: false,
     }),
   ])
