@@ -11,6 +11,7 @@ export class FetchMatchaPossibleRoutesFailedError extends XLinkSDKErrorBase {
 
 export const fetchMatchaPossibleRoutesFactory = (options: {
   apiKey: string
+  baseUrl?: string
   debug?: boolean
 }): FetchRoutesImpl => {
   const debugLog: typeof console.log = (...args) => {
@@ -18,12 +19,14 @@ export const fetchMatchaPossibleRoutesFactory = (options: {
     console.log("[fetchMatchaPossibleRouteImpl]", ...args)
   }
 
+  const baseUrl = options.baseUrl ?? "https://api.0x.org"
+
   return async info => {
     const res: Awaited<ReturnType<FetchRoutesImpl>> = []
     for (const route of info.possibleRoutes) {
       res.push(
         ...(await fetchMatchaPossibleRouteImpl(
-          { apiKey: options.apiKey, debugLog },
+          { apiKey: options.apiKey, baseUrl, debugLog },
           route,
         )),
       )
@@ -35,6 +38,7 @@ export const fetchMatchaPossibleRoutesFactory = (options: {
 const fetchMatchaPossibleRouteImpl = async (
   context: {
     apiKey: string
+    baseUrl: string
     debugLog: typeof console.log
   },
   info: QueryableRoute,
@@ -58,7 +62,11 @@ const fetchMatchaPossibleRouteImpl = async (
     slippageBps: BigNumber.toString(BigNumber.mul(info.slippage, 10000)),
   })
 
-  const fetchUrl = `https://api.0x.org/swap/allowance-holder/quote?${querystring.toString()}`
+  const fetchUrl =
+    `${context.baseUrl}/swap/allowance-holder/quote?${querystring.toString()}`.replace(
+      /^\/+/,
+      "/",
+    )
   context.debugLog("fetchUrl", fetchUrl)
 
   const resp = await fetch(fetchUrl, {
