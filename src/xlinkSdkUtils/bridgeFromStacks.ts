@@ -1,11 +1,13 @@
 import * as btc from "@scure/btc-signer"
-import { ContractCallOptions } from "clarity-codegen"
+import { FungiblePostConditionWire } from "@stacks/transactions"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
+import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   composeTxXLINK,
+  ContractCallOptions,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
@@ -23,7 +25,6 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 
 export interface BridgeFromStacksInput {
   fromChain: ChainId
@@ -153,7 +154,10 @@ async function bridgeFromStacks_toBitcoin(
       "peg-out-address": addressToScriptPubKey(bitcoinNetwork, info.toAddress),
       amount: numberToStacksContractNumber(info.amount),
     },
-    contractCallInfo.executeOptions,
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
   )
 
   return await info.sendTransaction(options)
@@ -201,7 +205,10 @@ async function bridgeFromStacks_toEVM(
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),
     },
-    contractCallInfo.executeOptions,
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
   )
 
   return await info.sendTransaction(options)
@@ -248,7 +255,10 @@ async function bridgeFromStacks_toMeta(
       "token-trait": `${fromTokenContractInfo.deployerAddress}.${fromTokenContractInfo.contractName}`,
       amount: numberToStacksContractNumber(info.amount),
     },
-    contractCallInfo.executeOptions,
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
   )
 
   return await info.sendTransaction(options)

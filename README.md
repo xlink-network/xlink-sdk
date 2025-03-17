@@ -68,6 +68,7 @@ const xlinkSdk = new XLinkSDK();
 
 1. Bridge from Stacks
 ```typescript
+import { serializeCVBytes } from '@stacks/transactions';
 import { 
     BridgeInfoFromStacksInput, 
     BridgeFromStacksInput,
@@ -102,11 +103,11 @@ const result = await xlinkSdk.bridgeFromStacks({
             contractAddress: tx.contractAddress,
             contractName: tx.contractName,
             functionName: tx.functionName,
-            functionArgs: tx.functionArgs,
-            senderKey: "sender address private key here",
+            functionArgs: tx.functionArgs.map(a => serializeCVBytes(a)),
             network,
-            postConditions: tx.postConditions,
-            anchorMode: tx.anchorMode,
+            senderKey: "sender address private key here",
+            postConditions: /* add post conditions */,
+            anchorMode: /* add anchor mode */,
         });
         const broadcastResponse = await broadcastTransaction(transaction, network);
         return {txid: broadcastResponse.txid};
