@@ -1,9 +1,17 @@
 import { StacksNetwork } from "@stacks/network"
-import { callReadOnlyFunction } from "@stacks/transactions"
+import {
+  fetchCallReadOnlyFunction,
+  FungiblePostConditionWire,
+  serializeCVBytes,
+  STXPostConditionWire,
+} from "@stacks/transactions"
 import {
   CallReadOnlyFunctionFn,
   composeTxOptionsFactory,
   executeReadonlyCallFactory,
+  OpenCallFunctionDescriptor,
+  ParameterObjOfDescriptor,
+  StringOnly,
 } from "clarity-codegen"
 import { xlinkContracts } from "../../generated/smartContract/contracts_xlink"
 import { STACKS_MAINNET, STACKS_TESTNET } from "../config"
@@ -14,12 +22,12 @@ import {
   StacksContractAddress,
 } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { getAllStacksTokens } from "./apiHelpers/getAllStacksTokens"
 import {
   StacksContractName,
   stxContractAddresses,
   stxTokenContractAddresses_legacy,
 } from "./stxContractAddresses"
-import { getAllStacksTokens } from "./apiHelpers/getAllStacksTokens"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
 export const numberFromStacksContractNumber = (
@@ -41,7 +49,47 @@ export const numberToStacksContractNumber = (
   )
 }
 
-export const composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
+export type SerializedClarityValue = Uint8Array
+type ContractCallOptions_PostCondition =
+  | FungiblePostConditionWire
+  | STXPostConditionWire
+
+export interface ContractCallOptions {
+  contractAddress: string
+  contractName: string
+  functionName: string
+  functionArgs: SerializedClarityValue[]
+}
+
+const _composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
+export type ComposeTxOptionsFn<Contracts extends typeof xlinkContracts> = <
+  T extends StringOnly<keyof Contracts>,
+  F extends StringOnly<keyof Contracts[T]>,
+  Descriptor extends Contracts[T][F],
+  PC extends ContractCallOptions_PostCondition,
+>(
+  contractName: T,
+  functionName: F,
+  args: Descriptor extends OpenCallFunctionDescriptor
+    ? ParameterObjOfDescriptor<Descriptor>
+    : never,
+  options?: {
+    deployerAddress?: string
+    postConditions?: PC[]
+  },
+) => ContractCallOptions
+export const composeTxXLINK: ComposeTxOptionsFn<typeof xlinkContracts> = (
+  ...args
+) => {
+  const options = _composeTxXLINK(...args)
+  return {
+    ...options,
+    functionArgs: options.functionArgs.map(arg => serializeCVBytes(arg)),
+    anchorMode: undefined,
+    postConditionMode: undefined,
+    postConditions: undefined,
+  }
+}
 
 export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
   xlinkContracts,
@@ -77,7 +125,7 @@ export const getStacksContractCallInfo = <C extends StacksContractName>(
       deployerAddress:
         stxContractAddresses[contractName][chainId].deployerAddress,
       callReadOnlyFunction(callOptions) {
-        return callReadOnlyFunction({
+        return fetchCallReadOnlyFunction({
           ...callOptions,
           contractAddress:
             stxContractAddresses[contractName][chainId].deployerAddress,

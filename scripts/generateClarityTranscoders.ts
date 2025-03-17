@@ -29,7 +29,7 @@ const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
     envName === "prod" ? STACKS_MAINNET : STACKS_TESTNET
 
   await generateContracts(
-    process.env.STACKS_CORE_API_URL ?? fallbackStacksNetwork.coreApiUrl,
+    process.env.STACKS_CORE_API_URL ?? fallbackStacksNetwork.client.baseUrl,
     contractName => {
       return (
         stxContractAddresses[contractName as StacksContractName]?.[

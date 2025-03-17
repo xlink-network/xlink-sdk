@@ -4,7 +4,7 @@
   "exclude": ["lib"],
   "compilerOptions": {
     "skipLibCheck": true,
-    "lib": ["WebWorker"],
+    "lib": ["ES2023", "WebWorker"],
     "noEmit": true
   }
 }

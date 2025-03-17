@@ -1,6 +1,11 @@
 # Changelog
 
-## [0.5.0]
+## [Unreleased (0.5.0-51)]
+
+### Breaking Changes
+
+- **Upgraded @stacks/* dependencies to v7.x**
+  - `bridgeFromStacks.sendTransaction` type signature changed
 
 ### Major New Features
 
@@ -29,6 +34,9 @@
   - Added STX token on EVM chains
   - Added support for TRUMP token
   - Expanded token mapping logic between chains
+
+- **Dependencies upgrades**
+  - Viem -> v2.23.10
 
 ### Security Enhancements
 

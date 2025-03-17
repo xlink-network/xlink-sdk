@@ -1,13 +1,25 @@
-import { StacksMainnet, StacksMocknet } from "@stacks/network"
+import {
+  StacksNetwork,
+  STACKS_MAINNET as STACKS_MAINNET_DEFAULT,
+  STACKS_TESTNET as STACKS_TESTNET_DEFAULT,
+} from "@stacks/network"
 
 export const backendAPIPrefix = "https://sdk-api.xlink.network/"
 
-export const STACKS_MAINNET = new StacksMainnet({
-  url: "https://stacks-node-api.alexlab.co",
-})
-export const STACKS_TESTNET = new StacksMocknet({
-  url: "https://nakamoto-dev-api.alexlab.co",
-})
+export const STACKS_MAINNET: StacksNetwork = {
+  ...STACKS_MAINNET_DEFAULT,
+  client: {
+    ...STACKS_MAINNET_DEFAULT.client,
+    baseUrl: "https://stacks-node-api.alexlab.co",
+  },
+}
+export const STACKS_TESTNET: StacksNetwork = {
+  ...STACKS_TESTNET_DEFAULT,
+  client: {
+    ...STACKS_TESTNET_DEFAULT.client,
+    baseUrl: "https://nakamoto-dev-api.alexlab.co",
+  },
+}
 
 export const contractNameOverrides_mainnet: Record<string, string> = {
   "btc-peg-in-endpoint-v2-07": "btc-peg-in-v2-07a",
