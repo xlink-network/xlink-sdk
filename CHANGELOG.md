@@ -54,6 +54,7 @@
 
 ### Other Changes
 
+- Added cross-chain swap example code for developer reference
 - Multiple Stacks contract upgrades
 - Support for new fee charge model
 - Upgraded viem dependency

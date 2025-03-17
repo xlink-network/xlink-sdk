@@ -1,0 +1,37 @@
+{
+  "name": "xlink-sdk-cross-chain-swap-example",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "simulation": "tsx simulation/index.ts"
+  },
+  "dependencies": {
+    "@stacks/common": "^7.0.2",
+    "@stacks/connect": "^8.1.7",
+    "@stacks/network": "^7.0.2",
+    "@stacks/stacks-blockchain-api-types": "^7.14.1",
+    "@stacks/transactions": "^7.0.5",
+    "@xlink-network/xlink-sdk": "file:../..",
+    "alex-sdk": "github:alexgo-io/alex-sdk#feat/detailed-swap-route-info",
+    "c32check": "^2.0.0",
+    "lodash-es": "^4.17.21",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-query": "^3.39.3"
+  },
+  "devDependencies": {
+    "@types/lodash-es": "^4.17.12",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "prettier": "^3.5.3",
+    "stxer": "^0.4.1",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.2"
+  }
+}
