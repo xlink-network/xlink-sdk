@@ -1,16 +1,23 @@
 import { toSDKNumberOrUndefined } from "../../../xlinkSdkUtils/types"
+import { arraySplit } from "../../arrayHelpers"
 import { BigNumber } from "../../BigNumber"
 import { XLinkSDKErrorBase } from "../../errors"
 import { FetchRoutesImpl, QueryableRoute } from "./helpers"
 
 export class FetchMatchaPossibleRoutesFailedError extends XLinkSDKErrorBase {
   constructor(message: null | string, options: ErrorConstructorOptions) {
-    super(message ?? "Request Matcha.xyz api failed", options)
+    super(message ?? "Request 0x.org api failed", options)
   }
 }
 
 export const fetchMatchaPossibleRoutesFactory = (options: {
   apiKey: string
+  /**
+   * The maximum number of routes to fetch in same time
+   *
+   * @default 10 (0x.org api limit, see https://0x.org/docs/developer-resources/rate-limits#what-are-the-rate-limits-for-the-0x-apis)
+   */
+  batchSize?: number
   baseUrl?: string
   debug?: boolean
 }): FetchRoutesImpl => {
@@ -21,17 +28,29 @@ export const fetchMatchaPossibleRoutesFactory = (options: {
 
   const baseUrl = options.baseUrl ?? "https://api.0x.org"
 
+  const batchSize = options.batchSize ?? 10
+
   return async info => {
-    const res: Awaited<ReturnType<FetchRoutesImpl>> = []
-    for (const route of info.possibleRoutes) {
+    const batches = arraySplit(
+      (_, idx) => Math.floor(idx / batchSize),
+      info.possibleRoutes,
+    )
+
+    const res: Awaited<ReturnType<FetchRoutesImpl>>[] = []
+    for (const batch of batches) {
       res.push(
-        ...(await fetchMatchaPossibleRouteImpl(
-          { apiKey: options.apiKey, baseUrl, debugLog },
-          route,
+        ...(await Promise.all(
+          batch.map(route =>
+            fetchMatchaPossibleRouteImpl(
+              { debugLog, baseUrl, apiKey: options.apiKey },
+              route,
+            ),
+          ),
         )),
       )
     }
-    return res
+
+    return res.flat()
   }
 }
 

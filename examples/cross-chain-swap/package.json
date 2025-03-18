@@ -16,7 +16,7 @@
     "@stacks/stacks-blockchain-api-types": "^7.14.1",
     "@stacks/transactions": "^7.0.5",
     "@xlink-network/xlink-sdk": "file:../..",
-    "alex-sdk": "github:alexgo-io/alex-sdk#feat/detailed-swap-route-info",
+    "alex-sdk": "^3.2.0",
     "c32check": "^2.0.0",
     "lodash-es": "^4.17.21",
     "react": "^19.0.0",

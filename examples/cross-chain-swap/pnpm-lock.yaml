@@ -27,8 +27,8 @@ importers:
         specifier: file:../..
         version: file:../..(@stacks/common@7.0.2)(typescript@5.8.2)
       alex-sdk:
-        specifier: github:alexgo-io/alex-sdk#feat/detailed-swap-route-info
-        version: https://codeload.github.com/alexgo-io/alex-sdk/tar.gz/15171aec2fec824ce3593982ba254748588c1303(@stacks/common@7.0.2)(@stacks/network@7.0.2)(@stacks/transactions@7.0.5)
+        specifier: ^3.2.0
+        version: 3.2.0(@stacks/common@7.0.2)(@stacks/network@7.0.2)(@stacks/transactions@7.0.5)
       c32check:
         specifier: ^2.0.0
         version: 2.0.0
@@ -550,9 +550,8 @@ packages:
       zod:
         optional: true
 
-  alex-sdk@https://codeload.github.com/alexgo-io/alex-sdk/tar.gz/15171aec2fec824ce3593982ba254748588c1303:
-    resolution: {tarball: https://codeload.github.com/alexgo-io/alex-sdk/tar.gz/15171aec2fec824ce3593982ba254748588c1303}
-    version: 3.0.4
+  alex-sdk@3.2.0:
+    resolution: {integrity: sha512-5Y83pTK3T7wN/SzgFQdjddzYutUuarTsKV6Wt7l4j081RECMYteeiga320iR17MY4R7Jekkw+Rsb0KtvuGnO4Q==}
     engines: {node: '>=10'}
     peerDependencies:
       '@stacks/network': ^7.0.2
@@ -1578,7 +1577,7 @@ snapshots:
     optionalDependencies:
       typescript: 5.8.2
 
-  alex-sdk@https://codeload.github.com/alexgo-io/alex-sdk/tar.gz/15171aec2fec824ce3593982ba254748588c1303(@stacks/common@7.0.2)(@stacks/network@7.0.2)(@stacks/transactions@7.0.5):
+  alex-sdk@3.2.0(@stacks/common@7.0.2)(@stacks/network@7.0.2)(@stacks/transactions@7.0.5):
     dependencies:
       '@stacks/network': 7.0.2
       '@stacks/transactions': 7.0.5
