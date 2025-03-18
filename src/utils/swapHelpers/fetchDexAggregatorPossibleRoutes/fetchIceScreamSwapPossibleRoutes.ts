@@ -10,6 +10,7 @@ export class FetchIceScreamSwapPossibleRoutesFailedError extends XLinkSDKErrorBa
 }
 
 export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
+  baseUrl?: string
   debug?: boolean
 }): FetchRoutesImpl => {
   const debugLog: typeof console.log = (...args) => {
@@ -17,11 +18,16 @@ export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
     console.log("[fetchIceScreamSwapPossibleRoutesFactory]", ...args)
   }
 
+  const baseUrl = options.baseUrl ?? "https://aggregator.icecreamswap.com"
+
   return async info => {
     const res: Awaited<ReturnType<FetchRoutesImpl>> = []
     for (const route of info.possibleRoutes) {
       res.push(
-        ...(await fetchIceScreamSwapPossibleRouteImpl({ debugLog }, route)),
+        ...(await fetchIceScreamSwapPossibleRouteImpl(
+          { debugLog, baseUrl },
+          route,
+        )),
       )
     }
     return res
@@ -31,6 +37,7 @@ export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
 const fetchIceScreamSwapPossibleRouteImpl = async (
   context: {
     debugLog: typeof console.log
+    baseUrl: string
   },
   info: QueryableRoute,
 ): ReturnType<FetchRoutesImpl> => {
@@ -51,9 +58,7 @@ const fetchIceScreamSwapPossibleRouteImpl = async (
     slippage: BigNumber.toString(info.slippage),
   })
 
-  const fetchUrl = `https://aggregator.icecreamswap.com/${String(
-    info.chain.chainId,
-  )}?${querystring.toString()}`
+  const fetchUrl = `${context.baseUrl}/${String(info.chain.chainId)}?${querystring.toString()}`
   context.debugLog("fetchUrl", fetchUrl)
 
   const resp = await fetch(fetchUrl)
