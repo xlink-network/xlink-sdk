@@ -13,6 +13,7 @@ import { EVMAddress } from "./types"
 
 export interface SDKGlobalContextCache<K, V>
   extends GeneralCacheInterface<K, V> {}
+
 export function withGlobalContextCache<K, V>(
   cache: undefined | SDKGlobalContextCache<K, Promise<V>>,
   cacheKey: K,
