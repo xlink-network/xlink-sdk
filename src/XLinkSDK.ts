@@ -118,6 +118,7 @@ import {
   evmNativeCurrencyAddress,
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+import { DumpableCache, getCacheInside } from "./utils/DumpableCache"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -183,6 +184,7 @@ export {
   GetTimeLockedAssetsInput,
   GetTimeLockedAssetsOutput,
 } from "./xlinkSdkUtils/timelockFromEVM"
+export type { DumpableCache } from "./utils/DumpableCache"
 
 export interface XLinkSDKOptions {
   __experimental?: {
@@ -197,6 +199,9 @@ export interface XLinkSDKOptions {
     }
     runes?: {
       ignoreValidateResult?: boolean
+    }
+    evm?: {
+      onChainConfigCachePrepared?: (cache: DumpableCache) => void
     }
   }
   evm?: {
@@ -231,6 +236,17 @@ export class XLinkSDK {
     const cacheEVMOnChainConfig =
       options.evm?.cacheOnChainConfig ?? defaultConfig.evm?.cacheOnChainConfig
 
+    let onChainConfigCache:
+      | undefined
+      | SDKGlobalContext["evm"]["onChainConfigCache"]
+    if (cacheEVMOnChainConfig) {
+      const onChainConfigDumpableCache = new DumpableCache()
+      options.__experimental?.evm?.onChainConfigCachePrepared?.(
+        onChainConfigDumpableCache,
+      )
+      onChainConfigCache = getCacheInside(onChainConfigDumpableCache)
+    }
+
     this.sdkContext = {
       routes: {
         detectedCache: new Map(),
@@ -262,7 +278,7 @@ export class XLinkSDK {
       evm: {
         routesConfigCache: new Map(),
         feeRateCache: new Map(),
-        onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
+        onChainConfigCache,
         viemClients: {
           ...defaultEvmClients,
           ...options.evm?.viemClients,
