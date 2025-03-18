@@ -1,4 +1,5 @@
 import { toSDKNumberOrUndefined } from "../../../xlinkSdkUtils/types"
+import { arraySplit } from "../../arrayHelpers"
 import { BigNumber } from "../../BigNumber"
 import { XLinkSDKErrorBase } from "../../errors"
 import { FetchRoutesImpl, QueryableRoute } from "./helpers"
@@ -10,6 +11,12 @@ export class FetchIceScreamSwapPossibleRoutesFailedError extends XLinkSDKErrorBa
 }
 
 export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
+  /**
+   * The maximum number of routes to fetch in same time
+   *
+   * @default 1
+   */
+  batchSize?: number
   baseUrl?: string
   debug?: boolean
 }): FetchRoutesImpl => {
@@ -20,17 +27,26 @@ export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
 
   const baseUrl = options.baseUrl ?? "https://aggregator.icecreamswap.com"
 
+  const batchSize = options.batchSize ?? 1
+
   return async info => {
-    const res: Awaited<ReturnType<FetchRoutesImpl>> = []
-    for (const route of info.possibleRoutes) {
+    const batches = arraySplit(
+      (_, idx) => Math.floor(idx / batchSize),
+      info.possibleRoutes,
+    )
+
+    const res: Awaited<ReturnType<FetchRoutesImpl>>[] = []
+    for (const batch of batches) {
       res.push(
-        ...(await fetchIceScreamSwapPossibleRouteImpl(
-          { debugLog, baseUrl },
-          route,
+        ...(await Promise.all(
+          batch.map(route =>
+            fetchIceScreamSwapPossibleRouteImpl({ debugLog, baseUrl }, route),
+          ),
         )),
       )
     }
-    return res
+
+    return res.flat()
   }
 }
 

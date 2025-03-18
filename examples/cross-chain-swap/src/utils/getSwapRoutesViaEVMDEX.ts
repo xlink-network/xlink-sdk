@@ -7,15 +7,14 @@ import {
   XLinkSDK,
 } from "@xlink-network/xlink-sdk"
 import {
+  fetchIceScreamSwapPossibleRoutesFactory,
   getDexAggregatorRoutes,
   getPossibleEVMDexAggregatorSwapParameters,
-  fetchMatchaPossibleRoutesFactory,
 } from "@xlink-network/xlink-sdk/swapHelpers"
 
 export async function getSwapRoutesViaEVMDEX(
   context: {
     xlinkSDK: XLinkSDK
-    matchaAPIKey: string
   },
   swapRequest: KnownRoute & {
     amount: SDKNumber
@@ -38,10 +37,7 @@ export async function getSwapRoutesViaEVMDEX(
   }
 
   const routes = await getDexAggregatorRoutes(xlinkSDK, {
-    routeFetcher: fetchMatchaPossibleRoutesFactory({
-      baseUrl: "/api/matcha",
-      apiKey: context.matchaAPIKey,
-    }),
+    routeFetcher: fetchIceScreamSwapPossibleRoutesFactory({}),
     routes: possibleSwapParameters.map(p => ({
       evmChain: p.evmChain,
       fromToken: p.fromToken,

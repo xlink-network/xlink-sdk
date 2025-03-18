@@ -7,23 +7,18 @@ import {
   XLinkSDK,
 } from "@xlink-network/xlink-sdk"
 import { AlexSDK } from "alex-sdk"
-import { FC, Fragment, useEffect, useState } from "react"
+import { FC, Fragment, useState } from "react"
 import { useQuery } from "react-query"
+import { useDebouncedValue } from "../hooks/useDebouncedValue"
+import { formatXLinkSDKChainName } from "../utils/formatXLinkSDKChainName"
 import { getAvailableRoutes } from "../utils/getAvailableRoutes"
 import { getSwapRoutesViaALEX } from "../utils/getSwapRoutesViaALEX"
 import { getSwapRoutesViaEVMDEX } from "../utils/getSwapRoutesViaEVMDEX"
-import { formatXLinkSDKChainName } from "../utils/formatXLinkSDKChainName"
-import { useDebouncedValue } from "../hooks/useDebouncedValue"
-
-const STORAGE_KEY = "xlink_matcha_api_key"
 
 export const SwapRouteSelector: FC<{
   alexSDK: AlexSDK
   xlinkSDK: XLinkSDK
 }> = ({ alexSDK, xlinkSDK }) => {
-  const [matchaAPIKey, setMatchaAPIKey] = useState(() => {
-    return localStorage.getItem(STORAGE_KEY) || ""
-  })
   const [swapAmount, setSwapAmount] = useState("")
   const [selectedRoute, setSelectedRoute] = useState<null | KnownRoute>(null)
   const [selectedSwapRoute, setSelectedSwapRoute] =
@@ -31,11 +26,6 @@ export const SwapRouteSelector: FC<{
 
   const debouncedSwapAmount = useDebouncedValue(swapAmount, 500)
   const debouncedRoute = useDebouncedValue(selectedRoute, 500)
-  const debouncedAPIKey = useDebouncedValue(matchaAPIKey, 500)
-
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, matchaAPIKey)
-  }, [matchaAPIKey])
 
   const availableRoutes = useQuery({
     queryKey: ["availableRoutes"],
@@ -72,7 +62,7 @@ export const SwapRouteSelector: FC<{
   })
 
   const evmDexRoutes = useQuery({
-    enabled: !!debouncedRoute && !!debouncedSwapAmount && !!debouncedAPIKey,
+    enabled: !!debouncedRoute && !!debouncedSwapAmount,
     queryKey: [
       "evmDexRoutes",
       JSON.stringify(debouncedRoute),
@@ -82,9 +72,6 @@ export const SwapRouteSelector: FC<{
       if (debouncedRoute == null) {
         throw new Error("No route selected")
       }
-      if (!debouncedAPIKey) {
-        throw new Error("No matcha API key")
-      }
       if (!isNumber(debouncedSwapAmount)) {
         throw new Error("No swap amount")
       }
@@ -92,7 +79,6 @@ export const SwapRouteSelector: FC<{
       return getSwapRoutesViaEVMDEX(
         {
           xlinkSDK: xlinkSDK,
-          matchaAPIKey: debouncedAPIKey,
         },
         {
           ...debouncedRoute,
@@ -162,18 +148,6 @@ export const SwapRouteSelector: FC<{
           <p>Loading routes...</p>
         </div>
       )}
-
-      <div className="section">
-        <h2>Basic Information</h2>
-        <div className="input-group">
-          <input
-            type="text"
-            placeholder="Enter 0x API Key"
-            value={matchaAPIKey}
-            onChange={e => setMatchaAPIKey(e.target.value)}
-          />
-        </div>
-      </div>
 
       <div className="section">
         <h2>Swap Settings</h2>
