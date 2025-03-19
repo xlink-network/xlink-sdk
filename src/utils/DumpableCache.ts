@@ -9,7 +9,7 @@ export const getCacheInside = <K, V>(
 }
 
 export class DumpableCache {
-  [dumpableCacheKey]: Map<unknown, unknown>
+  readonly [dumpableCacheKey]: Map<unknown, unknown>
 
   constructor() {
     this[dumpableCacheKey] = new Map()
@@ -31,7 +31,10 @@ export class DumpableCache {
         throw new Error("Unsupported cache version")
       }
 
-      this[dumpableCacheKey] = new Map(parsed.data)
+      this[dumpableCacheKey].clear()
+      for (const [key, value] of Object.entries(parsed.data)) {
+        this[dumpableCacheKey].set(key, value)
+      }
     } catch (error) {
       console.trace("Failed to load cache", error)
     }
