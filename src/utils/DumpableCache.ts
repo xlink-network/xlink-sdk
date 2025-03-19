@@ -1,3 +1,4 @@
+import { props } from "./promiseHelpers"
 import { GeneralCacheInterface } from "./types/GeneralCacheInterface"
 
 const dumpableCacheKey = Symbol("dumpableCacheKey")
@@ -20,7 +21,7 @@ export class DumpableCache {
       ["**NOTICE**"]:
         "This is a dumped cache, DO NOT use it or modify it, only for SDK internal usage.",
       version: 1,
-      data: Object.fromEntries(this[dumpableCacheKey]),
+      data: await props(Object.fromEntries(this[dumpableCacheKey])),
     })
   }
 
