@@ -345,7 +345,6 @@ async function createBridgeOrderFromMetaImpl(
           "min-amount-out": numberToStacksContractNumber(
             swapInfo.minimumAmountsToReceive,
           ),
-          "token-in": `${bridgedFromStacksTokenAddress.deployerAddress}.${bridgedFromStacksTokenAddress.contractName}`,
           "token-out": `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
           "swap-token-in": `${swapFromTokenStacksAddress.deployerAddress}.${swapFromTokenStacksAddress.contractName}`,
           "swap-token-out": `${swapToTokenStacksAddress.deployerAddress}.${swapToTokenStacksAddress.contractName}`,

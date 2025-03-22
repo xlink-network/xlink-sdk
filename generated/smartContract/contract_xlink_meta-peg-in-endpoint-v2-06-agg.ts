@@ -130,7 +130,6 @@ export const metaPegInEndpointV206Agg = defineContract({
           'swap-token-in': principalT,
           'swap-token-out': principalT,
           to: bufferT,
-          'token-in': principalT,
           'token-out': principalT
         }, )
       }
@@ -153,7 +152,6 @@ export const metaPegInEndpointV206Agg = defineContract({
         'swap-token-in': principalT,
         'swap-token-out': principalT,
         to: bufferT,
-        'token-in': principalT,
         'token-out': principalT
       }, )
     }, ), ),
@@ -172,7 +170,6 @@ export const metaPegInEndpointV206Agg = defineContract({
       'swap-token-in': principalT,
       'swap-token-out': principalT,
       to: bufferT,
-      'token-in': principalT,
       'token-out': principalT
     }, ), ),
     mode: 'readonly'
