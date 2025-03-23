@@ -32,7 +32,7 @@ export interface QueryableRoute {
 }
 
 export interface DexAggregatorRoute {
-  provider: "IceCreamSwap" | "Matcha"
+  provider: "IceCreamSwap" | "Matcha" | "KyberSwap"
   evmChain: KnownChainId.EVMChain
   fromToken: KnownTokenId.EVMToken
   toToken: KnownTokenId.EVMToken
@@ -43,6 +43,7 @@ export interface DexAggregatorRoute {
 
 export type FetchRoutesImpl = (info: {
   possibleRoutes: QueryableRoute[]
+  abortSignal?: AbortSignal
 }) => Promise<DexAggregatorRoute[]>
 
 export async function getQueryableRoutes(

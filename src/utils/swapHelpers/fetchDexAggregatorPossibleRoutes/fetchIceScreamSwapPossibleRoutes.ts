@@ -19,6 +19,7 @@ export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
   batchSize?: number
   baseUrl?: string
   debug?: boolean
+  onError?: (error: FetchIceScreamSwapPossibleRoutesFailedError) => void
 }): FetchRoutesImpl => {
   const debugLog: typeof console.log = (...args) => {
     if (!options.debug) return
@@ -40,10 +41,18 @@ export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
       res.push(
         ...(await Promise.all(
           batch.map(route =>
-            fetchIceScreamSwapPossibleRouteImpl({ debugLog, baseUrl }, route),
+            fetchIceScreamSwapPossibleRouteImpl(
+              { debugLog, baseUrl },
+              route,
+            ).catch(e => {
+              options.onError?.(e)
+              return []
+            }),
           ),
         )),
       )
+
+      if (info.abortSignal?.aborted) break
     }
 
     return res.flat()
