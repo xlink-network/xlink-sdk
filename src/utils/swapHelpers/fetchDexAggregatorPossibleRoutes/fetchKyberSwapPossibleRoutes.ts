@@ -21,6 +21,7 @@ export const fetchKyberSwapPossibleRoutesFactory = (options: {
   batchSize?: number
   clientId?: string
   debug?: boolean
+  onError?: (error: FetchKyberSwapPossibleRoutesFailedError) => void
 }): FetchRoutesImpl => {
   const debugLog: typeof console.log = (...args) => {
     if (!options.debug) return
@@ -45,7 +46,10 @@ export const fetchKyberSwapPossibleRoutesFactory = (options: {
             fetchKyberSwapPossibleRouteImpl(
               { debugLog, baseUrl, clientId: options.clientId },
               route,
-            ),
+            ).catch(e => {
+              options.onError?.(e)
+              return []
+            }),
           ),
         )),
       )

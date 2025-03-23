@@ -20,6 +20,7 @@ export const fetchMatchaPossibleRoutesFactory = (options: {
   batchSize?: number
   baseUrl?: string
   debug?: boolean
+  onError?: (error: FetchMatchaPossibleRoutesFailedError) => void
 }): FetchRoutesImpl => {
   const debugLog: typeof console.log = (...args) => {
     if (!options.debug) return
@@ -44,7 +45,10 @@ export const fetchMatchaPossibleRoutesFactory = (options: {
             fetchMatchaPossibleRouteImpl(
               { debugLog, baseUrl, apiKey: options.apiKey },
               route,
-            ),
+            ).catch(e => {
+              options.onError?.(e)
+              return []
+            }),
           ),
         )),
       )
