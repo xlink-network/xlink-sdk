@@ -201,6 +201,10 @@ export {
   fetchMatchaPossibleRoutesFactory,
   FetchMatchaPossibleRoutesFailedError,
 } from "./utils/swapHelpers/fetchDexAggregatorPossibleRoutes/fetchMatchaPossibleRoutes"
+export {
+  fetchKyberSwapPossibleRoutesFactory,
+  FetchKyberSwapPossibleRoutesFailedError,
+} from "./utils/swapHelpers/fetchDexAggregatorPossibleRoutes/fetchKyberSwapPossibleRoutes"
 export interface DexAggregatorRoute
   extends Omit<_DexAggregatorRoute, "fromAmount" | "toAmount" | "slippage"> {
   fromAmount: SDKNumber
