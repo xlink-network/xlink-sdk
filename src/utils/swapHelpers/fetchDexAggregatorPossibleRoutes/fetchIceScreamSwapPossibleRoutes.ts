@@ -51,6 +51,8 @@ export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
           ),
         )),
       )
+
+      if (info.abortSignal?.aborted) break
     }
 
     return res.flat()

@@ -43,6 +43,7 @@ export interface DexAggregatorRoute {
 
 export type FetchRoutesImpl = (info: {
   possibleRoutes: QueryableRoute[]
+  abortSignal?: AbortSignal
 }) => Promise<DexAggregatorRoute[]>
 
 export async function getQueryableRoutes(

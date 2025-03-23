@@ -52,6 +52,8 @@ export const fetchMatchaPossibleRoutesFactory = (options: {
           ),
         )),
       )
+
+      if (info.abortSignal?.aborted) break
     }
 
     return res.flat()

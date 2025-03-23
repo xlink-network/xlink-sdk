@@ -53,6 +53,8 @@ export const fetchKyberSwapPossibleRoutesFactory = (options: {
           ),
         )),
       )
+
+      if (info.abortSignal?.aborted) break
     }
 
     return res.flat()
