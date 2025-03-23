@@ -128,14 +128,10 @@ const fetchKyberSwapPossibleRouteImpl = async (
   const respText = await resp.text()
   context.debugLog("Request succeed:", respText)
 
-  let respData: MockData | MockErrorData
+  let respData: MockData
   try {
     respData = JSON.parse(respText)
   } catch (e) {
-    return []
-  }
-
-  if (respData.code === 4011) {
     return []
   }
 
@@ -207,14 +203,6 @@ function mapSDKChainIdToKyberChainId(
       checkNever(chainId)
       return undefined
   }
-}
-
-type MockErrorData = typeof mockErrorData
-const mockErrorData = {
-  code: 4011 as const,
-  message: "token not found",
-  details: null,
-  requestId: "00bc6fc4-c6a1-45bb-82bc-8692f7aeb30e",
 }
 
 type MockData = typeof mockData
