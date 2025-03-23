@@ -1,6 +1,6 @@
 {
   "name": "@xlink-network/xlink-sdk",
-  "version": "0.5.0-59",
+  "version": "0.5.0-60",
   "description": "XLINK js SDK",
   "packageManager": "pnpm@9.9.0",
   "keywords": [
