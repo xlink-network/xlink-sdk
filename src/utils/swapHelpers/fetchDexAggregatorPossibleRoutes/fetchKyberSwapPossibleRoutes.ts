@@ -142,7 +142,7 @@ const fetchKyberSwapPossibleRouteImpl = async (
 
   return [
     {
-      provider: "IceCreamSwap",
+      provider: "KyberSwap",
       evmChain: info.chain.chain,
       fromToken: info.fromEVMToken.token,
       toToken: info.toEVMToken.token,
