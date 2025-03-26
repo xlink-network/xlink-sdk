@@ -38,15 +38,21 @@ import {
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
 } from "./xlinkContractHelpers"
+import { EVM_BARE_PEG_IN_USE_SWAP_CONTRACT } from "../config"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromEVM_ToStacks,
 ): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(
-    route.toChain,
-    StacksContractName.EVMPegInEndpoint,
-  )
+  const stacksContractCallInfo = EVM_BARE_PEG_IN_USE_SWAP_CONTRACT
+    ? getStacksContractCallInfo(
+        route.toChain,
+        StacksContractName.EVMPegInEndpointSwap,
+      )
+    : getStacksContractCallInfo(
+        route.toChain,
+        StacksContractName.EVMPegInEndpoint,
+      )
   const stacksSwapContractCallInfo = getStacksContractCallInfo(
     route.toChain,
     StacksContractName.EVMPegInEndpointSwap,

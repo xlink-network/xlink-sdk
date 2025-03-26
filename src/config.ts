@@ -46,3 +46,5 @@ export const contractNameOverrides_testnet: Record<string, string> = {
   // cross router
   "cross-router-v2-03": "cross-router-v2-03-dk",
 }
+
+export const EVM_BARE_PEG_IN_USE_SWAP_CONTRACT = true
