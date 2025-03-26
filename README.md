@@ -1,67 +1,60 @@
 # XLinkSDK
 
-XLink is designed to facilitate the transfer of digital tokens between different blockchains. Its primary purpose is to act as a bridge, enabling users to move and swap their tokens seamlessly across various blockchain ecosystems.
+🐙 **XLINK isn't just a bridge—it's the liquidity layer for Bitcoin and the essential connector for Bitcoin DeFi** 🐙
 
-## System Type and Purpose
+XLinkSDK enables seamless asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains. It supports cross-chain swaps, Runes & BRC20 metaprotocols, and DEX aggregator integrations.
 
-XLinkSDK allows users to interact with XLink. It can be used in backend environments as well as in browsers and mobile applications. The SDK enables bidirectional transfer of coins/tokens between Bitcoin, Stacks, and various EVM including Bitcoin Layer 2s networks. Also, provides information on transfer fees, route planning, transaction size calculations and implements security features for safe transfers.
+The SDK allows users to interact with XLINK smart contracts from backend environments, browsers, and mobile apps. It securely handles cross-chain transfers, fee estimation, route planning, and transaction size calculations by using XLINK's on-chain and off-chain infrastructure.
 
 ## Installation
 
 ### Prerequisites
 
-Ensure you have the following installed:
-
 - [Node.js](https://nodejs.org/en)
 - [pnpm](https://pnpm.io/)
 
-### Installing the XLink SDK Library
-
-To install the XLink SDK, use the following command:
+### Install
 
 ```bash
 pnpm install @xlink-network/xlink-sdk
 ```
 
-## XLink SDK API
+## Usage
+
+The [`XLinkSDK`](./src/XLinkSDK.ts) class provides the core functions of the library. To create an instance:
+
+```typescript
+import { XLinkSDK } from "@xlink-network/xlink-sdk"
+const sdk = new XLinkSDK()
+```
+
+For the full API reference, including a full list of available methods and their usage, visit the [SDK Documentation](https://releases-latest.xlink-sdk.pages.dev).
 
 ### Supported Blockchains and Tokens
 
-#### KnownChainId
+#### [`KnownChainId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownChainId)
 
-The `KnownChainId` namespace encapsulates types and utility functions to validate blockchain networks supported by the SDK. It ensures that only recognized chain IDs across Bitcoin, EVM-compatible chains, and Stacks are used.
+Defines types and utility functions for supported networks, ensuring only valid chain IDs are used within the SDK.
 
-| Namespace | Mainnet                                                                                                                                               | Testnet                                                                                   |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| Bitcoin   | `Mainnet`                                                                                                                                             | `Testnet`                                                                                 |
-| Stacks    | `Mainnet`                                                                                                                                             | `Testnet`                                                                                 |
-| EVM       | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`, `Merlin`, `AILayer`, `Mode`, `XLayer`, `Arbitrum`, `Aurora`, `Manta`, `Linea` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BisonTestnet`, `BitboyTestnet`, `BeraTestnet` |
+| Namespace | Mainnet                                                                                                                                                       | Testnet                                                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| Bitcoin | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
+| Runes | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
+| BRC20 | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
+| Stacks  | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
+| EVM     | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`, `Merlin`, `AILayer`, `Mode`, `XLayer`, `Arbitrum`, `Aurora`, `Manta`, `Linea`, `Base` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BlifeTestnet`, `BitboyTestnet`, `BeraTestnet` |
 
-#### KnownTokenId
+#### [`KnownTokenId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownTokenId)
 
-The `KnownTokenId` namespace manages the token IDs of supported cryptocurrencies across different blockchain networks within the SDK. It ensures that only recognized tokens specific to Bitcoin, EVM-compatible chains, and Stacks are used.
+Defines types, utility functions, and supported tokens within the SDK.
 
-##### Namespaces
-
-| Namespace | Tokens                                                                                                              |
-| --------- | ------------------------------------------------------------------------------------------------------------------- |
-| Bitcoin   | `BTC`                                                                                                               |
-| Stacks    | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`, `uBTC`, `DB20`, `DOG`                                |
-| EVM       | `USDT`, `LUNR`, `WBTC`, `BTCB`, `aBTC`, `sUSDT`, `ALEX`, `SKO`, `vLiSTX`, `vLiALEX`, `uBTC`, `wuBTC`, `DB20`, `DOG` |
-
-**Future Support**: Support for Runes and BR20 tokens on the Bitcoin network is planned for a future update.
-
-### XLink SDK
-
-The [`XLinkSDK`](/modules/XLinkSDK) object contains the most important functions of this library, all grouped together. To create it:
-
-```typescript
-const theSdk = new XLinkSDK()
-```
-
-For detailed API documentation, including a full list of available methods and their usage, please refer to:
-
-[SDK API Documentation](https://releases-latest.xlink-sdk.pages.dev)
+| Namespace | Tokens                                                                                                                                               |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bitcoin | `BTC`                                                                                                                                                |
+| Runes   | _To be confirmed_                                                                                                                                   |
+| BRC20   | _To be confirmed_                                                                                                                                   |
+| Stacks  | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`, `vLiaBTC`,`uBTC`, `DB20`, `DOG`, `STX`, `TRUMP`                                       |
+| EVM     | `USDT`, `sUSDT`, `USDC`, `aBTC`, `WTCB`, `BTCB`, `cbBTC`, `uBTC`, `wuBTC`, `STX`, `vLiSTX`, `ALEX`, `vLiALEX`, `LUNR`, `SKO`, `DB20`, `DOG`, `TRUMP` |
 
 ### Use Cases
 
@@ -74,146 +67,211 @@ const xlinkSdk = new XLinkSDK()
 
 #### Bridge from Stacks
 
+Use case showcasing a transfer of 100 `sUSDT` from Stacks to `USDT` on Ethereum using XLinkSDK.
+
 ```typescript
-import { serializeCVBytes } from '@stacks/transactions';
 import {
-    BridgeInfoFromStacksInput,
     BridgeFromStacksInput,
     KnownChainId,
     KnownTokenId,
     toSDKNumberOrUndefined,
 } from '@xlink-network/xlink-sdk';
+import { serializeCVBytes, makeContractCall, broadcastTransaction } from '@stacks/transactions';
 
-// Get bridge info
+// Retrieve bridge information
 const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({
-    fromChain: KnownChainId.Stacks.Mainnet,
-    fromToken: KnownTokenId.Stacks.sUSDT,
-    toChain: KnownChainId.EVM.Ethereum,
-    toToken: KnownTokenId.EVM.USDT,
-    amount: toSDKNumberOrUndefined(100),
+  fromChain: KnownChainId.Stacks.Mainnet,
+  toChain: KnownChainId.EVM.Ethereum,
+  fromToken: KnownTokenId.Stacks.sUSDT,
+  toToken: KnownTokenId.EVM.USDT,
+  amount: toSDKNumberOrUndefined(100),
 });
+
 console.log("Bridge Info:", bridgeInfo);
 
+// Define bridge operation input
+const bridgeFromStacksInput: BridgeFromStacksInput = {
+  fromChain: KnownChainId.Stacks.Mainnet,
+  toChain: KnownChainId.EVM.Ethereum,
+  fromToken: KnownTokenId.Stacks.sUSDT,
+  toToken: KnownTokenId.EVM.USDT,
+  fromAddress: /* Sender Stacks principal */,
+  toAddress: /* Receiver EVM address */,
+  amount: toSDKNumberOrUndefined(100),
+  sendTransaction: async (tx: ContractCallOptions) => {
+    /**
+     * Implementation for sending transaction on Stacks mainnet.
+     * Refer to: https://github.com/hirosystems/stacks.js/tree/main/packages/transactions#smart-contract-function-call
+     */
+    const transaction = await makeContractCall({
+      contractAddress: tx.contractAddress,
+      contractName: tx.contractName,
+      functionName: tx.functionName,
+      functionArgs: tx.functionArgs,
+      postConditions: /* Add post conditions if necessary */,
+      validateWithAbi: true,
+      senderKey: /* Sender private key */,
+      network: "mainnet",
+    });
+
+    const broadcastResponse = await broadcastTransaction(transaction, "mainnet");
+    return { txid: broadcastResponse.txid };
+  },
+};
+
+// Example of how a `sendTransaction` argument would look like
+const contractCallOptionsExample: ContractCallOptions = {
+  contractAddress: "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK",
+  contractName: "cross-peg-out-endpoint-v2-01",
+  functionName: "transfer-to-unwrap",
+  functionArgs: [].map(arg => serializeCVBytes(arg)), // Array elements must be Clarity values
+};
+
 // Perform the bridge operation
-const result = await xlinkSdk.bridgeFromStacks({
-    fromChain: KnownChainId.Stacks.Mainnet,
-    fromToken: KnownTokenId.Stacks.sUSDT,
-    toChain: KnownChainId.EVM.Ethereum,
-    toToken: KnownTokenId.EVM.USDT,
-    fromAddress: "0x...",
-    toAddress: "0x...",
-    amount: toSDKNumberOrUndefined(10),
-    sendTransaction: async tx => {
-        // Implementation for sending transaction from Stacks mainnet
-        const network = new StacksMainnet();
-        const transaction = await makeContractCall({
-            contractAddress: tx.contractAddress,
-            contractName: tx.contractName,
-            functionName: tx.functionName,
-            functionArgs: tx.functionArgs.map(a => serializeCVBytes(a)),
-            network,
-            senderKey: "sender address private key here",
-            postConditions: /* add post conditions */,
-            anchorMode: /* add anchor mode */,
-        });
-        const broadcastResponse = await broadcastTransaction(transaction, network);
-        return {txid: broadcastResponse.txid};
-    },
-});
+const result = await xlinkSdk.bridgeFromStacks(bridgeFromStacksInput);
 console.log("Transaction ID:", result.txid);
 ```
 
 #### Bridge from EVM
 
+Use case showcasing a transfer of 100 `USDT` from Ethereum to `UsSDT` on Stacks using XLinkSDK.
+
 ```typescript
 import {
-  BridgeInfoFromEVMInput,
   BridgeFromEVMInput,
   KnownChainId,
   KnownTokenId,
   toSDKNumberOrUndefined,
 } from "@xlink-network/xlink-sdk"
-
-// Get bridge info
+import { ethers } from "ethers";
+  
+// Retrieve bridge information
 const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
   fromChain: KnownChainId.EVM.Ethereum,
-  fromToken: KnownTokenId.EVM.USDT,
   toChain: KnownChainId.Stacks.Mainnet,
+  fromToken: KnownTokenId.EVM.USDT,
   toToken: KnownTokenId.Stacks.sUSDT,
   amount: toSDKNumberOrUndefined(100),
-})
-console.log("Bridge Info:", bridgeInfo)
+});
 
-// Perform the bridge operation
-const result = await xlinkSdk.bridgeFromEVM({
+console.log("Bridge Info:", bridgeInfo);
+  
+// Example signer setup using ethers.js
+const provider = new ethers.providers.JsonRpcProvider("https://mainnet.someprovider.io/YOUR_PROJECT_ID");
+const signer = new ethers.Wallet("SENDER_PRIVATE_KEY", provider);
+
+const bridgeFromEVMInput: BridgeFromEVMInput = {
   fromChain: KnownChainId.EVM.Ethereum,
-  fromToken: KnownTokenId.EVM.USDT,
-  fromAddress: "0x95222290DD7278Aa3D......................",
   toChain: KnownChainId.Stacks.Mainnet,
+  fromToken: KnownTokenId.EVM.USDT,
   toToken: KnownTokenId.Stacks.sUSDT,
-  toAddress: "0x95222290DD7278Aa3D......................",
-  amount: toSDKNumberOrUndefined(10),
-  sendTransaction: async function (tx: {
-    from: `0x${string}`
-    to: `0x${string}`
-    data: Uint8Array
-    recommendedGasLimit: `${string} (XLinkSDK number)`
-  }): Promise<{ txHash: string }> {
-    // Implementation for sending transaction from EVM chain
-    return { txHash: "....." }
+  fromAddress: /* Sender EVM address */,
+  toAddress: /* Receiver Stacks principal */,
+  amount: toSDKNumberOrUndefined(100),
+  sendTransaction: async (tx: 
+    {
+      from: EVMAddress /* Sender EVM address */
+      to: EVMAddress /* Bridge Endpoint address */
+      data: Uint8Array /* Transaction data */
+      recommendedGasLimit: SDKNumber /* Recommended gas limit */
+      value?: SDKNumber /* Transaction value */
+    }
+  ): Promise<{ txHash: string }> => {
+    /**
+     * Implementation for sending transaction on Ethereum mainnet
+     * See https://docs.ethers.org/v5/api/contract/contract/ for reference
+     */
+    const txRequest = {
+    from: tx.from,
+    to: tx.to,
+    data: ethers.utils.hexlify(tx.data),
+    gasLimit: ethers.BigNumber.from(tx.recommendedGasLimit.split(" ")[0]), // Convert string to BigNumber
+    };
+
+    const sentTx = await signer.sendTransaction(txRequest);
+    const receipt = await sentTx.wait();
+    return { txHash: receipt.transactionHash };
   },
-})
-console.log("Transaction ID:", result.txHash)
+};
+  
+// Perform the bridge operation
+const result = await xlinkSdk.bridgeFromEVM(bridgeFromEVMInput);
+console.log("Transaction ID:", result.txHash);
 ```
 
 #### Bridge from Bitcoin
 
+Use case showcasing a transfer of 1 `BTC` from Bitcoin to `WBTC` on Ethereum using XLinkSDK.
+
 ```typescript
 import {
-  BridgeInfoFromBitcoinInput,
   BridgeFromBitcoinInput,
   KnownChainId,
   KnownTokenId,
   toSDKNumberOrUndefined,
 } from "@xlink-network/xlink-sdk"
+/* Use your preferred Bitcoin libs here */
+import { Psbt, networks, Transaction, script } from "bitcoinjs-lib";
+import { ECPairFactory } from "ecpair";
+import * as tinysecp from "tiny-secp256k1";
+import axios from "axios";
 
-// Get bridge info
+// Retrieve bridge information
 const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
   fromChain: KnownChainId.Bitcoin.Mainnet,
-  fromToken: KnownTokenId.Bitcoin.BTC,
   toChain: KnownChainId.EVM.Ethereum,
-  toToken: KnownTokenId.EVM.BTCB,
+  fromToken: KnownTokenId.Bitcoin.BTC,
+  toToken: KnownTokenId.EVM.WBTC,
   amount: toSDKNumberOrUndefined(1),
-})
+});
+
 console.log("Bridge Info:", bridgeInfo)
 
-// Perform the bridge operation
-const result = await xlinkSdk.bridgeFromBitcoin({
+const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
   fromChain: KnownChainId.Bitcoin.Mainnet,
   fromToken: KnownTokenId.Bitcoin.BTC,
-  fromAddress: "bitcoin address",
   toChain: KnownChainId.EVM.Ethereum,
   toToken: KnownTokenId.EVM.WBTC,
-  toAddress: "0x...",
-  fromAddressScriptPubKey: new Uint8Array([10, 20, 30, 40]),
+  fromAddress: /* Sender Bitcoin address */,
+  toAddress: /* Receiver EVM address */,
   amount: toSDKNumberOrUndefined(1),
   networkFeeRate: 10n,
-  reselectSpendableUTXOs(
+  reselectSpendableUTXOs: async (
     satsToSend: bigint,
     pinnedUTXOs: UTXOSpendable[],
-    lastTimeSelectedUTXOs: UTXOSpendable[],
-  ): Promise<UTXOSpendable[]> {
-    return Promise.resolve([])
+    lastTimeSelectedUTXOs: UTXOSpendable[]
+  ): Promise<UTXOSpendable[]> => {
+    /**
+     * Implementation for selecting spendable UTXOs from the wallet
+     * This should fetch available UTXOs from a Bitcoin node or explorer API
+     */
+    return [];
   },
-  signPsbt: function (tx: {
-    psbt: Uint8Array
-    signInputs: number[]
-  }): Promise<{ psbt: Uint8Array }> {
-    throw new Error("Function not implemented.")
+  signPsbt: async (tx: { psbt: Uint8Array; signInputs: number[] }): Promise<{ psbt: Uint8Array }> => {
+    /**
+     * Implementation for signing a Bitcoin PSBT (Partially Signed Bitcoin Transaction)
+     * See https://github.com/bitcoinjs/bitcoinjs-lib for reference
+     */
+    let psbt = Psbt.fromBuffer(tx.psbt);
+    tx.signInputs.forEach((index) => {
+      psbt.signInput(index, keyPair);
+    });
+    psbt.finalizeAllInputs();
+    return { psbt: psbt.toBuffer() };
   },
-  sendTransaction: function (tx: { hex: string }): Promise<{ txid: string }> {
-    throw new Error("Function not implemented.")
+  sendTransaction: async (tx: { hex: string }): Promise<{ txid: string }> => {
+    /**
+     * Implementation for broadcasting a Bitcoin transaction with Axios
+     * Using a Bitcoin node or explorer API (e.g., Blockstream API)
+     */
+    const response = await axios.post("https://some-mempool/api/tx", tx.hex, {
+      headers: { "Content-Type": "text/plain" },
+    });
+    return { txid: response.data };
   },
-})
-console.log("Transaction ID:", result.tx)
+};
+
+// Perform the bridge operation
+const result = await xlinkSdk.bridgeFromBitcoin(bridgeFromBitcoinInput);
+console.log("Transaction ID:", result.txid);
 ```
