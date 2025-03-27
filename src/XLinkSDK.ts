@@ -127,11 +127,13 @@ export {
 export {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinInput_signPsbtFn,
+  BridgeFromBitcoinInput_reselectSpendableUTXOs,
   BridgeFromBitcoinOutput,
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
 export {
   BridgeFromBRC20Input,
   BridgeFromBRC20Input_signPsbtFn,
+  BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs,
   BridgeFromBRC20Output,
 } from "./xlinkSdkUtils/bridgeFromBRC20"
 export {
@@ -141,6 +143,7 @@ export {
 export {
   BridgeFromRunesInput,
   BridgeFromRunesInput_signPsbtFn,
+  BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
   BridgeFromRunesOutput,
   RunesUTXOSpendable,
 } from "./xlinkSdkUtils/bridgeFromRunes"
