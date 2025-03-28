@@ -105,10 +105,13 @@ export interface BridgeFromRunesInput {
 
   amount: SDKNumber
   inputRuneUTXOs: RunesUTXOSpendable[]
+  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
 
   networkFeeRate: bigint
-  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs
+
   signPsbt: BridgeFromRunesInput_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -587,7 +590,7 @@ async function constructRunesTransaction(
   const tx = createTransaction(
     txOptions.inputs,
     txOptions.recipients.concat({
-      addressScriptPubKey: info.fromAddressScriptPubKey,
+      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
     txOptions.opReturnScripts ?? [],
@@ -645,8 +648,12 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
   toAddress: BridgeFromRunesInput["toAddress"]
   amount: BridgeFromRunesInput["amount"]
   inputRuneUTXOs: BridgeFromRunesInput["inputRuneUTXOs"]
+
   networkFeeRate: BridgeFromRunesInput["networkFeeRate"]
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput["reselectSpendableNetworkFeeUTXOs"]
+
   pegInAddress: BitcoinAddress
   orderData: Uint8Array
   bridgeFeeOutput: null | {
@@ -845,7 +852,7 @@ export async function prepareRunesTransaction(
         ),
       },
     ],
-    changeAddressScriptPubKey: info.fromAddressScriptPubKey,
+    changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
     opReturnScripts: [runesOpReturnScript],
     reselectSpendableUTXOs: reselectSpendableUTXOsFactory(

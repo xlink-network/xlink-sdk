@@ -59,9 +59,11 @@ export interface EstimateBridgeTransactionFromRunesInput {
 
   amount: SDKNumber
   inputRuneUTXOs: RunesUTXOSpendable[]
-
   swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
+
   networkFeeRate: bigint
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs
 }
 

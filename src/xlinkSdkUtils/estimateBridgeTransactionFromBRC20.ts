@@ -58,9 +58,11 @@ export interface EstimateBridgeTransactionFromBRC20Input {
   toAddressScriptPubKey?: Uint8Array
 
   inputInscriptionUTXO: UTXOSpendable
-
   swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
+
   networkFeeRate: bigint
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs
 }
 
