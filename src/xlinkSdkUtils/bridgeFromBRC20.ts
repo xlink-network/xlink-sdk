@@ -94,10 +94,13 @@ export interface BridgeFromBRC20Input {
   toAddressScriptPubKey?: Uint8Array
 
   inputInscriptionUTXO: UTXOSpendable
+  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
 
   networkFeeRate: bigint
-  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
   reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
+
   signPsbt: BridgeFromBRC20Input_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -641,7 +644,7 @@ async function constructBRC20Transaction(
   const tx = createTransaction(
     txOptions.inputs,
     txOptions.recipients.concat({
-      addressScriptPubKey: info.fromAddressScriptPubKey,
+      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
     txOptions.opReturnScripts ?? [],
@@ -698,8 +701,12 @@ export type PrepareBRC20TransactionInput = KnownRoute_FromBRC20 & {
   fromAddress: BridgeFromBRC20Input["fromAddress"]
   toAddress: BridgeFromBRC20Input["toAddress"]
   inputInscriptionUTXO: BridgeFromBRC20Input["inputInscriptionUTXO"]
+
   networkFeeRate: BridgeFromBRC20Input["networkFeeRate"]
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input["reselectSpendableNetworkFeeUTXOs"]
+
   pegInAddress: BitcoinAddress
   orderData: Uint8Array
   bridgeFeeOutput: null | {
@@ -796,7 +803,7 @@ export async function prepareBRC20Transaction(
             },
           ]),
     ],
-    changeAddressScriptPubKey: info.fromAddressScriptPubKey,
+    changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
     reselectSpendableUTXOs: reselectSpendableUTXOsFactory(
       info.reselectSpendableNetworkFeeUTXOs,
