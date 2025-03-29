@@ -28,6 +28,7 @@ export const possibleSwapOnEVMChains = [
   KnownChainId.EVM.Base,
   KnownChainId.EVM.Arbitrum,
   KnownChainId.EVM.Linea,
+  KnownChainId.EVM.BSC,
 ] satisfies KnownChainId.EVMChain[]
 
 export interface EVMDexAggregatorSwapParameters {
