@@ -340,4 +340,14 @@ export const stxTokenContractAddresses_legacy: Record<
       contractName: "runes-trump",
     }),
   },
+  [KnownTokenId.Stacks.GHIBLICZ]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "bsc-ghiblicz",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "bsc-ghiblicz",
+    }),
+  },
 }

@@ -206,6 +206,7 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.ENDPOINT,
         ONCHAIN_CONFIG_KEY.REGISTRY,
         ONCHAIN_CONFIG_KEY.TIMELOCK,
+        ONCHAIN_CONFIG_KEY.ENDPOINT_NATIVE,
         ONCHAIN_CONFIG_KEY.TOKEN_ABTC,
         ONCHAIN_CONFIG_KEY.TOKEN_ALEX,
         ONCHAIN_CONFIG_KEY.TOKEN_ATALEX,
@@ -219,9 +220,9 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_WUBTC,
         ONCHAIN_CONFIG_KEY.TOKEN_DB20,
         ONCHAIN_CONFIG_KEY.TOKEN_DOG,
-        ONCHAIN_CONFIG_KEY.ENDPOINT_NATIVE,
         ONCHAIN_CONFIG_KEY.TOKEN_STX,
         ONCHAIN_CONFIG_KEY.TOKEN_TRUMP,
+        ONCHAIN_CONFIG_KEY.TOKEN_GHIBLICZ,
       ],
     ],
   }).catch(err => {
@@ -242,32 +243,33 @@ const _getOnChainConfigsImpl = async (
     [EVMEndpointContract.BridgeEndpoint]: maybeAddress(configs[0]),
     [EVMEndpointContract.Registry]: maybeAddress(configs[1]),
     [EVMEndpointContract.TimeLock]: maybeAddress(configs[2]),
-    [EVMToken.aBTC]: maybeAddress(configs[3]),
-    [EVMToken.ALEX]: maybeAddress(configs[4]),
-    [EVMToken.vLiALEX]: maybeAddress(configs[5]),
-    [EVMToken.vLiSTX]: maybeAddress(configs[6]),
+    [EVMEndpointContract.NativeBridgeEndpoint]: maybeAddress(configs[3]),
+    [EVMToken.aBTC]: maybeAddress(configs[4]),
+    [EVMToken.ALEX]: maybeAddress(configs[5]),
+    [EVMToken.vLiALEX]: maybeAddress(configs[6]),
+    [EVMToken.vLiSTX]: maybeAddress(configs[7]),
     // prettier-ignore
     [
       chain === KnownChainId.EVM.Base ? EVMToken.USDC :
       EVMToken.USDT
-    ]: maybeAddress(configs[7]),
+    ]: maybeAddress(configs[8]),
     // prettier-ignore
     [
       chain === KnownChainId.EVM.BSC ? EVMToken.BTCB :
       chain === KnownChainId.EVM.Base ? EVMToken.cbBTC :
       EVMToken.WBTC
     ]:
-      maybeAddress(configs[8]),
-    [EVMToken.LUNR]: maybeAddress(configs[9]),
-    [EVMToken.SKO]: maybeAddress(configs[10]),
-    [EVMToken.sUSDT]: maybeAddress(configs[11]),
-    [EVMToken.uBTC]: maybeAddress(configs[12]),
-    [EVMToken.wuBTC]: maybeAddress(configs[13]),
-    [EVMToken.DB20]: maybeAddress(configs[14]),
-    [EVMToken.DOG]: maybeAddress(configs[15]),
-    [EVMEndpointContract.NativeBridgeEndpoint]: maybeAddress(configs[16]),
+      maybeAddress(configs[9]),
+    [EVMToken.LUNR]: maybeAddress(configs[10]),
+    [EVMToken.SKO]: maybeAddress(configs[11]),
+    [EVMToken.sUSDT]: maybeAddress(configs[12]),
+    [EVMToken.uBTC]: maybeAddress(configs[13]),
+    [EVMToken.wuBTC]: maybeAddress(configs[14]),
+    [EVMToken.DB20]: maybeAddress(configs[15]),
+    [EVMToken.DOG]: maybeAddress(configs[16]),
     [EVMToken.STX]: maybeAddress(configs[17]),
     [EVMToken.TRUMP]: maybeAddress(configs[18]),
+    [EVMToken.GHIBLICZ]: maybeAddress(configs[19]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -314,4 +316,7 @@ enum ONCHAIN_CONFIG_KEY {
 
   // https://t.me/c/1599543687/69562
   TOKEN_TRUMP = "TOKEN_TRUMP",
+
+  // https://t.me/c/1599543687/73009
+  TOKEN_GHIBLICZ = "TOKEN_GHIBLICZ",
 }
