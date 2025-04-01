@@ -291,6 +291,7 @@ export class XLinkSDK {
    * This function retrieves the list of supported routes for token transfers between blockchain
    * networks, filtered based on optional conditions. It aggregates the results from different
    * blockchain networks (Stacks, EVM, Bitcoin) to return a list of possible routes.
+   *
    * @param conditions - An optional object containing the conditions for filtering the supported routes:
    * - `fromChain?: ChainId` - The ID of the source blockchain (optional).
    * - `toChain?: ChainId` - The ID of the destination blockchain (optional).
@@ -336,6 +337,21 @@ export class XLinkSDK {
     )
   }
 
+  /**
+   * Determines whether a given route (from one blockchain/token to another) is supported by the XLink SDK.
+   * This function evaluates cross-chain compatibility for all supported networks (EVM, Stacks, Bitcoin, BRC20, Runes)
+   * by delegating to specialized validators per source chain type. It checks that the route is logically valid,
+   * not deprecated, and exists in the internally cached bridge configuration.
+   *
+   * @param route - The route to validate, containing:
+   * - `fromChain`: the origin blockchain (`ChainId`)
+   * - `fromToken`: the token to bridge from (`TokenId`)
+   * - `toChain`: the destination blockchain (`ChainId`)
+   * - `toToken`: the token to receive on the destination (`TokenId`)
+   *
+   * @returns A promise that resolves to `true` if the route is supported for bridging,
+   * or `false` if the route is invalid, unsupported, or incomplete.
+   */
   async isSupportedRoute(route: DefinedRoute): Promise<boolean> {
     const checkingResult = await Promise.all([
       isSupportedEVMRoute(this.sdkContext, route),
@@ -348,12 +364,31 @@ export class XLinkSDK {
     return checkingResult.some(r => r)
   }
 
+  /**
+   * This function retrieves the contract address associated with a specific token on the Stacks blockchain.
+   *
+   * @param chain - The ID of the Stacks blockchain.
+   * @param token - The specific token ID for which the contract address is to be retrieved.
+   *
+   * @returns A promise that resolves with the contract address associated with the specified token,
+   * or `undefined` if the chain is not a Stacks chain or if the contract address cannot be retrieved.
+   */
   stacksAddressFromStacksToken(
     chain: ChainId,
     token: KnownTokenId.StacksToken,
   ): Promise<undefined | StacksContractAddress> {
     return stacksAddressFromStacksToken(this.sdkContext, chain, token)
   }
+  /**
+   * This function maps a given Stacks contract address to its corresponding known token ID.
+   *
+   * @param chain - The ID of the Stacks blockchain.
+   * @param address - The contract address on the Stacks blockchain.
+   *
+   * @returns A promise that resolves with the known token ID corresponding to the provided
+   * contract address, or `undefined` if the chain is not a Stacks chain or if the token ID
+   * cannot be found.
+   */
   stacksAddressToStacksToken(
     chain: ChainId,
     address: StacksContractAddress,
@@ -365,6 +400,7 @@ export class XLinkSDK {
    * This function provides detailed information about token transfers from the Stacks network to other supported
    * blockchain networks, including Bitcoin and EVM-compatible chains. It verifies the validity of the transfer
    * route and retrieves bridge information based on the destination chain and tokens.
+   *
    * @param input - An object containing the input parameters required for retrieving bridge information:
    * - `fromChain: ChainId` - The ID of the source blockchain (Stacks in this case).
    * - `toChain: ChainId` - The ID of the destination blockchain (Bitcoin, EVM-compatible chains, etc.).
@@ -380,6 +416,7 @@ export class XLinkSDK {
    * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
    * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
    * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -393,6 +430,7 @@ export class XLinkSDK {
    * This function facilitates the transfer of tokens from the Stacks network to other supported blockchain
    * networks, including Bitcoin and EVM-compatible chains. It validates the route and calls the appropriate
    * bridging function based on the destination chain and tokens involved.
+   *
    * @param input -  An object containing the input parameters required for the bridging operation:
    * - `fromChain: ChainId` - The ID of the source blockchain.
    * - `toChain: ChainId` - The ID of the destination blockchain (Bitcoin, EVM, etc.).
@@ -404,6 +442,7 @@ export class XLinkSDK {
    * - `sendTransaction` - // Implementation for sending transaction from Stacks mainnet.
    *
    * @returns A promise that resolves with the transaction ID (`txid`) of the bridging operation.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -416,6 +455,7 @@ export class XLinkSDK {
   /**
    * This function retrieves the contract address of a specific type of contract
    * (e.g., a bridge endpoint) on a given EVM-compatible blockchain.
+   *
    * @param chain - The ID of the EVM-compatible blockchain where the contract is deployed.
    * @param contractType - The type of contract (e.g., `PublicEVMContractType.BridgeEndpoint`)
    * for which the address is to be retrieved.
@@ -450,6 +490,7 @@ export class XLinkSDK {
 
   /**
    * This function retrieves the contract address of a specific token on a given EVM-compatible blockchain.
+   *
    * @param chain - The ID of the EVM-compatible blockchain where the token contract is deployed.
    * @param token - The specific token ID for which the contract address is to be retrieved.
    *
@@ -467,6 +508,7 @@ export class XLinkSDK {
 
   /**
    * This function maps a given contract address on an EVM-compatible blockchain to its corresponding known token ID.
+   *
    * @param chain - The ID of the EVM-compatible blockchain where the contract is deployed.
    * @param address - The contract address on the EVM-compatible blockchain.
    *
@@ -488,6 +530,7 @@ export class XLinkSDK {
    * This function provides detailed information about token transfers from an EVM-compatible blockchain to other supported
    * blockchain networks, including Stacks, Bitcoin, and other EVM-compatible chains. It verifies the validity of the transfer
    * route and retrieves bridge information based on the destination chain and tokens.
+   *
    * @param input - An object containing the input parameters required for retrieving bridge information:
    * - `fromChain: ChainId` - The ID of the source blockchain (Stacks in this case).
    * - `toChain: ChainId` - The ID of the destination blockchain (Bitcoin, EVM-compatible chains, etc.).
@@ -503,6 +546,7 @@ export class XLinkSDK {
    * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
    * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
    * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -516,6 +560,7 @@ export class XLinkSDK {
    * This function facilitates the transfer of tokens from an EVM-compatible blockchain to other supported
    * blockchain networks, including Stacks, Bitcoin, and other EVM-compatible chains. It validates the
    * route and calls the appropriate bridging function based on the destination chain and tokens involved.
+   *
    * @param input - An object containing the input parameters required for the bridging operation:
    * - `fromChain: ChainId` - The ID of the source blockchain (an EVM-compatible chain in this case).
    * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, Bitcoin, or another EVM-compatible chain).
@@ -528,6 +573,7 @@ export class XLinkSDK {
    * - `sendTransaction` - // Implementation for sending transaction from EVM chain.
    *
    * @returns A promise that resolves with the transaction hash (`txHash`) of the bridging operation.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -539,6 +585,7 @@ export class XLinkSDK {
    * This function retrieves a list of time-locked assets for a given wallet address across multiple EVM-compatible
    * blockchain networks. It queries smart contracts to find and return information about the assets that are
    * currently locked in time-based agreements.
+   *
    * @param input - An object containing the input parameters required for retrieving time-locked assets:
    * - `walletAddress: EVMAddress` - The address of the wallet for which to retrieve the time-locked assets.
    * - `chains: KnownChainId.EVMChain[]` - An array of EVM-compatible blockchains to query for locked assets.
@@ -562,6 +609,7 @@ export class XLinkSDK {
   /**
    * This function facilitates the claiming of time-locked assets on EVM-compatible chains. It uses smart
    * contract functions to execute the release of locked assets based on predefined conditions.
+   *
    * @param input - An object containing the input parameters required for claiming time-locked assets:
    * - `chain: KnownChainId.EVMChain` - The ID of the EVM-compatible blockchain where the assets are locked.
    * - `lockedAssetIds: string[]` - An array of IDs representing the locked assets to be claimed.
@@ -576,6 +624,18 @@ export class XLinkSDK {
     return claimTimeLockedAssetsFromEVM(this.sdkContext, input)
   }
 
+  /**
+   * Retrieves the BTC Peg-In address and its corresponding ScriptPubKey for a given Bitcoin source chain.
+   * This address is used to initiate a transfer (peg-in) from the Bitcoin network into the XLink protocol.
+   *
+   * @param fromChain - The source Bitcoin chain (`Mainnet` or `Testnet`).
+   * @param toChain - The destination chain (must be a known chain, although it is not used in address generation).
+   *
+   * @returns A promise that resolves with an object containing:
+   * - `address`: the BTC Peg-In address to which the user should send BTC.
+   * - `scriptPubKey`: the ScriptPubKey representation of the address.
+   * Returns `undefined` if the provided chain is invalid or unsupported.
+   */
   async bitcoinReceiverAddress(
     fromChain: ChainId,
     toChain: ChainId,
@@ -589,7 +649,8 @@ export class XLinkSDK {
    * This function provides detailed information about token transfers from the Bitcoin network to other supported
    * blockchain networks, including Stacks and EVM-compatible chains. It verifies the validity of the transfer route
    * and retrieves bridge information based on the destination chain.
-   * @param info - An object containing the input parameters required for retrieving bridge information:
+   *
+   * @param input - An object containing the input parameters required for retrieving bridge information:
    * - `fromChain: ChainId` - The ID of the source blockchain.
    * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, etc.).
    * - `amount: SDKNumber` - The amount of tokens involved in the transfer.
@@ -602,6 +663,7 @@ export class XLinkSDK {
    * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
    * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
    * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains is unsupported.
    */
@@ -624,6 +686,7 @@ export class XLinkSDK {
   /**
    * This function estimates the transaction fee and vSize for move or swap tokens from the Bitcoin network
    * to other supported blockchain networks, including Stacks and EVM-compatible chains.
+   *
    * @param input - An object containing the input parameters required for estimating the transaction:
    * - `fromChain: ChainId` - The ID of the source blockchain (Bitcoin in this case).
    * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM-compatible chains, etc.).
@@ -639,6 +702,7 @@ export class XLinkSDK {
    * @returns A promise that resolves with an object containing the estimated transaction details:
    * - `fee: SDKNumber` - The estimated transaction fee.
    * - `estimatedVSize: SDKNumber` - The estimated vSize of the transaction.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -664,6 +728,7 @@ export class XLinkSDK {
    * This function facilitates the transfer of tokens from the Bitcoin network to other supported
    * blockchain networks. It checks the validity of the route and then calls the appropriate
    * bridging function based on the destination chain.
+   *
    * @param input - An object containing the input parameters required for the bridging operation:
    * - `fromChain: ChainId` - The ID of the source blockchain.
    * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, etc.).
@@ -678,6 +743,7 @@ export class XLinkSDK {
    * - `signPsbt: BridgeFromBitcoinInput_signPsbtFn`.
    *
    * @returns A promise that resolves with the transaction ID (`tx`) of the bridging operation.
+   *
    * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
    * chains or tokens is unsupported.
    */
@@ -694,6 +760,28 @@ export class XLinkSDK {
     })
   }
 
+  /**
+   * This function provides detailed information about token transfers from BRC-20 compatible chains to other supported
+   * blockchain networks, including Stacks, EVM-compatible chains, Bitcoin, Runes, or other BRC-20 chains. It verifies the
+   * validity of the transfer route and retrieves bridge information, including intermediary steps and fees.
+   *
+   * @param input - An object containing the input parameters required to retrieve bridge information:
+   * - `fromChain: ChainId` – The source blockchain (must be a BRC-20-compatible chain).
+   * - `toChain: ChainId` – The destination blockchain.
+   * - `fromToken: TokenId` – The token being bridged from the source chain.
+   * - `toToken: TokenId` – The token expected on the destination chain.
+   * - `amount: SDKNumber` – The amount of tokens to bridge.
+   * - `swapRoute?: SwapRoute_WithExchangeRate_Public` – Optional: a route to perform token swaps during the bridge.
+   *
+   * @returns A promise that resolves with detailed bridge information:
+   * - `fromChain`, `toChain`, `fromToken`, `toToken` – Source and destination details.
+   * - `fromAmount`, `toAmount` – Input and estimated output amounts.
+   * - `fees` – A list of estimated fees applied to the bridge (fixed or rate-based).
+   * - `isPaused`, `minBridgeAmount`, `maxBridgeAmount` – Status and constraints of the bridge route.
+   * - `transferProphets` – A list of step-by-step bridge operations, including intermediary chains or swaps when applicable.
+   *
+   * @throws UnsupportedBridgeRouteError – If the route between the source and destination is not supported.
+   */
   bridgeInfoFromBRC20(
     input: BridgeInfoFromBRC20Input,
   ): Promise<BridgeInfoFromBRC20Output> {
@@ -724,6 +812,34 @@ export class XLinkSDK {
       },
     )
   }
+  /**
+   * This function facilitates the transfer of BRC-20 tokens from a BRC20-compatible network to other supported
+   * blockchain networks such as Stacks, EVM-compatible chains, Bitcoin, other BRC20 chains, or Runes chains.
+   * It validates the provided route and delegates to the appropriate bridging logic depending on the destination.
+   *
+   * @param input - An object containing the input parameters required for the bridging operation:
+   * - `fromChain: ChainId` - The ID of the source blockchain (must be a BRC20-compatible chain).
+   * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, Bitcoin, Runes, or another BRC20 chain).
+   * - `fromToken: TokenId` - The BRC-20 token being transferred.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The sender's Bitcoin address.
+   * - `fromAddressScriptPubKey: Uint8Array` - The script public key corresponding to the `fromAddress`.
+   * - `toAddress: string` - The recipient's address on the destination blockchain.
+   * - `toAddressScriptPubKey?: Uint8Array` - Required when the destination chain is Bitcoin, BRC20 or Runes.
+   * - `inputInscriptionUTXO: UTXOSpendable` - The inscription UTXO holding the BRC-20 token to bridge.
+   * - `networkFeeRate: bigint` - The fee rate for Bitcoin transaction construction.
+   * - `swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public` - Optional swap configuration for token conversion.
+   * - `reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs` - Function to fetch additional UTXOs for network fee.
+   * - `signPsbt: BridgeFromBRC20Input_signPsbtFn` - Function to sign the PSBT (Partially Signed Bitcoin Transaction).
+   * - `sendTransaction` - Function used to broadcast the final signed transaction.
+   *
+   * @returns A promise that resolves with the Bitcoin transaction ID (`txid`) of the bridging operation.
+   *
+   * @throws `TooManyRequestsError` - is received from the backend API.
+   * @throws `UnsupportedBridgeRouteError` - If the combination of `fromChain`, `toChain`, `fromToken`, and `toToken` is unsupported.
+   * @throws `InvalidMethodParametersError` - If required parameters are missing.
+   * @throws `BridgeValidateFailedError` - If the bridge order validation fails.
+   */
   bridgeFromBRC20(input: BridgeFromBRC20Input): Promise<BridgeFromBRC20Output> {
     return bridgeFromBRC20(this.sdkContext, input).catch(err => {
       if (err instanceof TooManyRequestsError) {
@@ -734,19 +850,64 @@ export class XLinkSDK {
       throw err
     })
   }
+  /**
+   * Retrieves the BRC20 tick (e.g., "ordi", "pepe") associated with a known BRC20 token ID
+   * on a specific BRC20-compatible blockchain.
+   * Internally, this function looks up the list of supported BRC20 routes on the given chain
+   * and returns the `brc20Tick` value corresponding to the provided `KnownTokenId.BRC20Token`.
+   *
+   * @param chain - The blockchain network (must be a valid BRC20 chain, like `brc20-mainnet` or `brc20-testnet`).
+   * @param token - The known BRC20 token identifier (must follow the `brc20-<tick>` format).
+   *
+   * @returns A promise that resolves with the corresponding BRC20 tick string, or `undefined`
+   * if the token is not found or the chain is not supported.
+   */
   brc20TickFromBRC20Token(
     chain: ChainId,
     token: KnownTokenId.BRC20Token,
   ): Promise<undefined | string> {
     return brc20TickFromBRC20Token(this.sdkContext, chain, token)
   }
+  /**
+   * Retrieves the `KnownTokenId.BRC20Token` corresponding to a given BRC20 tick
+   * on a specific BRC20-compatible blockchain.
+   * This function performs a case-insensitive match of the provided tick against
+   * the list of supported BRC20 tokens on the given chain.
+   *
+   * @param chain - The blockchain network to search in (must be a BRC20-compatible chain such as `brc20-mainnet` or `brc20-testnet`).
+   * @param tick - The BRC20 tick (e.g., "ordi", "pepe") to look up.
+   *
+   * @returns A promise that resolves with the associated `KnownTokenId.BRC20Token`,
+   * or `undefined` if no match is found or the chain is not supported.
+   */
   brc20TickToBRC20Token(
     chain: ChainId,
     tick: string,
   ): Promise<undefined | KnownTokenId.BRC20Token> {
     return brc20TickToBRC20Token(this.sdkContext, chain, tick)
   }
-
+  /**
+   * This function provides detailed information about bridging a token from the Runes protocol to other supported
+   * blockchain networks including Stacks, EVM, Bitcoin, BRC-20, or other Runes chains. It validates the compatibility
+   * of the route and determines fees, transfer amount, and route steps required to complete the bridge.
+   *
+   * @param input - An object containing the input parameters required to retrieve bridge information:
+   * - `fromChain: ChainId` – The source blockchain (must be a Runes-compatible chain).
+   * - `toChain: ChainId` – The destination blockchain.
+   * - `fromToken: TokenId` – The token being bridged from the source chain.
+   * - `toToken: TokenId` – The token expected on the destination chain.
+   * - `amount: SDKNumber` – The amount of tokens to bridge.
+   * - `swapRoute?: SwapRoute_WithExchangeRate_Public` – Optional: a route to perform token swaps during the bridge.
+   *
+   * @returns A promise that resolves with detailed bridge information:
+   * - `fromChain`, `toChain`, `fromToken`, `toToken` – Source and destination details.
+   * - `fromAmount`, `toAmount` – Input and estimated output amounts.
+   * - `fees` – A list of estimated fees applied to the bridge (fixed or rate-based).
+   * - `isPaused`, `minBridgeAmount`, `maxBridgeAmount` – Status and constraints of the bridge route.
+   * - `transferProphets` – A list of step-by-step bridge operations, including intermediary chains or swaps when applicable.
+   *
+   * @throws UnsupportedBridgeRouteError – If the route between the source and destination is not supported.
+   */
   bridgeInfoFromRunes(
     input: BridgeInfoFromRunesInput,
   ): Promise<BridgeInfoFromRunesOutput> {
@@ -777,6 +938,34 @@ export class XLinkSDK {
       },
     )
   }
+  /**
+   * This function facilitates the transfer of tokens from the Runes protocol to other supported
+   * blockchain networks. It validates the route using internal logic and delegates the transaction
+   * construction and broadcasting based on the destination chain.
+   *
+   * @param input - An object containing the input parameters required for the bridging operation:
+   * - `fromChain: ChainId` - The ID of the source blockchain (must be a Runes chain).
+   * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, Bitcoin, BRC20, or another Runes chain).
+   * - `fromToken: TokenId` - The token being transferred from the Runes chain.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The sender’s address on the Runes chain.
+   * - `fromAddressScriptPubKey: Uint8Array` - The script public key for `fromAddress`.
+   * - `toAddress: string` - The recipient’s address on the destination blockchain.
+   * - `toAddressScriptPubKey?: Uint8Array` - Required when the destination chain is Bitcoin, BRC20, or Runes.
+   * - `amount: SDKNumber` - The amount of tokens to transfer.
+   * - `inputRuneUTXOs: RunesUTXOSpendable[]` - UTXOs containing the Runes to be spent.
+   * - `networkFeeRate: bigint` - The Bitcoin network fee rate to be used for the transaction.
+   * - `swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public` - Optional swap route for token conversion before bridging.
+   * - `reselectSpendableNetworkFeeUTXOs` - Callback to reselect UTXOs for network fee.
+   * - `signPsbt` - Callback function to sign the PSBT (Partially Signed Bitcoin Transaction).
+   * - `sendTransaction` - Callback function to broadcast the signed transaction.
+   *
+   * @returns A promise that resolves with the transaction ID (`txid`) of the bridging operation.
+   *
+   * @throws UnsupportedBridgeRouteError - If the route is not supported.
+   * @throws InvalidMethodParametersError - If required parameters are missing or invalid.
+   * @throws TooFrequentlyError - If the operation is rate-limited due to excessive requests.
+   */
   bridgeFromRunes(input: BridgeFromRunesInput): Promise<BridgeFromRunesOutput> {
     return bridgeFromRunes(this.sdkContext, input).catch(err => {
       if (err instanceof TooManyRequestsError) {
@@ -787,12 +976,35 @@ export class XLinkSDK {
       throw err
     })
   }
+  /**
+   * Retrieves the `RuneIdCombined` associated with a known Runes token on a specific Runes-compatible blockchain.
+   * Internally, this function queries the supported Runes bridge routes for the specified chain,
+   * and looks up the `runesId` that corresponds to the provided `KnownTokenId.RunesToken`.
+   *
+   * @param chain - The Runes-compatible blockchain (`runes-mainnet` or `runes-testnet`) to search in.
+   * @param token - The known Runes token ID (must follow the `runes-<id>` format).
+   *
+   * @returns A promise that resolves with the corresponding `RuneIdCombined` if found,
+   * or `undefined` if the token is not supported or the chain is invalid.
+   */
   runesIdFromRunesToken(
     chain: ChainId,
     token: KnownTokenId.RunesToken,
   ): Promise<undefined | RuneIdCombined> {
     return runesIdFromRunesToken(this.sdkContext, chain, token)
   }
+  /**
+   * Retrieves the `KnownTokenId.RunesToken` associated with a given `RuneIdCombined`
+   * on a specific Runes-compatible blockchain.
+   * This function queries the supported Runes bridge routes for the specified chain,
+   * and returns the known Runes token ID mapped to the provided `runesId`.
+   *
+   * @param chain - The Runes-compatible blockchain (`runes-mainnet` or `runes-testnet`) to search in.
+   * @param id - The `RuneIdCombined` representing the unique Runes asset identifier.
+   *
+   * @returns A promise that resolves with the corresponding `KnownTokenId.RunesToken`,
+   * or `undefined` if the ID is not recognized or the chain is not supported.
+   */
   runesIdToRunesToken(
     chain: ChainId,
     id: RuneIdCombined,
@@ -801,14 +1013,6 @@ export class XLinkSDK {
   }
 }
 
-/**
- * This function retrieves the contract address associated with a specific token on the Stacks blockchain.
- * @param chain - The ID of the Stacks blockchain.
- * @param token - The specific token ID for which the contract address is to be retrieved.
- *
- * @returns A promise that resolves with the contract address associated with the specified token,
- * or `undefined` if the chain is not a Stacks chain or if the contract address cannot be retrieved.
- */
 async function stacksAddressFromStacksToken(
   sdkContext: SDKGlobalContext,
   chain: ChainId,
@@ -823,15 +1027,6 @@ async function stacksAddressFromStacksToken(
   }
 }
 
-/**
- * This function maps a given Stacks contract address to its corresponding known token ID.
- * @param chain - The ID of the Stacks blockchain.
- * @param address - The contract address on the Stacks blockchain.
- *
- * @returns A promise that resolves with the known token ID corresponding to the provided
- * contract address, or `undefined` if the chain is not a Stacks chain or if the token ID
- * cannot be found.
- */
 async function stacksAddressToStacksToken(
   sdkContext: SDKGlobalContext,
   chain: ChainId,
