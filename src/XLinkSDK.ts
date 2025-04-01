@@ -476,12 +476,28 @@ export class XLinkSDK {
     return
   }
 
+  /**
+   * This function retrieves the numeric EVM chain ID (`chainId`) associated with a known EVM-compatible chain.
+   *
+   * @param chain - A known EVM-compatible chain identifier (`KnownChainId.EVMChain`).
+   *
+   * @returns A promise that resolves with the numeric `chainId` (as a `bigint`) corresponding to the specified
+   * EVM-compatible chain. Returns `undefined` if the chain ID is not available or not supported.
+   */
   async evmChainIdFromKnownChainId(
     chain: KnownChainId.EVMChain,
   ): Promise<undefined | bigint> {
     return evmChainIdFromKnownChainId(chain)
   }
 
+  /**
+   * This function maps a numeric EVM chain ID (`chainId`) to its corresponding known chain identifier (`KnownChainId.EVMChain`).
+   *
+   * @param chainId - The numeric chain ID (as a `bigint`) of an EVM-compatible blockchain.
+   *
+   * @returns A promise that resolves with the corresponding known EVM chain ID (`KnownChainId.EVMChain`),
+   * or `undefined` if the chain ID is not recognized or not supported.
+   */
   async evmChainIdToKnownChainId(
     chainId: bigint,
   ): Promise<undefined | KnownChainId.EVMChain> {
@@ -794,6 +810,34 @@ export class XLinkSDK {
       throw err
     })
   }
+  /**
+   * This function estimates the transaction fee and vSize for transferring or swapping BRC-20 tokens
+   * from a Bitcoin-based network to other supported blockchains, including Stacks, EVM-compatible chains,
+   * other BRC-20 chains, Runes, or the Bitcoin network itself.
+   *
+   * @param input - An object containing the input parameters required for the transaction estimation:
+   * - `fromChain: ChainId` - The ID of the source chain (must be a BRC-20 compatible chain).
+   * - `fromToken: TokenId` - The token being bridged from the BRC-20 chain.
+   * - `toChain: ChainId` - The ID of the target chain.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The sender's Bitcoin address.
+   * - `fromAddressScriptPubKey: Uint8Array` - The script public key corresponding to the `fromAddress`.
+   * - `toAddress: string` - The recipient's address on the destination chain.
+   * - `toAddressScriptPubKey?: Uint8Array` - Required when bridging to a Bitcoin-based chain.
+   * - `inputInscriptionUTXO: UTXOSpendable` - The UTXO containing the BRC-20 inscription to be bridged.
+   * - `swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public` - Optional swap route if a token swap is involved before bridging.
+   * - `networkFeeRate: bigint` - The desired network fee rate.
+   * - `reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs` - Function to reselect additional UTXOs for covering network fees.
+   *
+   * @returns A promise that resolves with estimated transaction parameters:
+   * - `fee: SDKNumber` - The estimated total fee in satoshis.
+   * - `estimatedVSize: SDKNumber` - The estimated virtual size of the transaction in vBytes.
+   * - `revealTransactionSatoshiAmount?: SDKNumber` - Optional, the amount of satoshis used in the reveal transaction output.
+   *
+   * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
+   * chains or tokens is not supported.
+   * @throws InvalidMethodParametersError - If any required parameters are missing or invalid for the selected route.
+   */
   estimateBridgeTransactionFromBRC20(
     input: EstimateBridgeTransactionFromBRC20Input,
   ): Promise<EstimateBridgeTransactionFromBRC20Output> {
@@ -920,6 +964,33 @@ export class XLinkSDK {
       throw err
     })
   }
+  /**
+   * This function estimates the transaction fee and vSize for bridging Rune tokens from the Runes protocol
+   * to other supported blockchain networks such as Stacks, EVM-compatible chains, or back to other Runes/BRC-20 destinations.
+   *
+   * @param input - An object containing the input parameters required for estimating the transaction:
+   * - `fromChain: ChainId` - The ID of the source blockchain (a Runes-compatible Bitcoin chain).
+   * - `toChain: ChainId` - The ID of the destination blockchain.
+   * - `fromToken: TokenId` - The Rune token being transferred from the source.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The source Bitcoin address that holds the Rune token.
+   * - `fromAddressScriptPubKey: Uint8Array` - The script public key corresponding to the source address.
+   * - `toAddress: string` - The destination address on the target blockchain.
+   * - `toAddressScriptPubKey?: Uint8Array` - The script public key for the destination address, required when the destination is a Bitcoin-based chain.
+   * - `amount: SDKNumber` - The amount of Rune tokens to transfer.
+   * - `inputRuneUTXOs: RunesUTXOSpendable[]` - The list of Rune UTXOs used as inputs.
+   * - `networkFeeRate: bigint` - The fee rate to use for Bitcoin transaction construction.
+   * - `swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public` - Optional swap route to use in case token conversion is needed.
+   * - `reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs` - A function to reselect network fee UTXOs when needed.
+   *
+   * @returns A promise that resolves with an object containing estimated transaction data:
+   * - `fee: SDKNumber` - The estimated total fee in satoshis for the bridging operation.
+   * - `estimatedVSize: SDKNumber` - The estimated vSize of the transaction in bytes.
+   * - `revealTransactionSatoshiAmount?: SDKNumber` - (Optional) The satoshi amount associated with the reveal transaction used to complete the bridge.
+   *
+   * @throws UnsupportedBridgeRouteError - If the route between the source and destination tokens or chains is not supported.
+   * @throws InvalidMethodParametersError - If required parameters are missing.
+   */
   estimateBridgeTransactionFromRunes(
     input: EstimateBridgeTransactionFromRunesInput,
   ): Promise<EstimateBridgeTransactionFromRunesOutput> {
@@ -956,7 +1027,7 @@ export class XLinkSDK {
    * - `inputRuneUTXOs: RunesUTXOSpendable[]` - UTXOs containing the Runes to be spent.
    * - `networkFeeRate: bigint` - The Bitcoin network fee rate to be used for the transaction.
    * - `swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public` - Optional swap route for token conversion before bridging.
-   * - `reselectSpendableNetworkFeeUTXOs` - Callback to reselect UTXOs for network fee.
+   * - `reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs` - Callback to reselect UTXOs for network fee.
    * - `signPsbt` - Callback function to sign the PSBT (Partially Signed Bitcoin Transaction).
    * - `sendTransaction` - Callback function to broadcast the signed transaction.
    *
