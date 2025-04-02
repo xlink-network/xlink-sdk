@@ -30,6 +30,11 @@
       "import": "./lib/bitcoinHelpers.mjs",
       "require": "./lib/bitcoinHelpers.js"
     },
+    "./runeHelpers": {
+      "types": "./lib/runeHelpers.d.ts",
+      "import": "./lib/runeHelpers.mjs",
+      "require": "./lib/runeHelpers.js"
+    },
     "./swapHelpers": {
       "types": "./lib/swapHelpers.d.ts",
       "import": "./lib/swapHelpers.mjs",

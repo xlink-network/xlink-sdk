@@ -2,6 +2,7 @@ import { sortBy } from "../utils/arrayHelpers"
 import { MAX_BIGINT, sum } from "../utils/bigintHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { isNotNull } from "../utils/typeHelpers"
+import { ReselectSpendableUTXOsFn_Public } from "../xlinkSdkUtils/bridgeFromBitcoin"
 import {
   isSameUTXO,
   sumUTXO,
@@ -18,15 +19,12 @@ export type GetConfirmedSpendableUTXOFn = (
 export const reselectSpendableUTXOsFactory = (
   availableUTXOs: UTXOBasic[],
   getUTXOSpendable: GetConfirmedSpendableUTXOFn,
-): ReselectSpendableUTXOsFn => {
-  return async (satsToSend, pinnedUTXOs, _lastTimeSelectedUTXOs) => {
+): ReselectSpendableUTXOsFn_Public => {
+  return async (satsToSend, _lastTimeSelectedUTXOs) => {
     const lastTimeSelectedUTXOs = await Promise.all(
-      _lastTimeSelectedUTXOs.map(async fetchingUtxo => {
-        const fromPinnedUTXO = pinnedUTXOs.find(pinnedUTXO =>
-          isSameUTXO(pinnedUTXO, fetchingUtxo),
-        )
-        return fromPinnedUTXO ?? getUTXOSpendable(fetchingUtxo)
-      }),
+      _lastTimeSelectedUTXOs.map(fetchingUtxo =>
+        getUTXOSpendable(fetchingUtxo),
+      ),
     ).then(utxos => utxos.filter(isNotNull))
 
     const otherAvailableUTXOs = await Promise.all(
@@ -40,11 +38,7 @@ export const reselectSpendableUTXOsFactory = (
         .map(getUTXOSpendable),
     ).then(utxos => utxos.filter(isNotNull))
 
-    const allUTXOSpendable = [
-      ...pinnedUTXOs,
-      ...lastTimeSelectedUTXOs,
-      ...otherAvailableUTXOs,
-    ]
+    const allUTXOSpendable = [...lastTimeSelectedUTXOs, ...otherAvailableUTXOs]
     const finalSelectedBasicUTXOs = selectUTXOs(
       satsToSend,
       lastTimeSelectedUTXOs,
@@ -65,8 +59,8 @@ export const reselectSpendableUTXOsWithSafePadFactory = (
     getUTXOSpendable,
   )
 
-  return async (satsToSend, pinnedUTXOs, lastTimeSelectedUTXOs) => {
-    const utxos = await reselect(satsToSend, pinnedUTXOs, lastTimeSelectedUTXOs)
+  return async (satsToSend, lastTimeSelectedUTXOs) => {
+    const utxos = await reselect(satsToSend, lastTimeSelectedUTXOs)
     const selectedAmount = sumUTXO(utxos)
 
     const difference = satsToSend - selectedAmount
