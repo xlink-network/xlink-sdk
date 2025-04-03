@@ -288,18 +288,26 @@ export class XLinkSDK {
   }
 
   /**
-   * This function retrieves the list of supported routes for token transfers between blockchain
-   * networks, filtered based on optional conditions. It aggregates the results from different
-   * blockchain networks (Stacks, EVM, Bitcoin) to return a list of possible routes.
+   * Retrieves the list of all supported token bridging routes across blockchain networks.
+   * This function aggregates the route definitions from all supported protocols:
+   * - EVM chains
+   * - Stacks chains
+   * - Bitcoin
+   * - BRC-20
+   * - Runes
    *
-   * @param conditions - An optional object containing the conditions for filtering the supported routes:
-   * - `fromChain?: ChainId` - The ID of the source blockchain (optional).
-   * - `toChain?: ChainId` - The ID of the destination blockchain (optional).
-   * - `fromToken?: TokenId` - The ID of the token being transferred from the source blockchain (optional).
-   * - `toToken?: TokenId` - The ID of the token expected on the destination blockchain (optional).
+   * If no filtering conditions are provided, it returns all supported bridging routes
+   * across both `mainnet` and `testnet`. When filtering is applied via the `conditions` parameter,
+   * it will return only the routes matching the specified criteria.
    *
-   * @returns A promise that resolves with an array of `KnownRoute` objects, each representing a
-   * possible route for the token transfer.
+   * @param conditions - Optional filtering criteria for narrowing down the supported routes:
+   * - `fromChain?: ChainId` – Filter by the source blockchain.
+   * - `toChain?: ChainId` – Filter by the destination blockchain.
+   * - `fromToken?: TokenId` – Filter by the token being sent from the source.
+   * - `toToken?: TokenId` – Filter by the token expected on the destination.
+   *
+   * @returns A promise that resolves with an array of `KnownRoute` objects, each representing a supported
+   * token transfer route between blockchains.
    */
   async getSupportedRoutes(
     conditions?: GetSupportedRoutesFn_Conditions,

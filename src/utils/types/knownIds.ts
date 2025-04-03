@@ -37,11 +37,13 @@ export namespace KnownTokenId {
     return _allKnownBitcoinTokens.includes(value as any)
   }
 
+  /** This type includes all known BRC20 tokens. */
   export type BRC20Token = TokenId<"a brc20 token">
   export function isBRC20Token(value: TokenId): value is BRC20Token {
     return value.startsWith("brc20-")
   }
 
+  /** This type includes all known Runes tokens. */
   export type RunesToken = TokenId<"a runes token">
   export function isRunesToken(value: TokenId): value is RunesToken {
     return value.startsWith("runes-")
@@ -77,11 +79,17 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("evm-vlistx")
     /** Represents the vLiALEX token ID on EVM-compatible blockchains. */
     export const vLiALEX = tokenId("evm-vlialex")
+    /** Represents the uBTC token ID on EVM-compatible blockchains. */
     export const uBTC = tokenId("evm-ubtc")
+    /** Represents the wuBTC token ID on EVM-compatible blockchains. */
     export const wuBTC = tokenId("evm-wubtc")
+    /** Represents the DB20 token ID on EVM-compatible blockchains. */
     export const DB20 = tokenId("evm-db20")
+    /** Represents the DOG token ID on EVM-compatible blockchains. */
     export const DOG = tokenId("evm-dog")
+    /** Represents the STX token ID on EVM-compatible blockchains. */
     export const STX = tokenId("evm-stx")
+    /** Represents the TRUMP token ID on EVM-compatible blockchains. */
     export const TRUMP = tokenId("evm-trump")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
@@ -109,10 +117,15 @@ export namespace KnownTokenId {
     export const vLiALEX = tokenId("stx-vlialex")
     /** Represents the vLiaBTC token ID on the Stacks blockchain. */
     export const vLiaBTC = tokenId("stx-vliabtc")
+    /** Represents the DB20 token ID on the Stacks blockchain. */
     export const DB20 = tokenId("stx-db20")
+    /** Represents the uBTC token ID on the Stacks blockchain. */
     export const uBTC = tokenId("stx-ubtc")
+    /** Represents the DOG token ID on the Stacks blockchain. */
     export const DOG = tokenId("stx-dog")
+    /** Represents the STX token ID on the Stacks blockchain. */
     export const STX = tokenId("stx-stx")
+    /** Represents the TRUMP token ID on the Stacks blockchain. */
     export const TRUMP = tokenId("stx-trump")
   }
   const _allKnownStacksTokens = [
