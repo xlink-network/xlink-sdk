@@ -350,4 +350,14 @@ export const stxTokenContractAddresses_legacy: Record<
       contractName: "bsc-ghiblicz",
     }),
   },
+  [KnownTokenId.Stacks.ETH]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-eth",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "token-eth",
+    }),
+  },
 }
