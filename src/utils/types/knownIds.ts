@@ -85,6 +85,7 @@ export namespace KnownTokenId {
     export const TRUMP = tokenId("evm-trump")
     export const GHIBLICZ = tokenId("evm-ghiblicz")
     export const ETH = tokenId("evm-eth")
+    export const SOL = tokenId("evm-sol")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
@@ -118,6 +119,7 @@ export namespace KnownTokenId {
     export const TRUMP = tokenId("stx-trump")
     export const GHIBLICZ = tokenId("stx-ghiblicz")
     export const ETH = tokenId("stx-eth")
+    export const SOL = tokenId("stx-sol")
   }
   const _allKnownStacksTokens = [
     Stacks.sUSDT,
@@ -134,6 +136,8 @@ export namespace KnownTokenId {
     Stacks.STX,
     Stacks.TRUMP,
     Stacks.GHIBLICZ,
+    Stacks.ETH,
+    Stacks.SOL,
   ] as const
   export type StacksToken =
     | TokenId<`a Stacks token`>
