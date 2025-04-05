@@ -360,4 +360,14 @@ export const stxTokenContractAddresses_legacy: Record<
       contractName: "token-eth",
     }),
   },
+  [KnownTokenId.Stacks.SOL]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-sol",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "token-sol",
+    }),
+  },
 }
