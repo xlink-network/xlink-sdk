@@ -25,6 +25,7 @@ import {
 import { TransferProphet } from "../types/TransferProphet"
 
 export const possibleSwapOnEVMChains = [
+  KnownChainId.EVM.Ethereum,
   KnownChainId.EVM.Base,
   KnownChainId.EVM.Arbitrum,
   KnownChainId.EVM.Linea,
