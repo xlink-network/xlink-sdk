@@ -148,7 +148,20 @@ const _getEvm2StacksFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   if (!resp.isApprovedOnEVMSide) return undefined
 
@@ -194,7 +207,20 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksNativeBridgeFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksNativeBridgeFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,
@@ -279,6 +305,10 @@ const _getStacks2EvmFeeInfo = async (
     },
   })
 
+  if (ctx.debugLog) {
+    console.log("[getStacks2EvmFeeInfo/specialFeeInfo]", route, specialFeeInfo)
+  }
+
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
@@ -297,14 +327,26 @@ const _getStacks2EvmFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  ]).then(([resp, isPaused]) => {
-    if (resp.type !== "success") return undefined
+  ]).then(
+    ([resp, isPaused]) => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, resp, isPaused)
+      }
 
-    return {
-      ...unwrapResponse(resp),
-      isPaused,
-    }
-  })
+      if (resp.type !== "success") return undefined
+
+      return {
+        ...unwrapResponse(resp),
+        isPaused,
+      }
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   if (tokenConf == null) return undefined
 

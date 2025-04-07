@@ -5,9 +5,12 @@ import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { KnownRoute } from "./buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
-export async function detectSupportedRoutes(
+export async function detectPossibleRoutes(
   ctx: SDKGlobalContext,
-  networkType: "mainnet" | "testnet",
+  conditions: {
+    networkType: "mainnet" | "testnet"
+    swapEnabled: boolean
+  },
 ): Promise<KnownRoute[]> {
   type FetchedRoute = {
     baseStacksChain: KnownChainId.StacksChain
@@ -16,7 +19,9 @@ export async function detectSupportedRoutes(
     pairedToken: KnownTokenId.KnownToken
   }
 
-  if (ctx.routes.detectedCache.get(networkType) !== null) {
+  const { networkType, swapEnabled } = conditions
+
+  if (ctx.routes.detectedCache.get(networkType) != null) {
     return ctx.routes.detectedCache.get(networkType)!
   }
 
@@ -120,7 +125,8 @@ export async function detectSupportedRoutes(
       const isSameBaseStacksToken =
         routeFrom.baseStacksChain === routeTo.baseStacksChain &&
         routeFrom.baseStacksToken === routeTo.baseStacksToken
-      if (isSameRoute || !isSameBaseStacksToken) continue
+      if (isSameRoute) continue
+      if (!swapEnabled && !isSameBaseStacksToken) continue
       result.push({
         fromChain: routeFrom.pairedTokenChain,
         fromToken: routeFrom.pairedToken,
@@ -146,7 +152,8 @@ export async function detectSupportedRoutes(
       const isSameBaseStacksToken =
         routeFrom.baseStacksChain === routeTo.baseStacksChain &&
         routeFrom.baseStacksToken === routeTo.baseStacksToken
-      if (isSameRoute || !isSameBaseStacksToken) continue
+      if (isSameRoute) continue
+      if (!swapEnabled && !isSameBaseStacksToken) continue
       result.push({
         fromChain: routeFrom.pairedTokenChain,
         fromToken: routeFrom.pairedToken,
@@ -172,7 +179,8 @@ export async function detectSupportedRoutes(
       const isSameBaseStacksToken =
         routeFrom.baseStacksChain === routeTo.baseStacksChain &&
         routeFrom.baseStacksToken === routeTo.baseStacksToken
-      if (isSameRoute || !isSameBaseStacksToken) continue
+      if (isSameRoute) continue
+      if (!swapEnabled && !isSameBaseStacksToken) continue
       result.push({
         fromChain: routeFrom.pairedTokenChain,
         fromToken: routeFrom.pairedToken,
@@ -198,7 +206,8 @@ export async function detectSupportedRoutes(
       const isSameBaseStacksToken =
         routeFrom.baseStacksChain === routeTo.baseStacksChain &&
         routeFrom.baseStacksToken === routeTo.baseStacksToken
-      if (isSameRoute || !isSameBaseStacksToken) continue
+      if (isSameRoute) continue
+      if (!swapEnabled && !isSameBaseStacksToken) continue
       result.push({
         fromChain: routeFrom.pairedTokenChain,
         fromToken: routeFrom.pairedToken,

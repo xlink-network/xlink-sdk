@@ -49,10 +49,11 @@ export const getBtc2StacksFeeInfo = async (
   return withGlobalContextCache(
     ctx.btc.feeRateCache,
     `${withGlobalContextCache.cacheKeyFromRoute(route)}:${options.swapRoute?.via ?? ""}`,
-    () => _getBtc2StacksFeeInfo(route, options),
+    () => _getBtc2StacksFeeInfo(ctx, route, options),
   )
 }
 const _getBtc2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
     swapRoute: null | Pick<SwapRoute, "via">
@@ -104,7 +105,20 @@ const _getBtc2StacksFeeInfo = async (
       {},
       contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getBtc2StacksFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getBtc2StacksFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,
@@ -214,7 +228,20 @@ const _getStacks2BtcFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2BtcFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2BtcFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,

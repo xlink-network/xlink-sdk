@@ -9,7 +9,6 @@ import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
-  SpecialFeeDetailsForSwapRoute,
   SwapRoute,
 } from "../utils/SwapRouteHelpers"
 import {
@@ -96,7 +95,7 @@ const _getMeta2StacksFeeInfo = async (
   },
 ): Promise<undefined | TransferProphet> => {
   if (options.swapRoute != null) {
-    return getMeta2StacksSwapFeeInfo(route, {
+    return getMeta2StacksSwapFeeInfo(ctx, route, {
       swapRoute: options.swapRoute,
     })
   } else {
@@ -126,6 +125,10 @@ const getMeta2StacksBaseFeeInfo = async (
   const filteredRoute = filteredRoutes[0]
   if (filteredRoute == null) return
 
+  if (ctx.debugLog) {
+    console.log("[getMeta2StacksBaseFeeInfo]", route, filteredRoute)
+  }
+
   return {
     isPaused: filteredRoute.pegInPaused,
     bridgeToken: route.fromToken,
@@ -150,6 +153,7 @@ const getMeta2StacksBaseFeeInfo = async (
 }
 
 const getMeta2StacksSwapFeeInfo = async (
+  ctx: SDKGlobalContext,
   route1: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
     swapRoute: Pick<SwapRoute, "via">
@@ -187,7 +191,20 @@ const getMeta2StacksSwapFeeInfo = async (
       {},
       contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getMeta2StacksSwapFeeInfo]", route1, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getMeta2StacksSwapFeeInfo]", route1, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,
@@ -262,24 +279,30 @@ const _getStacks2MetaFeeInfo = async (
   const filteredRoute = filteredRoutes[0]
   if (filteredRoute == null) return
 
-  const feeDetails = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+  const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
     initialRoute: options.initialRoute,
     swapRoute: options.swapRoute,
-  }).then(
-    async (info): Promise<SpecialFeeDetailsForSwapRoute> =>
-      info ??
-      props({
-        feeRate: filteredRoute.pegOutFeeRate,
-        minFeeAmount: BigNumber.ZERO,
-        gasFee:
-          filteredRoute.pegOutFeeBitcoinAmount == null
-            ? undefined
-            : props({
-                token: KnownTokenId.Stacks.aBTC,
-                amount: filteredRoute.pegOutFeeBitcoinAmount,
-              }),
-      }),
-  )
+  })
+  if (ctx.debugLog) {
+    console.log("[getStacks2MetaFeeInfo/specialFeeInfo]", route, specialFeeInfo)
+  }
+
+  const feeDetails =
+    specialFeeInfo ??
+    (await props({
+      feeRate: filteredRoute.pegOutFeeRate,
+      minFeeAmount: BigNumber.ZERO,
+      gasFee:
+        filteredRoute.pegOutFeeBitcoinAmount == null
+          ? undefined
+          : props({
+              token: KnownTokenId.Stacks.aBTC,
+              amount: filteredRoute.pegOutFeeBitcoinAmount,
+            }),
+    }))
+  if (ctx.debugLog) {
+    console.log("[getStacks2MetaFeeInfo]", route, feeDetails)
+  }
 
   return {
     isPaused: filteredRoute.pegOutPaused,

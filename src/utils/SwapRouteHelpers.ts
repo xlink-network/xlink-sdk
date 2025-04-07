@@ -167,7 +167,7 @@ export async function getFinalStepStacksTokenAddress(
 export async function getAndCheckTransitStacksTokens(
   ctx: SDKGlobalContext,
   info: KnownRoute & {
-    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+    swapRoute?: SwapRoute
   },
 ): Promise<null | {
   firstStepToStacksToken: KnownTokenId.StacksToken
