@@ -2,11 +2,37 @@ import { XLinkSDK } from "../src"
 import { KnownRoute } from "../src/utils/buildSupportedRoutes"
 
 async function print(matchers: {
+  debug: boolean
+  op: "swap" | "bridge"
   chain: string[]
   token: string[]
 }): Promise<void> {
-  const sdk = new XLinkSDK()
-  const supportedRoutes = await sdk.getSupportedRoutes()
+  const sdk = new XLinkSDK({
+    debugLog: matchers.debug,
+  })
+  const supportedRoutes = await sdk
+    .getSupportedRoutes({
+      includeUnpredictableSwapPossibilities: matchers.op === "swap",
+    })
+    .then(routes => {
+      const isChainMatch: (r: KnownRoute) => boolean =
+        matchers.chain.length === 0
+          ? () => true
+          : r =>
+              matchers.chain.some(
+                c => r.fromChain.includes(c) || r.toChain.includes(c),
+              )
+
+      const isTokenMatch: (r: KnownRoute) => boolean =
+        matchers.token.length === 0
+          ? () => true
+          : r =>
+              matchers.token.some(
+                t => r.fromToken.includes(t) || r.toToken.includes(t),
+              )
+
+      return routes.filter(r => isChainMatch(r) && isTokenMatch(r))
+    })
 
   const group: Record<string, KnownRoute[]> = {}
   for (const route of supportedRoutes) {
@@ -42,11 +68,15 @@ async function print(matchers: {
 
 async function main(command: string[], args: string[]): Promise<void> {
   if (args.some(a => a === "-h" || a === "--help")) {
-    console.log(`Usage: ${command.join(" ")} [chain:<chain>] [token:<token>]`)
+    console.log(
+      `Usage: ${command.join(" ")} [op:debug] [op:swap] [chain:<chain>] [token:<token>]`,
+    )
     process.exit(0)
   }
 
   const matchers = {
+    debug: args.includes("op:debug"),
+    op: args.includes("op:swap") ? ("swap" as const) : ("bridge" as const),
     chain: [] as string[],
     token: [] as string[],
   }

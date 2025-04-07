@@ -1,13 +1,10 @@
 import { ChainId, TokenId } from "../xlinkSdkUtils/types"
-import {
-  SwapRouteViaALEX,
-  SwapRouteViaEVMDexAggregator,
-} from "./SwapRouteHelpers"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
 import { pMemoize } from "./pMemoize"
-import { KnownChainId, KnownTokenId } from "./types/knownIds"
+import { SwapRoute } from "./SwapRouteHelpers"
 import { checkNever } from "./typeHelpers"
+import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
 export interface DefinedRoute {
   fromChain: ChainId
@@ -245,7 +242,7 @@ export function defineRoute(
 export type IsSupportedFn = (
   ctx: SDKGlobalContext,
   route: DefinedRoute & {
-    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+    swapRoute?: SwapRoute
   },
 ) => Promise<boolean>
 export const memoizedIsSupportedFactory = (
@@ -279,7 +276,7 @@ export type CheckRouteValidFn = (
   ctx: SDKGlobalContext,
   isSupported: IsSupportedFn,
   route: DefinedRoute & {
-    swapRoute?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+    swapRoute?: SwapRoute
   },
 ) => Promise<KnownRoute>
 export const checkRouteValid: CheckRouteValidFn = async (
@@ -307,6 +304,7 @@ export interface GetSupportedRoutesFn_Conditions {
   fromToken?: TokenId
   toChain?: ChainId
   toToken?: TokenId
+  includeUnpredictableSwapPossibilities?: boolean
 }
 
 export type GetSupportedRoutesFn = (

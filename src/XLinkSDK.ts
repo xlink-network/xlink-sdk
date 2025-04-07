@@ -30,7 +30,7 @@ import {
   GetSupportedRoutesFn_Conditions,
   KnownRoute,
 } from "./utils/buildSupportedRoutes"
-import { detectSupportedRoutes } from "./utils/detectSupportedRoutes"
+import { detectPossibleRoutes } from "./utils/detectPossibleRoutes"
 import { TooFrequentlyError } from "./utils/errors"
 import {
   KnownChainId,
@@ -119,6 +119,8 @@ import {
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
 import { DumpableCache, getCacheInside } from "./utils/DumpableCache"
+import { isNotNull } from "./utils/typeHelpers"
+import { SwapRoute } from "./utils/SwapRouteHelpers"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -190,6 +192,7 @@ export {
 export type { DumpableCache } from "./utils/DumpableCache"
 
 export interface XLinkSDKOptions {
+  debugLog?: boolean
   __experimental?: {
     backendAPI?: {
       runtimeEnv?: "prod" | "dev"
@@ -251,6 +254,7 @@ export class XLinkSDK {
     }
 
     this.sdkContext = {
+      debugLog: options.debugLog ?? false,
       routes: {
         detectedCache: new Map(),
       },
@@ -291,19 +295,33 @@ export class XLinkSDK {
   }
 
   /**
-   * This function retrieves the list of supported routes for token transfers between blockchain
-   * networks, filtered based on optional conditions. It aggregates the results from different
-   * blockchain networks (Stacks, EVM, Bitcoin) to return a list of possible routes.
-   * @param conditions - An optional object containing the conditions for filtering the supported routes:
+   * @deprecated Use `getPossibleRoutes` instead
+   */
+  async getSupportedRoutes(
+    conditions?: GetSupportedRoutesFn_Conditions,
+  ): Promise<KnownRoute[]> {
+    return this.getPossibleRoutes(conditions)
+  }
+
+  /**
+   * This function roughly returns a list of possible routes supported by the
+   * SDK. It aggregates the results from different blockchain networks (Stacks,
+   * EVM, Bitcoin).
+   *
+   * @param conditions - An optional object containing the conditions for filtering the possible routes:
    * - `fromChain?: ChainId` - The ID of the source blockchain (optional).
    * - `toChain?: ChainId` - The ID of the destination blockchain (optional).
    * - `fromToken?: TokenId` - The ID of the token being transferred from the source blockchain (optional).
    * - `toToken?: TokenId` - The ID of the token expected on the destination blockchain (optional).
+   * - `includeUnpredictableSwapPossibilities?: boolean` - Whether to include
+   *    routes that require token swaps to complete. Note that the ability to perform these swaps
+   *    cannot be determined at this point, so enabling this option may return routes that cannot
+   *    actually be completed (optional).
    *
    * @returns A promise that resolves with an array of `KnownRoute` objects, each representing a
    * possible route for the token transfer.
    */
-  async getSupportedRoutes(
+  async getPossibleRoutes(
     conditions?: GetSupportedRoutesFn_Conditions,
   ): Promise<KnownRoute[]> {
     const specifiedChain = conditions?.fromChain ?? conditions?.toChain
@@ -318,28 +336,55 @@ export class XLinkSDK {
     let resultRoutesPromise: Promise<KnownRoute[]>
     if (networkType == null) {
       resultRoutesPromise = Promise.all([
-        detectSupportedRoutes(this.sdkContext, "mainnet"),
-        detectSupportedRoutes(this.sdkContext, "testnet"),
-      ]).then(res => res.flat())
+        detectPossibleRoutes(this.sdkContext, {
+          networkType: "mainnet",
+          swapEnabled:
+            conditions?.includeUnpredictableSwapPossibilities ?? false,
+        }),
+        detectPossibleRoutes(this.sdkContext, {
+          networkType: "testnet",
+          swapEnabled:
+            conditions?.includeUnpredictableSwapPossibilities ?? false,
+        }),
+      ]).then(res => res.flat().filter(isNotNull))
     } else {
-      resultRoutesPromise = detectSupportedRoutes(this.sdkContext, networkType)
+      resultRoutesPromise = detectPossibleRoutes(this.sdkContext, {
+        networkType,
+        swapEnabled: conditions?.includeUnpredictableSwapPossibilities ?? false,
+      })
     }
 
     const resultRoutes = await resultRoutesPromise
-    if (conditions == null || Object.keys(conditions).length === 0) {
+    const routeConditions = {
+      fromChain: conditions?.fromChain,
+      fromToken: conditions?.fromToken,
+      toChain: conditions?.toChain,
+      toToken: conditions?.toToken,
+    }
+    if (Object.values(routeConditions).filter(isNotNull).length === 0) {
       return resultRoutes
     }
 
     return resultRoutes.filter(
       r =>
-        r.fromChain === conditions.fromChain &&
-        r.toChain === conditions.toChain &&
-        r.fromToken === conditions.fromToken &&
-        r.toToken === conditions.toToken,
+        (routeConditions.fromChain == null ||
+          r.fromChain === routeConditions.fromChain) &&
+        (routeConditions.fromToken == null ||
+          r.fromToken === routeConditions.fromToken) &&
+        (routeConditions.toChain == null ||
+          r.toChain === routeConditions.toChain) &&
+        (routeConditions.toToken == null ||
+          r.toToken === routeConditions.toToken),
     )
   }
 
-  async isSupportedRoute(route: DefinedRoute): Promise<boolean> {
+  /**
+   * different from `getPossibleRoutes`, this function is designed to further
+   * determine if the route is supported by the SDK
+   */
+  async isSupportedRoute(
+    route: DefinedRoute & { swapRoute?: SwapRoute },
+  ): Promise<boolean> {
     const checkingResult = await Promise.all([
       isSupportedEVMRoute(this.sdkContext, route),
       isSupportedStacksRoute(this.sdkContext, route),
