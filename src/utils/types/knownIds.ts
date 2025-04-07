@@ -86,6 +86,7 @@ export namespace KnownTokenId {
     export const GHIBLICZ = tokenId("evm-ghiblicz")
     export const ETH = tokenId("evm-eth")
     export const SOL = tokenId("evm-sol")
+    export const LINK = tokenId("evm-link")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
@@ -120,6 +121,7 @@ export namespace KnownTokenId {
     export const GHIBLICZ = tokenId("stx-ghiblicz")
     export const ETH = tokenId("stx-eth")
     export const SOL = tokenId("stx-sol")
+    export const LINK = tokenId("stx-link")
   }
   const _allKnownStacksTokens = [
     Stacks.sUSDT,
@@ -138,6 +140,7 @@ export namespace KnownTokenId {
     Stacks.GHIBLICZ,
     Stacks.ETH,
     Stacks.SOL,
+    Stacks.LINK,
   ] as const
   export type StacksToken =
     | TokenId<`a Stacks token`>

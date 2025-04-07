@@ -225,6 +225,7 @@ const _getOnChainConfigsImpl = async (
         ONCHAIN_CONFIG_KEY.TOKEN_GHIBLICZ,
         ONCHAIN_CONFIG_KEY.TOKEN_ETH,
         ONCHAIN_CONFIG_KEY.TOKEN_SOL,
+        ONCHAIN_CONFIG_KEY.TOKEN_LINK,
       ],
     ],
   }).catch(err => {
@@ -274,6 +275,7 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.GHIBLICZ]: maybeAddress(configs[19]),
     [EVMToken.ETH]: maybeAddress(configs[20]),
     [EVMToken.SOL]: maybeAddress(configs[21]),
+    [EVMToken.LINK]: maybeAddress(configs[22]),
   }
 }
 function maybeAddress(value: string | null): Address | undefined {
@@ -329,4 +331,7 @@ enum ONCHAIN_CONFIG_KEY {
 
   // https://t.me/c/1599543687/73387
   TOKEN_SOL = "TOKEN_SOL",
+
+  // https://t.me/c/1599543687/73476
+  TOKEN_LINK = "TOKEN_LINK",
 }
