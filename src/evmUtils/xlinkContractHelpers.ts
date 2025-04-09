@@ -254,6 +254,7 @@ const _getOnChainConfigsImpl = async (
     // prettier-ignore
     [
       chain === KnownChainId.EVM.Base ? EVMToken.USDC :
+      chain === KnownChainId.EVM.Arbitrum ? EVMToken.USDC :
       EVMToken.USDT
     ]: maybeAddress(configs[8]),
     // prettier-ignore
