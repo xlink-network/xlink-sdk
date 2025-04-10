@@ -194,9 +194,11 @@ async function _getEVMDexAggregatorSwapParametersImpl(
         toChain: transitStacksChain,
         toToken: lastStepFromStacksToken,
       }).then(feeInfo =>
-        feeInfo == null || !isTransferProphetValid(feeInfo, info.amount)
-          ? null
-          : token,
+        /**
+         * we can not compare the amount with the max/min bridge amount here,
+         * since we can not know the swapped amount here
+         */
+        feeInfo == null || feeInfo.isPaused ? null : token,
       ),
     ),
   ).then(tokens => tokens.filter(isNotNull))
