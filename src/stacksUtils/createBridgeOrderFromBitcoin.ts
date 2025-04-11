@@ -362,8 +362,8 @@ async function createBridgeOrderFromBitcoinImpl(
 
   return {
     tokenOutTrait: {
-      deployerAddress: bridgedToStacksTokenAddress.deployerAddress,
-      contractName: bridgedToStacksTokenAddress.contractName,
+      deployerAddress: tokenOutStacksAddress.deployerAddress,
+      contractName: tokenOutStacksAddress.contractName,
     },
     data: data!,
   }
