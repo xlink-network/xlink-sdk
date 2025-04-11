@@ -1,7 +1,6 @@
 import { unwrapResponse } from "clarity-codegen"
 import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
 import { addressToBuffer } from "../utils/addressHelpers"
-import { last } from "../utils/arrayHelpers"
 import {
   KnownRoute_FromMeta,
   KnownRoute_FromMeta_ToBitcoin,
@@ -257,21 +256,15 @@ async function createBridgeOrderFromMetaImpl(
     return undefined
   }
 
-  // prettier-ignore
-  const swappedToStacksTokenAddress = (
-    swapInfo == null ? undefined :
-    swapInfo.via === "ALEX" ? last(swapInfo.swapPools).toTokenAddress :
-    swapInfo.via === "evmDexAggregator" ?
-      await getTerminatingStacksTokenContractAddress(
-        sdkContext,
-        {
+  const tokenOutStacksAddress =
+    (KnownChainId.isEVMChain(info.toChain) &&
+    KnownTokenId.isEVMToken(info.toToken)
+      ? await getTerminatingStacksTokenContractAddress(sdkContext, {
           stacksChain: transitStacksChain,
-          evmChain: swapInfo.evmChain,
-          evmToken: swapInfo.toEVMToken,
-        }
-      ) :
-    (checkNever(swapInfo), undefined)
-  ) ?? bridgedToStacksTokenAddress
+          evmChain: info.toChain,
+          evmToken: info.toToken,
+        })
+      : undefined) ?? bridgedToStacksTokenAddress
 
   let data: undefined | Uint8Array
   if (swapInfo == null) {
@@ -283,8 +276,8 @@ async function createBridgeOrderFromMetaImpl(
           from: info.fromAddressBuffer,
           to: info.toAddressBuffer,
           "chain-id": targetChainId,
-          token: `${swappedToStacksTokenAddress.deployerAddress}.${swappedToStacksTokenAddress.contractName}`,
-          "token-out": `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
+          token: `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
+          "token-out": `${tokenOutStacksAddress.deployerAddress}.${tokenOutStacksAddress.contractName}`,
         },
       },
       contractBaseCallInfo.executeOptions,
@@ -302,7 +295,7 @@ async function createBridgeOrderFromMetaImpl(
           "min-amount-out": numberToStacksContractNumber(
             swapInfo.minimumAmountsToReceive,
           ),
-          "token-out": `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
+          "token-out": `${tokenOutStacksAddress.deployerAddress}.${tokenOutStacksAddress.contractName}`,
         },
       },
       contractSwapCallInfo.executeOptions,
@@ -345,9 +338,9 @@ async function createBridgeOrderFromMetaImpl(
           "min-amount-out": numberToStacksContractNumber(
             swapInfo.minimumAmountsToReceive,
           ),
-          "token-out": `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
           "swap-token-in": `${swapFromTokenStacksAddress.deployerAddress}.${swapFromTokenStacksAddress.contractName}`,
           "swap-token-out": `${swapToTokenStacksAddress.deployerAddress}.${swapToTokenStacksAddress.contractName}`,
+          "token-out": `${tokenOutStacksAddress.deployerAddress}.${tokenOutStacksAddress.contractName}`,
         },
       },
       contractAggCallInfo.executeOptions,
