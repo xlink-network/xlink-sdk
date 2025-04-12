@@ -425,12 +425,14 @@ export const getTerminatingStacksTokenContractAddress = (
     assertExclude(restChains, KnownChainId.EVM.BSCTestnet)
 
     if (
-      toChain === KnownChainId.EVM.Base &&
+      (toChain === KnownChainId.EVM.Base ||
+        toChain === KnownChainId.EVM.Arbitrum) &&
       toToken === KnownTokenId.EVM.USDC
     ) {
       return terminatingStacksTokenContractAddresses.usdc[route.fromChain]
     }
     assertExclude(restChains, KnownChainId.EVM.Base)
+    assertExclude(restChains, KnownChainId.EVM.Arbitrum)
 
     checkNever(restChains)
   }
@@ -499,9 +501,9 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
   assertExclude(restStableUSDChains, KnownChainId.EVM.Sepolia)
   assertExclude(restStableUSDChains, KnownChainId.EVM.BSC)
   assertExclude(restStableUSDChains, KnownChainId.EVM.BSCTestnet)
-
   if (
-    route.evmChain === KnownChainId.EVM.Base &&
+    (route.evmChain === KnownChainId.EVM.Base ||
+      route.evmChain === KnownChainId.EVM.Arbitrum) &&
     isStacksContractAddressEqual(
       route.stacksTokenAddress,
       terminatingStacksTokenContractAddresses.usdc[route.stacksChain],
@@ -510,6 +512,7 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = (route: {
     return KnownTokenId.EVM.USDC
   }
   assertExclude(restStableUSDChains, KnownChainId.EVM.Base)
+  assertExclude(restStableUSDChains, KnownChainId.EVM.Arbitrum)
 
   checkNever(restStableUSDChains)
   checkNever(restBTCChains)
@@ -521,6 +524,7 @@ type ChainsHaveAlternativeStableUSD =
   | typeof KnownChainId.EVM.BSC
   | typeof KnownChainId.EVM.BSCTestnet
   | typeof KnownChainId.EVM.Base
+  | typeof KnownChainId.EVM.Arbitrum
 type ChainsHaveAlternativeBTC =
   | typeof KnownChainId.EVM.Ethereum
   | typeof KnownChainId.EVM.Sepolia
