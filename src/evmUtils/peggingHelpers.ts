@@ -237,7 +237,21 @@ export const getStacks2EvmFeeInfo = async (
   options: {
     toDexAggregator: boolean
     /**
-     * checkout the comments in getSpecialFeeDetailsForSwapRoute
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
   },
@@ -260,7 +274,21 @@ const _getStacks2EvmFeeInfo = async (
   options: {
     toDexAggregator: boolean
     /**
-     * checkout the comments in getSpecialFeeDetailsForSwapRoute
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
   },
