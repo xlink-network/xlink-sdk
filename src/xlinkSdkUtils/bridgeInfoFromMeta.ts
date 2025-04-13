@@ -622,7 +622,7 @@ async function bridgeInfoFromMeta_toBitcoin(
       }),
       ...intermediaryInfo.steps,
       getStacks2BtcFeeInfo(ctx, btcPegOutRoute, {
-        initialRoute: metaPegInRoute,
+        initialRoute: last(intermediaryInfo.routes) as KnownRoute_ToStacks,
         swapRoute: null,
       }),
     ])
@@ -782,7 +782,7 @@ async function bridgeInfoFromMeta_toMeta(
       }),
       ...intermediaryInfo.steps,
       getStacks2MetaFeeInfo(ctx, metaPegOutRoute, {
-        initialRoute: metaPegInRoute,
+        initialRoute: last(intermediaryInfo.routes) as KnownRoute_ToStacks,
         swapRoute: null,
       }),
     ])
