@@ -1,9 +1,14 @@
 import { getOutputDustThreshold } from "@c4/btc-utils"
 import * as btc from "@scure/btc-signer"
+import { equalBytes } from "@scure/btc-signer/utils"
 import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
-import { UTXOSpendable, bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
+import {
+  UTXOSpendable,
+  addressToScriptPubKey,
+  bitcoinToSatoshi,
+} from "../bitcoinUtils/bitcoinHelpers"
 import {
   BitcoinAddress,
   getBitcoinHardLinkageAddress,
@@ -59,8 +64,8 @@ import {
   getChainIdNetworkType,
 } from "../utils/types/knownIds"
 import {
-  reselectSpendableUTXOsFactory,
   ReselectSpendableUTXOsFn_Public,
+  reselectSpendableUTXOsFactory,
 } from "./bridgeFromBitcoin"
 import { getBridgeFeeOutput } from "./bridgeFromBRC20"
 import {
@@ -134,6 +139,54 @@ export async function bridgeFromRunes(
   info: BridgeFromRunesInput,
 ): Promise<BridgeFromRunesOutput> {
   const route = await checkRouteValid(ctx, isSupportedRunesRoute, info)
+
+  if (
+    !equalBytes(
+      info.fromAddressScriptPubKey,
+      addressToScriptPubKey(
+        info.fromChain === KnownChainId.Bitcoin.Mainnet
+          ? btc.NETWORK
+          : btc.TEST_NETWORK,
+        info.fromAddress,
+      ),
+    )
+  ) {
+    throw new InvalidMethodParametersError(
+      ["XLinkSDK", "bridgeFromRunes"],
+      [
+        {
+          name: "fromAddressScriptPubKey",
+          expected: "the scriptPubKey of the fromAddress",
+          received: "invalid scriptPubKey",
+        },
+      ],
+    )
+  }
+
+  if (info.toAddressScriptPubKey != null) {
+    if (
+      !equalBytes(
+        info.toAddressScriptPubKey,
+        addressToScriptPubKey(
+          info.fromChain === KnownChainId.Bitcoin.Mainnet
+            ? btc.NETWORK
+            : btc.TEST_NETWORK,
+          info.toAddress,
+        ),
+      )
+    ) {
+      throw new InvalidMethodParametersError(
+        ["XLinkSDK", "bridgeFromRunes"],
+        [
+          {
+            name: "toAddressScriptPubKey",
+            expected: "the scriptPubKey of the toAddress",
+            received: "invalid scriptPubKey",
+          },
+        ],
+      )
+    }
+  }
 
   if (KnownChainId.isRunesChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {

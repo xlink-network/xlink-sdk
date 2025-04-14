@@ -1,8 +1,13 @@
 import * as btc from "@scure/btc-signer"
+import { equalBytes } from "@scure/btc-signer/utils"
 import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
-import { UTXOSpendable, bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
+import {
+  UTXOSpendable,
+  addressToScriptPubKey,
+  bitcoinToSatoshi,
+} from "../bitcoinUtils/bitcoinHelpers"
 import {
   BitcoinAddress,
   getBTCPegInAddress,
@@ -63,12 +68,12 @@ import {
   getChainIdNetworkType,
 } from "../utils/types/knownIds"
 import { TransferProphet_Fee_Fixed } from "../utils/types/TransferProphet"
+import {
+  ReselectSpendableUTXOsFn_Public,
+  reselectSpendableUTXOsFactory,
+} from "./bridgeFromBitcoin"
 import { ChainId, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import {
-  reselectSpendableUTXOsFactory,
-  ReselectSpendableUTXOsFn_Public,
-} from "./bridgeFromBitcoin"
 
 export type BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs =
   ReselectSpendableUTXOsFn_Public
@@ -123,6 +128,54 @@ export async function bridgeFromBRC20(
   info: BridgeFromBRC20Input,
 ): Promise<BridgeFromBRC20Output> {
   const route = await checkRouteValid(ctx, isSupportedBRC20Route, info)
+
+  if (
+    !equalBytes(
+      info.fromAddressScriptPubKey,
+      addressToScriptPubKey(
+        info.fromChain === KnownChainId.Bitcoin.Mainnet
+          ? btc.NETWORK
+          : btc.TEST_NETWORK,
+        info.fromAddress,
+      ),
+    )
+  ) {
+    throw new InvalidMethodParametersError(
+      ["XLinkSDK", "bridgeFromBRC20"],
+      [
+        {
+          name: "fromAddressScriptPubKey",
+          expected: "the scriptPubKey of the fromAddress",
+          received: "invalid scriptPubKey",
+        },
+      ],
+    )
+  }
+
+  if (info.toAddressScriptPubKey != null) {
+    if (
+      !equalBytes(
+        info.toAddressScriptPubKey,
+        addressToScriptPubKey(
+          info.fromChain === KnownChainId.Bitcoin.Mainnet
+            ? btc.NETWORK
+            : btc.TEST_NETWORK,
+          info.toAddress,
+        ),
+      )
+    ) {
+      throw new InvalidMethodParametersError(
+        ["XLinkSDK", "bridgeFromBRC20"],
+        [
+          {
+            name: "toAddressScriptPubKey",
+            expected: "the scriptPubKey of the toAddress",
+            received: "invalid scriptPubKey",
+          },
+        ],
+      )
+    }
+  }
 
   if (KnownChainId.isBRC20Chain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
