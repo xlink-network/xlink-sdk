@@ -1,9 +1,11 @@
 import * as btc from "@scure/btc-signer"
+import { equalBytes } from "@scure/btc-signer/utils"
 import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
 import {
   UTXOSpendable,
+  addressToScriptPubKey,
   bitcoinToSatoshi,
   excludeUTXOs,
   sumUTXO,
@@ -109,6 +111,54 @@ export async function bridgeFromBitcoin(
   info: BridgeFromBitcoinInput,
 ): Promise<BridgeFromBitcoinOutput> {
   const route = await checkRouteValid(ctx, isSupportedBitcoinRoute, info)
+
+  if (
+    !equalBytes(
+      info.fromAddressScriptPubKey,
+      addressToScriptPubKey(
+        info.fromChain === KnownChainId.Bitcoin.Mainnet
+          ? btc.NETWORK
+          : btc.TEST_NETWORK,
+        info.fromAddress,
+      ),
+    )
+  ) {
+    throw new InvalidMethodParametersError(
+      ["XLinkSDK", "bridgeFromBitcoin"],
+      [
+        {
+          name: "fromAddressScriptPubKey",
+          expected: "the scriptPubKey of the fromAddress",
+          received: "invalid scriptPubKey",
+        },
+      ],
+    )
+  }
+
+  if (info.toAddressScriptPubKey != null) {
+    if (
+      !equalBytes(
+        info.toAddressScriptPubKey,
+        addressToScriptPubKey(
+          info.fromChain === KnownChainId.Bitcoin.Mainnet
+            ? btc.NETWORK
+            : btc.TEST_NETWORK,
+          info.toAddress,
+        ),
+      )
+    ) {
+      throw new InvalidMethodParametersError(
+        ["XLinkSDK", "bridgeFromBitcoin"],
+        [
+          {
+            name: "toAddressScriptPubKey",
+            expected: "the scriptPubKey of the toAddress",
+            received: "invalid scriptPubKey",
+          },
+        ],
+      )
+    }
+  }
 
   if (KnownChainId.isBitcoinChain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
