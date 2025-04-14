@@ -7,23 +7,40 @@ import { decodeHex } from "../../utils/hexHelpers"
 import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
 import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
 import { getBTCPegInAddress } from "../btcAddresses"
+import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../constants"
 import { calculateFee } from "../prepareTransaction"
+import { getMetaPegInAddress } from "../../metaUtils/btcAddresses"
 
-const REVEAL_TX_OUTPUT_AMOUNT = 546n
+const REVEAL_TX_OUTPUT_AMOUNT = BITCOIN_OUTPUT_MINIMUM_AMOUNT
 
 export async function createBitcoinPegInRecipients(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
   info: {
-    fromChain: KnownChainId.BitcoinChain
-    toChain: KnownChainId.StacksChain | KnownChainId.EVMChain
-    fromToken: KnownTokenId.BitcoinToken
-    toToken: KnownTokenId.StacksToken | KnownTokenId.EVMToken
+    fromChain:
+      | KnownChainId.BitcoinChain
+      | KnownChainId.BRC20Chain
+      | KnownChainId.RunesChain
+    fromToken:
+      | KnownTokenId.BitcoinToken
+      | KnownTokenId.BRC20Token
+      | KnownTokenId.RunesToken
+    toChain:
+      | KnownChainId.StacksChain
+      | KnownChainId.EVMChain
+      | KnownChainId.BitcoinChain
+      | KnownChainId.BRC20Chain
+      | KnownChainId.RunesChain
+    toToken:
+      | KnownTokenId.StacksToken
+      | KnownTokenId.EVMToken
+      | KnownTokenId.BitcoinToken
+      | KnownTokenId.BRC20Token
+      | KnownTokenId.RunesToken
     fromAddress: {
       address: string
       scriptPubKey: Uint8Array
     }
     toAddress: string
-    fromAmount: BigNumber
     feeRate: bigint
     orderData: Uint8Array
   },
@@ -32,12 +49,18 @@ export async function createBitcoinPegInRecipients(
   scriptPubKey: Uint8Array
   satsAmount: bigint
 }> {
-  const pegInAddress = await getBTCPegInAddress(info.fromChain, info.toChain)
+  const pegInAddress = KnownChainId.isBitcoinChain(info.fromChain)
+    ? await getBTCPegInAddress(info.fromChain, info.toChain)
+    : KnownChainId.isBRC20Chain(info.fromChain) ||
+        KnownChainId.isRunesChain(info.fromChain)
+      ? await getMetaPegInAddress(info.fromChain, info.toChain)
+      : null
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
-      KnownTokenId.Bitcoin.BTC,
+      info.fromToken,
+      info.toToken,
     )
   }
 
@@ -56,7 +79,6 @@ export async function createBitcoinPegInRecipients(
         scriptPubKeyHex: toHex(info.fromAddress.scriptPubKey),
       },
       toAddress: info.toAddress,
-      fromAmount: BigNumber.toString(info.fromAmount),
       orderDataHex: toHex(info.orderData),
     },
   })
@@ -73,7 +95,7 @@ export async function createBitcoinPegInRecipients(
   })
   const { fee: newTxFee } = await calculateFee({
     recipientAddressScriptPubKeys: [pegInAddress.scriptPubKey],
-    opReturnData: [],
+    opReturnScripts: [],
     selectedUTXOs: [],
     feeRate: info.feeRate,
     extraSize: revealInputSize.inputSize + revealInputSize.witnessDataSize / 4,

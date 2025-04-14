@@ -34,6 +34,14 @@ export function isSameUTXO(utxo1: UTXOBasic, utxo2: UTXOBasic): boolean {
   return utxo1.txId === utxo2.txId && utxo1.index === utxo2.index
 }
 
+export type UTXOFilter = <U extends UTXOBasic>(utxo: U) => boolean
+export function excludeUTXOs(excludingUTXOs: UTXOBasic[]): UTXOFilter {
+  return filteringUTXO =>
+    !excludingUTXOs.some(excludingUTXO =>
+      isSameUTXO(excludingUTXO, filteringUTXO),
+    )
+}
+
 export function addressToScriptPubKey(
   network: BitcoinNetwork,
   address: string,

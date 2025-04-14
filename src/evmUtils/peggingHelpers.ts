@@ -1,15 +1,10 @@
-import { callReadOnlyFunction } from "@stacks/transactions"
-import { CallReadOnlyFunctionFn, unwrapResponse } from "clarity-codegen"
+import { unwrapResponse } from "clarity-codegen"
 import { readContract } from "viem/actions"
-import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "../metaUtils/xlinkContractHelpers"
+import { EVM_BARE_PEG_IN_USE_SWAP_CONTRACT } from "../config"
+import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import {
-  getTerminatingStacksTokenContractAddress,
-  stxTokenContractAddresses,
-} from "../stacksUtils/stxContractAddresses"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
@@ -18,20 +13,39 @@ import {
 } from "../stacksUtils/xlinkContractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
+  getAndCheckTransitStacksTokens,
+  getSpecialFeeDetailsForSwapRoute,
+} from "../utils/SwapRouteHelpers"
+import {
   IsSupportedFn,
   KnownRoute_FromEVM_ToStacks,
   KnownRoute_FromStacks_ToEVM,
+  KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { props } from "../utils/promiseHelpers"
-import { assertExclude, checkNever } from "../utils/typeHelpers"
-import { TransferProphet } from "../utils/types/TransferProphet"
+import { checkNever } from "../utils/typeHelpers"
+import {
+  TransferProphet,
+  TransferProphet_Fee_Fixed,
+} from "../utils/types/TransferProphet"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
-import { nativeCurrencyAddress } from "./addressHelpers"
+import {
+  evmNativeCurrencyAddress,
+  isStacksContractAddressEqual,
+  StacksContractAddress,
+} from "../xlinkSdkUtils/types"
+import {
+  SDKGlobalContext,
+  withGlobalContextCache,
+} from "../xlinkSdkUtils/types.internal"
+import {
+  getEVMSupportedRoutes,
+  getEVMSupportedRoutesByChainType,
+} from "./apiHelpers/getEVMSupportedRoutes"
 import { BridgeEndpointAbi } from "./contractAbi/bridgeEndpoint"
 import { BridgeRegistryAbi } from "./contractAbi/bridgeRegistry"
 import {
@@ -44,10 +58,25 @@ export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromEVM_ToStacks,
 ): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(
-    route.toChain,
-    "cross-peg-in-endpoint-v2-04",
+  return withGlobalContextCache(
+    ctx.evm.feeRateCache,
+    withGlobalContextCache.cacheKeyFromRoute(route),
+    () => _getEvm2StacksFeeInfo(ctx, route),
   )
+}
+const _getEvm2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromEVM_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = EVM_BARE_PEG_IN_USE_SWAP_CONTRACT
+    ? getStacksContractCallInfo(
+        route.toChain,
+        StacksContractName.EVMPegInEndpointSwap,
+      )
+    : getStacksContractCallInfo(
+        route.toChain,
+        StacksContractName.EVMPegInEndpoint,
+      )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   const evmTokenContractCallInfo = await getEVMTokenContractInfo(
     ctx,
@@ -62,20 +91,11 @@ export const getEvm2StacksFeeInfo = async (
     return
   }
 
-  if (evmTokenContractCallInfo.tokenContractAddress === nativeCurrencyAddress) {
+  const { client, tokenContractAddress } = evmTokenContractCallInfo
+
+  if (tokenContractAddress === evmNativeCurrencyAddress) {
     return getEvm2StacksNativeBridgeFeeInfo(ctx, route)
   }
-
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
-
-  const { client, tokenContractAddress } = evmTokenContractCallInfo
 
   const registryAddr =
     evmContractCallInfo.registryContractAddress ??
@@ -86,7 +106,7 @@ export const getEvm2StacksFeeInfo = async (
     }))
 
   const resp = await props({
-    isApproved: readContract(client, {
+    isApprovedOnEVMSide: readContract(client, {
       abi: BridgeRegistryAbi,
       address: registryAddr,
       functionName: "APPROVED_TOKEN",
@@ -126,11 +146,24 @@ export const getEvm2StacksFeeInfo = async (
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
-  if (!resp.isApproved) return undefined
+  if (!resp.isApprovedOnEVMSide) return undefined
 
   const minAmount = BigNumber.max([resp.minAmount, resp.minFeeAmount])
   const maxAmount = BigNumber.min([resp.maxAmount])
@@ -157,7 +190,7 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
     route.toChain,
-    "cross-peg-in-endpoint-v2-04",
+    StacksContractName.EVMPegInEndpoint,
   )
   const evmContractCallInfo = await getEVMContractCallInfo(ctx, route.fromChain)
   if (
@@ -167,23 +200,27 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
     return
   }
 
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
-  }
-
   const resp = await props({
     isPaused: executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksNativeBridgeFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksNativeBridgeFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,
@@ -195,32 +232,109 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
 }
 
 export const getStacks2EvmFeeInfo = async (
+  ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToEVM,
+  options: {
+    toDexAggregator: boolean
+    /**
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
+     */
+    initialRoute: null | KnownRoute_ToStacks
+  },
 ): Promise<undefined | TransferProphet> => {
-  const stacksContractCallInfo = getStacksContractCallInfo(
-    route.fromChain,
-    "cross-peg-out-endpoint-v2-01",
+  return withGlobalContextCache(
+    ctx.evm.feeRateCache,
+    [
+      withGlobalContextCache.cacheKeyFromRoute(route),
+      options.toDexAggregator ? "agg" : "",
+      options.initialRoute == null
+        ? ""
+        : withGlobalContextCache.cacheKeyFromRoute(options.initialRoute),
+    ].join("#"),
+    () => _getStacks2EvmFeeInfo(ctx, route, options),
   )
-  const stacksTokenContractCallInfo = getStacksTokenContractInfo(
+}
+const _getStacks2EvmFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromStacks_ToEVM,
+  options: {
+    toDexAggregator: boolean
+    /**
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
+     */
+    initialRoute: null | KnownRoute_ToStacks
+  },
+): Promise<undefined | TransferProphet> => {
+  const stacksBaseContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    StacksContractName.EVMPegOutEndpoint,
+  )
+  const stacksAggContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    StacksContractName.EVMPegOutEndpointAggregator,
+  )
+  const stacksTokenContractCallInfo = await getStacksTokenContractInfo(
+    ctx,
     route.fromChain,
     route.fromToken,
   )
   const toChainId = contractAssignedChainIdFromKnownChain(route.toChain)
-  if (stacksContractCallInfo == null || stacksTokenContractCallInfo == null) {
+  if (
+    stacksBaseContractCallInfo == null ||
+    stacksAggContractCallInfo == null ||
+    stacksTokenContractCallInfo == null
+  ) {
     return
   }
 
-  const terminatingStacksTokenAddress =
-    getTerminatingStacksTokenContractAddress(route) ??
-    stacksTokenContractCallInfo
+  const stacksContractCallInfo = options.toDexAggregator
+    ? stacksAggContractCallInfo
+    : stacksBaseContractCallInfo
 
-  const executeOptions = {
-    deployerAddress: stacksContractCallInfo.deployerAddress,
-    callReadOnlyFunction: (callOptions =>
-      callReadOnlyFunction({
-        ...callOptions,
-        network: stacksContractCallInfo.network,
-      })) satisfies CallReadOnlyFunctionFn,
+  const terminatingStacksTokenAddress =
+    (await getTerminatingStacksTokenContractAddress(ctx, {
+      evmChain: route.toChain,
+      evmToken: route.toToken,
+      stacksChain: route.fromChain,
+    })) ?? stacksTokenContractCallInfo
+
+  const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+    initialRoute: options.initialRoute,
+    swapRoute: {
+      via: options.toDexAggregator ? "evmDexAggregator" : "ALEX",
+    },
+  })
+
+  if (ctx.debugLog) {
+    console.log("[getStacks2EvmFeeInfo/specialFeeInfo]", route, specialFeeInfo)
   }
 
   const tokenConf = await Promise.all([
@@ -233,40 +347,79 @@ export const getStacks2EvmFeeInfo = async (
           "chain-id": toChainId,
         },
       },
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
-      executeOptions,
+      stacksContractCallInfo.executeOptions,
     ),
-  ]).then(([resp, isPaused]) => {
-    if (resp.type !== "success") return undefined
+  ]).then(
+    ([resp, isPaused]) => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, resp, isPaused)
+      }
 
-    return {
-      ...unwrapResponse(resp),
-      isPaused,
-    }
-  })
+      if (resp.type !== "success") return undefined
+
+      return {
+        ...unwrapResponse(resp),
+        isPaused,
+      }
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   if (tokenConf == null) return undefined
 
-  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
-  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
+  const isPaused = tokenConf.isPaused || tokenConf.approved === false
   const reserve = numberFromStacksContractNumber(tokenConf.reserve)
 
-  const minAmount = BigNumber.max([
-    numberFromStacksContractNumber(tokenConf["min-amount"]),
-    minFee,
-  ])
+  const minAmount = numberFromStacksContractNumber(tokenConf["min-amount"])
   const maxAmount = BigNumber.min([
     numberFromStacksContractNumber(tokenConf["max-amount"]),
     reserve,
   ])
 
+  if (specialFeeInfo != null) {
+    return {
+      isPaused,
+      bridgeToken: route.fromToken,
+      fees: [
+        {
+          type: "rate",
+          token: route.fromToken,
+          rate: specialFeeInfo.feeRate,
+          minimumAmount: specialFeeInfo.minFeeAmount,
+        },
+        ...(specialFeeInfo.gasFee == null
+          ? []
+          : [
+              {
+                type: "fixed",
+                token: specialFeeInfo.gasFee.token,
+                amount: specialFeeInfo.gasFee.amount,
+              } satisfies TransferProphet_Fee_Fixed,
+            ]),
+      ],
+      minBridgeAmount: BigNumber.isZero(minAmount)
+        ? specialFeeInfo.minFeeAmount
+        : BigNumber.max([minAmount, specialFeeInfo.minFeeAmount]),
+      maxBridgeAmount: maxAmount,
+    }
+  }
+
+  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
+  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
+
   return {
-    isPaused: tokenConf.isPaused || tokenConf.approved === false,
+    isPaused,
     bridgeToken: route.fromToken,
     fees: [
       {
@@ -276,114 +429,10 @@ export const getStacks2EvmFeeInfo = async (
         minimumAmount: minFee,
       },
     ],
-    minBridgeAmount: BigNumber.isZero(minAmount) ? null : minAmount,
-    maxBridgeAmount: BigNumber.isZero(maxAmount) ? null : maxAmount,
-  }
-}
-
-export async function fromCorrespondingStacksToken(
-  toChain: KnownChainId.EVMChain,
-  stacksToken: KnownTokenId.StacksToken,
-): Promise<KnownTokenId.EVMToken[]> {
-  const EVMToken = KnownTokenId.EVM
-  const StacksToken = KnownTokenId.Stacks
-
-  const restEVMTokenPossibilities = assertExclude.i<KnownTokenId.EVMToken>()
-
-  if (stacksToken === StacksToken.sLUNR) {
-    return [EVMToken.LUNR]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.LUNR)
-
-  if (stacksToken === StacksToken.ALEX) {
-    return [EVMToken.ALEX]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.ALEX)
-
-  if (stacksToken === StacksToken.sSKO) {
-    return [EVMToken.SKO]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.SKO)
-
-  if (stacksToken === StacksToken.vLiSTX) {
-    return [EVMToken.vLiSTX]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.vLiSTX)
-
-  if (stacksToken === StacksToken.vLiALEX) {
-    return [EVMToken.vLiALEX]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.vLiALEX)
-
-  if (stacksToken === StacksToken.sUSDT) {
-    return [EVMToken.sUSDT, EVMToken.USDT, EVMToken.USDC]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.sUSDT)
-  assertExclude(restEVMTokenPossibilities, EVMToken.USDT)
-  assertExclude(restEVMTokenPossibilities, EVMToken.USDC)
-  if (stacksToken === StacksToken.aBTC) {
-    return [EVMToken.aBTC, EVMToken.WBTC, EVMToken.BTCB, EVMToken.cbBTC]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.aBTC)
-  assertExclude(restEVMTokenPossibilities, EVMToken.WBTC)
-  assertExclude(restEVMTokenPossibilities, EVMToken.BTCB)
-  assertExclude(restEVMTokenPossibilities, EVMToken.cbBTC)
-
-  if (stacksToken === StacksToken.uBTC) {
-    return [EVMToken.uBTC, EVMToken.wuBTC]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.uBTC)
-  assertExclude(restEVMTokenPossibilities, EVMToken.wuBTC)
-
-  if (stacksToken === StacksToken.DB20) {
-    return [EVMToken.DB20]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.DB20)
-
-  if (stacksToken === StacksToken.DOG) {
-    return [EVMToken.DOG]
-  }
-  assertExclude(restEVMTokenPossibilities, EVMToken.DOG)
-
-  checkNever(restEVMTokenPossibilities)
-  return []
-}
-export async function toCorrespondingStacksToken(
-  evmToken: KnownTokenId.EVMToken,
-): Promise<undefined | KnownTokenId.StacksToken> {
-  const EVMToken = KnownTokenId.EVM
-  const StacksToken = KnownTokenId.Stacks
-
-  switch (evmToken) {
-    case EVMToken.LUNR:
-      return StacksToken.sLUNR
-    case EVMToken.ALEX:
-      return StacksToken.ALEX
-    case EVMToken.SKO:
-      return StacksToken.sSKO
-    case EVMToken.vLiSTX:
-      return StacksToken.vLiSTX
-    case EVMToken.vLiALEX:
-      return StacksToken.vLiALEX
-    case EVMToken.sUSDT:
-    case EVMToken.USDT:
-    case EVMToken.USDC:
-      return StacksToken.sUSDT
-    case EVMToken.aBTC:
-    case EVMToken.BTCB:
-    case EVMToken.WBTC:
-    case EVMToken.cbBTC:
-      return StacksToken.aBTC
-    case EVMToken.uBTC:
-    case EVMToken.wuBTC:
-      return StacksToken.uBTC
-    case EVMToken.DB20:
-      return StacksToken.DB20
-    case EVMToken.DOG:
-      return StacksToken.DOG
-    default:
-      checkNever(evmToken)
-      return
+    minBridgeAmount: BigNumber.isZero(minAmount)
+      ? minFee
+      : BigNumber.max([minAmount, minFee]),
+    maxBridgeAmount: maxAmount,
   }
 }
 
@@ -394,15 +443,13 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
     return false
   }
 
+  if (!KnownChainId.isKnownChain(toChain)) return false
+
   if (
-    KnownChainId.isEVMChain(fromChain) &&
-    _allNoLongerSupportedEVMChains.includes(fromChain)
-  ) {
-    return false
-  }
-  if (
-    KnownChainId.isEVMChain(toChain) &&
-    _allNoLongerSupportedEVMChains.includes(toChain)
+    (KnownChainId.isEVMChain(fromChain) &&
+      _allNoLongerSupportedEVMChains.includes(fromChain)) ||
+    (KnownChainId.isEVMChain(toChain) &&
+      _allNoLongerSupportedEVMChains.includes(toChain))
   ) {
     return false
   }
@@ -413,7 +460,6 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   ) {
     return false
   }
-  if (!KnownChainId.isKnownChain(toChain)) return false
 
   const fromContractInfo = await getEVMContractCallInfo(ctx, fromChain)
   if (fromContractInfo == null) return false
@@ -421,66 +467,186 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   const fromTokenInfo = await getEVMTokenContractInfo(ctx, fromChain, fromToken)
   if (fromTokenInfo == null) return false
 
-  if (fromTokenInfo.tokenContractAddress === nativeCurrencyAddress) {
+  if (fromTokenInfo.tokenContractAddress === evmNativeCurrencyAddress) {
     if (fromContractInfo.bridgeEndpointContractAddress == null) return false
     if (!KnownChainId.isBitcoinChain(toChain)) return false
   }
 
+  const headAndTailStacksTokens = await getAndCheckTransitStacksTokens(ctx, {
+    ...route,
+    fromChain,
+    fromToken,
+    toChain: toChain as any,
+    toToken: toToken as any,
+  })
+  if (headAndTailStacksTokens == null) return false
+  const { firstStepToStacksToken, lastStepFromStacksToken } =
+    headAndTailStacksTokens
+
+  // evm -> stacks
   if (KnownChainId.isStacksChain(toChain)) {
     if (!KnownTokenId.isStacksToken(toToken)) return false
 
-    const stacksToken = await toCorrespondingStacksToken(fromToken)
-    if (stacksToken == null) return false
-
-    if (stxTokenContractAddresses[stacksToken]?.[toChain] == null) {
-      return false
-    }
-
-    return stacksToken === toToken
+    const evmRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    return evmRoutes.some(
+      route => route.evmToken === fromToken && route.stacksToken === toToken,
+    )
   }
 
+  // evm -> evm
   if (KnownChainId.isEVMChain(toChain)) {
     if (!KnownTokenId.isEVMToken(toToken)) return false
 
-    const toTokenInfo = await getEVMTokenContractInfo(ctx, toChain, toToken)
-    if (toTokenInfo == null) return false
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getEVMSupportedRoutes(ctx, toChain)
 
-    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
-    if (transitStacksToken == null) return false
-
-    const toEVMTokens = await fromCorrespondingStacksToken(
-      toChain,
-      transitStacksToken,
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.evmToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
     )
-    return toEVMTokens.includes(toToken)
   }
 
+  // evm -> btc
   if (KnownChainId.isBitcoinChain(toChain)) {
     if (!KnownTokenId.isBitcoinToken(toToken)) return false
-    const stacksToken = await toCorrespondingStacksToken(fromToken)
-    return stacksToken === KnownTokenId.Stacks.aBTC
+
+    return toToken === KnownTokenId.Bitcoin.BTC
   }
 
-  if (KnownChainId.isRunesChain(toChain)) {
-    if (!KnownTokenId.isRunesToken(toToken)) return false
-
-    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
-    if (transitStacksToken == null) return false
-
-    const runesRoutes = await getRunesSupportedRoutes(ctx, toChain)
-    return runesRoutes.some(route => route.stacksToken === transitStacksToken)
-  }
-
+  // evm -> brc20
   if (KnownChainId.isBRC20Chain(toChain)) {
     if (!KnownTokenId.isBRC20Token(toToken)) return false
 
-    const transitStacksToken = await toCorrespondingStacksToken(fromToken)
-    if (transitStacksToken == null) return false
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getBRC20SupportedRoutes(ctx, toChain)
 
-    const brc20Routes = await getBRC20SupportedRoutes(ctx, toChain)
-    return brc20Routes.some(route => route.stacksToken === transitStacksToken)
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.stacksToken === lastStepFromStacksToken &&
+          route.brc20Token === toToken,
+      )
+    )
+  }
+
+  // evm -> runes
+  if (KnownChainId.isRunesChain(toChain)) {
+    if (!KnownTokenId.isRunesToken(toToken)) return false
+
+    const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getRunesSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.some(
+        route =>
+          route.evmToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) &&
+      toRoutes.some(
+        route =>
+          route.stacksToken === lastStepFromStacksToken &&
+          route.runesToken === toToken,
+      )
+    )
   }
 
   checkNever(toChain)
   return false
+}
+
+export async function evmTokenFromCorrespondingStacksToken(
+  sdkContext: SDKGlobalContext,
+  toChain: KnownChainId.EVMChain,
+  fromStacksToken: KnownTokenId.StacksToken,
+): Promise<KnownTokenId.EVMToken[]> {
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, toChain)
+  return supportedRoutes.reduce(
+    (acc, route) =>
+      route.stacksToken === fromStacksToken ? [...acc, route.evmToken] : acc,
+    [] as KnownTokenId.EVMToken[],
+  )
+}
+export async function evmTokenToCorrespondingStacksToken(
+  sdkContext: SDKGlobalContext,
+  fromChain: KnownChainId.EVMChain,
+  fromEVMToken: KnownTokenId.EVMToken,
+): Promise<undefined | KnownTokenId.StacksToken> {
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, fromChain)
+  return supportedRoutes.find(route => route.evmToken === fromEVMToken)
+    ?.stacksToken
+}
+
+export const getTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  info: {
+    evmChain: KnownChainId.EVMChain
+    evmToken: KnownTokenId.EVMToken
+    stacksChain: KnownChainId.StacksChain
+  },
+): Promise<undefined | StacksContractAddress> => {
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, info.evmChain)
+
+  return (
+    supportedRoutes.find(r => r.evmToken === info.evmToken)
+      ?.proxyStacksTokenContractAddress ?? undefined
+  )
+}
+
+export const getStacksTokenFromTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  info: {
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.StacksToken> => {
+  const routes = await getEVMSupportedRoutesByChainType(
+    sdkContext,
+    info.stacksChain === KnownChainId.Stacks.Mainnet ? "mainnet" : "testnet",
+  )
+
+  return (
+    routes.find(r =>
+      r.proxyStacksTokenContractAddress == null
+        ? false
+        : isStacksContractAddressEqual(
+            r.proxyStacksTokenContractAddress,
+            info.stacksTokenAddress,
+          ),
+    )?.stacksToken ?? undefined
+  )
+}
+
+export const getEVMTokenFromTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  info: {
+    evmChain: KnownChainId.EVMChain
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.EVMToken> => {
+  const supportedRoutes = await getEVMSupportedRoutes(sdkContext, info.evmChain)
+
+  return (
+    supportedRoutes.find(r =>
+      r.proxyStacksTokenContractAddress == null
+        ? false
+        : isStacksContractAddressEqual(
+            r.proxyStacksTokenContractAddress,
+            info.stacksTokenAddress,
+          ),
+    )?.evmToken ?? undefined
+  )
 }

@@ -1,33 +1,32 @@
-import { NETWORK, TEST_NETWORK } from "@scure/btc-signer"
 import { StacksNetwork } from "@stacks/network"
 import {
-  c32address,
-  c32addressDecode,
-  versions as c32addressVersions,
-} from "c32check"
+  fetchCallReadOnlyFunction,
+  FungiblePostConditionWire,
+  serializeCVBytes,
+  STXPostConditionWire,
+} from "@stacks/transactions"
 import {
+  CallReadOnlyFunctionFn,
   composeTxOptionsFactory,
   executeReadonlyCallFactory,
+  OpenCallFunctionDescriptor,
+  ParameterObjOfDescriptor,
+  StringOnly,
 } from "clarity-codegen"
 import { xlinkContracts } from "../../generated/smartContract/contracts_xlink"
-import {
-  addressToScriptPubKey,
-  scriptPubKeyToAddress,
-} from "../bitcoinUtils/bitcoinHelpers"
 import { STACKS_MAINNET, STACKS_TESTNET } from "../config"
 import { BigNumber, BigNumberSource } from "../utils/BigNumber"
-import { StacksAddressVersionNotSupportedError } from "../utils/errors"
-import {
-  decodeHex,
-  encodeHex,
-  encodeZeroPrefixedHex,
-} from "../utils/hexHelpers"
-import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { StacksContractAddress } from "../xlinkSdkUtils/types"
 import {
-  stxContractDeployers,
-  stxTokenContractAddresses,
+  isStacksContractAddressEqual,
+  StacksContractAddress,
+} from "../xlinkSdkUtils/types"
+import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { getAllStacksTokens } from "./apiHelpers/getAllStacksTokens"
+import {
+  StacksContractName,
+  stxContractAddresses,
+  stxTokenContractAddresses_legacy,
 } from "./stxContractAddresses"
 
 const CONTRACT_COMMON_NUMBER_SCALE = 8
@@ -50,16 +49,54 @@ export const numberToStacksContractNumber = (
   )
 }
 
-export const composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
+export type SerializedClarityValue = Uint8Array
+type ContractCallOptions_PostCondition =
+  | FungiblePostConditionWire
+  | STXPostConditionWire
+
+export interface ContractCallOptions {
+  contractAddress: string
+  contractName: string
+  functionName: string
+  functionArgs: SerializedClarityValue[]
+}
+
+const _composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
+export type ComposeTxOptionsFn<Contracts extends typeof xlinkContracts> = <
+  T extends StringOnly<keyof Contracts>,
+  F extends StringOnly<keyof Contracts[T]>,
+  Descriptor extends Contracts[T][F],
+  PC extends ContractCallOptions_PostCondition,
+>(
+  contractName: T,
+  functionName: F,
+  args: Descriptor extends OpenCallFunctionDescriptor
+    ? ParameterObjOfDescriptor<Descriptor>
+    : never,
+  options?: {
+    deployerAddress?: string
+    postConditions?: PC[]
+  },
+) => ContractCallOptions
+export const composeTxXLINK: ComposeTxOptionsFn<typeof xlinkContracts> = (
+  ...args
+) => {
+  const options = _composeTxXLINK(...args)
+  return {
+    ...options,
+    functionArgs: options.functionArgs.map(arg => serializeCVBytes(arg)),
+    anchorMode: undefined,
+    postConditionMode: undefined,
+    postConditions: undefined,
+  }
+}
 
 export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
   xlinkContracts,
   {},
 )
 
-export const getStacksContractCallInfo = <
-  C extends keyof typeof stxContractDeployers,
->(
+export const getStacksContractCallInfo = <C extends StacksContractName>(
   chainId: KnownChainId.StacksChain,
   contractName: C,
 ):
@@ -67,132 +104,103 @@ export const getStacksContractCallInfo = <
   | (Omit<StacksContractAddress, "contractName"> & {
       contractName: C
       network: StacksNetwork
+      executeOptions: {
+        deployerAddress?: string
+        senderAddress?: string
+        callReadOnlyFunction?: CallReadOnlyFunctionFn
+      }
     }) => {
   const network =
     chainId === KnownChainId.Stacks.Mainnet ? STACKS_MAINNET : STACKS_TESTNET
 
-  if (stxContractDeployers[contractName][chainId] == null) {
+  if (stxContractAddresses[contractName][chainId] == null) {
     return undefined
   }
 
   return {
-    ...stxContractDeployers[contractName][chainId],
+    ...stxContractAddresses[contractName][chainId],
     contractName,
     network,
+    executeOptions: {
+      deployerAddress:
+        stxContractAddresses[contractName][chainId].deployerAddress,
+      callReadOnlyFunction(callOptions) {
+        return fetchCallReadOnlyFunction({
+          ...callOptions,
+          contractAddress:
+            stxContractAddresses[contractName][chainId].deployerAddress,
+          contractName:
+            stxContractAddresses[contractName][chainId].contractName,
+          network,
+        })
+      },
+    },
   }
 }
 
-export const getStacksTokenContractInfo = (
+export const getStacksTokenContractInfo = async (
+  ctx: SDKGlobalContext,
   chainId: KnownChainId.StacksChain,
   tokenId: KnownTokenId.StacksToken,
-): undefined | (StacksContractAddress & { network: StacksNetwork }) => {
-  if (stxTokenContractAddresses[tokenId]?.[chainId] == null) {
+): Promise<
+  undefined | (StacksContractAddress & { network: StacksNetwork })
+> => {
+  let address: StacksContractAddress | undefined
+  if (stxTokenContractAddresses_legacy[tokenId]?.[chainId] != null) {
+    address = stxTokenContractAddresses_legacy[tokenId][chainId]
+  } else {
+    const allTokens = await getAllStacksTokens(ctx, chainId)
+    for (const token of allTokens) {
+      if (token.stacksTokenId === tokenId) {
+        address = token.contractAddress
+        break
+      }
+    }
+  }
+
+  if (address == null) {
     return undefined
   }
 
   const network =
     chainId === KnownChainId.Stacks.Mainnet ? STACKS_MAINNET : STACKS_TESTNET
 
-  return {
-    ...stxTokenContractAddresses[tokenId]![chainId],
-    network,
-  }
+  return { ...address, network }
 }
 
 export async function getStacksToken(
+  ctx: SDKGlobalContext,
   chain: KnownChainId.StacksChain,
   tokenAddress: StacksContractAddress,
 ): Promise<undefined | KnownTokenId.StacksToken> {
   for (const token of Object.keys(
-    stxTokenContractAddresses,
-  ) as (keyof typeof stxTokenContractAddresses)[]) {
-    const info = stxTokenContractAddresses[token]?.[chain]
+    stxTokenContractAddresses_legacy,
+  ) as (keyof typeof stxTokenContractAddresses_legacy)[]) {
+    const info = stxTokenContractAddresses_legacy[token]?.[chain]
     if (info == null) continue
 
-    if (
-      info.deployerAddress === tokenAddress.deployerAddress &&
-      info.contractName === tokenAddress.contractName
-    ) {
-      return token
+    if (isStacksContractAddressEqual(info, tokenAddress)) {
+      return token as KnownTokenId.StacksToken
+    }
+  }
+
+  const allTokens = await getAllStacksTokens(ctx, chain)
+  for (const token of allTokens) {
+    if (isStacksContractAddressEqual(token.contractAddress, tokenAddress)) {
+      return token.stacksTokenId
+    }
+
+    if (token.underlyingToken != null) {
+      if (
+        isStacksContractAddressEqual(
+          token.underlyingToken.contractAddress,
+          tokenAddress,
+        )
+      ) {
+        return token.stacksTokenId
+      }
     }
   }
 
   return
-}
-
-export function addressFromBuffer(
-  chain: KnownChainId.KnownChain,
-  buffer: Uint8Array,
-): string {
-  if (KnownChainId.isStacksChain(chain)) {
-    return c32address(
-      c32addressVersions[
-        chain === KnownChainId.Stacks.Mainnet ? "mainnet" : "testnet"
-      ].p2pkh,
-      encodeHex(buffer),
-    )
-  }
-
-  if (
-    KnownChainId.isBitcoinChain(chain) ||
-    KnownChainId.isBRC20Chain(chain) ||
-    KnownChainId.isRunesChain(chain)
-  ) {
-    return scriptPubKeyToAddress(
-      chain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
-      buffer,
-    )
-  }
-
-  if (KnownChainId.isEVMChain(chain)) {
-    return encodeZeroPrefixedHex(buffer)
-  }
-
-  checkNever(chain)
-  throw new TypeError("[addressFromBuffer] Unsupported chain: " + chain)
-}
-
-export function addressToBuffer(
-  chain: KnownChainId.KnownChain,
-  address: string,
-): Uint8Array {
-  if (KnownChainId.isStacksChain(chain)) {
-    const [version, hash160] = c32addressDecode(address)
-
-    if (
-      (chain === KnownChainId.Stacks.Mainnet &&
-        version == c32addressVersions.mainnet.p2sh) ||
-      (chain === KnownChainId.Stacks.Testnet &&
-        version == c32addressVersions.testnet.p2sh)
-    ) {
-      throw new StacksAddressVersionNotSupportedError(address, "Multisig")
-    } else if (
-      (chain === KnownChainId.Stacks.Mainnet &&
-        version !== c32addressVersions.mainnet.p2pkh) ||
-      (chain === KnownChainId.Stacks.Testnet &&
-        version !== c32addressVersions.testnet.p2pkh)
-    ) {
-      throw new StacksAddressVersionNotSupportedError(address, `${version}`)
-    }
-
-    return decodeHex(hash160)
-  }
-
-  if (
-    KnownChainId.isBitcoinChain(chain) ||
-    KnownChainId.isBRC20Chain(chain) ||
-    KnownChainId.isRunesChain(chain)
-  ) {
-    return addressToScriptPubKey(
-      chain === KnownChainId.Bitcoin.Mainnet ? NETWORK : TEST_NETWORK,
-      address,
-    )
-  }
-
-  if (KnownChainId.isEVMChain(chain)) {
-    return decodeHex(address)
-  }
-
-  checkNever(chain)
-  throw new TypeError("[addressToBuffer] Unsupported chain: " + chain)
 }

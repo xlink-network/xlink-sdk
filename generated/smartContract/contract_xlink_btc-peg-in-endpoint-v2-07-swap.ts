@@ -14,8 +14,8 @@ stringAsciiT,
 noneT
 } from "../smartContractHelpers/codegenImport"
 
-export const btcPegInEndpointV205 = defineContract({
-"btc-peg-in-endpoint-v2-05": {
+export const btcPegInEndpointV207Swap = defineContract({
+"btc-peg-in-endpoint-v2-07-swap": {
   callback: {
     input: [
       { name: 'sender', type: principalT },
@@ -24,7 +24,7 @@ export const btcPegInEndpointV205 = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
-  'finalize-peg-in-cross': {
+  'finalize-peg-in-cross-swap': {
     input: [
       { name: 'tx', type: bufferT },
       {
@@ -48,6 +48,7 @@ export const btcPegInEndpointV205 = defineContract({
         name: 'reveal-proof',
         type: tupleT({ hashes: listT(bufferT, ), 'tree-depth': uintT, 'tx-index': uintT }, )
       },
+      { name: 'routing-traits', type: listT(traitT, ) },
       { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(booleanT, ),
@@ -73,20 +74,39 @@ export const btcPegInEndpointV205 = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
+  'set-peg-out-fee': {
+    input: [ { name: 'fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-peg-out-gas-fee': {
+    input: [ { name: 'fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'break-routing-id': {
+    input: [ { name: 'routing-ids', type: listT(uintT, ) } ],
+    output: responseSimpleT(tupleT({
+      'routing-factors': listT(uintT, ),
+      'routing-tokens': listT(principalT, )
+    }, ), ),
+    mode: 'readonly'
+  },
   'construct-principal': {
     input: [ { name: 'hash-bytes', type: bufferT } ],
     output: responseSimpleT(principalT, ),
     mode: 'readonly'
   },
-  'create-order-cross-or-fail': {
+  'create-order-cross-swap-or-fail': {
     input: [
       {
         name: 'order',
         type: tupleT({
           'chain-id': optionalT(uintT, ),
           from: bufferT,
+          'min-amount-out': optionalT(uintT, ),
+          routing: listT(uintT, ),
           to: bufferT,
-          token: principalT,
           'token-out': principalT
         }, )
       }
@@ -102,7 +122,7 @@ export const btcPegInEndpointV205 = defineContract({
     output: responseSimpleT(tupleT({ 'commit-txid': bufferT, 'order-script': bufferT }, ), ),
     mode: 'readonly'
   },
-  'decode-order-cross-from-reveal-tx-or-fail': {
+  'decode-order-cross-swap-from-reveal-tx-or-fail': {
     input: [
       { name: 'tx', type: bufferT },
       { name: 'order-idx', type: uintT }
@@ -112,20 +132,22 @@ export const btcPegInEndpointV205 = defineContract({
       'order-details': tupleT({
         'chain-id': optionalT(uintT, ),
         from: bufferT,
+        'min-amount-out': optionalT(uintT, ),
+        routing: listT(uintT, ),
         to: bufferT,
-        token: principalT,
         'token-out': principalT
       }, )
     }, ), ),
     mode: 'readonly'
   },
-  'decode-order-cross-or-fail': {
+  'decode-order-cross-swap-or-fail': {
     input: [ { name: 'order-script', type: bufferT } ],
     output: responseSimpleT(tupleT({
       'chain-id': optionalT(uintT, ),
       from: bufferT,
+      'min-amount-out': optionalT(uintT, ),
+      routing: listT(uintT, ),
       to: bufferT,
-      token: principalT,
       'token-out': principalT
     }, ), ),
     mode: 'readonly'
@@ -151,6 +173,16 @@ export const btcPegInEndpointV205 = defineContract({
     }, ), ),
     mode: 'readonly'
   },
+  'get-default-peg-out-fee': {
+    input: [
+      {
+        name: 'pair-tuple',
+        type: tupleT({ 'chain-id': optionalT(uintT, ), token: principalT }, )
+      }
+    ],
+    output: responseSimpleT(tupleT({ 'peg-out-fee': uintT, 'peg-out-gas-fee': uintT }, ), ),
+    mode: 'readonly'
+  },
   'get-fee-to-address': { input: [], output: principalT, mode: 'readonly' },
   'get-peg-in-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-peg-in-min-fee': { input: [], output: uintT, mode: 'readonly' },
@@ -159,6 +191,8 @@ export const btcPegInEndpointV205 = defineContract({
     output: booleanT,
     mode: 'readonly'
   },
+  'get-peg-out-fee': { input: [], output: uintT, mode: 'readonly' },
+  'get-peg-out-gas-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-txid': {
     input: [ { name: 'tx', type: bufferT } ],
     output: responseSimpleT(bufferT, ),
@@ -171,7 +205,7 @@ export const btcPegInEndpointV205 = defineContract({
     mode: 'readonly'
   },
   'is-peg-in-paused': { input: [], output: booleanT, mode: 'readonly' },
-  'validate-tx-cross': {
+  'validate-tx-cross-swap': {
     input: [
       {
         name: 'commit-tx',
@@ -181,6 +215,7 @@ export const btcPegInEndpointV205 = defineContract({
         name: 'reveal-tx',
         type: tupleT({ 'order-idx': uintT, tx: bufferT }, )
       },
+      { name: 'routing-traits', type: listT(traitT, ) },
       { name: 'token-out-trait', type: traitT }
     ],
     output: responseSimpleT(tupleT({
@@ -189,10 +224,13 @@ export const btcPegInEndpointV205 = defineContract({
       'order-details': tupleT({
         'chain-id': optionalT(uintT, ),
         from: bufferT,
+        'min-amount-out': optionalT(uintT, ),
+        routing: listT(uintT, ),
         to: bufferT,
-        token: principalT,
         'token-out': principalT
-      }, )
+      }, ),
+      'routing-factors': listT(uintT, ),
+      'routing-tokens': listT(principalT, )
     }, ), ),
     mode: 'readonly'
   },
@@ -214,7 +252,9 @@ export const btcPegInEndpointV205 = defineContract({
   'fee-to-address': { input: noneT, output: principalT, mode: 'variable' },
   'peg-in-fee': { input: noneT, output: uintT, mode: 'variable' },
   'peg-in-min-fee': { input: noneT, output: uintT, mode: 'variable' },
-  'peg-in-paused': { input: noneT, output: booleanT, mode: 'variable' }
+  'peg-in-paused': { input: noneT, output: booleanT, mode: 'variable' },
+  'peg-out-fee': { input: noneT, output: uintT, mode: 'variable' },
+  'peg-out-gas-fee': { input: noneT, output: uintT, mode: 'variable' }
 }
 } as const)
 

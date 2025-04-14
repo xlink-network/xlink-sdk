@@ -1,4 +1,4 @@
-import { ChainId, TokenId } from "../../xlinkSdkUtils/types"
+import { ChainId, RuneIdCombined, TokenId } from "../../xlinkSdkUtils/types"
 import { checkNever } from "../typeHelpers"
 
 const chainId = <const T extends string>(value: T): ChainId<T> => value as any
@@ -81,12 +81,19 @@ export namespace KnownTokenId {
     export const wuBTC = tokenId("evm-wubtc")
     export const DB20 = tokenId("evm-db20")
     export const DOG = tokenId("evm-dog")
+    export const STX = tokenId("evm-stx")
+    export const TRUMP = tokenId("evm-trump")
+    export const GHIBLICZ = tokenId("evm-ghiblicz")
+    export const ETH = tokenId("evm-eth")
+    export const SOL = tokenId("evm-sol")
+    export const LINK = tokenId("evm-link")
   }
   /** This type includes all known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
   export function isEVMToken(value: TokenId): value is EVMToken {
     return _allKnownEVMTokens.includes(value as any)
   }
+
   /** A namespace that contains constants and types for Stacks tokens. */
   export namespace Stacks {
     /** Represents the sUSDT token ID on the Stacks blockchain. */
@@ -104,15 +111,48 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("stx-vlistx")
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
     export const vLiALEX = tokenId("stx-vlialex")
-    export const uBTC = tokenId("stx-ubtc")
+    /** Represents the vLiaBTC token ID on the Stacks blockchain. */
+    export const vLiaBTC = tokenId("stx-vliabtc")
     export const DB20 = tokenId("stx-db20")
+    export const uBTC = tokenId("stx-ubtc")
     export const DOG = tokenId("stx-dog")
+    export const STX = tokenId("stx-stx")
+    export const TRUMP = tokenId("stx-trump")
+    export const GHIBLICZ = tokenId("stx-ghiblicz")
+    export const ETH = tokenId("stx-eth")
+    export const SOL = tokenId("stx-sol")
+    export const LINK = tokenId("stx-link")
   }
-  /** This type includes all known tokens on the Stacks blockchain. */
-  export type StacksToken = (typeof _allKnownStacksTokens)[number]
+  const _allKnownStacksTokens = [
+    Stacks.sUSDT,
+    Stacks.sLUNR,
+    Stacks.aBTC,
+    Stacks.ALEX,
+    Stacks.sSKO,
+    Stacks.vLiSTX,
+    Stacks.vLiALEX,
+    Stacks.vLiaBTC,
+    Stacks.DB20,
+    Stacks.uBTC,
+    Stacks.DOG,
+    Stacks.STX,
+    Stacks.TRUMP,
+    Stacks.GHIBLICZ,
+    Stacks.ETH,
+    Stacks.SOL,
+    Stacks.LINK,
+  ] as const
+  export type StacksToken =
+    | TokenId<`a Stacks token`>
+    | (typeof _allKnownStacksTokens)[number]
   export function isStacksToken(value: TokenId): value is StacksToken {
-    return _allKnownStacksTokens.includes(value as any)
+    return value.startsWith("stx-")
   }
+}
+export const createStacksToken = (
+  stacksTokenId: string,
+): KnownTokenId.StacksToken => {
+  return `stx-${stacksTokenId}` as any
 }
 export const createBRC20Token = (
   brc20tick: string,
@@ -120,13 +160,12 @@ export const createBRC20Token = (
   return `brc20-${brc20tick}` as any
 }
 export const createRunesToken = (
-  runeId: `${number}:${number}`,
+  runeId: RuneIdCombined,
 ): KnownTokenId.RunesToken => {
   return `runes-${runeId}` as any
 }
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
-export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 
 /**
  * The `KnownChainId` namespace provides types of blockchain networks
@@ -333,6 +372,27 @@ export const _allKnownRunesChains = Object.values(KnownChainId.Runes)
 export const _allKnownBRC20Chains = Object.values(KnownChainId.BRC20)
 export const _allKnownEVMChains = Object.values(KnownChainId.EVM)
 export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
+export const getChainIdNetworkType = (
+  chainId: KnownChainId.KnownChain,
+): "mainnet" | "testnet" => {
+  if (chainId === KnownChainId.Stacks.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Stacks.Testnet) return "testnet"
+
+  if (KnownChainId.isEVMMainnetChain(chainId)) return "mainnet"
+  if (KnownChainId.isEVMTestnetChain(chainId)) return "testnet"
+
+  if (chainId === KnownChainId.Bitcoin.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Bitcoin.Testnet) return "testnet"
+
+  if (chainId === KnownChainId.BRC20.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.BRC20.Testnet) return "testnet"
+
+  if (chainId === KnownChainId.Runes.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Runes.Testnet) return "testnet"
+
+  checkNever(chainId)
+  return "mainnet"
+}
 
 export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Ethereum,

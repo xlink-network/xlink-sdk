@@ -1,7 +1,9 @@
 import { getStacks2BtcFeeInfo } from "../bitcoinUtils/peggingHelpers"
 import { getStacks2EvmFeeInfo } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
+import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 import {
+  checkRouteValid,
   KnownRoute_FromStacks_ToBitcoin,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToEVM,
@@ -14,7 +16,6 @@ import {
   transformToPublicTransferProphet,
 } from "../utils/types/TransferProphet"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { supportedRoutes } from "./bridgeFromStacks"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
 
@@ -33,7 +34,7 @@ export async function bridgeInfoFromStacks(
   ctx: SDKGlobalContext,
   info: BridgeInfoFromStacksInput,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const route = await supportedRoutes.checkRouteValid(ctx, info)
+  const route = await checkRouteValid(ctx, isSupportedStacksRoute, info)
 
   if (KnownChainId.isStacksChain(route.fromChain)) {
     if (KnownChainId.isBitcoinChain(route.toChain)) {
@@ -41,7 +42,7 @@ export async function bridgeInfoFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isBitcoinToken(route.toToken)
       ) {
-        return bridgeInfoFromStacks_toBitcoin({
+        return bridgeInfoFromStacks_toBitcoin(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -54,7 +55,7 @@ export async function bridgeInfoFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeInfoFromStacks_toEVM({
+        return bridgeInfoFromStacks_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -95,6 +96,8 @@ export async function bridgeInfoFromStacks(
   } else {
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
     checkNever(route)
   }
 
@@ -107,13 +110,17 @@ export async function bridgeInfoFromStacks(
 }
 
 async function bridgeInfoFromStacks_toBitcoin(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
     KnownRoute_FromStacks_ToBitcoin,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const step1 = await getStacks2BtcFeeInfo(info)
+  const step1 = await getStacks2BtcFeeInfo(ctx, info, {
+    initialRoute: null,
+    swapRoute: null,
+  })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -130,13 +137,17 @@ async function bridgeInfoFromStacks_toBitcoin(
 }
 
 async function bridgeInfoFromStacks_toEVM(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeInfoFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
     KnownRoute_FromStacks_ToEVM,
 ): Promise<BridgeInfoFromStacksOutput> {
-  const step1 = await getStacks2EvmFeeInfo(info)
+  const step1 = await getStacks2EvmFeeInfo(ctx, info, {
+    initialRoute: null,
+    toDexAggregator: false,
+  })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
@@ -160,7 +171,10 @@ async function bridgeInfoFromStacks_toMeta(
   > &
     (KnownRoute_FromStacks_ToBRC20 | KnownRoute_FromStacks_ToRunes),
 ): Promise<BridgeInfoFromStacksOutput> {
-  const step1 = await getStacks2MetaFeeInfo(ctx, info)
+  const step1 = await getStacks2MetaFeeInfo(ctx, info, {
+    initialRoute: null,
+    swapRoute: null,
+  })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
       info.fromChain,

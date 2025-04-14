@@ -1,4 +1,4 @@
-import { NETWORK, TEST_NETWORK } from "@scure/btc-signer"
+import { NETWORK, p2tr, TEST_NETWORK } from "@scure/btc-signer"
 import { checkNever } from "../utils/typeHelpers"
 import { KnownChainId } from "../utils/types/knownIds"
 import { addressToScriptPubKey } from "./bitcoinHelpers"
@@ -42,5 +42,42 @@ export function getBTCPegInAddress(
   return {
     address: addr,
     scriptPubKey: script,
+  }
+}
+
+export const getBitcoinHardLinkageAddress = (
+  fromChain:
+    | KnownChainId.BitcoinChain
+    | KnownChainId.BRC20Chain
+    | KnownChainId.RunesChain,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  toChain: KnownChainId.KnownChain,
+): undefined | BitcoinAddress => {
+  const pubKey =
+    "1ab1c25de20e4f186a405abb7430e05439269c53d99938741961ee9db83ee58d"
+
+  let bitcoinNetwork: undefined | typeof NETWORK | typeof TEST_NETWORK
+  switch (fromChain) {
+    case KnownChainId.Bitcoin.Mainnet:
+    case KnownChainId.BRC20.Mainnet:
+    case KnownChainId.Runes.Mainnet:
+      bitcoinNetwork = NETWORK
+      break
+    case KnownChainId.Bitcoin.Testnet:
+    case KnownChainId.BRC20.Testnet:
+    case KnownChainId.Runes.Testnet:
+      bitcoinNetwork = TEST_NETWORK
+      break
+    default:
+      checkNever(fromChain)
+  }
+
+  if (bitcoinNetwork == null) return undefined
+
+  const payment = p2tr(pubKey, undefined, bitcoinNetwork)
+
+  return {
+    address: payment.address!,
+    scriptPubKey: payment.script,
   }
 }

@@ -5,16 +5,6 @@ XLink is designed to facilitate the transfer of digital tokens between different
 
 XLinkSDK allows users to interact with XLink. It can be used in backend environments as well as in browsers and mobile applications. The SDK enables bidirectional transfer of coins/tokens between Bitcoin, Stacks, and various EVM including Bitcoin Layer 2s networks. Also, provides information on transfer fees, route planning, transaction size calculations and implements security features for safe transfers.
 
-## Roadmap
-
-- [x] Bitcoin <> EVM
-- [x] Bitcoin <> Stacks
-- [ ] Runes <> Stacks
-- [ ] BRC-20 <> Stacks
-- [x] EVM <> EVM
-- [x] EVM <> Bitcoin
-- [x] EVM <> Stacks
-
 ## Installation
 
 ### Prerequisites
@@ -78,6 +68,7 @@ const xlinkSdk = new XLinkSDK();
 
 1. Bridge from Stacks
 ```typescript
+import { serializeCVBytes } from '@stacks/transactions';
 import { 
     BridgeInfoFromStacksInput, 
     BridgeFromStacksInput,
@@ -112,11 +103,11 @@ const result = await xlinkSdk.bridgeFromStacks({
             contractAddress: tx.contractAddress,
             contractName: tx.contractName,
             functionName: tx.functionName,
-            functionArgs: tx.functionArgs,
-            senderKey: "sender address private key here",
+            functionArgs: tx.functionArgs.map(a => serializeCVBytes(a)),
             network,
-            postConditions: tx.postConditions,
-            anchorMode: tx.anchorMode,
+            senderKey: "sender address private key here",
+            postConditions: /* add post conditions */,
+            anchorMode: /* add anchor mode */,
         });
         const broadcastResponse = await broadcastTransaction(transaction, network);
         return {txid: broadcastResponse.txid};

@@ -1,37 +1,88 @@
 import { Client } from "viem"
+import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { EVMOnChainAddresses } from "../evmUtils/evmContractAddresses"
+import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { StacksTokenInfo } from "../stacksUtils/apiHelpers/getAllStacksTokens"
+import { DefinedRoute, KnownRoute } from "../utils/buildSupportedRoutes"
+import { pMemoizeImpl } from "../utils/pMemoize"
+import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
-import type {
-  BRC20SupportedRoute,
-  RunesSupportedRoute,
-} from "../metaUtils/xlinkContractHelpers"
+import { TransferProphet } from "../utils/types/TransferProphet"
+import { EVMAddress } from "./types"
 
-export interface SDKGlobalContextCache<K, T> {
-  get: (key: K) => T | null
-  set: (key: K, value: T) => void
-  delete: (key: K) => void
+export interface SDKGlobalContextCache<K, V>
+  extends GeneralCacheInterface<K, V> {}
+
+export function withGlobalContextCache<K, V>(
+  cache: undefined | SDKGlobalContextCache<K, Promise<V>>,
+  cacheKey: K,
+  promiseFactory: () => Promise<V>,
+): Promise<V> {
+  if (cache == null) return promiseFactory()
+  return pMemoizeImpl(cache, cacheKey, promiseFactory)
+}
+export namespace withGlobalContextCache {
+  export const cacheKeyFromRoute = (route: DefinedRoute): string => {
+    return `${route.fromChain}:${route.fromToken}:${route.toChain}:${route.toToken}`
+  }
 }
 
 export interface SDKGlobalContext {
+  debugLog: boolean
+  routes: {
+    detectedCache: SDKGlobalContextCache<"mainnet" | "testnet", KnownRoute[]>
+  }
   backendAPI: {
     runtimeEnv: "prod" | "dev"
   }
-  brc20: {
-    routesConfigCache?: SDKGlobalContextCache<
+  stacks: {
+    tokensCache?: SDKGlobalContextCache<
+      KnownChainId.StacksChain,
+      Promise<StacksTokenInfo[]>
+    >
+  }
+  btc: {
+    ignoreValidateResult?: boolean
+    feeRateCache?: SDKGlobalContextCache<
       string,
+      Promise<undefined | TransferProphet>
+    >
+  }
+  brc20: {
+    ignoreValidateResult?: boolean
+    feeRateCache?: SDKGlobalContextCache<
+      string,
+      Promise<undefined | TransferProphet>
+    >
+    routesConfigCache?: SDKGlobalContextCache<
+      KnownChainId.BRC20Chain,
       Promise<BRC20SupportedRoute[]>
     >
   }
   runes: {
-    routesConfigCache?: SDKGlobalContextCache<
+    ignoreValidateResult?: boolean
+    feeRateCache?: SDKGlobalContextCache<
       string,
+      Promise<undefined | TransferProphet>
+    >
+    routesConfigCache?: SDKGlobalContextCache<
+      KnownChainId.RunesChain,
       Promise<RunesSupportedRoute[]>
     >
   }
   evm: {
     enableMulticall?: boolean
-    onChainConfigCache?: SDKGlobalContextCache<
+    feeRateCache?: SDKGlobalContextCache<
       string,
+      Promise<undefined | TransferProphet>
+    >
+    routesConfigCache?: SDKGlobalContextCache<
+      "mainnet" | "testnet",
+      Promise<EVMSupportedRoute[]>
+    >
+    onChainConfigCache?: SDKGlobalContextCache<
+      `${KnownChainId.EVMChain}:${EVMAddress}`,
       Promise<EVMOnChainAddresses>
     >
     viemClients: Partial<Record<KnownChainId.EVMChain, Client>>

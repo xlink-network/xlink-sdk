@@ -1,17 +1,19 @@
 import * as btc from "@scure/btc-signer"
-import { ContractCallOptions } from "clarity-codegen"
+import { FungiblePostConditionWire } from "@stacks/transactions"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
+import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   composeTxXLINK,
+  ContractCallOptions,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "../stacksUtils/xlinkContractHelpers"
 import {
-  buildSupportedRoutes,
-  defineRoute,
+  checkRouteValid,
   KnownRoute_FromStacks_ToBitcoin,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToEVM,
@@ -20,82 +22,9 @@ import {
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
-import {
-  KnownChainId,
-  KnownTokenId,
-  _allKnownEVMMainnetChains,
-  _allKnownEVMTestnetChains,
-} from "../utils/types/knownIds"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { getTerminatingStacksTokenContractAddress } from "../stacksUtils/stxContractAddresses"
-
-export const supportedRoutes = buildSupportedRoutes(
-  [
-    // from mainnet
-    ...defineRoute(
-      // to Bitcoin
-      [[KnownChainId.Stacks.Mainnet], [KnownChainId.Bitcoin.Mainnet]],
-      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
-    ),
-    ...defineRoute(
-      // to rest EVM chains
-      [[KnownChainId.Stacks.Mainnet], [..._allKnownEVMMainnetChains]],
-      [
-        // BTCs
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.cbBTC],
-        // USDTs
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
-        // others
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
-        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
-        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
-        [KnownTokenId.Stacks.DB20, KnownTokenId.EVM.DB20],
-        [KnownTokenId.Stacks.DOG, KnownTokenId.EVM.DOG],
-      ],
-    ),
-
-    // from testnet
-    ...defineRoute(
-      // to Bitcoin
-      [[KnownChainId.Stacks.Testnet], [KnownChainId.Bitcoin.Testnet]],
-      [[KnownTokenId.Stacks.aBTC, KnownTokenId.Bitcoin.BTC]],
-    ),
-    ...defineRoute(
-      // to rest EVM chains
-      [[KnownChainId.Stacks.Testnet], [..._allKnownEVMTestnetChains]],
-      [
-        // BTCs
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.aBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.WBTC],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.BTCB],
-        [KnownTokenId.Stacks.aBTC, KnownTokenId.EVM.cbBTC],
-        // USDTs
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.USDT],
-        [KnownTokenId.Stacks.sUSDT, KnownTokenId.EVM.sUSDT],
-        // others
-        [KnownTokenId.Stacks.sSKO, KnownTokenId.EVM.SKO],
-        [KnownTokenId.Stacks.ALEX, KnownTokenId.EVM.ALEX],
-        [KnownTokenId.Stacks.vLiSTX, KnownTokenId.EVM.vLiSTX],
-        [KnownTokenId.Stacks.vLiALEX, KnownTokenId.EVM.vLiALEX],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.uBTC],
-        [KnownTokenId.Stacks.uBTC, KnownTokenId.EVM.wuBTC],
-        [KnownTokenId.Stacks.DB20, KnownTokenId.EVM.DB20],
-        [KnownTokenId.Stacks.DOG, KnownTokenId.EVM.DOG],
-      ],
-    ),
-  ],
-  {
-    isSupported: isSupportedStacksRoute,
-  },
-)
 
 export interface BridgeFromStacksInput {
   fromChain: ChainId
@@ -118,7 +47,7 @@ export async function bridgeFromStacks(
   ctx: SDKGlobalContext,
   info: BridgeFromStacksInput,
 ): Promise<BridgeFromStacksOutput> {
-  const route = await supportedRoutes.checkRouteValid(ctx, info)
+  const route = await checkRouteValid(ctx, isSupportedStacksRoute, info)
 
   if (KnownChainId.isStacksChain(route.fromChain)) {
     if (KnownChainId.isBitcoinChain(route.toChain)) {
@@ -139,7 +68,7 @@ export async function bridgeFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeFromStacks_toEVM({
+        return bridgeFromStacks_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -152,7 +81,7 @@ export async function bridgeFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isBRC20Token(route.toToken)
       ) {
-        return bridgeFromStacks_toMeta({
+        return bridgeFromStacks_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -165,7 +94,7 @@ export async function bridgeFromStacks(
         KnownTokenId.isStacksToken(route.fromToken) &&
         KnownTokenId.isRunesToken(route.toToken)
       ) {
-        return bridgeFromStacks_toMeta({
+        return bridgeFromStacks_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -180,6 +109,8 @@ export async function bridgeFromStacks(
   } else {
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
     checkNever(route)
   }
 
@@ -200,7 +131,7 @@ async function bridgeFromStacks_toBitcoin(
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain,
-    "btc-peg-out-endpoint-v2-01",
+    StacksContractName.BTCPegOutEndpoint,
   )
   if (!contractCallInfo) {
     throw new UnsupportedBridgeRouteError(
@@ -223,13 +154,17 @@ async function bridgeFromStacks_toBitcoin(
       "peg-out-address": addressToScriptPubKey(bitcoinNetwork, info.toAddress),
       amount: numberToStacksContractNumber(info.amount),
     },
-    { deployerAddress: contractCallInfo.deployerAddress },
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
   )
 
   return await info.sendTransaction(options)
 }
 
 async function bridgeFromStacks_toEVM(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -238,9 +173,10 @@ async function bridgeFromStacks_toEVM(
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain,
-    "cross-peg-out-endpoint-v2-01",
+    StacksContractName.EVMPegOutEndpoint,
   )
-  const fromTokenContractInfo = getStacksTokenContractInfo(
+  const fromTokenContractInfo = await getStacksTokenContractInfo(
+    ctx,
     info.fromChain,
     info.fromToken,
   )
@@ -254,7 +190,11 @@ async function bridgeFromStacks_toEVM(
   }
 
   const terminatingTokenContractAddress =
-    getTerminatingStacksTokenContractAddress(info) ?? fromTokenContractInfo
+    (await getTerminatingStacksTokenContractAddress(ctx, {
+      stacksChain: info.fromChain,
+      evmChain: info.toChain,
+      evmToken: info.toToken,
+    })) ?? fromTokenContractInfo
 
   const options = composeTxXLINK(
     contractCallInfo.contractName,
@@ -265,13 +205,17 @@ async function bridgeFromStacks_toEVM(
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
       "settle-address": decodeHex(info.toAddress),
     },
-    { deployerAddress: contractCallInfo.deployerAddress },
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
   )
 
   return await info.sendTransaction(options)
 }
 
 async function bridgeFromStacks_toMeta(
+  ctx: SDKGlobalContext,
   info: Omit<
     BridgeFromStacksInput,
     "fromChain" | "toChain" | "fromToken" | "toToken"
@@ -280,9 +224,10 @@ async function bridgeFromStacks_toMeta(
 ): Promise<BridgeFromStacksOutput> {
   const contractCallInfo = getStacksContractCallInfo(
     info.fromChain,
-    "meta-peg-out-endpoint-v2-04",
+    StacksContractName.MetaPegOutEndpoint,
   )
-  const fromTokenContractInfo = getStacksTokenContractInfo(
+  const fromTokenContractInfo = await getStacksTokenContractInfo(
+    ctx,
     info.fromChain,
     info.fromToken,
   )
@@ -310,7 +255,10 @@ async function bridgeFromStacks_toMeta(
       "token-trait": `${fromTokenContractInfo.deployerAddress}.${fromTokenContractInfo.contractName}`,
       amount: numberToStacksContractNumber(info.amount),
     },
-    { deployerAddress: contractCallInfo.deployerAddress },
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
   )
 
   return await info.sendTransaction(options)

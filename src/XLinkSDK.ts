@@ -1,16 +1,25 @@
 import { Client } from "viem"
 import { getBTCPegInAddress } from "./bitcoinUtils/btcAddresses"
+import { isSupportedBitcoinRoute } from "./bitcoinUtils/peggingHelpers"
 import { nativeCurrencyAddress } from "./evmUtils/addressHelpers"
-import { defaultEvmClients } from "./evmUtils/evmClients"
+import {
+  defaultEvmClients,
+  evmChainIdFromKnownChainId,
+  evmChainIdToKnownChainId,
+} from "./evmUtils/evmClients"
+import { isSupportedEVMRoute } from "./evmUtils/peggingHelpers"
 import {
   getEVMContractCallInfo,
   getEVMToken,
   getEVMTokenContractInfo,
 } from "./evmUtils/xlinkContractHelpers"
+import { getBRC20SupportedRoutes } from "./metaUtils/apiHelpers/getBRC20SupportedRoutes"
+import { getRunesSupportedRoutes } from "./metaUtils/apiHelpers/getRunesSupportedRoutes"
 import {
-  getBRC20SupportedRoutes,
-  getRunesSupportedRoutes,
-} from "./metaUtils/xlinkContractHelpers"
+  isSupportedBRC20Route,
+  isSupportedRunesRoute,
+} from "./metaUtils/peggingHelpers"
+import { isSupportedStacksRoute } from "./stacksUtils/peggingHelpers"
 import {
   getStacksToken,
   getStacksTokenContractInfo,
@@ -21,25 +30,37 @@ import {
   GetSupportedRoutesFn_Conditions,
   KnownRoute,
 } from "./utils/buildSupportedRoutes"
+import { detectPossibleRoutes } from "./utils/detectPossibleRoutes"
 import { TooFrequentlyError } from "./utils/errors"
-import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
+import {
+  KnownChainId,
+  KnownTokenId,
+  getChainIdNetworkType,
+} from "./utils/types/knownIds"
 import {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinOutput,
   bridgeFromBitcoin,
-  supportedRoutes as supportedRoutesFromBitcoin,
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
+import {
+  BridgeFromBRC20Input,
+  BridgeFromBRC20Output,
+  bridgeFromBRC20,
+} from "./xlinkSdkUtils/bridgeFromBRC20"
 import {
   BridgeFromEVMInput,
   BridgeFromEVMOutput,
   bridgeFromEVM,
-  supportedRoutes as supportedRoutesFromEVM,
 } from "./xlinkSdkUtils/bridgeFromEVM"
+import {
+  BridgeFromRunesInput,
+  BridgeFromRunesOutput,
+  bridgeFromRunes,
+} from "./xlinkSdkUtils/bridgeFromRunes"
 import {
   BridgeFromStacksInput,
   BridgeFromStacksOutput,
   bridgeFromStacks,
-  supportedRoutes as supportedRoutesFromStacks,
 } from "./xlinkSdkUtils/bridgeFromStacks"
 import {
   BridgeInfoFromBitcoinInput,
@@ -52,6 +73,14 @@ import {
   bridgeInfoFromEVM,
 } from "./xlinkSdkUtils/bridgeInfoFromEVM"
 import {
+  BridgeInfoFromBRC20Input,
+  BridgeInfoFromBRC20Output,
+  BridgeInfoFromRunesInput,
+  BridgeInfoFromRunesOutput,
+  bridgeInfoFromBRC20,
+  bridgeInfoFromRunes,
+} from "./xlinkSdkUtils/bridgeInfoFromMeta"
+import {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
   bridgeInfoFromStacks,
@@ -61,6 +90,16 @@ import {
   EstimateBridgeTransactionFromBitcoinOutput,
   estimateBridgeTransactionFromBitcoin,
 } from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
+import {
+  EstimateBridgeTransactionFromBRC20Input,
+  EstimateBridgeTransactionFromBRC20Output,
+  estimateBridgeTransactionFromBRC20,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
+import {
+  EstimateBridgeTransactionFromRunesInput,
+  EstimateBridgeTransactionFromRunesOutput,
+  estimateBridgeTransactionFromRunes,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromRunes"
 import {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
@@ -74,10 +113,14 @@ import {
   EVMAddress,
   EVMNativeCurrencyAddress,
   PublicEVMContractType,
+  RuneIdCombined,
   StacksContractAddress,
   evmNativeCurrencyAddress,
 } from "./xlinkSdkUtils/types"
 import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+import { DumpableCache, getCacheInside } from "./utils/DumpableCache"
+import { isNotNull } from "./utils/typeHelpers"
+import { SwapRoute } from "./utils/SwapRouteHelpers"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -86,12 +129,26 @@ export {
 export {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinInput_signPsbtFn,
+  BridgeFromBitcoinInput_reselectSpendableUTXOs,
   BridgeFromBitcoinOutput,
 } from "./xlinkSdkUtils/bridgeFromBitcoin"
+export {
+  BridgeFromBRC20Input,
+  BridgeFromBRC20Input_signPsbtFn,
+  BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs,
+  BridgeFromBRC20Output,
+} from "./xlinkSdkUtils/bridgeFromBRC20"
 export {
   BridgeFromEVMInput,
   BridgeFromEVMOutput,
 } from "./xlinkSdkUtils/bridgeFromEVM"
+export {
+  BridgeFromRunesInput,
+  BridgeFromRunesInput_signPsbtFn,
+  BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
+  BridgeFromRunesOutput,
+  RunesUTXOSpendable,
+} from "./xlinkSdkUtils/bridgeFromRunes"
 export {
   BridgeFromStacksInput,
   BridgeFromStacksOutput,
@@ -105,6 +162,12 @@ export {
   BridgeInfoFromEVMOutput,
 } from "./xlinkSdkUtils/bridgeInfoFromEVM"
 export {
+  BridgeInfoFromBRC20Input,
+  BridgeInfoFromBRC20Output,
+  BridgeInfoFromRunesInput,
+  BridgeInfoFromRunesOutput,
+} from "./xlinkSdkUtils/bridgeInfoFromMeta"
+export {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
 } from "./xlinkSdkUtils/bridgeInfoFromStacks"
@@ -113,16 +176,38 @@ export {
   EstimateBridgeTransactionFromBitcoinOutput,
 } from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
 export {
+  EstimateBridgeTransactionFromBRC20Input,
+  EstimateBridgeTransactionFromBRC20Output,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
+export {
+  EstimateBridgeTransactionFromRunesInput,
+  EstimateBridgeTransactionFromRunesOutput,
+} from "./xlinkSdkUtils/estimateBridgeTransactionFromRunes"
+export {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
   GetTimeLockedAssetsInput,
   GetTimeLockedAssetsOutput,
 } from "./xlinkSdkUtils/timelockFromEVM"
+export type { DumpableCache } from "./utils/DumpableCache"
 
 export interface XLinkSDKOptions {
+  debugLog?: boolean
   __experimental?: {
     backendAPI?: {
       runtimeEnv?: "prod" | "dev"
+    }
+    btc?: {
+      ignoreValidateResult?: boolean
+    }
+    brc20?: {
+      ignoreValidateResult?: boolean
+    }
+    runes?: {
+      ignoreValidateResult?: boolean
+    }
+    evm?: {
+      onChainConfigCachePrepared?: (cache: DumpableCache) => void
     }
   }
   evm?: {
@@ -132,6 +217,8 @@ export interface XLinkSDKOptions {
     cacheOnChainConfig?: boolean
 
     /**
+     * You can assign your custom viem clients here
+     *
      * @default undefined
      */
     viemClients?: Record<KnownChainId.EVMChain, Client>
@@ -155,19 +242,50 @@ export class XLinkSDK {
     const cacheEVMOnChainConfig =
       options.evm?.cacheOnChainConfig ?? defaultConfig.evm?.cacheOnChainConfig
 
+    let onChainConfigCache:
+      | undefined
+      | SDKGlobalContext["evm"]["onChainConfigCache"]
+    if (cacheEVMOnChainConfig) {
+      const onChainConfigDumpableCache = new DumpableCache()
+      options.__experimental?.evm?.onChainConfigCachePrepared?.(
+        onChainConfigDumpableCache,
+      )
+      onChainConfigCache = getCacheInside(onChainConfigDumpableCache)
+    }
+
     this.sdkContext = {
+      debugLog: options.debugLog ?? false,
+      routes: {
+        detectedCache: new Map(),
+      },
       backendAPI: {
         ...options.__experimental?.backendAPI,
         runtimeEnv: options.__experimental?.backendAPI?.runtimeEnv ?? "prod",
       },
+      stacks: {
+        tokensCache: new Map(),
+      },
+      btc: {
+        ignoreValidateResult:
+          options.__experimental?.btc?.ignoreValidateResult ?? false,
+        feeRateCache: new Map(),
+      },
       brc20: {
+        ignoreValidateResult:
+          options.__experimental?.brc20?.ignoreValidateResult ?? false,
         routesConfigCache: new Map(),
+        feeRateCache: new Map(),
       },
       runes: {
+        ignoreValidateResult:
+          options.__experimental?.runes?.ignoreValidateResult ?? false,
         routesConfigCache: new Map(),
+        feeRateCache: new Map(),
       },
       evm: {
-        onChainConfigCache: cacheEVMOnChainConfig ? new Map() : undefined,
+        routesConfigCache: new Map(),
+        feeRateCache: new Map(),
+        onChainConfigCache,
         viemClients: {
           ...defaultEvmClients,
           ...options.evm?.viemClients,
@@ -177,49 +295,119 @@ export class XLinkSDK {
   }
 
   /**
-   * This function retrieves the list of supported routes for token transfers between blockchain
-   * networks, filtered based on optional conditions. It aggregates the results from different
-   * blockchain networks (Stacks, EVM, Bitcoin) to return a list of possible routes.
-   * @param conditions - An optional object containing the conditions for filtering the supported routes:
-   * - `fromChain?: ChainId` - The ID of the source blockchain (optional).
-   * - `toChain?: ChainId` - The ID of the destination blockchain (optional).
-   * - `fromToken?: TokenId` - The ID of the token being transferred from the source blockchain (optional).
-   * - `toToken?: TokenId` - The ID of the token expected on the destination blockchain (optional).
-   *
-   * @returns A promise that resolves with an array of `KnownRoute` objects, each representing a
-   * possible route for the token transfer.
+   * @deprecated Use `getPossibleRoutes` instead
    */
   async getSupportedRoutes(
     conditions?: GetSupportedRoutesFn_Conditions,
   ): Promise<KnownRoute[]> {
-    const promises = [
-      supportedRoutesFromStacks,
-      supportedRoutesFromEVM,
-      supportedRoutesFromBitcoin,
-    ].map(async rules => rules.getSupportedRoutes(this.sdkContext, conditions))
-
-    return (await Promise.all(promises)).flat()
+    return this.getPossibleRoutes(conditions)
   }
 
-  async isSupportedRoute(route: DefinedRoute): Promise<boolean> {
-    const checkingResult = await Promise.all(
-      [
-        supportedRoutesFromStacks,
-        supportedRoutesFromEVM,
-        supportedRoutesFromBitcoin,
-      ].map(rule =>
-        rule
-          .checkRouteValid(this.sdkContext, route)
-          .then(() => true)
-          .catch(() => false),
-      ),
+  /**
+   * This function roughly returns a list of possible routes supported by the
+   * SDK. It aggregates the results from different blockchain networks (Stacks,
+   * EVM, Bitcoin).
+   *
+   * @param conditions - An optional object containing the conditions for filtering the possible routes:
+   * - `fromChain?: ChainId` - The ID of the source blockchain (optional).
+   * - `toChain?: ChainId` - The ID of the destination blockchain (optional).
+   * - `fromToken?: TokenId` - The ID of the token being transferred from the source blockchain (optional).
+   * - `toToken?: TokenId` - The ID of the token expected on the destination blockchain (optional).
+   * - `includeUnpredictableSwapPossibilities?: boolean` - Whether to include
+   *    routes that require token swaps to complete. Note that the ability to perform these swaps
+   *    cannot be determined at this point, so enabling this option may return routes that cannot
+   *    actually be completed (optional).
+   *
+   * @returns A promise that resolves with an array of `KnownRoute` objects, each representing a
+   * possible route for the token transfer.
+   */
+  async getPossibleRoutes(
+    conditions?: GetSupportedRoutesFn_Conditions,
+  ): Promise<KnownRoute[]> {
+    const specifiedChain = conditions?.fromChain ?? conditions?.toChain
+
+    if (specifiedChain != null && !KnownChainId.isKnownChain(specifiedChain)) {
+      return []
+    }
+
+    const networkType =
+      specifiedChain == null ? null : getChainIdNetworkType(specifiedChain)
+
+    let resultRoutesPromise: Promise<KnownRoute[]>
+    if (networkType == null) {
+      resultRoutesPromise = Promise.all([
+        detectPossibleRoutes(this.sdkContext, {
+          networkType: "mainnet",
+          swapEnabled:
+            conditions?.includeUnpredictableSwapPossibilities ?? false,
+        }),
+        detectPossibleRoutes(this.sdkContext, {
+          networkType: "testnet",
+          swapEnabled:
+            conditions?.includeUnpredictableSwapPossibilities ?? false,
+        }),
+      ]).then(res => res.flat().filter(isNotNull))
+    } else {
+      resultRoutesPromise = detectPossibleRoutes(this.sdkContext, {
+        networkType,
+        swapEnabled: conditions?.includeUnpredictableSwapPossibilities ?? false,
+      })
+    }
+
+    const resultRoutes = await resultRoutesPromise
+    const routeConditions = {
+      fromChain: conditions?.fromChain,
+      fromToken: conditions?.fromToken,
+      toChain: conditions?.toChain,
+      toToken: conditions?.toToken,
+    }
+    if (Object.values(routeConditions).filter(isNotNull).length === 0) {
+      return resultRoutes
+    }
+
+    return resultRoutes.filter(
+      r =>
+        (routeConditions.fromChain == null ||
+          r.fromChain === routeConditions.fromChain) &&
+        (routeConditions.fromToken == null ||
+          r.fromToken === routeConditions.fromToken) &&
+        (routeConditions.toChain == null ||
+          r.toChain === routeConditions.toChain) &&
+        (routeConditions.toToken == null ||
+          r.toToken === routeConditions.toToken),
     )
+  }
+
+  /**
+   * different from `getPossibleRoutes`, this function is designed to further
+   * determine if the route is supported by the SDK
+   */
+  async isSupportedRoute(
+    route: DefinedRoute & { swapRoute?: SwapRoute },
+  ): Promise<boolean> {
+    const checkingResult = await Promise.all([
+      isSupportedEVMRoute(this.sdkContext, route),
+      isSupportedStacksRoute(this.sdkContext, route),
+      isSupportedBitcoinRoute(this.sdkContext, route),
+      isSupportedBRC20Route(this.sdkContext, route),
+      isSupportedRunesRoute(this.sdkContext, route),
+    ])
 
     return checkingResult.some(r => r)
   }
 
-  stacksAddressFromStacksToken = stacksAddressFromStacksToken
-  stacksAddressToStacksToken = stacksAddressToStacksToken
+  stacksAddressFromStacksToken(
+    chain: ChainId,
+    token: KnownTokenId.StacksToken,
+  ): Promise<undefined | StacksContractAddress> {
+    return stacksAddressFromStacksToken(this.sdkContext, chain, token)
+  }
+  stacksAddressToStacksToken(
+    chain: ChainId,
+    address: StacksContractAddress,
+  ): Promise<undefined | KnownTokenId.StacksToken> {
+    return stacksAddressToStacksToken(this.sdkContext, chain, address)
+  }
 
   /**
    * This function provides detailed information about token transfers from the Stacks network to other supported
@@ -296,6 +484,18 @@ export class XLinkSDK {
     return
   }
 
+  async evmChainIdFromKnownChainId(
+    chain: KnownChainId.EVMChain,
+  ): Promise<undefined | bigint> {
+    return evmChainIdFromKnownChainId(chain)
+  }
+
+  async evmChainIdToKnownChainId(
+    chainId: bigint,
+  ): Promise<undefined | KnownChainId.EVMChain> {
+    return evmChainIdToKnownChainId(chainId)
+  }
+
   /**
    * This function retrieves the contract address of a specific token on a given EVM-compatible blockchain.
    * @param chain - The ID of the EVM-compatible blockchain where the token contract is deployed.
@@ -310,11 +510,7 @@ export class XLinkSDK {
   ): Promise<undefined | EVMAddress | EVMNativeCurrencyAddress> {
     if (!KnownChainId.isEVMChain(chain)) return
     const info = await getEVMTokenContractInfo(this.sdkContext, chain, token)
-    const addr = info?.tokenContractAddress
-    if (addr === nativeCurrencyAddress) {
-      return evmNativeCurrencyAddress
-    }
-    return addr
+    return info?.tokenContractAddress
   }
 
   /**
@@ -546,6 +742,46 @@ export class XLinkSDK {
     })
   }
 
+  bridgeInfoFromBRC20(
+    input: BridgeInfoFromBRC20Input,
+  ): Promise<BridgeInfoFromBRC20Output> {
+    return bridgeInfoFromBRC20(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeInfoFromBRC20"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
+  estimateBridgeTransactionFromBRC20(
+    input: EstimateBridgeTransactionFromBRC20Input,
+  ): Promise<EstimateBridgeTransactionFromBRC20Output> {
+    return estimateBridgeTransactionFromBRC20(this.sdkContext, input).catch(
+      err => {
+        if (err instanceof TooManyRequestsError) {
+          throw new TooFrequentlyError(
+            ["estimateBridgeTransactionFromBRC20"],
+            err.retryAfter,
+            {
+              cause: err,
+            },
+          )
+        }
+        throw err
+      },
+    )
+  }
+  bridgeFromBRC20(input: BridgeFromBRC20Input): Promise<BridgeFromBRC20Output> {
+    return bridgeFromBRC20(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeFromBRC20"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
   brc20TickFromBRC20Token(
     chain: ChainId,
     token: KnownTokenId.BRC20Token,
@@ -559,15 +795,55 @@ export class XLinkSDK {
     return brc20TickToBRC20Token(this.sdkContext, chain, tick)
   }
 
+  bridgeInfoFromRunes(
+    input: BridgeInfoFromRunesInput,
+  ): Promise<BridgeInfoFromRunesOutput> {
+    return bridgeInfoFromRunes(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeInfoFromRunes"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
+  estimateBridgeTransactionFromRunes(
+    input: EstimateBridgeTransactionFromRunesInput,
+  ): Promise<EstimateBridgeTransactionFromRunesOutput> {
+    return estimateBridgeTransactionFromRunes(this.sdkContext, input).catch(
+      err => {
+        if (err instanceof TooManyRequestsError) {
+          throw new TooFrequentlyError(
+            ["estimateBridgeTransactionFromRunes"],
+            err.retryAfter,
+            {
+              cause: err,
+            },
+          )
+        }
+        throw err
+      },
+    )
+  }
+  bridgeFromRunes(input: BridgeFromRunesInput): Promise<BridgeFromRunesOutput> {
+    return bridgeFromRunes(this.sdkContext, input).catch(err => {
+      if (err instanceof TooManyRequestsError) {
+        throw new TooFrequentlyError(["bridgeFromRunes"], err.retryAfter, {
+          cause: err,
+        })
+      }
+      throw err
+    })
+  }
   runesIdFromRunesToken(
     chain: ChainId,
     token: KnownTokenId.RunesToken,
-  ): Promise<undefined | `${number}:${number}`> {
+  ): Promise<undefined | RuneIdCombined> {
     return runesIdFromRunesToken(this.sdkContext, chain, token)
   }
   runesIdToRunesToken(
     chain: ChainId,
-    id: `${number}:${number}`,
+    id: RuneIdCombined,
   ): Promise<undefined | KnownTokenId.RunesToken> {
     return runesIdToRunesToken(this.sdkContext, chain, id)
   }
@@ -582,11 +858,12 @@ export class XLinkSDK {
  * or `undefined` if the chain is not a Stacks chain or if the contract address cannot be retrieved.
  */
 async function stacksAddressFromStacksToken(
+  sdkContext: SDKGlobalContext,
   chain: ChainId,
   token: KnownTokenId.StacksToken,
 ): Promise<undefined | StacksContractAddress> {
   if (!KnownChainId.isStacksChain(chain)) return
-  const info = await getStacksTokenContractInfo(chain, token)
+  const info = await getStacksTokenContractInfo(sdkContext, chain, token)
   if (info == null) return
   return {
     deployerAddress: info.deployerAddress,
@@ -604,11 +881,12 @@ async function stacksAddressFromStacksToken(
  * cannot be found.
  */
 async function stacksAddressToStacksToken(
+  sdkContext: SDKGlobalContext,
   chain: ChainId,
   address: StacksContractAddress,
 ): Promise<undefined | KnownTokenId.StacksToken> {
   if (!KnownChainId.isStacksChain(chain)) return
-  return getStacksToken(chain, address)
+  return getStacksToken(sdkContext, chain, address)
 }
 
 async function brc20TickFromBRC20Token(
@@ -627,14 +905,15 @@ async function brc20TickToBRC20Token(
 ): Promise<undefined | KnownTokenId.BRC20Token> {
   if (!KnownChainId.isBRC20Chain(chain)) return
   const routes = await getBRC20SupportedRoutes(sdkContext, chain)
-  return routes.find(r => r.brc20Tick === tick)?.brc20Token
+  return routes.find(r => r.brc20Tick.toLowerCase() === tick.toLowerCase())
+    ?.brc20Token
 }
 
 async function runesIdFromRunesToken(
   sdkContext: SDKGlobalContext,
   chain: ChainId,
   token: KnownTokenId.RunesToken,
-): Promise<undefined | `${number}:${number}`> {
+): Promise<undefined | RuneIdCombined> {
   if (!KnownChainId.isRunesChain(chain)) return
   const routes = await getRunesSupportedRoutes(sdkContext, chain)
   return routes.find(r => r.runesToken === token)?.runesId
@@ -642,7 +921,7 @@ async function runesIdFromRunesToken(
 async function runesIdToRunesToken(
   sdkContext: SDKGlobalContext,
   chain: ChainId,
-  runesId: `${number}:${number}`,
+  runesId: RuneIdCombined,
 ): Promise<undefined | KnownTokenId.RunesToken> {
   if (!KnownChainId.isRunesChain(chain)) return
   const routes = await getRunesSupportedRoutes(sdkContext, chain)

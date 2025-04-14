@@ -10,7 +10,10 @@ export interface Recipient {
 export function createTransaction(
   inputUTXOs: Array<UTXOSpendable>,
   recipients: Array<Recipient>,
-  opReturnData: Uint8Array[],
+  opReturnScripts: Uint8Array[],
+  options?: {
+    enableRBF?: boolean
+  },
 ): btc.Transaction {
   const tx = new btc.Transaction({
     allowUnknownOutputs: true,
@@ -32,7 +35,7 @@ export function createTransaction(
         "tapInternalKey" in utxo ? utxo.tapInternalKey : undefined,
       redeemScript: "redeemScript" in utxo ? utxo.redeemScript : undefined,
       // Enable RBF
-      sequence: btc.DEFAULT_SEQUENCE - 2,
+      sequence: options?.enableRBF ? btc.DEFAULT_SEQUENCE - 2 : undefined,
     })
   })
 
@@ -43,12 +46,9 @@ export function createTransaction(
     })
   })
 
-  if (hasAny(opReturnData)) {
-    opReturnData.forEach(data => {
-      tx.addOutput({
-        script: btc.Script.encode(["RETURN", data]),
-        amount: 0n,
-      })
+  if (hasAny(opReturnScripts)) {
+    opReturnScripts.forEach(script => {
+      tx.addOutput({ script, amount: 0n })
     })
   }
 

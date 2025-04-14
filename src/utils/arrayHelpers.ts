@@ -92,6 +92,31 @@ export function oneOf<T extends any[]>(
   return ((input: unknown) => coll.includes(input)) as any
 }
 
+export function groupBy<T, K extends string>(
+  iteratee: (item: T) => K,
+  ary: T[],
+): Partial<Record<K, T[]>> {
+  const result: Partial<Record<K, T[]>> = {}
+  ary.forEach(i => {
+    const key = iteratee(i)
+    if (result[key] == null) {
+      result[key] = []
+    }
+    result[key].push(i)
+  })
+  return result
+}
+
+export function uniqBy<T>(iteratee: (item: T) => string, ary: T[]): T[] {
+  const existed = new Set<string>()
+  return ary.flatMap(i => {
+    const id = iteratee(i)
+    if (existed.has(id)) return []
+    existed.add(id)
+    return [i]
+  })
+}
+
 export type SortByIteratee<T> = (
   item: T,
   index: number,
@@ -188,3 +213,24 @@ export const mapFindP: CurriedMapFindPFn = (async <T, U>(
   }
   return undefined
 }) as any
+
+/**
+ * Split an array into several arrays, based on the return value of the predicate function.
+ */
+export function arraySplit<T, U>(
+  predicate: (item: T, index: number) => U,
+  inputArray: T[],
+): T[][] {
+  return inputArray.reduce((outputArray: T[][], item, idx) => {
+    const lastGroup = last(outputArray)
+    if (
+      lastGroup == null ||
+      predicate(lastGroup[0], idx - 1) !== predicate(item, idx)
+    ) {
+      outputArray.push([item])
+    } else {
+      lastGroup.push(item)
+    }
+    return outputArray
+  }, [])
+}

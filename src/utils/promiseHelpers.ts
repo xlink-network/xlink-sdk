@@ -1,4 +1,4 @@
-export type UnboxPromise<T> = T extends PromiseLike<infer R> ? R : never
+export type UnboxPromise<T> = T extends PromiseLike<infer R> ? R : T
 
 export async function props<I extends Record<string, any>>(
   inputs: I,

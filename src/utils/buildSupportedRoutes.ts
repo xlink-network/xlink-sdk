@@ -2,12 +2,14 @@ import { ChainId, TokenId } from "../xlinkSdkUtils/types"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
 import { pMemoize } from "./pMemoize"
+import { SwapRoute } from "./SwapRouteHelpers"
+import { checkNever } from "./typeHelpers"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
 
 export interface DefinedRoute {
   fromChain: ChainId
-  toChain: ChainId
   fromToken: TokenId
+  toChain: ChainId
   toToken: TokenId
 }
 
@@ -53,23 +55,23 @@ export type KnownRoute_FromBitcoin_ToEVM = {
   toChain: KnownChainId.EVMChain
   toToken: KnownTokenId.EVMToken
 }
-// export type KnownRoute_FromBitcoin_ToBRC20 = {
-//   fromChain: KnownChainId.BitcoinChain
-//   fromToken: KnownTokenId.BitcoinToken
-//   toChain: KnownChainId.BRC20Chain
-//   toToken: KnownTokenId.BRC20Token
-// }
-// export type KnownRoute_FromBitcoin_ToRunes = {
-//   fromChain: KnownChainId.BitcoinChain
-//   fromToken: KnownTokenId.BitcoinToken
-//   toChain: KnownChainId.RunesChain
-//   toToken: KnownTokenId.RunesToken
-// }
+export type KnownRoute_FromBitcoin_ToBRC20 = {
+  fromChain: KnownChainId.BitcoinChain
+  fromToken: KnownTokenId.BitcoinToken
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromBitcoin_ToRunes = {
+  fromChain: KnownChainId.BitcoinChain
+  fromToken: KnownTokenId.BitcoinToken
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
+}
 export type KnownRoute_FromBitcoin =
   | KnownRoute_FromBitcoin_ToStacks
   | KnownRoute_FromBitcoin_ToEVM
-// | KnownRoute_FromBitcoin_ToBRC20
-// | KnownRoute_FromBitcoin_ToRunes
+  | KnownRoute_FromBitcoin_ToBRC20
+  | KnownRoute_FromBitcoin_ToRunes
 
 export type KnownRoute_FromEVM_ToStacks = {
   fromChain: KnownChainId.EVMChain
@@ -108,23 +110,112 @@ export type KnownRoute_FromEVM =
   | KnownRoute_FromEVM_ToRunes
   | KnownRoute_FromEVM_ToEVM
 
-export type _KnownRoute_FromBRC20_ToStacks = {
+export type KnownRoute_FromBRC20_ToStacks = {
   fromChain: KnownChainId.BRC20Chain
   fromToken: KnownTokenId.BRC20Token
   toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
 }
-export type _KnownRoute_FromRunes_ToStacks = {
+export type KnownRoute_FromBRC20_ToEVM = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.EVMChain
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromBRC20_ToBitcoin = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.BitcoinChain
+  toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromBRC20_ToBRC20 = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromBRC20_ToRunes = {
+  fromChain: KnownChainId.BRC20Chain
+  fromToken: KnownTokenId.BRC20Token
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
+}
+export type KnownRoute_FromBRC20 =
+  | KnownRoute_FromBRC20_ToStacks
+  | KnownRoute_FromBRC20_ToEVM
+  | KnownRoute_FromBRC20_ToBitcoin
+  | KnownRoute_FromBRC20_ToBRC20
+  | KnownRoute_FromBRC20_ToRunes
+
+export type KnownRoute_FromRunes_ToStacks = {
   fromChain: KnownChainId.RunesChain
   fromToken: KnownTokenId.RunesToken
   toChain: KnownChainId.StacksChain
   toToken: KnownTokenId.StacksToken
 }
+export type KnownRoute_FromRunes_ToEVM = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.EVMChain
+  toToken: KnownTokenId.EVMToken
+}
+export type KnownRoute_FromRunes_ToBitcoin = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.BitcoinChain
+  toToken: KnownTokenId.BitcoinToken
+}
+export type KnownRoute_FromRunes_ToBRC20 = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.BRC20Chain
+  toToken: KnownTokenId.BRC20Token
+}
+export type KnownRoute_FromRunes_ToRunes = {
+  fromChain: KnownChainId.RunesChain
+  fromToken: KnownTokenId.RunesToken
+  toChain: KnownChainId.RunesChain
+  toToken: KnownTokenId.RunesToken
+}
+export type KnownRoute_FromRunes =
+  | KnownRoute_FromRunes_ToStacks
+  | KnownRoute_FromRunes_ToEVM
+  | KnownRoute_FromRunes_ToBitcoin
+  | KnownRoute_FromRunes_ToBRC20
+  | KnownRoute_FromRunes_ToRunes
+
+export type KnownRoute_FromMeta_ToStacks =
+  | KnownRoute_FromBRC20_ToStacks
+  | KnownRoute_FromRunes_ToStacks
+export type KnownRoute_FromMeta_ToEVM =
+  | KnownRoute_FromBRC20_ToEVM
+  | KnownRoute_FromRunes_ToEVM
+export type KnownRoute_FromMeta_ToBitcoin =
+  | KnownRoute_FromBRC20_ToBitcoin
+  | KnownRoute_FromRunes_ToBitcoin
+export type KnownRoute_FromMeta_ToBRC20 =
+  | KnownRoute_FromBRC20_ToBRC20
+  | KnownRoute_FromRunes_ToBRC20
+export type KnownRoute_FromMeta_ToRunes =
+  | KnownRoute_FromBRC20_ToRunes
+  | KnownRoute_FromRunes_ToRunes
+export type KnownRoute_FromMeta_ToMeta =
+  | KnownRoute_FromMeta_ToBRC20
+  | KnownRoute_FromMeta_ToRunes
+export type KnownRoute_FromMeta = KnownRoute_FromBRC20 | KnownRoute_FromRunes
 
 export type KnownRoute =
   | KnownRoute_FromStacks
-  | KnownRoute_FromBitcoin
   | KnownRoute_FromEVM
+  | KnownRoute_FromBitcoin
+  | KnownRoute_FromBRC20
+  | KnownRoute_FromRunes
+
+export type KnownRoute_ToStacks =
+  | KnownRoute_FromBitcoin_ToStacks
+  | KnownRoute_FromEVM_ToStacks
+  | KnownRoute_FromBRC20_ToStacks
+  | KnownRoute_FromRunes_ToStacks
 
 export function defineRoute(
   chainPairs: [fromChains: ChainId[], toChains: ChainId[]],
@@ -150,15 +241,30 @@ export function defineRoute(
 
 export type IsSupportedFn = (
   ctx: SDKGlobalContext,
-  route: DefinedRoute,
+  route: DefinedRoute & {
+    swapRoute?: SwapRoute
+  },
 ) => Promise<boolean>
-const memoizedIsSupportedFactory = (
+export const memoizedIsSupportedFactory = (
   isSupported: IsSupportedFn,
 ): IsSupportedFn => {
   return pMemoize(
     {
       cacheKey([, route]) {
-        return `${route.fromChain}:${route.fromToken}->${route.toChain}:${route.toToken}`
+        const from = `${route.fromChain}:${route.fromToken}`
+        const to = `${route.toChain}:${route.toToken}`
+        if (route.swapRoute == null) return `${from}->${to}`
+
+        let swap: string
+        if (route.swapRoute.via === "ALEX") {
+          swap = route.swapRoute.swapPools.map(p => p.poolId).join("->")
+        } else if (route.swapRoute.via === "evmDexAggregator") {
+          swap = `${route.swapRoute.fromEVMToken}->${route.swapRoute.toEVMToken}`
+        } else {
+          checkNever(route.swapRoute)
+          swap = JSON.stringify(route.swapRoute)
+        }
+        return `${from}->(${swap})->${to}`
       },
       skipCache: true,
     },
@@ -166,87 +272,42 @@ const memoizedIsSupportedFactory = (
   )
 }
 
+export type CheckRouteValidFn = (
+  ctx: SDKGlobalContext,
+  isSupported: IsSupportedFn,
+  route: DefinedRoute & {
+    swapRoute?: SwapRoute
+  },
+) => Promise<KnownRoute>
+export const checkRouteValid: CheckRouteValidFn = async (
+  ctx,
+  isSupported,
+  route,
+) => {
+  const isValid = await isSupported(ctx, route)
+
+  if (!isValid) {
+    throw new UnsupportedBridgeRouteError(
+      route.fromChain,
+      route.toChain,
+      route.fromToken,
+      route.toToken,
+      route.swapRoute,
+    )
+  }
+
+  return route as any
+}
+
 export interface GetSupportedRoutesFn_Conditions {
   fromChain?: ChainId
-  toChain?: ChainId
   fromToken?: TokenId
+  toChain?: ChainId
   toToken?: TokenId
+  includeUnpredictableSwapPossibilities?: boolean
 }
+
 export type GetSupportedRoutesFn = (
   ctx: SDKGlobalContext,
   conditions?: GetSupportedRoutesFn_Conditions,
 ) => Promise<KnownRoute[]>
-
-export type CheckRouteValidFn = (
-  ctx: SDKGlobalContext,
-  route: DefinedRoute,
-) => Promise<KnownRoute>
-
-export function buildSupportedRoutes(
-  routes: DefinedRoute[],
-  options: {
-    isSupported?: IsSupportedFn
-  } = {},
-): {
-  getSupportedRoutes: GetSupportedRoutesFn
-  checkRouteValid: CheckRouteValidFn
-} {
-  const isSupported = memoizedIsSupportedFactory(
-    options.isSupported || (() => Promise.resolve(true)),
-  )
-
-  const getSupportedRoutes: GetSupportedRoutesFn = async (
-    ctx,
-    conditions = {},
-  ) => {
-    const filteredDefinitions = routes.filter(r => {
-      if (
-        conditions.fromChain != null &&
-        conditions.fromChain !== r.fromChain
-      ) {
-        return false
-      }
-      if (conditions.toChain != null && conditions.toChain !== r.toChain) {
-        return false
-      }
-      if (
-        conditions.fromToken != null &&
-        conditions.fromToken !== r.fromToken
-      ) {
-        return false
-      }
-      if (conditions.toToken != null && conditions.toToken !== r.toToken) {
-        return false
-      }
-
-      return true
-    })
-
-    const res = await Promise.all(
-      filteredDefinitions.map(
-        async route => [await isSupported(ctx, route), route] as const,
-      ),
-    )
-    return res
-      .filter(([isSupported]) => isSupported)
-      .map(([, route]) => route as KnownRoute)
-  }
-
-  return {
-    getSupportedRoutes,
-    async checkRouteValid(ctx, route) {
-      const isValid = await isSupported(ctx, route)
-
-      if (!isValid) {
-        throw new UnsupportedBridgeRouteError(
-          route.fromChain,
-          route.toChain,
-          route.fromToken,
-          route.toToken,
-        )
-      }
-
-      return route as any
-    },
-  }
-}
