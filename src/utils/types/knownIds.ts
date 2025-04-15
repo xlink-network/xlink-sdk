@@ -31,19 +31,19 @@ export namespace KnownTokenId {
     /** Represents the Bitcoin token ID (BTC). */
     export const BTC = tokenId("btc-btc")
   }
-  /** This type includes all known Bitcoin tokens. */
+  /** This type defines known Bitcoin tokens. */
   export type BitcoinToken = (typeof _allKnownBitcoinTokens)[number]
   export function isBitcoinToken(value: TokenId): value is BitcoinToken {
     return _allKnownBitcoinTokens.includes(value as any)
   }
 
-  /** This type includes all known BRC20 tokens. */
+  /** This type defines known BRC20 tokens. */
   export type BRC20Token = TokenId<"a brc20 token">
   export function isBRC20Token(value: TokenId): value is BRC20Token {
     return value.startsWith("brc20-")
   }
 
-  /** This type includes all known Runes tokens. */
+  /** This type defines known Runes tokens. */
   export type RunesToken = TokenId<"a runes token">
   export function isRunesToken(value: TokenId): value is RunesToken {
     return value.startsWith("runes-")
@@ -92,7 +92,7 @@ export namespace KnownTokenId {
     /** Represents the TRUMP token ID on EVM-compatible blockchains. */
     export const TRUMP = tokenId("evm-trump")
   }
-  /** This type includes all known tokens on EVM-compatible blockchains. */
+  /** This type defines known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
   export function isEVMToken(value: TokenId): value is EVMToken {
     return _allKnownEVMTokens.includes(value as any)
