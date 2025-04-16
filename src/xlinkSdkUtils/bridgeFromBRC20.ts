@@ -1,8 +1,13 @@
 import * as btc from "@scure/btc-signer"
+import { equalBytes } from "@scure/btc-signer/utils"
 import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
 import { createBitcoinPegInRecipients } from "../bitcoinUtils/apiHelpers/createBitcoinPegInRecipients"
 import { createRevealTx } from "../bitcoinUtils/apiHelpers/createRevealTx"
-import { UTXOSpendable, bitcoinToSatoshi } from "../bitcoinUtils/bitcoinHelpers"
+import {
+  UTXOSpendable,
+  addressToScriptPubKey,
+  bitcoinToSatoshi,
+} from "../bitcoinUtils/bitcoinHelpers"
 import {
   BitcoinAddress,
   getBTCPegInAddress,
@@ -63,12 +68,12 @@ import {
   getChainIdNetworkType,
 } from "../utils/types/knownIds"
 import { TransferProphet_Fee_Fixed } from "../utils/types/TransferProphet"
+import {
+  ReselectSpendableUTXOsFn_Public,
+  reselectSpendableUTXOsFactory,
+} from "./bridgeFromBitcoin"
 import { ChainId, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import {
-  reselectSpendableUTXOsFactory,
-  ReselectSpendableUTXOsFn_Public,
-} from "./bridgeFromBitcoin"
 
 export type BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs =
   ReselectSpendableUTXOsFn_Public
@@ -94,10 +99,13 @@ export interface BridgeFromBRC20Input {
   toAddressScriptPubKey?: Uint8Array
 
   inputInscriptionUTXO: UTXOSpendable
+  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
 
   networkFeeRate: bigint
-  swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
   reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
+
   signPsbt: BridgeFromBRC20Input_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -120,6 +128,54 @@ export async function bridgeFromBRC20(
   info: BridgeFromBRC20Input,
 ): Promise<BridgeFromBRC20Output> {
   const route = await checkRouteValid(ctx, isSupportedBRC20Route, info)
+
+  if (
+    !equalBytes(
+      info.fromAddressScriptPubKey,
+      addressToScriptPubKey(
+        info.fromChain === KnownChainId.Bitcoin.Mainnet
+          ? btc.NETWORK
+          : btc.TEST_NETWORK,
+        info.fromAddress,
+      ),
+    )
+  ) {
+    throw new InvalidMethodParametersError(
+      ["XLinkSDK", "bridgeFromBRC20"],
+      [
+        {
+          name: "fromAddressScriptPubKey",
+          expected: "the scriptPubKey of the fromAddress",
+          received: "invalid scriptPubKey",
+        },
+      ],
+    )
+  }
+
+  if (info.toAddressScriptPubKey != null) {
+    if (
+      !equalBytes(
+        info.toAddressScriptPubKey,
+        addressToScriptPubKey(
+          info.fromChain === KnownChainId.Bitcoin.Mainnet
+            ? btc.NETWORK
+            : btc.TEST_NETWORK,
+          info.toAddress,
+        ),
+      )
+    ) {
+      throw new InvalidMethodParametersError(
+        ["XLinkSDK", "bridgeFromBRC20"],
+        [
+          {
+            name: "toAddressScriptPubKey",
+            expected: "the scriptPubKey of the toAddress",
+            received: "invalid scriptPubKey",
+          },
+        ],
+      )
+    }
+  }
 
   if (KnownChainId.isBRC20Chain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
@@ -641,7 +697,7 @@ async function constructBRC20Transaction(
   const tx = createTransaction(
     txOptions.inputs,
     txOptions.recipients.concat({
-      addressScriptPubKey: info.fromAddressScriptPubKey,
+      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
       satsAmount: txOptions.changeAmount,
     }),
     txOptions.opReturnScripts ?? [],
@@ -698,8 +754,12 @@ export type PrepareBRC20TransactionInput = KnownRoute_FromBRC20 & {
   fromAddress: BridgeFromBRC20Input["fromAddress"]
   toAddress: BridgeFromBRC20Input["toAddress"]
   inputInscriptionUTXO: BridgeFromBRC20Input["inputInscriptionUTXO"]
+
   networkFeeRate: BridgeFromBRC20Input["networkFeeRate"]
+  networkFeeChangeAddress: string
+  networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input["reselectSpendableNetworkFeeUTXOs"]
+
   pegInAddress: BitcoinAddress
   orderData: Uint8Array
   bridgeFeeOutput: null | {
@@ -796,7 +856,7 @@ export async function prepareBRC20Transaction(
             },
           ]),
     ],
-    changeAddressScriptPubKey: info.fromAddressScriptPubKey,
+    changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
     reselectSpendableUTXOs: reselectSpendableUTXOsFactory(
       info.reselectSpendableNetworkFeeUTXOs,

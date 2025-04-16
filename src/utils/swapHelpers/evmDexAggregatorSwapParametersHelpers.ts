@@ -25,9 +25,11 @@ import {
 import { TransferProphet } from "../types/TransferProphet"
 
 export const possibleSwapOnEVMChains = [
+  KnownChainId.EVM.Ethereum,
   KnownChainId.EVM.Base,
   KnownChainId.EVM.Arbitrum,
   KnownChainId.EVM.Linea,
+  KnownChainId.EVM.BSC,
 ] satisfies KnownChainId.EVMChain[]
 
 export interface EVMDexAggregatorSwapParameters {
@@ -176,9 +178,11 @@ async function _getEVMDexAggregatorSwapParametersImpl(
           toDexAggregator: true,
           initialRoute: info.initialToStacksRoute,
         },
-      ).then(info =>
-        info == null || info.isPaused ? null : { token, transferProphet: info },
-      ),
+      ).then(feeInfo => {
+        if (feeInfo == null) return null
+        if (!isTransferProphetValid(feeInfo, info.amount)) return null
+        return { token, transferProphet: feeInfo }
+      }),
     ),
   ).then(infos => infos.filter(isNotNull))
 
@@ -189,7 +193,13 @@ async function _getEVMDexAggregatorSwapParametersImpl(
         fromToken: token,
         toChain: transitStacksChain,
         toToken: lastStepFromStacksToken,
-      }).then(info => (info == null || info.isPaused ? null : token)),
+      }).then(feeInfo =>
+        /**
+         * we can not compare the amount with the max/min bridge amount here,
+         * since we can not know the swapped amount here
+         */
+        feeInfo == null || feeInfo.isPaused ? null : token,
+      ),
     ),
   ).then(tokens => tokens.filter(isNotNull))
 
@@ -212,4 +222,27 @@ async function _getEVMDexAggregatorSwapParametersImpl(
     }
   }
   return results
+}
+
+function isTransferProphetValid(
+  feeInfo: TransferProphet,
+  amount: BigNumber,
+): boolean {
+  if (feeInfo.isPaused) return false
+
+  if (
+    feeInfo.minBridgeAmount != null &&
+    BigNumber.isLt(amount, feeInfo.minBridgeAmount)
+  ) {
+    return false
+  }
+
+  if (
+    feeInfo.maxBridgeAmount != null &&
+    BigNumber.isGt(amount, feeInfo.maxBridgeAmount)
+  ) {
+    return false
+  }
+
+  return true
 }

@@ -340,4 +340,44 @@ export const stxTokenContractAddresses_legacy: Record<
       contractName: "runes-trump",
     }),
   },
+  [KnownTokenId.Stacks.GHIBLICZ]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "bsc-ghiblicz",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "bsc-ghiblicz",
+    }),
+  },
+  [KnownTokenId.Stacks.ETH]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-eth",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "token-eth",
+    }),
+  },
+  [KnownTokenId.Stacks.SOL]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-sol",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "token-sol",
+    }),
+  },
+  [KnownTokenId.Stacks.LINK]: {
+    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
+      deployerAddress: xlinkContractsMultisigMainnet,
+      contractName: "token-link",
+    }),
+    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
+      deployerAddress: xlinkContractsMultisigTestnet,
+      contractName: "token-link",
+    }),
+  },
 }

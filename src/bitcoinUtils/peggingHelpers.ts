@@ -49,10 +49,11 @@ export const getBtc2StacksFeeInfo = async (
   return withGlobalContextCache(
     ctx.btc.feeRateCache,
     `${withGlobalContextCache.cacheKeyFromRoute(route)}:${options.swapRoute?.via ?? ""}`,
-    () => _getBtc2StacksFeeInfo(route, options),
+    () => _getBtc2StacksFeeInfo(ctx, route, options),
   )
 }
 const _getBtc2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
     swapRoute: null | Pick<SwapRoute, "via">
@@ -104,7 +105,20 @@ const _getBtc2StacksFeeInfo = async (
       {},
       contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getBtc2StacksFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getBtc2StacksFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,
@@ -129,7 +143,21 @@ export const getStacks2BtcFeeInfo = async (
   route: KnownRoute_FromStacks_ToBitcoin,
   options: {
     /**
-     * the initial route step
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
     /**
@@ -155,7 +183,21 @@ const _getStacks2BtcFeeInfo = async (
   route: KnownRoute_FromStacks_ToBitcoin,
   options: {
     /**
-     * the initial route step
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
     /**
@@ -214,7 +256,20 @@ const _getStacks2BtcFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2BtcFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2BtcFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,

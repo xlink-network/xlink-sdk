@@ -29,6 +29,7 @@ export namespace withGlobalContextCache {
 }
 
 export interface SDKGlobalContext {
+  debugLog: boolean
   routes: {
     detectedCache: SDKGlobalContextCache<"mainnet" | "testnet", KnownRoute[]>
   }

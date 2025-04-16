@@ -148,7 +148,20 @@ const _getEvm2StacksFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   if (!resp.isApprovedOnEVMSide) return undefined
 
@@ -194,7 +207,20 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  })
+  }).then(
+    resp => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksNativeBridgeFeeInfo]", route, resp)
+      }
+      return resp
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getEvm2StacksNativeBridgeFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   return {
     isPaused: resp.isPaused,
@@ -211,7 +237,21 @@ export const getStacks2EvmFeeInfo = async (
   options: {
     toDexAggregator: boolean
     /**
-     * checkout the comments in getSpecialFeeDetailsForSwapRoute
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
   },
@@ -234,7 +274,21 @@ const _getStacks2EvmFeeInfo = async (
   options: {
     toDexAggregator: boolean
     /**
-     * checkout the comments in getSpecialFeeDetailsForSwapRoute
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     *
+     * Examples:
+     *
+     * * BTC > Runes (`via: ALEX`):
+     *     1. btc > stacks (initialRoute)
+     *     2. stacks > runes
+     * * BTC > Runes (`via: evmDexAggregator`):
+     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     2. stacks > evm
+     *     3. evm swap
+     *     4. evm > stacks (initialRoute for this partition)
+     *     5. stacks > runes
      */
     initialRoute: null | KnownRoute_ToStacks
   },
@@ -279,6 +333,10 @@ const _getStacks2EvmFeeInfo = async (
     },
   })
 
+  if (ctx.debugLog) {
+    console.log("[getStacks2EvmFeeInfo/specialFeeInfo]", route, specialFeeInfo)
+  }
+
   const tokenConf = await Promise.all([
     executeReadonlyCallXLINK(
       stacksContractCallInfo.contractName,
@@ -297,14 +355,26 @@ const _getStacks2EvmFeeInfo = async (
       {},
       stacksContractCallInfo.executeOptions,
     ),
-  ]).then(([resp, isPaused]) => {
-    if (resp.type !== "success") return undefined
+  ]).then(
+    ([resp, isPaused]) => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, resp, isPaused)
+      }
 
-    return {
-      ...unwrapResponse(resp),
-      isPaused,
-    }
-  })
+      if (resp.type !== "success") return undefined
+
+      return {
+        ...unwrapResponse(resp),
+        isPaused,
+      }
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
 
   if (tokenConf == null) return undefined
 

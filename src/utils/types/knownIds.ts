@@ -91,6 +91,10 @@ export namespace KnownTokenId {
     export const STX = tokenId("evm-stx")
     /** Represents the TRUMP token ID on EVM-compatible blockchains. */
     export const TRUMP = tokenId("evm-trump")
+    export const GHIBLICZ = tokenId("evm-ghiblicz")
+    export const ETH = tokenId("evm-eth")
+    export const SOL = tokenId("evm-sol")
+    export const LINK = tokenId("evm-link")
   }
   /** This type defines known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
@@ -127,6 +131,10 @@ export namespace KnownTokenId {
     export const STX = tokenId("stx-stx")
     /** Represents the TRUMP token ID on the Stacks blockchain. */
     export const TRUMP = tokenId("stx-trump")
+    export const GHIBLICZ = tokenId("stx-ghiblicz")
+    export const ETH = tokenId("stx-eth")
+    export const SOL = tokenId("stx-sol")
+    export const LINK = tokenId("stx-link")
   }
   const _allKnownStacksTokens = [
     Stacks.sUSDT,
@@ -142,6 +150,10 @@ export namespace KnownTokenId {
     Stacks.DOG,
     Stacks.STX,
     Stacks.TRUMP,
+    Stacks.GHIBLICZ,
+    Stacks.ETH,
+    Stacks.SOL,
+    Stacks.LINK,
   ] as const
   export type StacksToken =
     | TokenId<`a Stacks token`>

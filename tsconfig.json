@@ -1,10 +1,7 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig.json",
   "extends": "@c4605/toolconfs/tsconfig-esModule",
-  "exclude": [
-    "lib",
-    "examples",
-  ],
+  "exclude": ["lib", "examples/cross-chain-swap"],
   "compilerOptions": {
     "skipLibCheck": true,
     "lib": ["ES2023", "WebWorker"],
