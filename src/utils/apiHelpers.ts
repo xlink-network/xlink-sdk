@@ -1,5 +1,6 @@
 import { backendAPIPrefix } from "../config"
 import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { BigNumber } from "./BigNumber"
 
 export async function requestAPI<T>(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
@@ -22,7 +23,15 @@ export async function requestAPI<T>(
         "Content-Type": "application/json",
         "X-Xlink-Runtime-Env": sdkContext.backendAPI.runtimeEnv,
       },
-      body: JSON.stringify(options.body),
+      body: JSON.stringify(options.body, (k, v) => {
+        if (typeof v === "bigint") {
+          return v.toString()
+        }
+        if (BigNumber.isBigNumber(v)) {
+          return BigNumber.toString(v)
+        }
+        return v
+      }),
     },
   )
 
