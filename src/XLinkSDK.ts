@@ -379,8 +379,20 @@ export class XLinkSDK {
   }
 
   /**
-   * different from `getPossibleRoutes`, this function is designed to further
-   * determine if the route is supported by the SDK
+   * Determines whether a given route (from one blockchain/token to another) is supported by the XLink SDK.
+   * This function evaluates cross-chain compatibility for all supported networks (EVM, Stacks, Bitcoin, BRC20, Runes)
+   * by delegating to specialized validators per source chain type. It checks that the route is logically valid,
+   * not deprecated, and exists in the bridge configuration which is dynamically fetched.
+   *
+   * @param route - The route to validate, containing:
+   * - `fromChain`: the origin blockchain (`ChainId`)
+   * - `fromToken`: the token to bridge from (`TokenId`)
+   * - `toChain`: the destination blockchain (`ChainId`)
+   * - `toToken`: the token to receive on the destination (`TokenId`)
+   * - `swapRoute?` – (optional) An optional swap configuration that may be present in the route object.
+   *
+   * @returns A promise that resolves to `true` if the route is supported for bridging,
+   * or `false` if the route is invalid, unsupported, or incomplete.
    */
   async isSupportedRoute(
     route: DefinedRoute & { swapRoute?: SwapRoute },
