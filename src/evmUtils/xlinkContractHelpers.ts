@@ -252,18 +252,33 @@ const _getOnChainConfigsImpl = async (
     [EVMToken.vLiALEX]: maybeAddress(configs[6]),
     [EVMToken.vLiSTX]: maybeAddress(configs[7]),
     // prettier-ignore
-    [
-      chain === KnownChainId.EVM.Base ? EVMToken.USDC :
-      chain === KnownChainId.EVM.Arbitrum ? EVMToken.USDC :
-      EVMToken.USDT
-    ]: maybeAddress(configs[8]),
+    [EVMToken.USDT]:
+      chain === KnownChainId.EVM.Ethereum ||
+      chain === KnownChainId.EVM.BSC
+        ? maybeAddress(configs[8])
+        : undefined,
     // prettier-ignore
-    [
-      chain === KnownChainId.EVM.BSC ? EVMToken.BTCB :
-      chain === KnownChainId.EVM.Base ? EVMToken.cbBTC :
-      EVMToken.WBTC
-    ]:
-      maybeAddress(configs[9]),
+    [EVMToken.USDC]:
+      chain === KnownChainId.EVM.Base ||
+      chain === KnownChainId.EVM.Arbitrum
+        ? maybeAddress(configs[8])
+        : undefined,
+    // prettier-ignore
+    [EVMToken.WBTC]:
+      chain === KnownChainId.EVM.Ethereum ||
+      chain === KnownChainId.EVM.Arbitrum
+        ? maybeAddress(configs[9])
+        : undefined,
+    // prettier-ignore
+    [EVMToken.BTCB]:
+      chain === KnownChainId.EVM.BSC
+        ? maybeAddress(configs[9])
+        : undefined,
+    // prettier-ignore
+    [EVMToken.cbBTC]:
+      chain === KnownChainId.EVM.Base
+        ? maybeAddress(configs[9])
+        : undefined,
     [EVMToken.LUNR]: maybeAddress(configs[10]),
     [EVMToken.SKO]: maybeAddress(configs[11]),
     [EVMToken.sUSDT]: maybeAddress(configs[12]),
