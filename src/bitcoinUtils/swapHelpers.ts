@@ -8,7 +8,7 @@ import {
   EVMDexAggregatorSwapParameters,
   getPossibleEVMDexAggregatorSwapParametersImpl,
 } from "../utils/swapHelpers/evmDexAggregatorSwapParametersHelpers"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { getBtc2StacksFeeInfo } from "./peggingHelpers"
 
 export async function getALEXSwapParameters_FromBitcoin(

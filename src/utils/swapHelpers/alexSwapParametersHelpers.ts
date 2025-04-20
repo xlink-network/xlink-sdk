@@ -1,5 +1,5 @@
-import { getStacksTokenContractInfo } from "../../stacksUtils/xlinkContractHelpers"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { getStacksTokenContractInfo } from "../../stacksUtils/contractHelpers"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 import { BigNumber } from "../BigNumber"
 import { KnownRoute } from "../buildSupportedRoutes"
 import { applyTransferProphet } from "../feeRateHelpers"

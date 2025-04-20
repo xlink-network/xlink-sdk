@@ -9,7 +9,7 @@ import {
   getPossibleEVMDexAggregatorSwapParametersImpl,
 } from "../utils/swapHelpers/evmDexAggregatorSwapParametersHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { getMeta2StacksFeeInfo } from "./peggingHelpers"
 
 export async function getALEXSwapParameters_FromMeta(

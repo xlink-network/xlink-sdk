@@ -12,7 +12,7 @@ import {
   getEVMContractCallInfo,
   getEVMToken,
   getEVMTokenContractInfo,
-} from "./evmUtils/xlinkContractHelpers"
+} from "./evmUtils/contractHelpers"
 import { getBRC20SupportedRoutes } from "./metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./metaUtils/apiHelpers/getRunesSupportedRoutes"
 import {
@@ -23,7 +23,7 @@ import { isSupportedStacksRoute } from "./stacksUtils/peggingHelpers"
 import {
   getStacksToken,
   getStacksTokenContractInfo,
-} from "./stacksUtils/xlinkContractHelpers"
+} from "./stacksUtils/contractHelpers"
 import { TooManyRequestsError } from "./utils/apiHelpers"
 import {
   DefinedRoute,
@@ -41,37 +41,37 @@ import {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinOutput,
   bridgeFromBitcoin,
-} from "./xlinkSdkUtils/bridgeFromBitcoin"
+} from "./sdkUtils/bridgeFromBitcoin"
 import {
   BridgeFromBRC20Input,
   BridgeFromBRC20Output,
   bridgeFromBRC20,
-} from "./xlinkSdkUtils/bridgeFromBRC20"
+} from "./sdkUtils/bridgeFromBRC20"
 import {
   BridgeFromEVMInput,
   BridgeFromEVMOutput,
   bridgeFromEVM,
-} from "./xlinkSdkUtils/bridgeFromEVM"
+} from "./sdkUtils/bridgeFromEVM"
 import {
   BridgeFromRunesInput,
   BridgeFromRunesOutput,
   bridgeFromRunes,
-} from "./xlinkSdkUtils/bridgeFromRunes"
+} from "./sdkUtils/bridgeFromRunes"
 import {
   BridgeFromStacksInput,
   BridgeFromStacksOutput,
   bridgeFromStacks,
-} from "./xlinkSdkUtils/bridgeFromStacks"
+} from "./sdkUtils/bridgeFromStacks"
 import {
   BridgeInfoFromBitcoinInput,
   BridgeInfoFromBitcoinOutput,
   bridgeInfoFromBitcoin,
-} from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+} from "./sdkUtils/bridgeInfoFromBitcoin"
 import {
   BridgeInfoFromEVMInput,
   BridgeInfoFromEVMOutput,
   bridgeInfoFromEVM,
-} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+} from "./sdkUtils/bridgeInfoFromEVM"
 import {
   BridgeInfoFromBRC20Input,
   BridgeInfoFromBRC20Output,
@@ -79,27 +79,27 @@ import {
   BridgeInfoFromRunesOutput,
   bridgeInfoFromBRC20,
   bridgeInfoFromRunes,
-} from "./xlinkSdkUtils/bridgeInfoFromMeta"
+} from "./sdkUtils/bridgeInfoFromMeta"
 import {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
   bridgeInfoFromStacks,
-} from "./xlinkSdkUtils/bridgeInfoFromStacks"
+} from "./sdkUtils/bridgeInfoFromStacks"
 import {
   EstimateBridgeTransactionFromBitcoinInput,
   EstimateBridgeTransactionFromBitcoinOutput,
   estimateBridgeTransactionFromBitcoin,
-} from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
+} from "./sdkUtils/estimateBridgeTransactionFromBitcoin"
 import {
   EstimateBridgeTransactionFromBRC20Input,
   EstimateBridgeTransactionFromBRC20Output,
   estimateBridgeTransactionFromBRC20,
-} from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
+} from "./sdkUtils/estimateBridgeTransactionFromBRC20"
 import {
   EstimateBridgeTransactionFromRunesInput,
   EstimateBridgeTransactionFromRunesOutput,
   estimateBridgeTransactionFromRunes,
-} from "./xlinkSdkUtils/estimateBridgeTransactionFromRunes"
+} from "./sdkUtils/estimateBridgeTransactionFromRunes"
 import {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
@@ -107,7 +107,7 @@ import {
   GetTimeLockedAssetsOutput,
   claimTimeLockedAssetsFromEVM,
   getTimeLockedAssetsFromEVM,
-} from "./xlinkSdkUtils/timelockFromEVM"
+} from "./sdkUtils/timelockFromEVM"
 import {
   ChainId,
   EVMAddress,
@@ -116,8 +116,8 @@ import {
   RuneIdCombined,
   StacksContractAddress,
   evmNativeCurrencyAddress,
-} from "./xlinkSdkUtils/types"
-import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+} from "./sdkUtils/types"
+import { SDKGlobalContext } from "./sdkUtils/types.internal"
 import { DumpableCache, getCacheInside } from "./utils/DumpableCache"
 import { isNotNull } from "./utils/typeHelpers"
 import { SwapRoute } from "./utils/SwapRouteHelpers"
@@ -131,64 +131,64 @@ export {
   BridgeFromBitcoinInput_signPsbtFn,
   BridgeFromBitcoinInput_reselectSpendableUTXOs,
   BridgeFromBitcoinOutput,
-} from "./xlinkSdkUtils/bridgeFromBitcoin"
+} from "./sdkUtils/bridgeFromBitcoin"
 export {
   BridgeFromBRC20Input,
   BridgeFromBRC20Input_signPsbtFn,
   BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs,
   BridgeFromBRC20Output,
-} from "./xlinkSdkUtils/bridgeFromBRC20"
+} from "./sdkUtils/bridgeFromBRC20"
 export {
   BridgeFromEVMInput,
   BridgeFromEVMOutput,
-} from "./xlinkSdkUtils/bridgeFromEVM"
+} from "./sdkUtils/bridgeFromEVM"
 export {
   BridgeFromRunesInput,
   BridgeFromRunesInput_signPsbtFn,
   BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
   BridgeFromRunesOutput,
   RunesUTXOSpendable,
-} from "./xlinkSdkUtils/bridgeFromRunes"
+} from "./sdkUtils/bridgeFromRunes"
 export {
   BridgeFromStacksInput,
   BridgeFromStacksOutput,
-} from "./xlinkSdkUtils/bridgeFromStacks"
+} from "./sdkUtils/bridgeFromStacks"
 export {
   BridgeInfoFromBitcoinInput,
   BridgeInfoFromBitcoinOutput,
-} from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+} from "./sdkUtils/bridgeInfoFromBitcoin"
 export {
   BridgeInfoFromEVMInput,
   BridgeInfoFromEVMOutput,
-} from "./xlinkSdkUtils/bridgeInfoFromEVM"
+} from "./sdkUtils/bridgeInfoFromEVM"
 export {
   BridgeInfoFromBRC20Input,
   BridgeInfoFromBRC20Output,
   BridgeInfoFromRunesInput,
   BridgeInfoFromRunesOutput,
-} from "./xlinkSdkUtils/bridgeInfoFromMeta"
+} from "./sdkUtils/bridgeInfoFromMeta"
 export {
   BridgeInfoFromStacksInput,
   BridgeInfoFromStacksOutput,
-} from "./xlinkSdkUtils/bridgeInfoFromStacks"
+} from "./sdkUtils/bridgeInfoFromStacks"
 export {
   EstimateBridgeTransactionFromBitcoinInput,
   EstimateBridgeTransactionFromBitcoinOutput,
-} from "./xlinkSdkUtils/estimateBridgeTransactionFromBitcoin"
+} from "./sdkUtils/estimateBridgeTransactionFromBitcoin"
 export {
   EstimateBridgeTransactionFromBRC20Input,
   EstimateBridgeTransactionFromBRC20Output,
-} from "./xlinkSdkUtils/estimateBridgeTransactionFromBRC20"
+} from "./sdkUtils/estimateBridgeTransactionFromBRC20"
 export {
   EstimateBridgeTransactionFromRunesInput,
   EstimateBridgeTransactionFromRunesOutput,
-} from "./xlinkSdkUtils/estimateBridgeTransactionFromRunes"
+} from "./sdkUtils/estimateBridgeTransactionFromRunes"
 export {
   ClaimTimeLockedAssetsInput,
   ClaimTimeLockedAssetsOutput,
   GetTimeLockedAssetsInput,
   GetTimeLockedAssetsOutput,
-} from "./xlinkSdkUtils/timelockFromEVM"
+} from "./sdkUtils/timelockFromEVM"
 export type { DumpableCache } from "./utils/DumpableCache"
 
 export interface XLinkSDKOptions {

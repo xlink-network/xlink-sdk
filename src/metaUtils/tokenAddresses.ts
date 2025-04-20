@@ -1,5 +1,5 @@
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
 import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 

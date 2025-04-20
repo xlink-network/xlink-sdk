@@ -2,7 +2,7 @@ import { sortBy } from "../utils/arrayHelpers"
 import { MAX_BIGINT, sum } from "../utils/bigintHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { isNotNull } from "../utils/typeHelpers"
-import { ReselectSpendableUTXOsFn_Public } from "../xlinkSdkUtils/bridgeFromBitcoin"
+import { ReselectSpendableUTXOsFn_Public } from "../sdkUtils/bridgeFromBitcoin"
 import {
   isSameUTXO,
   sumUTXO,

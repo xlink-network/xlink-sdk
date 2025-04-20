@@ -3,12 +3,12 @@ import {
   KnownRoute,
   KnownTokenId,
   XLinkSDK,
-} from "@xlink-network/xlink-sdk"
+} from "@brotocol-xyz/bro-sdk"
 
 export const getAvailableRoutes = async (
-  xlinkSDK: XLinkSDK,
+  sdk: XLinkSDK,
 ): Promise<(KnownRoute & { fromTokenName: string; toTokenName: string })[]> => {
-  const routes = await _getAvailableRoutes(xlinkSDK)
+  const routes = await _getAvailableRoutes(sdk)
   return routes.map(
     (route): KnownRoute & { fromTokenName: string; toTokenName: string } =>
       ({
@@ -31,14 +31,14 @@ type ChainTokenPair = readonly [
 type AvailableRoute = readonly [from: ChainTokenPair, to: ChainTokenPair]
 
 const _getAvailableRoutes = async (
-  xlinkSDK: XLinkSDK,
+  sdk: XLinkSDK,
 ): Promise<AvailableRoute[]> => {
-  const alexBrc20 = await xlinkSDK.brc20TickToBRC20Token(
+  const alexBrc20 = await sdk.brc20TickToBRC20Token(
     KnownChainId.BRC20.Mainnet,
     "alex$",
   )
 
-  const ausdBrc20 = await xlinkSDK.brc20TickToBRC20Token(
+  const ausdBrc20 = await sdk.brc20TickToBRC20Token(
     KnownChainId.BRC20.Mainnet,
     "ausd$",
   )

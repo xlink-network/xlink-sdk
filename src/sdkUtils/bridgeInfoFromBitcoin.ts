@@ -13,7 +13,7 @@ import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
+} from "../stacksUtils/contractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,

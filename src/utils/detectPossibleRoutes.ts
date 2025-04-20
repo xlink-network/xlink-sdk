@@ -1,7 +1,7 @@
 import { getEVMSupportedRoutesByChainType } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { KnownRoute } from "./buildSupportedRoutes"
 import { KnownChainId, KnownTokenId } from "./types/knownIds"
 

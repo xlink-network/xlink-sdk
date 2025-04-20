@@ -1,4 +1,4 @@
-import { ChainId, RuneIdCombined, TokenId } from "../../xlinkSdkUtils/types"
+import { ChainId, RuneIdCombined, TokenId } from "../../sdkUtils/types"
 import { checkNever } from "../typeHelpers"
 
 const chainId = <const T extends string>(value: T): ChainId<T> => value as any

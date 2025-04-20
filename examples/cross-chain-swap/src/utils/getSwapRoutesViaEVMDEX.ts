@@ -5,16 +5,16 @@ import {
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsOut,
   toSDKNumberOrUndefined,
   XLinkSDK,
-} from "@xlink-network/xlink-sdk"
+} from "@brotocol-xyz/bro-sdk"
 import {
-  fetchIceScreamSwapPossibleRoutesFactory,
+  fetchKyberSwapPossibleRoutesFactory,
   getDexAggregatorRoutes,
   getPossibleEVMDexAggregatorSwapParameters,
-} from "@xlink-network/xlink-sdk/swapHelpers"
+} from "@brotocol-xyz/bro-sdk/swapHelpers"
 
 export async function getSwapRoutesViaEVMDEX(
   context: {
-    xlinkSDK: XLinkSDK
+    sdk: XLinkSDK
   },
   swapRequest: KnownRoute & {
     amount: SDKNumber
@@ -28,16 +28,16 @@ export async function getSwapRoutesViaEVMDEX(
         SwapRouteViaEVMDexAggregator_WithMinimumAmountsOut)[]
     }
 > {
-  const { xlinkSDK } = context
+  const { sdk } = context
 
   const possibleSwapParameters =
-    await getPossibleEVMDexAggregatorSwapParameters(xlinkSDK, swapRequest)
+    await getPossibleEVMDexAggregatorSwapParameters(sdk, swapRequest)
   if (possibleSwapParameters.length === 0) {
     return { type: "failed", reason: "unsupported-route" }
   }
 
-  const routes = await getDexAggregatorRoutes(xlinkSDK, {
-    routeFetcher: fetchIceScreamSwapPossibleRoutesFactory({}),
+  const routes = await getDexAggregatorRoutes(sdk, {
+    routeFetcher: fetchKyberSwapPossibleRoutesFactory({}),
     routes: possibleSwapParameters.map(p => ({
       evmChain: p.evmChain,
       fromToken: p.fromToken,

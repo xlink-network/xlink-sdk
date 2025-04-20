@@ -1,4 +1,4 @@
-import { ChainId, TokenId } from "../xlinkSdkUtils/types"
+import { ChainId, TokenId } from "../sdkUtils/types"
 import {
   SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,

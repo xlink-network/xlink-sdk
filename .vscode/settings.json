@@ -3,6 +3,7 @@
   "cSpell.words": [
     "abtc",
     "Bitlayer",
+    "Brotocol",
     "Bsquared",
     "BTCB",
     "codegen",
@@ -15,7 +16,6 @@
     "susdt",
     "txid",
     "UTXO",
-    "viem",
-    "xlink"
+    "viem"
   ]
 }

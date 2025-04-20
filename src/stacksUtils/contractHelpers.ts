@@ -13,15 +13,15 @@ import {
   ParameterObjOfDescriptor,
   StringOnly,
 } from "clarity-codegen"
-import { xlinkContracts } from "../../generated/smartContract/contracts_xlink"
+import { broContracts } from "../../generated/smartContract/contracts_bro"
 import { STACKS_MAINNET, STACKS_TESTNET } from "../config"
-import { BigNumber, BigNumberSource } from "../utils/BigNumber"
-import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import {
   isStacksContractAddressEqual,
   StacksContractAddress,
-} from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+} from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
+import { BigNumber, BigNumberSource } from "../utils/BigNumber"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { getAllStacksTokens } from "./apiHelpers/getAllStacksTokens"
 import {
   StacksContractName,
@@ -61,8 +61,8 @@ export interface ContractCallOptions {
   functionArgs: SerializedClarityValue[]
 }
 
-const _composeTxXLINK = composeTxOptionsFactory(xlinkContracts, {})
-export type ComposeTxOptionsFn<Contracts extends typeof xlinkContracts> = <
+const _composeTxBrotocol = composeTxOptionsFactory(broContracts, {})
+export type ComposeTxOptionsFn<Contracts extends typeof broContracts> = <
   T extends StringOnly<keyof Contracts>,
   F extends StringOnly<keyof Contracts[T]>,
   Descriptor extends Contracts[T][F],
@@ -78,10 +78,10 @@ export type ComposeTxOptionsFn<Contracts extends typeof xlinkContracts> = <
     postConditions?: PC[]
   },
 ) => ContractCallOptions
-export const composeTxXLINK: ComposeTxOptionsFn<typeof xlinkContracts> = (
+export const composeTxXLINK: ComposeTxOptionsFn<typeof broContracts> = (
   ...args
 ) => {
-  const options = _composeTxXLINK(...args)
+  const options = _composeTxBrotocol(...args)
   return {
     ...options,
     functionArgs: options.functionArgs.map(arg => serializeCVBytes(arg)),
@@ -92,7 +92,7 @@ export const composeTxXLINK: ComposeTxOptionsFn<typeof xlinkContracts> = (
 }
 
 export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
-  xlinkContracts,
+  broContracts,
   {},
 )
 

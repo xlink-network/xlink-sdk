@@ -20,7 +20,7 @@ import {
 import { checkNever } from "./utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
 import { XLinkSDK } from "./XLinkSDK"
-import { SDKNumber, toSDKNumberOrUndefined } from "./xlinkSdkUtils/types"
+import { SDKNumber, toSDKNumberOrUndefined } from "./sdkUtils/types"
 
 export interface ALEXSwapParameters
   extends Omit<_ALEXSwapParameters, "fromAmount"> {

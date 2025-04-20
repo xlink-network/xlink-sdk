@@ -4,7 +4,7 @@ import {
   ALEXSwapParameters,
   getALEXSwapParametersImpl,
 } from "../utils/swapHelpers/alexSwapParametersHelpers"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { getEvm2StacksFeeInfo } from "./peggingHelpers"
 
 export async function getALEXSwapParameters_FromEVM(

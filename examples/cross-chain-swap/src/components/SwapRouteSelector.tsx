@@ -5,7 +5,7 @@ import {
   SwapRoute_WithExchangeRate,
   toSDKNumberOrUndefined,
   XLinkSDK,
-} from "@xlink-network/xlink-sdk"
+} from "@brotocol-xyz/bro-sdk"
 import { AlexSDK } from "alex-sdk"
 import { FC, Fragment, useState } from "react"
 import { useQuery } from "react-query"
@@ -17,8 +17,8 @@ import { getSwapRoutesViaEVMDEX } from "../utils/getSwapRoutesViaEVMDEX"
 
 export const SwapRouteSelector: FC<{
   alexSDK: AlexSDK
-  xlinkSDK: XLinkSDK
-}> = ({ alexSDK, xlinkSDK }) => {
+  sdk: XLinkSDK
+}> = ({ alexSDK, sdk }) => {
   const [swapAmount, setSwapAmount] = useState("")
   const [selectedRoute, setSelectedRoute] = useState<null | KnownRoute>(null)
   const [selectedSwapRoute, setSelectedSwapRoute] =
@@ -29,7 +29,7 @@ export const SwapRouteSelector: FC<{
 
   const availableRoutes = useQuery({
     queryKey: ["availableRoutes"],
-    queryFn: () => getAvailableRoutes(xlinkSDK),
+    queryFn: () => getAvailableRoutes(sdk),
   })
 
   const alexRoutes = useQuery({
@@ -50,7 +50,7 @@ export const SwapRouteSelector: FC<{
       return getSwapRoutesViaALEX(
         {
           alexSDK: alexSDK,
-          xlinkSDK: xlinkSDK,
+          sdk: sdk,
         },
         {
           ...debouncedRoute,
@@ -78,7 +78,7 @@ export const SwapRouteSelector: FC<{
 
       return getSwapRoutesViaEVMDEX(
         {
-          xlinkSDK: xlinkSDK,
+          sdk: sdk,
         },
         {
           ...debouncedRoute,
@@ -94,7 +94,9 @@ export const SwapRouteSelector: FC<{
     queryKey: [
       "bridgeInfo",
       JSON.stringify(selectedRoute),
-      JSON.stringify(selectedSwapRoute),
+      JSON.stringify(selectedSwapRoute, (k, v) =>
+        typeof v === "bigint" ? `${v}` : v,
+      ),
     ],
     queryFn: () => {
       if (selectedRoute == null) {
@@ -105,7 +107,7 @@ export const SwapRouteSelector: FC<{
       }
 
       if (KnownChainId.isBitcoinChain(selectedRoute.fromChain)) {
-        return xlinkSDK.bridgeInfoFromBitcoin({
+        return sdk.bridgeInfoFromBitcoin({
           ...selectedRoute,
           swapRoute: selectedSwapRoute,
           amount: toSDKNumberOrUndefined(Number(swapAmount)),
@@ -113,7 +115,7 @@ export const SwapRouteSelector: FC<{
       }
 
       if (KnownChainId.isBRC20Chain(selectedRoute.fromChain)) {
-        return xlinkSDK.bridgeInfoFromBRC20({
+        return sdk.bridgeInfoFromBRC20({
           ...selectedRoute,
           swapRoute: selectedSwapRoute,
           amount: toSDKNumberOrUndefined(Number(swapAmount)),
@@ -121,7 +123,7 @@ export const SwapRouteSelector: FC<{
       }
 
       if (KnownChainId.isRunesChain(selectedRoute.fromChain)) {
-        return xlinkSDK.bridgeInfoFromRunes({
+        return sdk.bridgeInfoFromRunes({
           ...selectedRoute,
           swapRoute: selectedSwapRoute,
           amount: toSDKNumberOrUndefined(Number(swapAmount)),

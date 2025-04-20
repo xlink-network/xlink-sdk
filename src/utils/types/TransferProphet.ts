@@ -2,7 +2,7 @@ import {
   SDKNumber,
   SDKNumberifyNestly,
   toSDKNumberOrUndefined,
-} from "../../xlinkSdkUtils/types"
+} from "../../sdkUtils/types"
 import { BigNumber } from "../BigNumber"
 import { first, last } from "../arrayHelpers"
 import { KnownRoute } from "../buildSupportedRoutes"

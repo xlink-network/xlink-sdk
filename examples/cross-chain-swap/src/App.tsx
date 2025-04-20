@@ -1,4 +1,4 @@
-import { XLinkSDK } from "@xlink-network/xlink-sdk"
+import { XLinkSDK } from "@brotocol-xyz/bro-sdk"
 import { AlexSDK } from "alex-sdk"
 import { FC } from "react"
 import "./App.css"
@@ -6,7 +6,7 @@ import { SwapRouteSelector } from "./components/SwapRouteSelector"
 import { QueryClient, QueryClientProvider } from "react-query"
 
 const alex = new AlexSDK()
-const xlink = new XLinkSDK()
+const sdk = new XLinkSDK()
 const queryClient = new QueryClient()
 
 const App: FC = () => {
@@ -18,7 +18,7 @@ const App: FC = () => {
         </header>
         <main className="app-main">
           <div className="content-wrapper">
-            <SwapRouteSelector alexSDK={alex} xlinkSDK={xlink} />
+            <SwapRouteSelector alexSDK={alex} sdk={sdk} />
           </div>
         </main>
       </div>

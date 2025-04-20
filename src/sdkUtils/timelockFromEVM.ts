@@ -6,7 +6,7 @@ import {
   getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
-} from "../evmUtils/xlinkContractHelpers"
+} from "../evmUtils/contractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import { UnsupportedChainError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"

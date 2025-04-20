@@ -1,4 +1,4 @@
-import { getStacksToken } from "../../stacksUtils/xlinkContractHelpers"
+import { getStacksToken } from "../../stacksUtils/contractHelpers"
 import { requestAPI } from "../../utils/apiHelpers"
 import { BigNumber } from "../../utils/BigNumber"
 import { isNotNull } from "../../utils/typeHelpers"
@@ -7,8 +7,8 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../../utils/types/knownIds"
-import { RuneIdCombined } from "../../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { RuneIdCombined } from "../../sdkUtils/types"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 
 export interface RunesSupportedRoute {
   runesId: RuneIdCombined

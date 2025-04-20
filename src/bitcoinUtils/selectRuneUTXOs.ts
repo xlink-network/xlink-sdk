@@ -3,7 +3,7 @@ import {
   RuneIdCombined,
   SDKNumber,
   toSDKNumberOrUndefined,
-} from "../xlinkSdkUtils/types"
+} from "../sdkUtils/types"
 import { UTXOSpendable } from "./bitcoinHelpers"
 
 export class NotEnoughRunesError extends Error {

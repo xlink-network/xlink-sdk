@@ -7,7 +7,7 @@ import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberFromStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
+} from "../stacksUtils/contractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   IsSupportedFn,
@@ -36,7 +36,7 @@ import {
 import {
   SDKGlobalContext,
   withGlobalContextCache,
-} from "../xlinkSdkUtils/types.internal"
+} from "../sdkUtils/types.internal"
 import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (

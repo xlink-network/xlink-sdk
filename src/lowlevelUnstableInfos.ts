@@ -15,8 +15,8 @@ import {
   metaTokenToCorrespondingStacksToken,
 } from "./metaUtils/peggingHelpers"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
-import { StacksContractAddress } from "./xlinkSdkUtils/types"
-import { SDKGlobalContext } from "./xlinkSdkUtils/types.internal"
+import { StacksContractAddress } from "./sdkUtils/types"
+import { SDKGlobalContext } from "./sdkUtils/types.internal"
 
 export {
   contractAssignedChainIdFromKnownChain,
@@ -30,10 +30,10 @@ export {
   legacyAlexContractDeployerMainnet,
   legacyAlexContractDeployerTestnet,
   wrapContractAddress,
-  xlinkContractsDeployerMainnet,
-  xlinkContractsDeployerTestnet,
-  xlinkContractsMultisigMainnet,
-  xlinkContractsMultisigTestnet,
+  contractsDeployerMainnet as brotocolContractsDeployerMainnet,
+  contractsDeployerTestnet as brotocolContractsDeployerTestnet,
+  contractsMultisigMainnet as brotocolContractsMultisigMainnet,
+  contractsMultisigTestnet as brotocolContractsMultisigTestnet,
 } from "./stacksUtils/stxContractAddresses"
 
 export {
@@ -74,9 +74,9 @@ export {
 
 export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
 
-export { bridgeFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeFromEVM"
-export { bridgeInfoFromEVM_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromEVM"
-export { bridgeInfoFromBitcoin_toLaunchpad } from "./xlinkSdkUtils/bridgeInfoFromBitcoin"
+export { bridgeFromEVM_toLaunchpad } from "./sdkUtils/bridgeFromEVM"
+export { bridgeInfoFromEVM_toLaunchpad } from "./sdkUtils/bridgeInfoFromEVM"
+export { bridgeInfoFromBitcoin_toLaunchpad } from "./sdkUtils/bridgeInfoFromBitcoin"
 
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
 

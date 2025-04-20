@@ -9,8 +9,8 @@ import {
 import {
   StacksContractName,
   stxContractAddresses,
-  xlinkContractsMultisigMainnet,
-  xlinkContractsMultisigTestnet,
+  contractsMultisigMainnet,
+  contractsMultisigTestnet,
 } from "../src/stacksUtils/stxContractAddresses"
 import { KnownChainId } from "../src/utils/types/knownIds"
 
@@ -23,8 +23,8 @@ const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
       : KnownChainId.Stacks.Testnet
   const fallbackDeployerAddress =
     envName === "prod"
-      ? xlinkContractsMultisigMainnet
-      : xlinkContractsMultisigTestnet
+      ? contractsMultisigMainnet
+      : contractsMultisigTestnet
   const fallbackStacksNetwork =
     envName === "prod" ? STACKS_MAINNET : STACKS_TESTNET
 
@@ -53,7 +53,7 @@ const envName = process.env.ENV_NAME === "dev" ? "dev" : "prod"
       "meta-peg-out-endpoint-v2-04",
     ],
     path.resolve(__dirname, "../generated/smartContract/"),
-    "xlink",
+    "bro",
     "../smartContractHelpers/codegenImport",
     envName === "prod"
       ? contractNameOverrides_mainnet

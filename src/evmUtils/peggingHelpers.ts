@@ -10,7 +10,7 @@ import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberFromStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
+} from "../stacksUtils/contractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
@@ -37,11 +37,11 @@ import {
   evmNativeCurrencyAddress,
   isStacksContractAddressEqual,
   StacksContractAddress,
-} from "../xlinkSdkUtils/types"
+} from "../sdkUtils/types"
 import {
   SDKGlobalContext,
   withGlobalContextCache,
-} from "../xlinkSdkUtils/types.internal"
+} from "../sdkUtils/types.internal"
 import {
   getEVMSupportedRoutes,
   getEVMSupportedRoutesByChainType,
@@ -52,7 +52,7 @@ import {
   getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberFromSolidityContractNumber,
-} from "./xlinkContractHelpers"
+} from "./contractHelpers"
 
 export const getEvm2StacksFeeInfo = async (
   ctx: SDKGlobalContext,

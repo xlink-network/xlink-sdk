@@ -3,9 +3,9 @@ import {
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
 } from "../../evmUtils/peggingHelpers"
-import { getEVMTokenContractInfo } from "../../evmUtils/xlinkContractHelpers"
-import { evmNativeCurrencyAddress } from "../../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { getEVMTokenContractInfo } from "../../evmUtils/contractHelpers"
+import { evmNativeCurrencyAddress } from "../../sdkUtils/types"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 import { hasAny, last } from "../arrayHelpers"
 import { BigNumber } from "../BigNumber"
 import {

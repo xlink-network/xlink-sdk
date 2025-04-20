@@ -7,7 +7,7 @@ This document explains the process for adding support for a new EVM token in the
 Adding support for a new EVM token requires modifying the following files:
 
 1. `src/utils/types/knownIds.ts` - Add the new Token ID
-2. `src/evmUtils/xlinkContractHelpers.ts` - Add the token to the contract configuration
+2. `src/evmUtils/contractHelpers.ts` - Add the token to the contract configuration
 3. `src/stacksUtils/stxContractAddresses.ts` - Add contract addresses for the corresponding token on the Stacks chain
 
 ## Important Notice for Developers and AI Assistants
@@ -47,9 +47,9 @@ export namespace KnownTokenId {
 }
 ```
 
-### 2. Update Contract Configuration in xlinkContractHelpers.ts
+### 2. Update Contract Configuration in contractHelpers.ts
 
-In the `src/evmUtils/xlinkContractHelpers.ts` file, you need to update the following sections:
+In the `src/evmUtils/contractHelpers.ts` file, you need to update the following sections:
 
 1. Add a new token key to the `ONCHAIN_CONFIG_KEY` enum:
 
@@ -105,12 +105,12 @@ export const stxTokenContractAddresses_legacy: Record<
   [KnownTokenId.Stacks.TOKEN_NAME]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
       // IMPORTANT: Use the exact addresses provided by the contract deployers
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "token-name", // This contract name must be obtained from the team
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
       // IMPORTANT: Use the exact addresses provided by the contract deployers
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: "token-name", // This contract name must be obtained from the team
     }),
   },
@@ -127,7 +127,7 @@ Here's a real example of adding support for the ETH token:
    export const ETH = tokenId("stx-eth")  // In Stacks namespace - same name as EVM
    ```
 
-2. Updating `xlinkContractHelpers.ts`:
+2. Updating `contractHelpers.ts`:
    ```typescript
    // Add to enum - this key was provided by the contract deployers
    // Note that this is TOKEN_ETH, not just ETH
@@ -148,11 +148,11 @@ Here's a real example of adding support for the ETH token:
    ```typescript
    [KnownTokenId.Stacks.ETH]: {
      [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-       deployerAddress: xlinkContractsMultisigMainnet,
+       deployerAddress: contractsMultisigMainnet,
        contractName: "token-eth", // This name was provided by the team
      }),
      [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-       deployerAddress: xlinkContractsMultisigTestnet,
+       deployerAddress: contractsMultisigTestnet,
        contractName: "token-eth", // This name was provided by the team
      }),
    },

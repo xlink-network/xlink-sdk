@@ -1,4 +1,4 @@
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 import { uniqBy } from "../arrayHelpers"
 import { BigNumber } from "../BigNumber"
 import { isNotNull } from "../typeHelpers"

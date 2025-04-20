@@ -1,2 +1,2 @@
-@xlink-network:registry=https://registry.npmjs.org/
+@brotocol-xyz:registry=https://registry.npmjs.org/
 //registry.npmjs.org/:_authToken=${NPM_KEY}

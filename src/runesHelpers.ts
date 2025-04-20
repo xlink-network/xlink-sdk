@@ -1,10 +1,10 @@
-import { RuneIdCombined, toSDKNumberOrUndefined } from "./xlinkSdkUtils/types"
+import { RuneIdCombined, toSDKNumberOrUndefined } from "./sdkUtils/types"
 import {
   GetAvailableRuneUTXOFn as _GetAvailableRuneUTXOFn,
   RuneInfo,
   selectRuneUTXOs as _selectRuneUTXOs,
 } from "./bitcoinUtils/selectRuneUTXOs"
-import { SDKNumber } from "./xlinkSdkUtils/types"
+import { SDKNumber } from "./sdkUtils/types"
 import { UTXOSpendable } from "./bitcoinHelpers"
 import { BigNumber } from "./utils/BigNumber"
 

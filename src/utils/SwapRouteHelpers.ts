@@ -7,9 +7,9 @@ import {
   getStacksContractCallInfo,
   getStacksToken,
   numberFromStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
-import { SDKNumber, StacksContractAddress } from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+} from "../stacksUtils/contractHelpers"
+import { SDKNumber, StacksContractAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { last } from "./arrayHelpers"
 import { BigNumber } from "./BigNumber"
 import {

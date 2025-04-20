@@ -1,4 +1,4 @@
-import { getStacksToken } from "../../stacksUtils/xlinkContractHelpers"
+import { getStacksToken } from "../../stacksUtils/contractHelpers"
 import { requestAPI } from "../../utils/apiHelpers"
 import { BigNumber } from "../../utils/BigNumber"
 import { isNotNull } from "../../utils/typeHelpers"
@@ -7,7 +7,7 @@ import {
   KnownChainId,
   createBRC20Token,
 } from "../../utils/types/knownIds"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 
 export interface BRC20SupportedRoute {
   brc20Tick: string

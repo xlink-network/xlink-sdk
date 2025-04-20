@@ -1,4 +1,4 @@
-import { KnownChainId } from "../../node_modules/@xlink-network/xlink-sdk/lib/utils/types/knownIds"
+import { KnownChainId } from "@brotocol-xyz/bro-sdk"
 
 export const formatXLinkSDKChainName = (
   chain: KnownChainId.KnownChain,

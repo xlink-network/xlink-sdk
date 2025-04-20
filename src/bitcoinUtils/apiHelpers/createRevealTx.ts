@@ -1,7 +1,7 @@
 import { toHex } from "viem"
 import { requestAPI } from "../../utils/apiHelpers"
 import { KnownChainId } from "../../utils/types/knownIds"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 
 export async function createRevealTx(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
@@ -14,7 +14,7 @@ export async function createRevealTx(
     vout: number
     satsAmount: bigint
     orderData: Uint8Array
-    xlinkPegInAddress: {
+    pegInAddress: {
       address: string
       scriptPubKey: Uint8Array
     }
@@ -32,8 +32,8 @@ export async function createRevealTx(
       satsAmount: info.satsAmount,
       orderDataHex: toHex(info.orderData),
       xlinkPegInAddress: {
-        address: info.xlinkPegInAddress.address,
-        scriptPubKeyHex: toHex(info.xlinkPegInAddress.scriptPubKey),
+        address: info.pegInAddress.address,
+        scriptPubKeyHex: toHex(info.pegInAddress.scriptPubKey),
       },
     },
   })

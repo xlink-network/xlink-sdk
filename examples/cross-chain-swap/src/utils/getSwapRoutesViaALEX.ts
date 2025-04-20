@@ -6,15 +6,15 @@ import {
   SwapRouteViaALEX_WithMinimumAmountsOut,
   toSDKNumberOrUndefined,
   XLinkSDK,
-} from "@xlink-network/xlink-sdk"
-import { getALEXSwapParameters } from "@xlink-network/xlink-sdk/swapHelpers"
+} from "@brotocol-xyz/bro-sdk"
+import { getALEXSwapParameters } from "@brotocol-xyz/bro-sdk/swapHelpers"
 import { AlexSDK } from "alex-sdk"
 import { sortBy, uniqBy } from "lodash-es"
 
 export async function getSwapRoutesViaALEX(
   context: {
     alexSDK: AlexSDK
-    xlinkSDK: XLinkSDK
+    sdk: XLinkSDK
   },
   swapRequest: KnownRoute & {
     amount: SDKNumber
@@ -28,9 +28,9 @@ export async function getSwapRoutesViaALEX(
         SwapRouteViaALEX_WithMinimumAmountsOut)[]
     }
 > {
-  const { alexSDK, xlinkSDK } = context
+  const { alexSDK, sdk } = context
 
-  const swapParameters = await getALEXSwapParameters(xlinkSDK, swapRequest)
+  const swapParameters = await getALEXSwapParameters(sdk, swapRequest)
   if (swapParameters == null) {
     return { type: "failed", reason: "unsupported-route" }
   }
@@ -43,11 +43,11 @@ export async function getSwapRoutesViaALEX(
   }
 
   const [fromTokenAddress, toTokenAddress] = await Promise.all([
-    xlinkSDK.stacksAddressFromStacksToken(
+    sdk.stacksAddressFromStacksToken(
       swapParameters.stacksChain,
       swapParameters.fromToken,
     ),
-    xlinkSDK.stacksAddressFromStacksToken(
+    sdk.stacksAddressFromStacksToken(
       swapParameters.stacksChain,
       swapParameters.toToken,
     ),

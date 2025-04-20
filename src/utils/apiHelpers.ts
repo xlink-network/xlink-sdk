@@ -1,5 +1,5 @@
 import { backendAPIPrefix } from "../config"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 
 export async function requestAPI<T>(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,

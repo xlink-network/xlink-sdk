@@ -8,10 +8,10 @@ import {
   getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberToSolidityContractNumber,
-} from "../evmUtils/xlinkContractHelpers"
+} from "../evmUtils/contractHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import { getStacksTokenContractInfo } from "../stacksUtils/xlinkContractHelpers"
+import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import { addressToBuffer } from "../utils/addressHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {

@@ -1,4 +1,3 @@
-import { getOutputDustThreshold } from "@c4/btc-utils"
 import * as btc from "@scure/btc-signer"
 import { equalBytes } from "@scure/btc-signer/utils"
 import { broadcastRevealableTransaction } from "../bitcoinUtils/apiHelpers/broadcastRevealableTransaction"
@@ -11,6 +10,7 @@ import {
 } from "../bitcoinUtils/bitcoinHelpers"
 import {
   BitcoinAddress,
+  getBTCPegInAddress,
   getBitcoinHardLinkageAddress,
 } from "../bitcoinUtils/btcAddresses"
 import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../bitcoinUtils/constants"
@@ -20,8 +20,10 @@ import {
   prepareTransaction,
 } from "../bitcoinUtils/prepareTransaction"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
-import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
-import { runesTokenToId } from "../metaUtils/tokenAddresses"
+import {
+  getMeta2StacksFeeInfo,
+  isSupportedBRC20Route,
+} from "../metaUtils/peggingHelpers"
 import { CreateBridgeOrderResult } from "../stacksUtils/createBridgeOrderFromBitcoin"
 import {
   createBridgeOrder_MetaToBitcoin,
@@ -30,16 +32,17 @@ import {
   createBridgeOrder_MetaToStacks,
 } from "../stacksUtils/createBridgeOrderFromMeta"
 import { validateBridgeOrderFromMeta } from "../stacksUtils/validateBridgeOrderFromMeta"
-import { getStacksTokenContractInfo } from "../stacksUtils/xlinkContractHelpers"
+import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import { range } from "../utils/arrayHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
-  KnownRoute_FromRunes,
-  KnownRoute_FromRunes_ToBRC20,
-  KnownRoute_FromRunes_ToBitcoin,
-  KnownRoute_FromRunes_ToEVM,
-  KnownRoute_FromRunes_ToRunes,
-  KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromBRC20,
+  KnownRoute_FromBRC20_ToBRC20,
+  KnownRoute_FromBRC20_ToBitcoin,
+  KnownRoute_FromBRC20_ToEVM,
+  KnownRoute_FromBRC20_ToRunes,
+  KnownRoute_FromBRC20_ToStacks,
+  KnownRoute_FromMeta,
   checkRouteValid,
 } from "../utils/buildSupportedRoutes"
 import {
@@ -48,13 +51,14 @@ import {
   UnsupportedBridgeRouteError,
 } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
-import { toBitcoinOpReturnScript } from "../utils/RunesProtocol/RunesBitcoinScript"
 import {
+  SwapRoute,
   SwapRouteViaALEX,
   SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
   SwapRouteViaEVMDexAggregator,
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
   SwapRoute_WithMinimumAmountsToReceive_Public,
+  toCorrespondingStacksToken,
 } from "../utils/SwapRouteHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
@@ -63,38 +67,24 @@ import {
   _knownChainIdToErrorMessagePart,
   getChainIdNetworkType,
 } from "../utils/types/knownIds"
+import { TransferProphet_Fee_Fixed } from "../utils/types/TransferProphet"
 import {
   ReselectSpendableUTXOsFn_Public,
   reselectSpendableUTXOsFactory,
 } from "./bridgeFromBitcoin"
-import { getBridgeFeeOutput } from "./bridgeFromBRC20"
-import {
-  ChainId,
-  RuneIdCombined,
-  SDKNumber,
-  TokenId,
-  isEVMAddress,
-} from "./types"
+import { ChainId, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
 
-export type BridgeFromRunesInput_signPsbtFn = (tx: {
-  psbt: Uint8Array
-  signBitcoinInputs: number[]
-  signRunesInputs: number[]
-}) => Promise<{ psbt: Uint8Array }>
-
-export type BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs =
+export type BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs =
   ReselectSpendableUTXOsFn_Public
 
-export type RunesUTXOSpendable = UTXOSpendable & {
-  runes: {
-    runeId: RuneIdCombined
-    runeDivisibility: number
-    runeAmount: bigint
-  }[]
-}
+export type BridgeFromBRC20Input_signPsbtFn = (tx: {
+  psbt: Uint8Array
+  signBitcoinInputs: number[]
+  signInscriptionInputs: number[]
+}) => Promise<{ psbt: Uint8Array }>
 
-export interface BridgeFromRunesInput {
+export interface BridgeFromBRC20Input {
   fromChain: ChainId
   toChain: ChainId
   fromToken: TokenId
@@ -108,16 +98,15 @@ export interface BridgeFromRunesInput {
    */
   toAddressScriptPubKey?: Uint8Array
 
-  amount: SDKNumber
-  inputRuneUTXOs: RunesUTXOSpendable[]
+  inputInscriptionUTXO: UTXOSpendable
   swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
 
   networkFeeRate: bigint
+  reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs
   networkFeeChangeAddress: string
   networkFeeChangeAddressScriptPubKey: Uint8Array
-  reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs
 
-  signPsbt: BridgeFromRunesInput_signPsbtFn
+  signPsbt: BridgeFromBRC20Input_signPsbtFn
   sendTransaction: (tx: {
     hex: string
     pegInOrderOutput: {
@@ -130,15 +119,15 @@ export interface BridgeFromRunesInput {
   }>
 }
 
-export interface BridgeFromRunesOutput {
+export interface BridgeFromBRC20Output {
   txid: string
 }
 
-export async function bridgeFromRunes(
+export async function bridgeFromBRC20(
   ctx: SDKGlobalContext,
-  info: BridgeFromRunesInput,
-): Promise<BridgeFromRunesOutput> {
-  const route = await checkRouteValid(ctx, isSupportedRunesRoute, info)
+  info: BridgeFromBRC20Input,
+): Promise<BridgeFromBRC20Output> {
+  const route = await checkRouteValid(ctx, isSupportedBRC20Route, info)
 
   if (
     !equalBytes(
@@ -152,7 +141,7 @@ export async function bridgeFromRunes(
     )
   ) {
     throw new InvalidMethodParametersError(
-      ["XLinkSDK", "bridgeFromRunes"],
+      ["XLinkSDK", "bridgeFromBRC20"],
       [
         {
           name: "fromAddressScriptPubKey",
@@ -176,7 +165,7 @@ export async function bridgeFromRunes(
       )
     ) {
       throw new InvalidMethodParametersError(
-        ["XLinkSDK", "bridgeFromRunes"],
+        ["XLinkSDK", "bridgeFromBRC20"],
         [
           {
             name: "toAddressScriptPubKey",
@@ -188,13 +177,13 @@ export async function bridgeFromRunes(
     }
   }
 
-  if (KnownChainId.isRunesChain(route.fromChain)) {
+  if (KnownChainId.isBRC20Chain(route.fromChain)) {
     if (KnownChainId.isStacksChain(route.toChain)) {
       if (
-        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.fromToken) &&
         KnownTokenId.isStacksToken(route.toToken)
       ) {
-        return bridgeFromRunes_toStacks(ctx, {
+        return bridgeFromBRC20_toStacks(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -204,10 +193,10 @@ export async function bridgeFromRunes(
       }
     } else if (KnownChainId.isEVMChain(route.toChain)) {
       if (
-        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.fromToken) &&
         KnownTokenId.isEVMToken(route.toToken)
       ) {
-        return bridgeFromRunes_toEVM(ctx, {
+        return bridgeFromBRC20_toEVM(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -217,10 +206,10 @@ export async function bridgeFromRunes(
       }
     } else if (KnownChainId.isBitcoinChain(route.toChain)) {
       if (
-        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.fromToken) &&
         KnownTokenId.isBitcoinToken(route.toToken)
       ) {
-        return bridgeFromRunes_toBitcoin(ctx, {
+        return bridgeFromBRC20_toBitcoin(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -230,10 +219,10 @@ export async function bridgeFromRunes(
       }
     } else if (KnownChainId.isBRC20Chain(route.toChain)) {
       if (
-        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.fromToken) &&
         KnownTokenId.isBRC20Token(route.toToken)
       ) {
-        return bridgeFromRunes_toMeta(ctx, {
+        return bridgeFromBRC20_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -243,10 +232,10 @@ export async function bridgeFromRunes(
       }
     } else if (KnownChainId.isRunesChain(route.toChain)) {
       if (
-        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isBRC20Token(route.fromToken) &&
         KnownTokenId.isRunesToken(route.toToken)
       ) {
-        return bridgeFromRunes_toMeta(ctx, {
+        return bridgeFromBRC20_toMeta(ctx, {
           ...info,
           fromChain: route.fromChain,
           toChain: route.toChain,
@@ -262,7 +251,7 @@ export async function bridgeFromRunes(
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
-    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
     checkNever(route)
   }
 
@@ -274,14 +263,83 @@ export async function bridgeFromRunes(
   )
 }
 
-async function bridgeFromRunes_toStacks(
+export async function getBridgeFeeOutput(
+  sdkContext: SDKGlobalContext,
+  info: KnownRoute_FromMeta & {
+    swapRoute?: SwapRoute
+  },
+): Promise<null | {
+  address: string
+  scriptPubKey: Uint8Array
+  satsAmount: BigNumber
+}> {
+  const btcPegInAddress = getBTCPegInAddress(
+    getChainIdNetworkType(info.fromChain) === "mainnet"
+      ? KnownChainId.Bitcoin.Mainnet
+      : KnownChainId.Bitcoin.Testnet,
+    info.toChain,
+  )
+  const transitStacksChain =
+    getChainIdNetworkType(info.fromChain) === "mainnet"
+      ? KnownChainId.Stacks.Mainnet
+      : KnownChainId.Stacks.Testnet
+  const transitStacksToken = await toCorrespondingStacksToken(
+    sdkContext,
+    info.fromChain,
+    info.fromToken,
+  )
+  if (btcPegInAddress == null || transitStacksToken == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const step1FeeInfo = await getMeta2StacksFeeInfo(
+    sdkContext,
+    {
+      fromChain: info.fromChain as KnownChainId.BRC20Chain,
+      fromToken: info.fromToken as KnownTokenId.BRC20Token,
+      toChain: transitStacksChain,
+      toToken: transitStacksToken,
+    },
+    { swapRoute: info.swapRoute ?? null },
+  )
+  if (step1FeeInfo == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const bridgeFeeInBTC = step1FeeInfo.fees.find(
+    (f): f is TransferProphet_Fee_Fixed =>
+      f.type === "fixed" && f.token === KnownTokenId.Bitcoin.BTC,
+  )
+
+  if (bridgeFeeInBTC == null) return null
+  if (BigNumber.isZero(bridgeFeeInBTC.amount)) return null
+
+  return {
+    ...btcPegInAddress,
+    satsAmount: BigNumber.from(
+      bitcoinToSatoshi(BigNumber.toString(bridgeFeeInBTC.amount)),
+    ),
+  }
+}
+
+async function bridgeFromBRC20_toStacks(
   sdkContext: SDKGlobalContext,
   info: Omit<
-    BridgeFromRunesInput,
+    BridgeFromBRC20Input,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
-    KnownRoute_FromRunes_ToStacks,
-): Promise<BridgeFromRunesOutput> {
+    KnownRoute_FromBRC20_ToStacks,
+): Promise<BridgeFromBRC20Output> {
   const swapRoute = info.swapRoute
 
   const pegInAddress = getMetaPegInAddress(info.fromChain, info.toChain)
@@ -327,7 +385,7 @@ async function bridgeFromRunes_toStacks(
 
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
-  return broadcastRunesTransaction(
+  return broadcastBRC20Transaction(
     sdkContext,
     {
       ...info,
@@ -339,14 +397,14 @@ async function bridgeFromRunes_toStacks(
   )
 }
 
-async function bridgeFromRunes_toEVM(
+async function bridgeFromBRC20_toEVM(
   sdkContext: SDKGlobalContext,
   info: Omit<
-    BridgeFromRunesInput,
+    BridgeFromBRC20Input,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
-    KnownRoute_FromRunes_ToEVM,
-): Promise<BridgeFromRunesOutput> {
+    KnownRoute_FromBRC20_ToEVM,
+): Promise<BridgeFromBRC20Output> {
   const swapRoute = info.swapRoute
 
   const createdOrder = !isEVMAddress(info.toAddress)
@@ -376,7 +434,7 @@ async function bridgeFromRunes_toEVM(
 
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
-  return broadcastRunesTransaction(
+  return broadcastBRC20Transaction(
     sdkContext,
     {
       ...info,
@@ -388,19 +446,19 @@ async function bridgeFromRunes_toEVM(
   )
 }
 
-async function bridgeFromRunes_toBitcoin(
+async function bridgeFromBRC20_toBitcoin(
   sdkContext: SDKGlobalContext,
   info: Omit<
-    BridgeFromRunesInput,
+    BridgeFromBRC20Input,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
-    KnownRoute_FromRunes_ToBitcoin,
-): Promise<BridgeFromRunesOutput> {
+    KnownRoute_FromBRC20_ToBitcoin,
+): Promise<BridgeFromBRC20Output> {
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
         "XLinkSDK",
-        `bridgeFromRunes (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
+        `bridgeFromBRC20 (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
         {
@@ -438,7 +496,7 @@ async function bridgeFromRunes_toBitcoin(
 
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
-  return broadcastRunesTransaction(
+  return broadcastBRC20Transaction(
     sdkContext,
     {
       ...info,
@@ -450,19 +508,19 @@ async function bridgeFromRunes_toBitcoin(
   )
 }
 
-async function bridgeFromRunes_toMeta(
+async function bridgeFromBRC20_toMeta(
   sdkContext: SDKGlobalContext,
   info: Omit<
-    BridgeFromRunesInput,
+    BridgeFromBRC20Input,
     "fromChain" | "toChain" | "fromToken" | "toToken"
   > &
-    (KnownRoute_FromRunes_ToBRC20 | KnownRoute_FromRunes_ToRunes),
-): Promise<BridgeFromRunesOutput> {
+    (KnownRoute_FromBRC20_ToBRC20 | KnownRoute_FromBRC20_ToRunes),
+): Promise<BridgeFromBRC20Output> {
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
         "XLinkSDK",
-        `bridgeFromRunes (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
+        `bridgeFromBRC20 (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
         {
@@ -500,7 +558,7 @@ async function bridgeFromRunes_toMeta(
 
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
-  return broadcastRunesTransaction(
+  return broadcastBRC20Transaction(
     sdkContext,
     {
       ...info,
@@ -512,14 +570,14 @@ async function bridgeFromRunes_toMeta(
   )
 }
 
-async function broadcastRunesTransaction(
+async function broadcastBRC20Transaction(
   sdkContext: SDKGlobalContext,
   info: Omit<
-    ConstructRunesTransactionInput,
+    ConstructBRC20TransactionInput,
     "validateBridgeOrder" | "orderData" | "pegInAddress" | "hardLinkageOutput"
   > & {
     withHardLinkageOutput: boolean
-    sendTransaction: BridgeFromRunesInput["sendTransaction"]
+    sendTransaction: BridgeFromBRC20Input["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
 ): Promise<{ txid: string }> {
@@ -533,14 +591,14 @@ async function broadcastRunesTransaction(
     )
   }
 
-  const route: KnownRoute_FromRunes = {
+  const route: KnownRoute_FromBRC20 = {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
-    toChain: info.toChain as any,
-    toToken: info.toToken as any,
-  }
+    toChain: info.toChain,
+    toToken: info.toToken,
+  } as any
 
-  const tx = await constructRunesTransaction(sdkContext, {
+  const tx = await constructBRC20Transaction(sdkContext, {
     ...info,
     ...route,
     validateBridgeOrder: async (btcTx, revealTx, extra) => {
@@ -583,7 +641,7 @@ async function broadcastRunesTransaction(
       orderData: createdOrder.data,
       orderOutputIndex: tx.revealOutput.index,
       orderOutputSatsAmount: tx.revealOutput.satsAmount,
-      xlinkPegInAddress: pegInAddress,
+      pegInAddress: pegInAddress,
     },
   )
 
@@ -598,7 +656,7 @@ async function broadcastRunesTransaction(
 
   if (apiBroadcastedTxId !== delegateBroadcastedTxId) {
     console.warn(
-      "[xlink-sdk] Transaction id broadcasted by API and delegatee are different:",
+      "[bro-sdk] Transaction id broadcasted by API and delegatee are different:",
       `API: ${apiBroadcastedTxId}, `,
       `Delegatee: ${delegateBroadcastedTxId}`,
     )
@@ -607,12 +665,12 @@ async function broadcastRunesTransaction(
   return { txid: delegateBroadcastedTxId }
 }
 
-type ConstructRunesTransactionInput = PrepareRunesTransactionInput & {
+type ConstructBRC20TransactionInput = PrepareBRC20TransactionInput & {
   swapRoute:
     | undefined
     | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
     | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
-  signPsbt: BridgeFromRunesInput["signPsbt"]
+  signPsbt: BridgeFromBRC20Input["signPsbt"]
   pegInAddress: BitcoinAddress
   validateBridgeOrder: (
     pegInTx: Uint8Array,
@@ -624,9 +682,9 @@ type ConstructRunesTransactionInput = PrepareRunesTransactionInput & {
     },
   ) => Promise<void>
 }
-async function constructRunesTransaction(
+async function constructBRC20Transaction(
   sdkContext: SDKGlobalContext,
-  info: ConstructRunesTransactionInput,
+  info: ConstructBRC20TransactionInput,
 ): Promise<{
   hex: string
   revealOutput: {
@@ -634,11 +692,7 @@ async function constructRunesTransaction(
     satsAmount: bigint
   }
 }> {
-  const txOptions = await prepareRunesTransaction(
-    sdkContext,
-    "bridgeFromRunes",
-    info,
-  )
+  const txOptions = await prepareBRC20Transaction(sdkContext, info)
 
   const tx = createTransaction(
     txOptions.inputs,
@@ -651,8 +705,8 @@ async function constructRunesTransaction(
 
   const { psbt } = await info.signPsbt({
     psbt: tx.toPSBT(),
-    signRunesInputs: range(0, info.inputRuneUTXOs.length),
-    signBitcoinInputs: range(info.inputRuneUTXOs.length, tx.inputsLength),
+    signInscriptionInputs: [0],
+    signBitcoinInputs: range(1, tx.inputsLength),
   })
 
   const signedTx = btc.Transaction.fromPSBT(psbt, {
@@ -669,7 +723,7 @@ async function constructRunesTransaction(
     vout: txOptions.revealOutput.index,
     satsAmount: txOptions.revealOutput.satsAmount,
     orderData: info.orderData,
-    xlinkPegInAddress: info.pegInAddress,
+    pegInAddress: info.pegInAddress,
   })
 
   await info
@@ -695,17 +749,16 @@ async function constructRunesTransaction(
   }
 }
 
-export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
-  fromAddressScriptPubKey: BridgeFromRunesInput["fromAddressScriptPubKey"]
-  fromAddress: BridgeFromRunesInput["fromAddress"]
-  toAddress: BridgeFromRunesInput["toAddress"]
-  amount: BridgeFromRunesInput["amount"]
-  inputRuneUTXOs: BridgeFromRunesInput["inputRuneUTXOs"]
+export type PrepareBRC20TransactionInput = KnownRoute_FromBRC20 & {
+  fromAddressScriptPubKey: BridgeFromBRC20Input["fromAddressScriptPubKey"]
+  fromAddress: BridgeFromBRC20Input["fromAddress"]
+  toAddress: BridgeFromBRC20Input["toAddress"]
+  inputInscriptionUTXO: BridgeFromBRC20Input["inputInscriptionUTXO"]
 
-  networkFeeRate: BridgeFromRunesInput["networkFeeRate"]
+  networkFeeRate: BridgeFromBRC20Input["networkFeeRate"]
   networkFeeChangeAddress: string
   networkFeeChangeAddressScriptPubKey: Uint8Array
-  reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput["reselectSpendableNetworkFeeUTXOs"]
+  reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input["reselectSpendableNetworkFeeUTXOs"]
 
   pegInAddress: BitcoinAddress
   orderData: Uint8Array
@@ -721,21 +774,18 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
  *
  * * Inputs: ...
  * * Outputs:
- *   * Runes change
+ *   * Peg-in BRC-20 tokens
  *   * Peg-in order data
  *   * Bridge fee (optional)
  *   * Hard linkage (optional)
- *   * Peg-in Rune tokens
  *   * BTC change (optional)
- *   * Runestone
  *
- * (with bridge fee example tx) https://mempool.space/testnet/tx/db5518a5e785c55a8b53ca6c8e7a2c21cb11913addd972fe9de4322dfcbaf723
- * (with hard linkage example tx) https://mempool.space/tx/f1ac518ab087924d17dffcc9cefb4d0d59ba15c04b75be567e1edf59bc0d7bf1#vout=2
+ * (with bridge fee example tx) https://mempool.space/testnet/tx/e127a2d3c343675a1cde8ca8d10ae5621b40d309ce44b4f45bedc10499f8d596
+ * (with hard linkage example tx) https://mempool.space/tx/51ff0b2de15cb6e9df0685458faf9b13d761b6e5991496b89c53641d27a8c9da#vin=1
  */
-export async function prepareRunesTransaction(
-  sdkContext: SDKGlobalContext,
-  methodName: string,
-  info: PrepareRunesTransactionInput,
+export async function prepareBRC20Transaction(
+  sdkContext: Pick<SDKGlobalContext, "backendAPI">,
+  info: PrepareBRC20TransactionInput,
 ): Promise<
   BitcoinTransactionPrepareResult & {
     bitcoinNetwork: typeof btc.NETWORK
@@ -761,66 +811,6 @@ export async function prepareRunesTransaction(
       ? btc.NETWORK
       : btc.TEST_NETWORK
 
-  const runeId = await runesTokenToId(
-    sdkContext,
-    info.fromChain,
-    info.fromToken,
-  )
-  if (runeId == null) {
-    throw new UnsupportedBridgeRouteError(
-      info.fromChain,
-      info.toChain,
-      info.fromToken,
-      info.toToken,
-    )
-  }
-
-  const runeIdCombined: RuneIdCombined = `${Number(runeId.id.blockHeight)}:${Number(runeId.id.txIndex)}`
-  const runeDivisibilityAry = info.inputRuneUTXOs.flatMap(u =>
-    u.runes.flatMap(r =>
-      r.runeId === runeIdCombined ? [r.runeDivisibility] : [],
-    ),
-  )
-  const runeDivisibility = runeDivisibilityAry[0]
-  if (runeDivisibility == null) {
-    throw new InvalidMethodParametersError(
-      [
-        "XLinkSDK",
-        `${methodName} (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
-      ],
-      [
-        {
-          name: "inputRuneUTXOs",
-          expected: `contains rune with id ${runeIdCombined}`,
-          received: "undefined",
-        },
-      ],
-    )
-  }
-
-  const runeRawAmountToPegIn = BigNumber.toBigInt(
-    { roundingMode: BigNumber.roundUp },
-    BigNumber.rightMoveDecimals(runeDivisibility, info.amount),
-  )
-  const runeAmountsInTotal = sumRuneUTXOs(info.inputRuneUTXOs)
-  const runeRawAmountToSend = runeAmountsInTotal[runeIdCombined] ?? 0n
-
-  if (runeRawAmountToSend < runeRawAmountToPegIn) {
-    throw new InvalidMethodParametersError(
-      [
-        "XLinkSDK",
-        `${methodName} (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
-      ],
-      [
-        {
-          name: "inputRuneUTXOs",
-          expected: `contains enough rune with id ${runeIdCombined}`,
-          received: String(runeAmountsInTotal[runeIdCombined] ?? 0n),
-        },
-      ],
-    )
-  }
-
   const pegInOrderRecipient = await createBitcoinPegInRecipients(sdkContext, {
     fromChain: info.fromChain,
     fromToken: info.fromToken,
@@ -835,45 +825,17 @@ export async function prepareRunesTransaction(
     feeRate: info.networkFeeRate,
   })
 
-  const runesChangeCausedOffset = 1
-  const pegInOrderDataCausedOffset = runesChangeCausedOffset + 1
-  const bridgeFeeCausedOffset =
-    pegInOrderDataCausedOffset + (info.bridgeFeeOutput == null ? 0 : 1)
-  const hardLinkageCausedOffset =
-    bridgeFeeCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
-  const pegInRuneTokensCausedOffset = hardLinkageCausedOffset + 1
-
-  const runesOpReturnScript = toBitcoinOpReturnScript({
-    edicts: [
-      {
-        id: runeId.id,
-        amount: runeRawAmountToPegIn,
-        output: BigInt(pegInRuneTokensCausedOffset - 1),
-      },
-    ],
-    // collect all remaining runes to the change address output
-    pointer: 0n,
-  })
-
   const result = await prepareTransaction({
-    pinnedUTXOs: info.inputRuneUTXOs,
+    pinnedUTXOs: [info.inputInscriptionUTXO],
     recipients: [
-      // runes change
       {
-        addressScriptPubKey: info.fromAddressScriptPubKey,
-        satsAmount: BigNumber.toBigInt(
-          { roundingMode: BigNumber.roundUp },
-          getOutputDustThreshold({
-            scriptPubKey: info.fromAddressScriptPubKey,
-          }),
-        ),
+        addressScriptPubKey: info.pegInAddress.scriptPubKey,
+        satsAmount: info.inputInscriptionUTXO.amount,
       },
-      // peg in order data
       {
         addressScriptPubKey: pegInOrderRecipient.scriptPubKey,
         satsAmount: pegInOrderRecipient.satsAmount,
       },
-      // bridge fee
       ...(info.bridgeFeeOutput == null
         ? []
         : [
@@ -885,7 +847,6 @@ export async function prepareRunesTransaction(
               ),
             },
           ]),
-      // hard linkage
       ...(info.hardLinkageOutput == null
         ? []
         : [
@@ -894,30 +855,26 @@ export async function prepareRunesTransaction(
               satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
             },
           ]),
-      // peg in rune tokens
-      {
-        addressScriptPubKey: info.pegInAddress.scriptPubKey,
-        satsAmount: BigNumber.toBigInt(
-          { roundingMode: BigNumber.roundUp },
-          getOutputDustThreshold({
-            scriptPubKey: info.pegInAddress.scriptPubKey,
-          }),
-        ),
-      },
     ],
     changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
-    opReturnScripts: [runesOpReturnScript],
     reselectSpendableUTXOs: reselectSpendableUTXOsFactory(
       info.reselectSpendableNetworkFeeUTXOs,
     ),
   })
 
+  const pegInBRC20TokensCausedOffset = 1
+  const pegInOrderDataCausedOffset = pegInBRC20TokensCausedOffset + 1
+  const bridgeFeeCausedOffset =
+    pegInOrderDataCausedOffset + (info.bridgeFeeOutput == null ? 0 : 1)
+  const hardLinkageCausedOffset =
+    bridgeFeeCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
+
   return {
     ...result,
     bitcoinNetwork,
     transferOutput: {
-      index: pegInRuneTokensCausedOffset - 1,
+      index: pegInBRC20TokensCausedOffset - 1,
     },
     revealOutput: {
       index: pegInOrderDataCausedOffset - 1,
@@ -940,18 +897,4 @@ export async function prepareRunesTransaction(
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
   }
-}
-
-const sumRuneUTXOs = (
-  runeUTXOs: RunesUTXOSpendable[],
-): Partial<Record<RuneIdCombined, bigint>> => {
-  return runeUTXOs.reduce(
-    (acc, runeUTXO) => {
-      runeUTXO.runes.forEach(rune => {
-        acc[rune.runeId] = (acc[rune.runeId] ?? 0n) + rune.runeAmount
-      })
-      return acc
-    },
-    {} as Record<RuneIdCombined, bigint>,
-  )
 }

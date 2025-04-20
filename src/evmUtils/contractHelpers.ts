@@ -10,8 +10,8 @@ import {
   EVMAddress,
   EVMNativeCurrencyAddress,
   evmNativeCurrencyAddress,
-} from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+} from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { BridgeConfigAbi } from "./contractAbi/bridgeConfig"
 import {
   EVMEndpointContract,
@@ -303,11 +303,16 @@ function maybeAddress(value: string | null): Address | undefined {
 }
 
 enum ONCHAIN_CONFIG_KEY {
-  /**
-   * https://t.me/c/1599543687/57298
-   */
   ENDPOINT = "ENDPOINT",
+  ENDPOINT_NATIVE = "ENDPOINT_NATIVE",
   REGISTRY = "REGISTRY",
+  TIMELOCK = "TIMELOCK",
+  MULTISIG = "MULTISIG",
+  MIGRATE = "MIGRATE",
+  MIGRATE_BOB = "MIGRATE_BOB",
+  MIGRATE_BOB_L2 = "MIGRATE_BOB_L2",
+  MIGRATE_BOB_L2_S = "MIGRATE_BOB_L2_S",
+
   TOKEN_ABTC = "TOKEN_ABTC",
   TOKEN_ALEX = "TOKEN_ALEX",
   TOKEN_ATALEX = "TOKEN_ATALEX",
@@ -319,35 +324,12 @@ enum ONCHAIN_CONFIG_KEY {
   TOKEN_SUSDT = "TOKEN_SUSDT",
   TOKEN_DB20 = "TOKEN_DB20",
   TOKEN_DOG = "TOKEN_DOG",
-  TIMELOCK = "TIMELOCK",
-  MULTISIG = "MULTISIG",
-  MIGRATE = "MIGRATE",
-  MIGRATE_BOB = "MIGRATE_BOB",
-  MIGRATE_BOB_L2 = "MIGRATE_BOB_L2",
-  MIGRATE_BOB_L2_S = "MIGRATE_BOB_L2_S",
-
-  // https://github.com/xlink-network/xlink/blob/9e6e268d820f2f9756ca15a36f8580e4f98c087e/packages/contracts/bridge-solidity/scripts/params.ts
-  ENDPOINT_NATIVE = "ENDPOINT_NATIVE",
-
-  // https://github.com/xlink-network/xlink/pull/299/commits/22b23c9ff3ea65eeb7c632db4255afe803f97fef#diff-8302902f9863ee3c7928a0fa6eb6ca22edd10f5553708459cdd072c1ea3ef696
   TOKEN_UBTC = "TOKEN_UBTC",
   TOKEN_WUBTC = "TOKEN_WUBTC",
-
-  // https://github.com/xlink-network/xlink/pull/366/files#diff-84d6042780ec5ce60f8e5349d20baf5f577f9d878feb8a703748ad37a91e31fd
   TOKEN_STX = "TOKEN_STX",
-
-  // https://t.me/c/1599543687/69562
   TOKEN_TRUMP = "TOKEN_TRUMP",
-
-  // https://t.me/c/1599543687/73009
   TOKEN_GHIBLICZ = "TOKEN_GHIBLICZ",
-
-  // https://t.me/c/1599543687/73347
   TOKEN_ETH = "TOKEN_ETH",
-
-  // https://t.me/c/1599543687/73387
   TOKEN_SOL = "TOKEN_SOL",
-
-  // https://t.me/c/1599543687/73476
   TOKEN_LINK = "TOKEN_LINK",
 }

@@ -20,8 +20,8 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { EVMAddress } from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { EVMAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { CreateBridgeOrderResult } from "./createBridgeOrderFromBitcoin"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { StacksContractName } from "./stxContractAddresses"
@@ -30,7 +30,7 @@ import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
-} from "./xlinkContractHelpers"
+} from "./contractHelpers"
 
 export async function createBridgeOrderFromMeta(
   sdkContext: SDKGlobalContext,

@@ -4,8 +4,8 @@ import {
   createStacksToken,
   KnownTokenId,
 } from "../../utils/types/knownIds"
-import { StacksContractAddress } from "../../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { StacksContractAddress } from "../../sdkUtils/types"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 
 export interface StacksTokenInfo {
   stacksTokenId: KnownTokenId.StacksToken

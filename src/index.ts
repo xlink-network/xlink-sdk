@@ -12,7 +12,7 @@ export {
   StacksContractAddress,
   PublicEVMContractType as EVMContractType,
   RuneIdCombined,
-} from "./xlinkSdkUtils/types"
+} from "./sdkUtils/types"
 export {
   SwapRoute,
   SwapRoute_WithMinimumAmountsToReceive_Public as SwapRoute_WithMinimumAmountsOut,
@@ -24,7 +24,7 @@ export {
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public as SwapRouteViaEVMDexAggregator_WithMinimumAmountsOut,
   SwapRouteViaEVMDexAggregator_WithExchangeRate_Public as SwapRouteViaEVMDexAggregator_WithExchangeRate,
 } from "./utils/SwapRouteHelpers"
-export { TimeLockedAsset } from "./xlinkSdkUtils/timelockFromEVM"
+export { TimeLockedAsset } from "./sdkUtils/timelockFromEVM"
 export {
   PublicTransferProphet as TransferProphet,
   PublicTransferProphetAggregated as TransferProphetAggregated,

@@ -5,7 +5,7 @@
 
 2. Add a `.npmrc` file to the project that needs to install this package (the `GITHUB_NPM_KEY' is an environment variable, which is the personal access token created in the previous step)
     ```
-    @xlink-network:registry=https://npm.pkg.github.com
+    @brotocol-xyz:registry=https://npm.pkg.github.com
     //npm.pkg.github.com/:_authToken=${GITHUB_NPM_KEY}
     ```
 

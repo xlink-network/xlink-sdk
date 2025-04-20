@@ -4,7 +4,7 @@ import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
+} from "../stacksUtils/contractHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
@@ -34,7 +34,7 @@ import {
 import {
   SDKGlobalContext,
   withGlobalContextCache,
-} from "../xlinkSdkUtils/types.internal"
+} from "../sdkUtils/types.internal"
 import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
 import { getMetaPegInAddress } from "./btcAddresses"

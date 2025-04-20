@@ -5,12 +5,12 @@ import {
   SwapRouteViaEVMDexAggregator,
 } from "../utils/SwapRouteHelpers"
 import { getChainIdNetworkType, KnownChainId } from "../utils/types/knownIds"
-import { StacksContractAddress } from "../xlinkSdkUtils/types"
+import { StacksContractAddress } from "../sdkUtils/types"
 import { StacksContractName } from "./stxContractAddresses"
 import {
   executeReadonlyCallXLINK,
   getStacksContractCallInfo,
-} from "./xlinkContractHelpers"
+} from "./contractHelpers"
 import { checkNever } from "../utils/typeHelpers"
 
 export async function validateBridgeOrderFromMeta(info: {

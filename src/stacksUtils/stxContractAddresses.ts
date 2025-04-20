@@ -3,16 +3,16 @@ import {
   contractNameOverrides_testnet,
 } from "../config"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
-import { StacksContractAddress } from "../xlinkSdkUtils/types"
+import { StacksContractAddress } from "../sdkUtils/types"
 
-export const xlinkContractsDeployerMainnet =
+export const contractsDeployerMainnet =
   "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK"
-export const xlinkContractsDeployerTestnet =
+export const contractsDeployerTestnet =
   "ST2QXSK64YQX3CQPC530K79XWQ98XFAM9W3XKEH3N"
 
-export const xlinkContractsMultisigMainnet =
+export const contractsMultisigMainnet =
   "SP673Z4BPB4R73359K9HE55F2X91V5BJTN5SXZ5T"
-export const xlinkContractsMultisigTestnet =
+export const contractsMultisigTestnet =
   "ST2QXSK64YQX3CQPC530K79XWQ98XFAM9W3XKEH3N"
 
 export const alexContractDeployerMainnet =
@@ -68,131 +68,131 @@ export enum StacksContractName {
 export const stxContractAddresses = {
   [StacksContractName.BTCPegInEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.BTCPegInEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.BTCPegInEndpoint,
     }),
   },
   [StacksContractName.BTCPegInEndpointSwap]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.BTCPegInEndpointSwap,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.BTCPegInEndpointSwap,
     }),
   },
   [StacksContractName.BTCPegInEndpointAggregator]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.BTCPegInEndpointAggregator,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.BTCPegInEndpointAggregator,
     }),
   },
   [StacksContractName.BTCPegInEndpointLaunchpad]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.BTCPegInEndpointLaunchpad,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.BTCPegInEndpointLaunchpad,
     }),
   },
   [StacksContractName.BTCPegOutEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsDeployerMainnet,
+      deployerAddress: contractsDeployerMainnet,
       contractName: StacksContractName.BTCPegOutEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: StacksContractName.BTCPegOutEndpoint,
     }),
   },
   [StacksContractName.EVMPegInEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.EVMPegInEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.EVMPegInEndpoint,
     }),
   },
   [StacksContractName.EVMPegInEndpointSwap]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.EVMPegInEndpointSwap,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.EVMPegInEndpointSwap,
     }),
   },
   [StacksContractName.EVMPegOutEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsDeployerMainnet,
+      deployerAddress: contractsDeployerMainnet,
       contractName: StacksContractName.EVMPegOutEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: StacksContractName.EVMPegOutEndpoint,
     }),
   },
   [StacksContractName.EVMPegOutEndpointAggregator]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.EVMPegOutEndpointAggregator,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.EVMPegOutEndpointAggregator,
     }),
   },
   [StacksContractName.MetaPegInEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.MetaPegInEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.MetaPegInEndpoint,
     }),
   },
   [StacksContractName.MetaPegInEndpointSwap]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.MetaPegInEndpointSwap,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.MetaPegInEndpointSwap,
     }),
   },
   [StacksContractName.MetaPegInEndpointAggregator]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.MetaPegInEndpointAggregator,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.MetaPegInEndpointAggregator,
     }),
   },
   [StacksContractName.MetaPegOutEndpoint]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.MetaPegOutEndpoint,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: StacksContractName.MetaPegOutEndpoint,
     }),
   },
@@ -222,41 +222,41 @@ export const stxTokenContractAddresses_legacy: Record<
   },
   [KnownTokenId.Stacks.aBTC]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsDeployerMainnet,
+      deployerAddress: contractsDeployerMainnet,
       contractName: "token-abtc",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: "token-abtc",
     }),
   },
   [KnownTokenId.Stacks.sUSDT]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsDeployerMainnet,
+      deployerAddress: contractsDeployerMainnet,
       contractName: "token-susdt",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: "token-susdt",
     }),
   },
   [KnownTokenId.Stacks.sLUNR]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsDeployerMainnet,
+      deployerAddress: contractsDeployerMainnet,
       contractName: "token-slunr",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: "token-slunr",
     }),
   },
   [KnownTokenId.Stacks.sSKO]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsDeployerMainnet,
+      deployerAddress: contractsDeployerMainnet,
       contractName: "token-ssko",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: "token-ssko",
     }),
   },
@@ -292,11 +292,11 @@ export const stxTokenContractAddresses_legacy: Record<
   },
   [KnownTokenId.Stacks.uBTC]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "token-ubtc",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsDeployerTestnet,
+      deployerAddress: contractsDeployerTestnet,
       contractName: "token-ubtc",
     }),
   },
@@ -332,51 +332,51 @@ export const stxTokenContractAddresses_legacy: Record<
   },
   [KnownTokenId.Stacks.TRUMP]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "runes-trump",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: "runes-trump",
     }),
   },
   [KnownTokenId.Stacks.GHIBLICZ]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "bsc-ghiblicz",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: "bsc-ghiblicz",
     }),
   },
   [KnownTokenId.Stacks.ETH]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "token-eth",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: "token-eth",
     }),
   },
   [KnownTokenId.Stacks.SOL]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "token-sol",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: "token-sol",
     }),
   },
   [KnownTokenId.Stacks.LINK]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: xlinkContractsMultisigMainnet,
+      deployerAddress: contractsMultisigMainnet,
       contractName: "token-link",
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: xlinkContractsMultisigTestnet,
+      deployerAddress: contractsMultisigTestnet,
       contractName: "token-link",
     }),
   },

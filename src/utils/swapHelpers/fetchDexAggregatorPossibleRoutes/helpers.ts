@@ -1,14 +1,14 @@
 import { readContract } from "viem/actions"
 import { ERC20Abi } from "../../../evmUtils/contractAbi/ERC20Abi"
 import { evmChainIdFromKnownChainId } from "../../../evmUtils/evmClients"
-import { getEVMTokenContractInfo } from "../../../evmUtils/xlinkContractHelpers"
+import { getEVMTokenContractInfo } from "../../../evmUtils/contractHelpers"
 import {
   EVMAddress,
   evmNativeCurrencyAddress,
   SDKNumber,
   toSDKNumberOrUndefined,
-} from "../../../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../../../xlinkSdkUtils/types.internal"
+} from "../../../sdkUtils/types"
+import { SDKGlobalContext } from "../../../sdkUtils/types.internal"
 import { BigNumber } from "../../BigNumber"
 import { KnownChainId, KnownTokenId } from "../../types/knownIds"
 

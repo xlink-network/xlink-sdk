@@ -1,4 +1,6 @@
 module.exports = {
-  ...require("@c4605/toolconfs/prettierrc"),
+  trailingComma: "all",
+  semi: false,
+  arrowParens: "avoid",
   singleQuote: false,
 }

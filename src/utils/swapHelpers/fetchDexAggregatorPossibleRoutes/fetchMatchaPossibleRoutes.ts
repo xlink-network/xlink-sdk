@@ -1,4 +1,4 @@
-import { toSDKNumberOrUndefined } from "../../../xlinkSdkUtils/types"
+import { toSDKNumberOrUndefined } from "../../../sdkUtils/types"
 import { arraySplit } from "../../arrayHelpers"
 import { BigNumber } from "../../BigNumber"
 import { XLinkSDKErrorBase } from "../../errors"

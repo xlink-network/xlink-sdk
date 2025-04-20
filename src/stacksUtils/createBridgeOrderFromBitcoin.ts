@@ -22,8 +22,8 @@ import {
   EVMAddress,
   isEVMAddress,
   StacksContractAddress,
-} from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+} from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { StacksContractName } from "./stxContractAddresses"
 import {
@@ -31,7 +31,7 @@ import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
-} from "./xlinkContractHelpers"
+} from "./contractHelpers"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint

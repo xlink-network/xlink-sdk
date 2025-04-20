@@ -1,5 +1,5 @@
 import { XLinkSDK } from "../src"
-import { getAllAddresses } from "../src/evmUtils/xlinkContractHelpers"
+import { getAllAddresses } from "../src/evmUtils/contractHelpers"
 import { getXLinkSDKContext } from "../src/lowlevelUnstableInfos"
 import { _allKnownEVMChains } from "../src/utils/types/knownIds"
 

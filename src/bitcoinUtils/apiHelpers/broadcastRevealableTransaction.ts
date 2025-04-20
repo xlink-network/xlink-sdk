@@ -1,7 +1,7 @@
 import { toHex } from "viem"
 import { requestAPI } from "../../utils/apiHelpers"
 import { KnownChainId } from "../../utils/types/knownIds"
-import { SDKGlobalContext } from "../../xlinkSdkUtils/types.internal"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 
 export async function broadcastRevealableTransaction(
   sdkContext: Pick<SDKGlobalContext, "backendAPI">,
@@ -14,7 +14,7 @@ export async function broadcastRevealableTransaction(
     orderData: Uint8Array
     orderOutputIndex: number
     orderOutputSatsAmount: bigint
-    xlinkPegInAddress: {
+    pegInAddress: {
       address: string
       scriptPubKey: Uint8Array
     }
@@ -32,8 +32,8 @@ export async function broadcastRevealableTransaction(
       orderOutputIndex: info.orderOutputIndex,
       orderOutputSatoshiAmount: info.orderOutputSatsAmount.toString(),
       xlinkPegInAddress: {
-        address: info.xlinkPegInAddress.address,
-        scriptPubKeyHex: toHex(info.xlinkPegInAddress.scriptPubKey),
+        address: info.pegInAddress.address,
+        scriptPubKeyHex: toHex(info.pegInAddress.scriptPubKey),
       },
     },
   })

@@ -11,7 +11,7 @@ import {
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
-} from "../stacksUtils/xlinkContractHelpers"
+} from "../stacksUtils/contractHelpers"
 import {
   checkRouteValid,
   KnownRoute_FromStacks_ToBitcoin,

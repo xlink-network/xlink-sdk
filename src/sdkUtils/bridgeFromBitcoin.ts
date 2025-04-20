@@ -30,7 +30,7 @@ import {
   createBridgeOrder_BitcoinToStacks,
 } from "../stacksUtils/createBridgeOrderFromBitcoin"
 import { validateBridgeOrderFromBitcoin } from "../stacksUtils/validateBridgeOrderFromBitcoin"
-import { getStacksTokenContractInfo } from "../stacksUtils/xlinkContractHelpers"
+import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import { range } from "../utils/arrayHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
@@ -462,7 +462,7 @@ async function broadcastBitcoinTransaction(
       orderData: createdOrder.data,
       orderOutputIndex: tx.revealOutput.index,
       orderOutputSatsAmount: tx.revealOutput.satsAmount,
-      xlinkPegInAddress: pegInAddress,
+      pegInAddress: pegInAddress,
     },
   )
 
@@ -477,7 +477,7 @@ async function broadcastBitcoinTransaction(
 
   if (apiBroadcastedTxId !== delegateBroadcastedTxId) {
     console.warn(
-      "[xlink-sdk] Transaction id broadcasted by API and delegatee are different:",
+      "[bro-sdk] Transaction id broadcasted by API and delegatee are different:",
       `API: ${apiBroadcastedTxId}, `,
       `Delegatee: ${delegateBroadcastedTxId}`,
     )
@@ -539,7 +539,7 @@ async function constructBitcoinTransaction(
     vout: txOptions.revealOutput.index,
     satsAmount: txOptions.revealOutput.satsAmount,
     orderData: info.orderData,
-    xlinkPegInAddress: info.pegInAddress,
+    pegInAddress: info.pegInAddress,
   })
 
   await info

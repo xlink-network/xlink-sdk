@@ -1,5 +1,5 @@
-import { ChainId, TokenId } from "../xlinkSdkUtils/types"
-import { SDKGlobalContext } from "../xlinkSdkUtils/types.internal"
+import { ChainId, TokenId } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { UnsupportedBridgeRouteError } from "./errors"
 import { pMemoize } from "./pMemoize"
 import { SwapRoute } from "./SwapRouteHelpers"
