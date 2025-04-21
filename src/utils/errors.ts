@@ -1,3 +1,4 @@
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { ChainId, TokenId } from "../sdkUtils/types"
 import {
   SwapRouteViaALEX,
@@ -8,7 +9,7 @@ import {
 export class BroSDKErrorBase extends Error {
   constructor(...args: ConstructorParameters<typeof Error>) {
     super(...args)
-    this.name = "BroSDKErrorBase"
+    this.name = `${SDK_NAME}ErrorBase`
   }
 }
 
