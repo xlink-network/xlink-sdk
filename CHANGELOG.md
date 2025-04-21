@@ -1,9 +1,12 @@
 # Changelog
 
-## [Unreleased (0.5.0-51)]
+## [Unreleased (0.5.0-x)]
 
 ### Breaking Changes
 
+- **Project Rebranded to Brotocol**:
+    - The package scope changed from `@xlink-network` to `@brotocol-xyz`.
+    - The main SDK class `XLinkSDK` has been renamed to `BroSDK`.
 - **Upgraded @stacks/* dependencies to v7.x**
   - `bridgeFromStacks.sendTransaction` type signature changed
 
