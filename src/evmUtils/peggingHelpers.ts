@@ -6,7 +6,7 @@ import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupport
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberFromStacksContractNumber,
@@ -142,7 +142,7 @@ const _getEvm2StacksFeeInfo = async (
       functionName: "maxAmountPerToken",
       args: [tokenContractAddress],
     }).then(numberFromSolidityContractNumber),
-    isPaused: executeReadonlyCallXLINK(
+    isPaused: executeReadonlyCallBro(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
@@ -201,7 +201,7 @@ const getEvm2StacksNativeBridgeFeeInfo = async (
   }
 
   const resp = await props({
-    isPaused: executeReadonlyCallXLINK(
+    isPaused: executeReadonlyCallBro(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},
@@ -338,7 +338,7 @@ const _getStacks2EvmFeeInfo = async (
   }
 
   const tokenConf = await Promise.all([
-    executeReadonlyCallXLINK(
+    executeReadonlyCallBro(
       stacksContractCallInfo.contractName,
       "get-approved-pair-or-fail",
       {
@@ -349,7 +349,7 @@ const _getStacks2EvmFeeInfo = async (
       },
       stacksContractCallInfo.executeOptions,
     ),
-    executeReadonlyCallXLINK(
+    executeReadonlyCallBro(
       stacksContractCallInfo.contractName,
       "get-paused",
       {},

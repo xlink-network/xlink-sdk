@@ -1,4 +1,4 @@
-# XLink-SDK Development Guide
+# SDK Development Guide
 
 ## Build/Test Commands
 - Install dependencies: `pnpm install`

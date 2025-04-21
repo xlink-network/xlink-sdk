@@ -3,7 +3,7 @@ import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20Support
 import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberFromStacksContractNumber,
@@ -87,19 +87,19 @@ const _getBtc2StacksFeeInfo = async (
     (checkNever(options.swapRoute.via), stacksBaseContractCallInfo)
 
   const resp = await props({
-    isPaused: executeReadonlyCallXLINK(
+    isPaused: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "is-peg-in-paused",
       {},
       contractCallInfo.executeOptions,
     ),
-    feeRate: executeReadonlyCallXLINK(
+    feeRate: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "get-peg-in-fee",
       {},
       contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
-    minFeeAmount: executeReadonlyCallXLINK(
+    minFeeAmount: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "get-peg-in-min-fee",
       {},
@@ -233,13 +233,13 @@ const _getStacks2BtcFeeInfo = async (
     async (info): Promise<SpecialFeeDetailsForSwapRoute> =>
       info ??
       props({
-        feeRate: executeReadonlyCallXLINK(
+        feeRate: executeReadonlyCallBro(
           stacksContractCallInfo.contractName,
           "get-peg-out-fee",
           {},
           stacksContractCallInfo.executeOptions,
         ).then(numberFromStacksContractNumber),
-        minFeeAmount: executeReadonlyCallXLINK(
+        minFeeAmount: executeReadonlyCallBro(
           stacksContractCallInfo.contractName,
           "get-peg-out-min-fee",
           {},
@@ -250,7 +250,7 @@ const _getStacks2BtcFeeInfo = async (
 
   const resp = await props({
     ...feeDetails,
-    isPaused: executeReadonlyCallXLINK(
+    isPaused: executeReadonlyCallBro(
       stacksContractCallInfo.contractName,
       "is-peg-out-paused",
       {},

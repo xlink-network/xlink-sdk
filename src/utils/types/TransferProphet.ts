@@ -1,3 +1,4 @@
+import { SDK_NAME } from "../../bitcoinUtils/constants"
 import {
   SDKNumber,
   SDKNumberifyNestly,
@@ -163,7 +164,7 @@ export const transformToPublicTransferProphetAggregated = (
 ): PublicTransferProphetAggregated<PublicTransferProphet[]> => {
   if (routes.length !== transferProphets.length) {
     throw new Error(
-      `[XLinkSDK#transformToPublicTransferProphetAggregated2] route count not match with transferProphet count, which is not expected`,
+      `[${SDK_NAME}#transformToPublicTransferProphetAggregated2] route count not match with transferProphet count, which is not expected`,
     )
   }
 

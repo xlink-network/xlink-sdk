@@ -1,10 +1,10 @@
-# XLinkSDK
+# BroSDK
 
-🐙 **XLINK isn't just a bridge—it's the liquidity layer for Bitcoin and the essential connector for Bitcoin DeFi** 🐙
+🐙 **Brotocol isn't just a bridge—it's the liquidity layer for Bitcoin and the essential connector for Bitcoin DeFi** 🐙
 
-XLinkSDK enables seamless asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains. It supports cross-chain swaps, Runes & BRC20 metaprotocols, and DEX aggregator integrations.
+BroSDK enables seamless asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains. It supports cross-chain swaps, Runes & BRC20 metaprotocols, and DEX aggregator integrations.
 
-The SDK allows users to interact with XLINK smart contracts from backend environments, browsers, and mobile apps. It securely handles cross-chain transfers, fee estimation, route planning, and transaction size calculations by using XLINK's on-chain and off-chain infrastructure.
+The SDK allows users to interact with Brotocol smart contracts from backend environments, browsers, and mobile apps. It securely handles cross-chain transfers, fee estimation, route planning, and transaction size calculations by using Brotocol's on-chain and off-chain infrastructure.
 
 ## Installation
 
@@ -16,16 +16,16 @@ The SDK allows users to interact with XLINK smart contracts from backend environ
 ### Install
 
 ```bash
-pnpm install @xlink-network/xlink-sdk
+pnpm install @brotocol-xyz/bro-sdk
 ```
 
 ## Usage
 
-The [`XLinkSDK`](./src/XLinkSDK.ts) class provides the core functions of the library. To create an instance:
+The [`BroSDK`](./src/BroSDK.ts) class provides the core functions of the library. To create an instance:
 
 ```typescript
-import { XLinkSDK } from "@xlink-network/xlink-sdk"
-const sdk = new XLinkSDK()
+import { BroSDK } from "@brotocol-xyz/bro-sdk"
+const sdk = new BroSDK()
 ```
 
 For the full API reference, including a full list of available methods and their usage, visit the [SDK Documentation](https://releases-latest.xlink-sdk.pages.dev).
@@ -61,13 +61,13 @@ Defines types, utility functions, and supported tokens within the SDK.
 Create an instance of the SDK with default options:
 
 ```typescript
-import { XLinkSDK } from "@xlink-network/xlink-sdk"
-const xlinkSdk = new XLinkSDK()
+import { BroSDK } from "@brotocol-xyz/bro-sdk"
+const broSdk = new BroSDK()
 ```
 
 #### Bridge from Stacks
 
-Use case showcasing a transfer of 100 `sUSDT` from Stacks to `USDT` on Ethereum using XLinkSDK.
+Use case showcasing a transfer of 100 `sUSDT` from Stacks to `USDT` on Ethereum using BroSDK.
 
 ```typescript
 import {
@@ -75,11 +75,11 @@ import {
     KnownChainId,
     KnownTokenId,
     toSDKNumberOrUndefined,
-} from '@xlink-network/xlink-sdk';
+} from '@brotocol-xyz/bro-sdk';
 import { serializeCVBytes, makeContractCall, broadcastTransaction } from '@stacks/transactions';
 
 // Retrieve bridge information
-const bridgeInfo = await xlinkSdk.bridgeInfoFromStacks({
+const bridgeInfo = await broSdk.bridgeInfoFromStacks({
   fromChain: KnownChainId.Stacks.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
   fromToken: KnownTokenId.Stacks.sUSDT,
@@ -128,13 +128,13 @@ const contractCallOptionsExample: ContractCallOptions = {
 };
 
 // Perform the bridge operation
-const result = await xlinkSdk.bridgeFromStacks(bridgeFromStacksInput);
+const result = await broSdk.bridgeFromStacks(bridgeFromStacksInput);
 console.log("Transaction ID:", result.txid);
 ```
 
 #### Bridge from EVM
 
-Use case showcasing a transfer of 100 `USDT` from Ethereum to `UsSDT` on Stacks using XLinkSDK.
+Use case showcasing a transfer of 100 `USDT` from Ethereum to `UsSDT` on Stacks using BroSDK.
 
 ```typescript
 import {
@@ -142,11 +142,11 @@ import {
   KnownChainId,
   KnownTokenId,
   toSDKNumberOrUndefined,
-} from "@xlink-network/xlink-sdk"
+} from "@brotocol-xyz/bro-sdk"
 import { ethers } from "ethers";
   
 // Retrieve bridge information
-const bridgeInfo = await xlinkSdk.bridgeInfoFromEVM({
+const bridgeInfo = await broSdk.bridgeInfoFromEVM({
   fromChain: KnownChainId.EVM.Ethereum,
   toChain: KnownChainId.Stacks.Mainnet,
   fromToken: KnownTokenId.EVM.USDT,
@@ -195,13 +195,13 @@ const bridgeFromEVMInput: BridgeFromEVMInput = {
 };
   
 // Perform the bridge operation
-const result = await xlinkSdk.bridgeFromEVM(bridgeFromEVMInput);
+const result = await broSdk.bridgeFromEVM(bridgeFromEVMInput);
 console.log("Transaction ID:", result.txHash);
 ```
 
 #### Bridge from Bitcoin
 
-Use case showcasing a transfer of 1 `BTC` from Bitcoin to `WBTC` on Ethereum using XLinkSDK.
+Use case showcasing a transfer of 1 `BTC` from Bitcoin to `WBTC` on Ethereum using BroSDK.
 
 ```typescript
 import {
@@ -209,7 +209,7 @@ import {
   KnownChainId,
   KnownTokenId,
   toSDKNumberOrUndefined,
-} from "@xlink-network/xlink-sdk"
+} from "@brotocol-xyz/bro-sdk"
 /* Use your preferred Bitcoin libs here */
 import { Psbt, networks, Transaction, script } from "bitcoinjs-lib";
 import { ECPairFactory } from "ecpair";
@@ -217,7 +217,7 @@ import * as tinysecp from "tiny-secp256k1";
 import axios from "axios";
 
 // Retrieve bridge information
-const bridgeInfo = await xlinkSdk.bridgeInfoFromBitcoin({
+const bridgeInfo = await broSdk.bridgeInfoFromBitcoin({
   fromChain: KnownChainId.Bitcoin.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
   fromToken: KnownTokenId.Bitcoin.BTC,
@@ -272,6 +272,6 @@ const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
 };
 
 // Perform the bridge operation
-const result = await xlinkSdk.bridgeFromBitcoin(bridgeFromBitcoinInput);
+const result = await broSdk.bridgeFromBitcoin(bridgeFromBitcoinInput);
 console.log("Transaction ID:", result.txid);
 ```

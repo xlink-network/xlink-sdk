@@ -4,7 +4,7 @@ import {
   SwapRouteViaEVMDexAggregator_WithExchangeRate,
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsOut,
   toSDKNumberOrUndefined,
-  XLinkSDK,
+  BroSDK,
 } from "@brotocol-xyz/bro-sdk"
 import {
   fetchKyberSwapPossibleRoutesFactory,
@@ -14,7 +14,7 @@ import {
 
 export async function getSwapRoutesViaEVMDEX(
   context: {
-    sdk: XLinkSDK
+    sdk: BroSDK
   },
   swapRequest: KnownRoute & {
     amount: SDKNumber

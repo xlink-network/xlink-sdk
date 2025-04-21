@@ -191,7 +191,7 @@ export {
 } from "./sdkUtils/timelockFromEVM"
 export type { DumpableCache } from "./utils/DumpableCache"
 
-export interface XLinkSDKOptions {
+export interface BroSDKOptions {
   debugLog?: boolean
   __experimental?: {
     backendAPI?: {
@@ -225,20 +225,20 @@ export interface XLinkSDKOptions {
   }
 }
 
-let defaultConfig: XLinkSDKOptions = {
+let defaultConfig: BroSDKOptions = {
   evm: {
     cacheOnChainConfig: true,
   },
 }
 
-export class XLinkSDK {
-  static defaultConfig(options: XLinkSDKOptions): void {
+export class BroSDK {
+  static defaultConfig(options: BroSDKOptions): void {
     defaultConfig = options
   }
 
   private sdkContext: SDKGlobalContext
 
-  constructor(options: XLinkSDKOptions = {}) {
+  constructor(options: BroSDKOptions = {}) {
     const cacheEVMOnChainConfig =
       options.evm?.cacheOnChainConfig ?? defaultConfig.evm?.cacheOnChainConfig
 
@@ -379,7 +379,7 @@ export class XLinkSDK {
   }
 
   /**
-   * Determines whether a given route (from one blockchain/token to another) is supported by the XLink SDK.
+   * Determines whether a given route (from one blockchain/token to another) is supported by the SDK.
    * This function evaluates cross-chain compatibility for all supported networks (EVM, Stacks, Bitcoin, BRC20, Runes)
    * by delegating to specialized validators per source chain type. It checks that the route is logically valid,
    * not deprecated, and exists in the bridge configuration which is dynamically fetched.
@@ -434,7 +434,7 @@ export class XLinkSDK {
    *
    * @returns A promise that resolves with the known token ID corresponding to the provided
    * contract address, or `undefined` if the chain is not a Stacks chain or if the token is not
-   * supported by XLINK.
+   * supported by Brotocol.
    */
   stacksAddressToStacksToken(
     chain: ChainId,
@@ -525,7 +525,7 @@ export class XLinkSDK {
 
   /**
    * This function retrieves the numeric EVM chain ID (`chainId`) associated with a known EVM-compatible chain in the SDK.
-   * This chain ID serves as the identifier for chains within XLINK smart contracts.
+   * This chain ID serves as the identifier for chains within smart contracts.
    *
    * @param chain - A known EVM-compatible chain identifier (`KnownChainId.EVMChain`).
    *
@@ -694,7 +694,7 @@ export class XLinkSDK {
   /**
    * Retrieves the BTC Peg-In address and its corresponding ScriptPubKey for a given Bitcoin source
    * chain (mainnet or testnet) and a specified destination chain.
-   * This address is used to initiate a transfer (peg-in) from the Bitcoin network into the XLink protocol.
+   * This address is used to initiate a transfer (peg-in) from the Bitcoin network into the Brotocol.
    *
    * @param fromChain - The source Bitcoin chain (`Mainnet` or `Testnet`).
    * @param toChain - The destination chain (must be a known chain, although it is not used in address generation).

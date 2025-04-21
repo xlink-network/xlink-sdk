@@ -1,12 +1,12 @@
 import { toSDKNumberOrUndefined } from "../../../sdkUtils/types"
 import { arraySplit } from "../../arrayHelpers"
 import { BigNumber } from "../../BigNumber"
-import { XLinkSDKErrorBase } from "../../errors"
+import { BroSDKErrorBase } from "../../errors"
 import { checkNever } from "../../typeHelpers"
 import { KnownChainId } from "../../types/knownIds"
 import { FetchRoutesImpl, QueryableRoute } from "./helpers"
 
-export class FetchKyberSwapPossibleRoutesFailedError extends XLinkSDKErrorBase {
+export class FetchKyberSwapPossibleRoutesFailedError extends BroSDKErrorBase {
   constructor(message: null | string, options: ErrorConstructorOptions) {
     super(message ?? "Request KyberSwap api failed", options)
   }

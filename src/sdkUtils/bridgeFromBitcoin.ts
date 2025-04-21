@@ -15,7 +15,10 @@ import {
   getBTCPegInAddress,
   getBitcoinHardLinkageAddress,
 } from "../bitcoinUtils/btcAddresses"
-import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../bitcoinUtils/constants"
+import {
+  BITCOIN_OUTPUT_MINIMUM_AMOUNT,
+  SDK_NAME,
+} from "../bitcoinUtils/constants"
 import { createTransaction } from "../bitcoinUtils/createTransaction"
 import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
@@ -124,7 +127,7 @@ export async function bridgeFromBitcoin(
     )
   ) {
     throw new InvalidMethodParametersError(
-      ["XLinkSDK", "bridgeFromBitcoin"],
+      [SDK_NAME, "bridgeFromBitcoin"],
       [
         {
           name: "fromAddressScriptPubKey",
@@ -148,7 +151,7 @@ export async function bridgeFromBitcoin(
       )
     ) {
       throw new InvalidMethodParametersError(
-        ["XLinkSDK", "bridgeFromBitcoin"],
+        [SDK_NAME, "bridgeFromBitcoin"],
         [
           {
             name: "toAddressScriptPubKey",
@@ -344,7 +347,7 @@ async function bridgeFromBitcoin_toMeta(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `bridgeFromBitcoin (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [

@@ -5,7 +5,7 @@ import {
   SwapRouteViaALEX_WithExchangeRate,
   SwapRouteViaALEX_WithMinimumAmountsOut,
   toSDKNumberOrUndefined,
-  XLinkSDK,
+  BroSDK,
 } from "@brotocol-xyz/bro-sdk"
 import { getALEXSwapParameters } from "@brotocol-xyz/bro-sdk/swapHelpers"
 import { AlexSDK } from "alex-sdk"
@@ -14,7 +14,7 @@ import { sortBy, uniqBy } from "lodash-es"
 export async function getSwapRoutesViaALEX(
   context: {
     alexSDK: AlexSDK
-    sdk: XLinkSDK
+    sdk: BroSDK
   },
   swapRequest: KnownRoute & {
     amount: SDKNumber

@@ -80,39 +80,36 @@ export { bridgeInfoFromBitcoin_toLaunchpad } from "./sdkUtils/bridgeInfoFromBitc
 
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
 
-export const getXLinkSDKContext = (
-  sdk: import("./XLinkSDK").XLinkSDK,
+export const getSDKContext = (
+  sdk: import("./BroSDK").BroSDK,
 ): SDKGlobalContext => {
   return sdk["sdkContext"]
 }
 
 export const getTerminatingStacksTokenContractAddress = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   info: {
     evmChain: KnownChainId.EVMChain
     evmToken: KnownTokenId.EVMToken
     stacksChain: KnownChainId.StacksChain
   },
 ): Promise<undefined | StacksContractAddress> => {
-  return _getTerminatingStacksTokenContractAddress(
-    getXLinkSDKContext(sdk),
-    info,
-  )
+  return _getTerminatingStacksTokenContractAddress(getSDKContext(sdk), info)
 }
 export const getStacksTokenFromTerminatingStacksTokenContractAddress = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   info: {
     stacksChain: KnownChainId.StacksChain
     stacksTokenAddress: StacksContractAddress
   },
 ): Promise<undefined | KnownTokenId.StacksToken> => {
   return _getStacksTokenFromTerminatingStacksTokenContractAddress(
-    getXLinkSDKContext(sdk),
+    getSDKContext(sdk),
     info,
   )
 }
 export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   info: {
     evmChain: KnownChainId.EVMChain
     stacksChain: KnownChainId.StacksChain
@@ -120,13 +117,13 @@ export const getEVMTokenIdFromTerminatingStacksTokenContractAddress = async (
   },
 ): Promise<undefined | KnownTokenId.EVMToken> => {
   return _getEVMTokenFromTerminatingStacksTokenContractAddress(
-    getXLinkSDKContext(sdk),
+    getSDKContext(sdk),
     info,
   )
 }
 
 export const evmTokensFromStacksToken = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   options: {
     fromStacksChain: KnownChainId.StacksChain
     fromStacksToken: KnownTokenId.StacksToken
@@ -136,14 +133,14 @@ export const evmTokensFromStacksToken = async (
   evmTokens: KnownTokenId.EVMToken[]
 }> => {
   const evmTokens = await evmTokenFromCorrespondingStacksToken(
-    getXLinkSDKContext(sdk),
+    getSDKContext(sdk),
     options.toChain,
     options.fromStacksToken,
   )
   return { evmTokens }
 }
 export const evmTokenToStacksToken = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   options: {
     fromChain: KnownChainId.EVMChain
     fromToken: KnownTokenId.EVMToken
@@ -153,7 +150,7 @@ export const evmTokenToStacksToken = async (
   stacksTokens: KnownTokenId.StacksToken[]
 }> => {
   const stacksTokens = await evmTokenToCorrespondingStacksToken(
-    getXLinkSDKContext(sdk),
+    getSDKContext(sdk),
     options.fromChain,
     options.fromToken,
   )
@@ -161,7 +158,7 @@ export const evmTokenToStacksToken = async (
 }
 
 export const metaTokensFromStacksToken = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   options: {
     fromStacksChain: KnownChainId.StacksChain
     fromStacksToken: KnownTokenId.StacksToken
@@ -171,14 +168,14 @@ export const metaTokensFromStacksToken = async (
   tokens: (KnownTokenId.BRC20Token | KnownTokenId.RunesToken)[]
 }> => {
   const metaTokens = await metaTokenFromCorrespondingStacksToken(
-    getXLinkSDKContext(sdk),
+    getSDKContext(sdk),
     options.toChain,
     options.fromStacksToken,
   )
   return { tokens: metaTokens == null ? [] : [metaTokens as any] }
 }
 export const metaTokenToStacksToken = async (
-  sdk: import("./XLinkSDK").XLinkSDK,
+  sdk: import("./BroSDK").BroSDK,
   options: {
     fromChain: KnownChainId.BRC20Chain | KnownChainId.RunesChain
     fromToken: KnownTokenId.BRC20Token | KnownTokenId.RunesToken
@@ -188,7 +185,7 @@ export const metaTokenToStacksToken = async (
   stacksTokens: KnownTokenId.StacksToken[]
 }> => {
   const stacksTokens = await metaTokenToCorrespondingStacksToken(
-    getXLinkSDKContext(sdk),
+    getSDKContext(sdk),
     {
       chain: options.fromChain as any,
       token: options.fromToken as any,

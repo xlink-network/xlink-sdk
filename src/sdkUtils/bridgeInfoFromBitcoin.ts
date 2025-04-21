@@ -10,7 +10,7 @@ import {
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
@@ -670,19 +670,19 @@ export async function bridgeInfoFromBitcoin_toLaunchpad(
   }
 
   const resp = await props({
-    isPaused: executeReadonlyCallXLINK(
+    isPaused: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "is-peg-in-paused",
       {},
       contractCallInfo.executeOptions,
     ),
-    feeRate: executeReadonlyCallXLINK(
+    feeRate: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "get-peg-in-fee",
       {},
       contractCallInfo.executeOptions,
     ).then(numberFromStacksContractNumber),
-    minFeeAmount: executeReadonlyCallXLINK(
+    minFeeAmount: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "get-peg-in-min-fee",
       {},

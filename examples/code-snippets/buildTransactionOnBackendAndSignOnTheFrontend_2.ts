@@ -2,13 +2,13 @@ import { UTXOSpendable } from "../../src/bitcoinHelpers"
 import {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinOutput,
-  XLinkSDK,
-} from "../../src/XLinkSDK"
+  BroSDK,
+} from "../../src/BroSDK"
 
 export type SignInfo = Parameters<BridgeFromBitcoinInput["signPsbt"]>[0]
 
 export class TransactionBuilder {
-  constructor(private readonly sdk: XLinkSDK) {}
+  constructor(private readonly sdk: BroSDK) {}
 
   /**
    * This is a cache of the request parameters for the transaction builder.

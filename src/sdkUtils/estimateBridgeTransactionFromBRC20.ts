@@ -1,5 +1,6 @@
 import { UTXOSpendable } from "../bitcoinHelpers"
 import { getBitcoinHardLinkageAddress } from "../bitcoinUtils/btcAddresses"
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedBRC20Route } from "../metaUtils/peggingHelpers"
 import {
@@ -259,7 +260,7 @@ async function estimateFromBRC20_toBitcoin(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `estimateBridgeTransactionFromBRC20 (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
@@ -316,7 +317,7 @@ async function estimateFromBRC20_toMeta(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `estimateBridgeTransactionFromBRC20 (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [

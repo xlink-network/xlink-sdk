@@ -1,13 +1,13 @@
 import {
   BridgeFromBitcoinInput,
   BridgeFromBitcoinOutput,
-  XLinkSDK,
-} from "../../src/XLinkSDK"
+  BroSDK,
+} from "../../src/BroSDK"
 
 export type SignInfo = Parameters<BridgeFromBitcoinInput["signPsbt"]>[0]
 
 export class TransactionBuilder {
-  constructor(private readonly sdk: XLinkSDK) {}
+  constructor(private readonly sdk: BroSDK) {}
 
   private inProgressRequests = new Map<
     /* requestId */ string,

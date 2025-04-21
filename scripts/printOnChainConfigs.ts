@@ -1,6 +1,6 @@
-import { XLinkSDK } from "../src"
+import { BroSDK } from "../src"
 import { getAllAddresses } from "../src/evmUtils/contractHelpers"
-import { getXLinkSDKContext } from "../src/lowlevelUnstableInfos"
+import { getSDKContext } from "../src/lowlevelUnstableInfos"
 import { _allKnownEVMChains } from "../src/utils/types/knownIds"
 
 async function print(matchers: { chain: string[] }): Promise<void> {
@@ -8,8 +8,8 @@ async function print(matchers: { chain: string[] }): Promise<void> {
     matchers.chain.some(m => c.includes(m)),
   )
 
-  const sdk = new XLinkSDK()
-  const ctx = getXLinkSDKContext(sdk)
+  const sdk = new BroSDK()
+  const ctx = getSDKContext(sdk)
 
   await Promise.all(
     chainIds.map(chainId =>

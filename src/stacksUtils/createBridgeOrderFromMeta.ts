@@ -26,7 +26,7 @@ import { CreateBridgeOrderResult } from "./createBridgeOrderFromBitcoin"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { StacksContractName } from "./stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
@@ -268,7 +268,7 @@ async function createBridgeOrderFromMetaImpl(
 
   let data: undefined | Uint8Array
   if (swapInfo == null) {
-    data = await executeReadonlyCallXLINK(
+    data = await executeReadonlyCallBro(
       contractBaseCallInfo.contractName,
       "create-order-cross-or-fail",
       {
@@ -283,7 +283,7 @@ async function createBridgeOrderFromMetaImpl(
       contractBaseCallInfo.executeOptions,
     ).then(unwrapResponse)
   } else if (swapInfo.via === "ALEX") {
-    data = await executeReadonlyCallXLINK(
+    data = await executeReadonlyCallBro(
       contractSwapCallInfo.contractName,
       "create-order-cross-swap-or-fail",
       {
@@ -326,7 +326,7 @@ async function createBridgeOrderFromMetaImpl(
         swapInfo,
       )
     }
-    data = await executeReadonlyCallXLINK(
+    data = await executeReadonlyCallBro(
       contractAggCallInfo.contractName,
       "create-order-agg-or-fail",
       {

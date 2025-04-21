@@ -5,21 +5,21 @@ import {
 } from "./SwapRouteHelpers"
 
 /** Extends the Error class and serves as the base for all custom errors within the SDK. */
-export class XLinkSDKErrorBase extends Error {
+export class BroSDKErrorBase extends Error {
   constructor(...args: ConstructorParameters<typeof Error>) {
     super(...args)
-    this.name = "XLinkSDKErrorBase"
+    this.name = "BroSDKErrorBase"
   }
 }
 
-export class BridgeValidateFailedError extends XLinkSDKErrorBase {
+export class BridgeValidateFailedError extends BroSDKErrorBase {
   constructor(public cause: Error) {
     super("Bridge order validation failed", { cause })
     this.name = "BridgeValidateFailedError"
   }
 }
 
-export class StacksAddressVersionNotSupportedError extends XLinkSDKErrorBase {
+export class StacksAddressVersionNotSupportedError extends BroSDKErrorBase {
   constructor(
     public address: string,
     public versionName: string,
@@ -29,7 +29,7 @@ export class StacksAddressVersionNotSupportedError extends XLinkSDKErrorBase {
   }
 }
 
-export class TooFrequentlyError extends XLinkSDKErrorBase {
+export class TooFrequentlyError extends BroSDKErrorBase {
   constructor(
     public methodPath: string[],
     public retryAfter?: number,
@@ -46,7 +46,7 @@ export class TooFrequentlyError extends XLinkSDKErrorBase {
 }
 
 /** It is thrown when a method in the SDK receives invalid parameters. */
-export class InvalidMethodParametersError extends XLinkSDKErrorBase {
+export class InvalidMethodParametersError extends BroSDKErrorBase {
   constructor(
     public methodPath: string[],
     public params: {
@@ -61,7 +61,7 @@ export class InvalidMethodParametersError extends XLinkSDKErrorBase {
 }
 
 /** It is thrown when an attempt is made to bridge tokens between unsupported chains in the SDK. */
-export class UnsupportedBridgeRouteError extends XLinkSDKErrorBase {
+export class UnsupportedBridgeRouteError extends BroSDKErrorBase {
   constructor(
     public fromChain: ChainId,
     public toChain: ChainId,
@@ -77,14 +77,14 @@ export class UnsupportedBridgeRouteError extends XLinkSDKErrorBase {
 }
 
 /** It is thrown when a method in the SDK receives an unknown chain. */
-export class UnsupportedChainError extends XLinkSDKErrorBase {
+export class UnsupportedChainError extends BroSDKErrorBase {
   constructor(public chain: ChainId) {
     super(`Unsupported chain: ${chain}`)
     this.name = "UnsupportedChainError"
   }
 }
 /** It is thrown when a smart contract is assigned an unknown or unsupported chain ID. */
-export class UnsupportedContractAssignedChainIdError extends XLinkSDKErrorBase {
+export class UnsupportedContractAssignedChainIdError extends BroSDKErrorBase {
   constructor(public chainId: bigint) {
     super(`Unsupported smart contract assigned chain id: ${chainId}`)
     this.name = "UnsupportedContractAssignedChainIdError"

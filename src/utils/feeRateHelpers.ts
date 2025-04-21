@@ -1,3 +1,4 @@
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { BigNumber } from "./BigNumber"
 import { concat, last, reduce } from "./arrayHelpers"
 import { checkNever, OneOrMore } from "./typeHelpers"
@@ -35,7 +36,7 @@ export const applyTransferProphets = (
     exchangeRates.length < transferProphets.length - 1
   ) {
     throw new Error(
-      `[XLinkSDK#applyTransferProphets] exchangeRate count not match with transferProphet count, which is not expected`,
+      `[${SDK_NAME}#applyTransferProphets] exchangeRate count not match with transferProphet count, which is not expected`,
     )
   }
 
@@ -77,7 +78,7 @@ export const applyTransferProphet = (
     if (f.type === "rate") {
       if (f.token !== transferProphet.bridgeToken) {
         throw new Error(
-          `[XLinkSDK#applyTransferProphet] transferProphet.bridgeToken (${transferProphet.bridgeToken}) does not match rateFee.token (${f.token}), which is not expected`,
+          `[${SDK_NAME}#applyTransferProphet] transferProphet.bridgeToken (${transferProphet.bridgeToken}) does not match rateFee.token (${f.token}), which is not expected`,
         )
       }
       feeAmount = BigNumber.max([
@@ -133,7 +134,7 @@ export const composeTransferProphets = (
     exchangeRates.length < transferProphets.length - 1
   ) {
     throw new Error(
-      `[XLinkSDK#composeTransferProphets] exchangeRate count not match with transferProphet count, which is not expected`,
+      `[${SDK_NAME}#composeTransferProphets] exchangeRate count not match with transferProphet count, which is not expected`,
     )
   }
 

@@ -4,20 +4,20 @@ import {
   StacksContractAddress,
   SwapRoute_WithExchangeRate,
   toSDKNumberOrUndefined,
-  XLinkSDK,
+  BroSDK,
 } from "@brotocol-xyz/bro-sdk"
 import { AlexSDK } from "alex-sdk"
 import { FC, Fragment, useState } from "react"
 import { useQuery } from "react-query"
 import { useDebouncedValue } from "../hooks/useDebouncedValue"
-import { formatXLinkSDKChainName } from "../utils/formatXLinkSDKChainName"
+import { formatSDKChainName } from "../utils/formatSDKChainName"
 import { getAvailableRoutes } from "../utils/getAvailableRoutes"
 import { getSwapRoutesViaALEX } from "../utils/getSwapRoutesViaALEX"
 import { getSwapRoutesViaEVMDEX } from "../utils/getSwapRoutesViaEVMDEX"
 
 export const SwapRouteSelector: FC<{
   alexSDK: AlexSDK
-  sdk: XLinkSDK
+  sdk: BroSDK
 }> = ({ alexSDK, sdk }) => {
   const [swapAmount, setSwapAmount] = useState("")
   const [selectedRoute, setSelectedRoute] = useState<null | KnownRoute>(null)
@@ -169,8 +169,8 @@ export const SwapRouteSelector: FC<{
               {availableRoutes.data?.map((route, index) => (
                 <option key={index} value={JSON.stringify(route)}>
                   {route.fromTokenName} (
-                  {formatXLinkSDKChainName(route.fromChain)}) →{" "}
-                  {route.toTokenName} ({formatXLinkSDKChainName(route.toChain)})
+                  {formatSDKChainName(route.fromChain)}) →{" "}
+                  {route.toTokenName} ({formatSDKChainName(route.toChain)})
                 </option>
               ))}
             </select>

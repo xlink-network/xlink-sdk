@@ -1,4 +1,5 @@
 import { getBitcoinHardLinkageAddress } from "../bitcoinUtils/btcAddresses"
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
 import {
@@ -260,7 +261,7 @@ async function estimateFromRunes_toBitcoin(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `estimateBridgeTransactionFromRunes (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
@@ -317,7 +318,7 @@ async function estimateFromRunes_toMeta(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `estimateBridgeTransactionFromRunes (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
