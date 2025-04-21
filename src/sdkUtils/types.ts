@@ -1,4 +1,5 @@
 import { isAddress } from "viem"
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { EVMEndpointContract } from "../evmUtils/evmContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import { InvalidMethodParametersError } from "../utils/errors"
@@ -6,7 +7,7 @@ import { InvalidMethodParametersError } from "../utils/errors"
 type SDKBrandedLiteral<
   Type extends string,
   T extends string | number,
-> = `${T} (BroSDK ${Type})`
+> = `${T} (${typeof SDK_NAME} ${Type})`
 
 /**
  * Represents a unique identifier for a blockchain network.
@@ -63,7 +64,7 @@ export const isEVMAddress = isAddress
 export type RuneIdCombined = `${number}:${number}`
 
 export const evmNativeCurrencyAddress = Symbol(
-  "[BroSDK] EVM Native Currency Address",
+  `[${SDK_NAME}] EVM Native Currency Address`,
 )
 export type EVMNativeCurrencyAddress = typeof evmNativeCurrencyAddress
 
