@@ -4,10 +4,12 @@
   "description": "Brotocol js SDK",
   "packageManager": "pnpm@9.9.0",
   "keywords": [
+    "brotocol",
     "bitcoin",
+    "brc-20",
+    "runes",
     "ethereum",
-    "stacks",
-    "brotocol"
+    "stacks"
   ],
   "repository": "github:brotocol-xyz/bro-sdk",
   "author": "c4605",

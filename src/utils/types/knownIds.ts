@@ -31,17 +31,19 @@ export namespace KnownTokenId {
     /** Represents the Bitcoin token ID (BTC). */
     export const BTC = tokenId("btc-btc")
   }
-  /** This type includes all known Bitcoin tokens. */
+  /** This type defines known Bitcoin tokens. */
   export type BitcoinToken = (typeof _allKnownBitcoinTokens)[number]
   export function isBitcoinToken(value: TokenId): value is BitcoinToken {
     return _allKnownBitcoinTokens.includes(value as any)
   }
 
+  /** This type defines known BRC20 tokens. */
   export type BRC20Token = TokenId<"a brc20 token">
   export function isBRC20Token(value: TokenId): value is BRC20Token {
     return value.startsWith("brc20-")
   }
 
+  /** This type defines known Runes tokens. */
   export type RunesToken = TokenId<"a runes token">
   export function isRunesToken(value: TokenId): value is RunesToken {
     return value.startsWith("runes-")
@@ -77,18 +79,24 @@ export namespace KnownTokenId {
     export const vLiSTX = tokenId("evm-vlistx")
     /** Represents the vLiALEX token ID on EVM-compatible blockchains. */
     export const vLiALEX = tokenId("evm-vlialex")
+    /** Represents the uBTC token ID on EVM-compatible blockchains. */
     export const uBTC = tokenId("evm-ubtc")
+    /** Represents the wuBTC token ID on EVM-compatible blockchains. */
     export const wuBTC = tokenId("evm-wubtc")
+    /** Represents the DB20 token ID on EVM-compatible blockchains. */
     export const DB20 = tokenId("evm-db20")
+    /** Represents the DOG token ID on EVM-compatible blockchains. */
     export const DOG = tokenId("evm-dog")
+    /** Represents the STX token ID on EVM-compatible blockchains. */
     export const STX = tokenId("evm-stx")
+    /** Represents the TRUMP token ID on EVM-compatible blockchains. */
     export const TRUMP = tokenId("evm-trump")
     export const GHIBLICZ = tokenId("evm-ghiblicz")
     export const ETH = tokenId("evm-eth")
     export const SOL = tokenId("evm-sol")
     export const LINK = tokenId("evm-link")
   }
-  /** This type includes all known tokens on EVM-compatible blockchains. */
+  /** This type defines known tokens on EVM-compatible blockchains. */
   export type EVMToken = (typeof _allKnownEVMTokens)[number]
   export function isEVMToken(value: TokenId): value is EVMToken {
     return _allKnownEVMTokens.includes(value as any)
@@ -113,10 +121,15 @@ export namespace KnownTokenId {
     export const vLiALEX = tokenId("stx-vlialex")
     /** Represents the vLiaBTC token ID on the Stacks blockchain. */
     export const vLiaBTC = tokenId("stx-vliabtc")
+    /** Represents the DB20 token ID on the Stacks blockchain. */
     export const DB20 = tokenId("stx-db20")
+    /** Represents the uBTC token ID on the Stacks blockchain. */
     export const uBTC = tokenId("stx-ubtc")
+    /** Represents the DOG token ID on the Stacks blockchain. */
     export const DOG = tokenId("stx-dog")
+    /** Represents the STX token ID on the Stacks blockchain. */
     export const STX = tokenId("stx-stx")
+    /** Represents the TRUMP token ID on the Stacks blockchain. */
     export const TRUMP = tokenId("stx-trump")
     export const GHIBLICZ = tokenId("stx-ghiblicz")
     export const ETH = tokenId("stx-eth")
