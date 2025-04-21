@@ -8,7 +8,7 @@ import { getChainIdNetworkType, KnownChainId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../sdkUtils/types"
 import { StacksContractName } from "./stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
 } from "./contractHelpers"
 import { checkNever } from "../utils/typeHelpers"
@@ -56,7 +56,7 @@ export async function validateBridgeOrderFromMeta(info: {
 
   if (swapRoute == null || swapRoute.via === "ALEX") {
     if (swapRoute == null || hasLength(swapRoute.swapPools, 0)) {
-      resp = await executeReadonlyCallXLINK(
+      resp = await executeReadonlyCallBro(
         contractBaseCallInfo.contractName,
         "validate-tx-cross",
         {
@@ -77,7 +77,7 @@ export async function validateBridgeOrderFromMeta(info: {
         contractBaseCallInfo.executeOptions,
       )
     } else {
-      resp = await executeReadonlyCallXLINK(
+      resp = await executeReadonlyCallBro(
         contractSwapCallInfo.contractName,
         "validate-tx-cross-swap",
         {
@@ -106,7 +106,7 @@ export async function validateBridgeOrderFromMeta(info: {
       )
     }
   } else if (swapRoute.via === "evmDexAggregator") {
-    resp = await executeReadonlyCallXLINK(
+    resp = await executeReadonlyCallBro(
       contractAggCallInfo.contractName,
       "validate-tx-agg",
       {

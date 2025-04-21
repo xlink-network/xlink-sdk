@@ -1,6 +1,6 @@
 # How to Add Support for a new EVM Token
 
-This document explains the process for adding support for a new EVM token in the XLink SDK.
+This document explains the process for adding support for a new EVM token in the SDK.
 
 ## Overview
 

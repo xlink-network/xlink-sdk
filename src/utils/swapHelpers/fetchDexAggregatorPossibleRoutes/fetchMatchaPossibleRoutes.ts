@@ -1,10 +1,10 @@
 import { toSDKNumberOrUndefined } from "../../../sdkUtils/types"
 import { arraySplit } from "../../arrayHelpers"
 import { BigNumber } from "../../BigNumber"
-import { XLinkSDKErrorBase } from "../../errors"
+import { BroSDKErrorBase } from "../../errors"
 import { FetchRoutesImpl, QueryableRoute } from "./helpers"
 
-export class FetchMatchaPossibleRoutesFailedError extends XLinkSDKErrorBase {
+export class FetchMatchaPossibleRoutesFailedError extends BroSDKErrorBase {
   constructor(message: null | string, options: ErrorConstructorOptions) {
     super(message ?? "Request 0x.org api failed", options)
   }

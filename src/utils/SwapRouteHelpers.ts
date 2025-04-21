@@ -3,7 +3,7 @@ import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksToken,
   numberFromStacksContractNumber,
@@ -382,14 +382,14 @@ export async function getSpecialFeeDetailsForSwapRoute(
         {
           fromEVM: {
             getFeeRate: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 evmPegInContractCallInfo.contractName,
                 "get-peg-out-fee",
                 {},
                 evmPegInContractCallInfo.executeOptions,
               ).then(numberFromStacksContractNumber),
             getFixedFeeAmount: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 evmPegInContractCallInfo.contractName,
                 "get-peg-out-gas-fee",
                 {},
@@ -427,14 +427,14 @@ export async function getSpecialFeeDetailsForSwapRoute(
         {
           fromBitcoin: {
             getFeeRate: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 btcPegInSwapContractCallInfo.contractName,
                 "get-peg-out-fee",
                 {},
                 btcPegInSwapContractCallInfo.executeOptions,
               ).then(numberFromStacksContractNumber),
             getFixedFeeAmount: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 btcPegInSwapContractCallInfo.contractName,
                 "get-peg-out-gas-fee",
                 {},
@@ -443,14 +443,14 @@ export async function getSpecialFeeDetailsForSwapRoute(
           },
           fromMeta: {
             getFeeRate: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 metaPegInSwapContractCallInfo.contractName,
                 "get-peg-out-fee",
                 {},
                 metaPegInSwapContractCallInfo.executeOptions,
               ).then(numberFromStacksContractNumber),
             getFixedFeeAmount: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 metaPegInSwapContractCallInfo.contractName,
                 "get-peg-out-gas-fee",
                 {},
@@ -459,14 +459,14 @@ export async function getSpecialFeeDetailsForSwapRoute(
           },
           fromEVM: {
             getFeeRate: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 evmPegInSwapContractCallInfo.contractName,
                 "get-peg-out-fee",
                 {},
                 evmPegInSwapContractCallInfo.executeOptions,
               ).then(numberFromStacksContractNumber),
             getFixedFeeAmount: () =>
-              executeReadonlyCallXLINK(
+              executeReadonlyCallBro(
                 evmPegInSwapContractCallInfo.contractName,
                 "get-peg-out-gas-fee",
                 {},

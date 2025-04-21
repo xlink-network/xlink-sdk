@@ -1,4 +1,4 @@
-import { XLinkSDK } from "../src"
+import { BroSDK } from "../src"
 import { KnownRoute } from "../src/utils/buildSupportedRoutes"
 
 async function print(matchers: {
@@ -7,7 +7,7 @@ async function print(matchers: {
   chain: string[]
   token: string[]
 }): Promise<void> {
-  const sdk = new XLinkSDK({
+  const sdk = new BroSDK({
     debugLog: matchers.debug,
   })
   const supportedRoutes = await sdk

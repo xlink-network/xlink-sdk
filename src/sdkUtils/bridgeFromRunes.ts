@@ -13,7 +13,10 @@ import {
   BitcoinAddress,
   getBitcoinHardLinkageAddress,
 } from "../bitcoinUtils/btcAddresses"
-import { BITCOIN_OUTPUT_MINIMUM_AMOUNT } from "../bitcoinUtils/constants"
+import {
+  BITCOIN_OUTPUT_MINIMUM_AMOUNT,
+  SDK_NAME,
+} from "../bitcoinUtils/constants"
 import { createTransaction } from "../bitcoinUtils/createTransaction"
 import {
   BitcoinTransactionPrepareResult,
@@ -22,6 +25,7 @@ import {
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
 import { runesTokenToId } from "../metaUtils/tokenAddresses"
+import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import { CreateBridgeOrderResult } from "../stacksUtils/createBridgeOrderFromBitcoin"
 import {
   createBridgeOrder_MetaToBitcoin,
@@ -30,7 +34,6 @@ import {
   createBridgeOrder_MetaToStacks,
 } from "../stacksUtils/createBridgeOrderFromMeta"
 import { validateBridgeOrderFromMeta } from "../stacksUtils/validateBridgeOrderFromMeta"
-import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import { range } from "../utils/arrayHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
@@ -152,7 +155,7 @@ export async function bridgeFromRunes(
     )
   ) {
     throw new InvalidMethodParametersError(
-      ["XLinkSDK", "bridgeFromRunes"],
+      [SDK_NAME, "bridgeFromRunes"],
       [
         {
           name: "fromAddressScriptPubKey",
@@ -176,7 +179,7 @@ export async function bridgeFromRunes(
       )
     ) {
       throw new InvalidMethodParametersError(
-        ["XLinkSDK", "bridgeFromRunes"],
+        [SDK_NAME, "bridgeFromRunes"],
         [
           {
             name: "toAddressScriptPubKey",
@@ -399,7 +402,7 @@ async function bridgeFromRunes_toBitcoin(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `bridgeFromRunes (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
@@ -461,7 +464,7 @@ async function bridgeFromRunes_toMeta(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `bridgeFromRunes (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
@@ -785,7 +788,7 @@ export async function prepareRunesTransaction(
   if (runeDivisibility == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `${methodName} (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
@@ -808,7 +811,7 @@ export async function prepareRunesTransaction(
   if (runeRawAmountToSend < runeRawAmountToPegIn) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `${methodName} (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [

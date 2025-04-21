@@ -1,17 +1,18 @@
 import { encodeFunctionData, Hex, toHex } from "viem"
 import { estimateGas } from "viem/actions"
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
 import { NativeBridgeEndpointAbi } from "../evmUtils/contractAbi/nativeBridgeEndpoint"
-import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
-import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
 import {
   getEVMContractCallInfo,
   getEVMTokenContractInfo,
   numberToSolidityContractNumber,
 } from "../evmUtils/contractHelpers"
+import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
+import { isSupportedEVMRoute } from "../evmUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
-import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
+import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
 import { addressToBuffer } from "../utils/addressHelpers"
 import { BigNumber } from "../utils/BigNumber"
 import {
@@ -263,7 +264,7 @@ async function bridgeFromEVM_toBitcoin(
 
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
-      ["XLinkSDK", "bridgeFromEVM (to Bitcoin)"],
+      [SDK_NAME, "bridgeFromEVM (to Bitcoin)"],
       [
         {
           name: "toAddressScriptPubKey",
@@ -491,7 +492,7 @@ async function bridgeFromEVM_toMeta(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `bridgeFromEVM (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [
@@ -604,7 +605,7 @@ export async function bridgeFromEVM_toLaunchpad(
   ) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `bridgeFromEVM_toLaunchpad (to ${_knownChainIdToErrorMessagePart(info.receiverChain)})`,
       ],
       [

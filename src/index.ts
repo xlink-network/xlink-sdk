@@ -1,4 +1,4 @@
-export * from "./XLinkSDK"
+export * from "./BroSDK"
 export * from "./utils/errors"
 export {
   ChainId,

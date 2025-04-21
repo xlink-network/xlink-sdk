@@ -6,7 +6,7 @@ import { InvalidMethodParametersError } from "../utils/errors"
 type SDKBrandedLiteral<
   Type extends string,
   T extends string | number,
-> = `${T} (XLinkSDK ${Type})`
+> = `${T} (BroSDK ${Type})`
 
 /**
  * Represents a unique identifier for a blockchain network.
@@ -63,7 +63,7 @@ export const isEVMAddress = isAddress
 export type RuneIdCombined = `${number}:${number}`
 
 export const evmNativeCurrencyAddress = Symbol(
-  "[XLinkSDK] EVM Native Currency Address",
+  "[BroSDK] EVM Native Currency Address",
 )
 export type EVMNativeCurrencyAddress = typeof evmNativeCurrencyAddress
 

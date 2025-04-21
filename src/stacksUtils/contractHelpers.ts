@@ -61,7 +61,7 @@ export interface ContractCallOptions {
   functionArgs: SerializedClarityValue[]
 }
 
-const _composeTxBrotocol = composeTxOptionsFactory(broContracts, {})
+const _composeTxBro = composeTxOptionsFactory(broContracts, {})
 export type ComposeTxOptionsFn<Contracts extends typeof broContracts> = <
   T extends StringOnly<keyof Contracts>,
   F extends StringOnly<keyof Contracts[T]>,
@@ -78,10 +78,10 @@ export type ComposeTxOptionsFn<Contracts extends typeof broContracts> = <
     postConditions?: PC[]
   },
 ) => ContractCallOptions
-export const composeTxXLINK: ComposeTxOptionsFn<typeof broContracts> = (
+export const composeTxBro: ComposeTxOptionsFn<typeof broContracts> = (
   ...args
 ) => {
-  const options = _composeTxBrotocol(...args)
+  const options = _composeTxBro(...args)
   return {
     ...options,
     functionArgs: options.functionArgs.map(arg => serializeCVBytes(arg)),
@@ -91,7 +91,7 @@ export const composeTxXLINK: ComposeTxOptionsFn<typeof broContracts> = (
   }
 }
 
-export const executeReadonlyCallXLINK = executeReadonlyCallFactory(
+export const executeReadonlyCallBro = executeReadonlyCallFactory(
   broContracts,
   {},
 )

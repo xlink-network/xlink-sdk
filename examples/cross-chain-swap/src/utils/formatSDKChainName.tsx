@@ -1,8 +1,6 @@
 import { KnownChainId } from "@brotocol-xyz/bro-sdk"
 
-export const formatXLinkSDKChainName = (
-  chain: KnownChainId.KnownChain,
-): string => {
+export const formatSDKChainName = (chain: KnownChainId.KnownChain): string => {
   if (KnownChainId.isBitcoinChain(chain)) {
     return "Bitcoin"
   }

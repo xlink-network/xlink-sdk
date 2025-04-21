@@ -2,6 +2,7 @@ import {
   getBitcoinHardLinkageAddress,
   getBTCPegInAddress,
 } from "../bitcoinUtils/btcAddresses"
+import { SDK_NAME } from "../bitcoinUtils/constants"
 import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
   createBridgeOrder_BitcoinToEVM,
@@ -240,7 +241,7 @@ async function estimateFromBitcoin_toMeta(
   if (info.toAddressScriptPubKey == null) {
     throw new InvalidMethodParametersError(
       [
-        "XLinkSDK",
+        SDK_NAME,
         `estimateBridgeTransactionFromBitcoin (to ${_knownChainIdToErrorMessagePart(info.toChain)})`,
       ],
       [

@@ -1,7 +1,7 @@
 import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
-  executeReadonlyCallXLINK,
+  executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
@@ -179,13 +179,13 @@ const getMeta2StacksSwapFeeInfo = async (
   if (contractCallInfo == null) return
 
   const resp = await props({
-    isPaused: executeReadonlyCallXLINK(
+    isPaused: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "is-paused",
       {},
       contractCallInfo.executeOptions,
     ),
-    fixedBtcFee: executeReadonlyCallXLINK(
+    fixedBtcFee: executeReadonlyCallBro(
       contractCallInfo.contractName,
       "get-peg-in-fee",
       {},

@@ -6,7 +6,7 @@ import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContr
 import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
-  composeTxXLINK,
+  composeTxBro,
   ContractCallOptions,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
@@ -147,7 +147,7 @@ async function bridgeFromStacks_toBitcoin(
       ? btc.NETWORK
       : btc.TEST_NETWORK
 
-  const options = composeTxXLINK(
+  const options = composeTxBro(
     contractCallInfo.contractName,
     "request-peg-out-0",
     {
@@ -196,7 +196,7 @@ async function bridgeFromStacks_toEVM(
       evmToken: info.toToken,
     })) ?? fromTokenContractInfo
 
-  const options = composeTxXLINK(
+  const options = composeTxBro(
     contractCallInfo.contractName,
     "transfer-to-unwrap",
     {
@@ -246,7 +246,7 @@ async function bridgeFromStacks_toMeta(
       ? btc.NETWORK
       : btc.TEST_NETWORK
 
-  const options = composeTxXLINK(
+  const options = composeTxBro(
     contractCallInfo.contractName,
     "request-peg-out",
     {
