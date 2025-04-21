@@ -171,7 +171,7 @@ export async function bridgeFromRunes(
       !equalBytes(
         info.toAddressScriptPubKey,
         addressToScriptPubKey(
-          info.fromChain === KnownChainId.Bitcoin.Mainnet
+          info.fromChain === KnownChainId.Runes.Mainnet
             ? btc.NETWORK
             : btc.TEST_NETWORK,
           info.toAddress,
