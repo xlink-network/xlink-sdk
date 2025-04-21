@@ -136,7 +136,7 @@ export async function bridgeFromBRC20(
     !equalBytes(
       info.fromAddressScriptPubKey,
       addressToScriptPubKey(
-        info.fromChain === KnownChainId.Bitcoin.Mainnet
+        info.fromChain === KnownChainId.BRC20.Mainnet
           ? btc.NETWORK
           : btc.TEST_NETWORK,
         info.fromAddress,
@@ -160,7 +160,7 @@ export async function bridgeFromBRC20(
       !equalBytes(
         info.toAddressScriptPubKey,
         addressToScriptPubKey(
-          info.fromChain === KnownChainId.Bitcoin.Mainnet
+          info.fromChain === KnownChainId.BRC20.Mainnet
             ? btc.NETWORK
             : btc.TEST_NETWORK,
           info.toAddress,
