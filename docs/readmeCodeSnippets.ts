@@ -1,8 +1,8 @@
-import { XLinkSDK } from "../src/index";
+import { BroSDK } from "../src/index";
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-const sdk = new XLinkSDK();
+const sdk = new BroSDK();
 
 // Supported Chains
 
@@ -53,16 +53,16 @@ const evmToken = await sdk.evmAddressToEVMToken(
 
 // Supported routes
 
-// Get all supported routes
-const allRoutes = await sdk.getSupportedRoutes();
+// Get all possible routes
+const allRoutes = await sdk.getPossibleRoutes();
 
-// Get all supported routes filtered by source chain
-const routesBySourceChain = await sdk.getSupportedRoutes({
+// Get all possible routes filtered by source chain
+const routesBySourceChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
 });
 
-// Get all supported routes filtered by source and target chain
-const routesBySourceAndTargetChain = await sdk.getSupportedRoutes({
+// Get all possible routes filtered by source and target chain
+const routesBySourceAndTargetChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
 });
@@ -77,7 +77,7 @@ const isSupported = await sdk.isSupportedRoute({
 
 // If the token pair is supported, get all available routes for that pair
 if (isSupported) {
-  const routesByPair = await sdk.getSupportedRoutes({
+  const routesByPair = await sdk.getPossibleRoutes({
     fromChain: KnownChainId.BRC20.Mainnet,
     toChain: KnownChainId.EVM.Ethereum,
     fromToken: brc20Token as KnownTokenId.BRC20Token,
@@ -87,8 +87,8 @@ if (isSupported) {
 
 // Bridge From Stacks
 
-import { makeContractCall, broadcastTransaction } from "@stacks/transactions";
-import { ContractCallOptions } from "../src/stacksUtils/xlinkContractHelpers";
+import { makeContractCall, broadcastTransaction, deserializeCV } from "@stacks/transactions";
+import { ContractCallOptions } from "../src/stacksUtils/contractHelpers";
 import { BridgeFromStacksInput, toSDKNumberOrUndefined } from "../src/index";
 
 // Retrieve bridge information
@@ -125,8 +125,8 @@ const bridgeFromStacksInput: BridgeFromStacksInput = {
       contractAddress: tx.contractAddress,
       contractName: tx.contractName,
       functionName: tx.functionName,
-      // TODO: deserialize each element of functionArgs and convert it into ClarityValue[]
-      functionArgs: tx.functionArgs,
+      // Deserialize each element of functionArgs and convert it into ClarityValue[]
+      functionArgs: tx.functionArgs.map(arg => deserializeCV(arg)),
       postConditions: [] /* Add post conditions */,
       validateWithAbi: true,
       senderKey:

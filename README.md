@@ -117,19 +117,21 @@ If a token is **unsupported**, these functions return `Promise<undefined>`.
 ### Supported Routes
 
 ```ts
-// Get all supported routes
-const allRoutes = await sdk.getSupportedRoutes();
+// Get all possible routes
+const allRoutes = await sdk.getPossibleRoutes();
 
-// Get all supported routes filtered by source chain
-const routesBySourceChain = await sdk.getSupportedRoutes({ fromChain: KnownChainId.BRC20.Mainnet });
+// Get all possible routes filtered by source chain
+const routesBySourceChain = await sdk.getPossibleRoutes({
+  fromChain: KnownChainId.BRC20.Mainnet,
+});
 
-// Get all supported routes filtered by source and target chain
-const routesBySourceAndTargetChain = await sdk.getSupportedRoutes({
+// Get all possible routes filtered by source and target chain
+const routesBySourceAndTargetChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
 });
 
-// Check if a specific token pair is supported for at least one route 
+// Check if a specific token pair is supported for at least one route
 const isSupported = await sdk.isSupportedRoute({
   fromChain: KnownChainId.BRC20.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
@@ -139,7 +141,7 @@ const isSupported = await sdk.isSupportedRoute({
 
 // If the token pair is supported, get all available routes for that pair
 if (isSupported) {
-  const routesByPair = await sdk.getSupportedRoutes({
+  const routesByPair = await sdk.getPossibleRoutes({
     fromChain: KnownChainId.BRC20.Mainnet,
     toChain: KnownChainId.EVM.Ethereum,
     fromToken: brc20Token as KnownTokenId.BRC20Token,
@@ -188,7 +190,7 @@ Once the route is validated, the cross-chain transfer can be initiated. These me
 
 ```ts
 import { BridgeFromStacksInput, toSDKNumberOrUndefined, KnownChainId, KnownTokenId } from "@brotocol-xyz/bro-sdk";
-import { makeContractCall, broadcastTransaction } from "@stacks/transactions";
+import { makeContractCall, broadcastTransaction, deserializeCV } from "@stacks/transactions";
 
 // Define bridge operation input
 const bridgeFromStacksInput: BridgeFromStacksInput = {
@@ -213,7 +215,8 @@ const bridgeFromStacksInput: BridgeFromStacksInput = {
       contractAddress: tx.contractAddress,
       contractName: tx.contractName,
       functionName: tx.functionName,
-      functionArgs: tx.functionArgs,
+      // Deserialize each element of functionArgs and convert it into ClarityValue
+      functionArgs: tx.functionArgs.map(arg => deserializeCV(arg)),
       postConditions: [] /* Add post conditions */,
       validateWithAbi: true,
       senderKey: "b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01",
@@ -229,6 +232,12 @@ const bridgeFromStacksInput: BridgeFromStacksInput = {
 const result = await sdk.bridgeFromStacks(bridgeFromStacksInput);
 console.log("Stacks Transaction ID:", result.txid);
 ```
+
+> [!NOTE]  
+> The `tx.functionArgs` field provided by the SDK is of type `SerializedClarityValue[]`.  
+> This differs from the `functionArgs` expected by the Stacks.js `makeContractCall` method, which requires `ClarityValue[]`.  
+> 
+> This design decision was intentional to maintain compatibility with both [Stacks.js](https://github.com/hirosystems/stacks.js) v6 and v7, as the implementation details of `ClarityValue` type differ between both versions. By using a serialized format, the SDK ensures flexibility and avoids locking users into a specific version of the Stacks.js library.
 
 ### Bridge From EVM
 
