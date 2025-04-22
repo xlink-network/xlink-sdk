@@ -1,19 +1,19 @@
 # BroSDK
 
+`@brotocol-xyz/bro-sdk` is a TypeScript SDK designed to integrate with Brotocol's on-chain and off-chain infrastructure. It is web3 library-agnostic, meaning you can use your preferred library to send and broadcast transactions while the SDK handles the rest.
+
 🐙 **Brotocol isn't just a bridge—it's the liquidity layer for Bitcoin and the essential connector for Bitcoin DeFi** 🐙
 
-BroSDK enables seamless asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains. It supports cross-chain swaps, Runes & BRC20 metaprotocols, and DEX aggregator integrations.
+## Features
 
-The SDK allows users to interact with Brotocol smart contracts from backend environments, browsers, and mobile apps. It securely handles cross-chain transfers, fee estimation, route planning, and transaction size calculations by using Brotocol's on-chain and off-chain infrastructure.
+- Asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains
+- Support for Runes and BRC20 metaprotocols
+- Cross-chain swaps and DEX aggregator integrations
+- Designed for flexibility, allowing integration with any Bitcoin and web3 library
 
 ## Installation
 
-### Prerequisites
-
-- [Node.js](https://nodejs.org/en)
-- [pnpm](https://pnpm.io/)
-
-### Install
+With [pnpm](https://pnpm.io/):
 
 ```bash
 pnpm install @brotocol-xyz/bro-sdk
@@ -21,257 +21,391 @@ pnpm install @brotocol-xyz/bro-sdk
 
 ## Usage
 
-The [`BroSDK`](./src/BroSDK.ts) class provides the core functions of the library. To create an instance:
+The [`BroSDK`](https://releases-latest.xlink-sdk.pages.dev/classes/index.BroSDK) class provides the core functions of the library. To create an instance:
 
-```typescript
-import { BroSDK } from "@brotocol-xyz/bro-sdk"
-const sdk = new BroSDK()
+```ts
+import { BroSDK } from "@brotocol-xyz/bro-sdk";
+const sdk = new BroSDK();
 ```
 
 For the full API reference, including a full list of available methods and their usage, visit the [SDK Documentation](https://releases-latest.xlink-sdk.pages.dev).
 
-### Supported Blockchains and Tokens
+### Supported Chains
 
-#### [`KnownChainId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownChainId)
+The [`KnownChainId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownChainId) namespace defines types and utility functions for all supported mainnet and testnet networks, ensuring only valid chains can be used within the SDK. Whenever referring to a chain, always use the types provided by the SDK.
 
-Defines types and utility functions for supported networks, ensuring only valid chain IDs are used within the SDK.
+Usage example:
+
+```ts
+import { KnownChainId } from "@brotocol-xyz/bro-sdk";
+
+// Bitcoin
+const bitcoinChainId = KnownChainId.Bitcoin.Mainnet; 
+const bitcoinTestnetChainId = KnownChainId.Bitcoin.Testnet;
+
+// EVM
+const ethereumChainId = KnownChainId.EVM.Ethereum; 
+const ethereumTestnetChainId = KnownChainId.EVM.Sepolia;
+
+// Utility function usage example
+KnownChainId.isEVMTestnetChain(KnownChainId.EVM.Sepolia); // Returns true
+KnownChainId.isEVMMainnetChain(KnownChainId.EVM.Sepolia); // Returns false
+```
+
+#### Mainnet Chains
+
+- **Bitcoin**, **Runes** & **BRC20**
+- **Stacks**
+- **EVM**: Ethereum, BSC, CoreDAO, Bsquared, BOB, Bitlayer, Lorenzo, Merlin, AILayer, Mode, XLayer, Arbitrum, Aurora, Manta, Linea, Base
+
+#### Testnet Chains
+
+- **Bitcoin**, **Runes** & **BRC20**
+- **Stacks**
+- **EVM**: Sepolia, BSC Testnet, CoreDAO Testnet, Blife Testnet, Bitboy Testnet, Bera Testnet
+
+> [!NOTE]
+> Runes and BRC20 metaprotocols are treated as distinct chains within the SDK, even though they share Bitcoin as the underlying blockchain.
+
+<!-- 
+Decided to remove the table as it seemed a little bulky for the README. But left it here for future reference.
+
+#### Available chains
 
 | Namespace | Mainnet                                                                                                                                                       | Testnet                                                                                   |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| :---------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------: |
 | Bitcoin | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
 | Runes | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
 | BRC20 | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
 | Stacks  | `Mainnet`                                                                                                                                                     | `Testnet`                                                                                 |
-| EVM     | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`, `Merlin`, `AILayer`, `Mode`, `XLayer`, `Arbitrum`, `Aurora`, `Manta`, `Linea`, `Base` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BlifeTestnet`, `BitboyTestnet`, `BeraTestnet` |
+| EVM     | `Ethereum`, `BSC`, `CoreDAO`, `Bsquared`, `BOB`, `Bitlayer`, `Lorenzo`, `Merlin`, `AILayer`, `Mode`, `XLayer`, `Arbitrum`, `Aurora`, `Manta`, `Linea`, `Base` | `Sepolia`, `BSCTestnet`, `CoreDAOTestnet`, `BlifeTestnet`, `BitboyTestnet`, `BeraTestnet` | -->
 
-#### [`KnownTokenId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownTokenId)
+### Supported Tokens
 
-Defines types, utility functions, and supported tokens within the SDK.
+Token support is **dynamic**, meaning new tokens can be added without requiring SDK updates. Instead of relying on a static list, the SDK provides methods to fetch supported tokens at runtime.
 
-| Namespace | Tokens                                                                                                                                               |
-| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Bitcoin | `BTC`                                                                                                                                                |
-| Runes   | _To be confirmed_                                                                                                                                   |
-| BRC20   | _To be confirmed_                                                                                                                                   |
-| Stacks  | `sUSDT`, `sLUNR`, `aBTC`, `ALEX`, `sSKO`, `vLiSTX`, `vLiALEX`, `vLiaBTC`,`uBTC`, `DB20`, `DOG`, `STX`, `TRUMP`                                       |
-| EVM     | `USDT`, `sUSDT`, `USDC`, `aBTC`, `WTCB`, `BTCB`, `cbBTC`, `uBTC`, `wuBTC`, `STX`, `vLiSTX`, `ALEX`, `vLiALEX`, `LUNR`, `SKO`, `DB20`, `DOG`, `TRUMP` |
+Check the [`KnownTokenId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownTokenId) namespace to see types and utility functions for all supported tokens.
 
-### Use Cases
+#### Retrieve a `TokenId`
 
-Create an instance of the SDK with default options:
+```ts
+// For BRC20 provide the tick symbol
+const brc20Token = await sdk.brc20TickToBRC20Token(KnownChainId.BRC20.Mainnet, "alex$");
 
-```typescript
-import { BroSDK } from "@brotocol-xyz/bro-sdk"
-const broSdk = new BroSDK()
+// For Runes provide the runes ID
+const runesToken = await sdk.runesIdToRunesToken(KnownChainId.Runes.Mainnet, "500:20");
+
+// For Stacks provide the contract address
+const stacksToken = await sdk.stacksAddressToStacksToken(KnownChainId.Stacks.Mainnet,
+  { deployerAddress: "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK", contractName: "token-abtc" },
+);
+
+// For EVM tokens provide the contract address
+const evmToken = await sdk.evmAddressToEVMToken(KnownChainId.EVM.Ethereum, "0x31761a152F1e96F966C041291644129144233b0B");
 ```
 
-#### Bridge from Stacks
+If a token is **unsupported**, these functions return `Promise<undefined>`.
 
-Use case showcasing a transfer of 100 `sUSDT` from Stacks to `USDT` on Ethereum using BroSDK.
+> [!NOTE]
+> Some Stacks and EVM tokens are still statically defined in `KnownTokenId.Stacks` and `KnownTokenId.EVM` for backward compatibility, but future additions will also be dynamically handled.
 
-```typescript
-import {
-    BridgeFromStacksInput,
-    KnownChainId,
-    KnownTokenId,
-    toSDKNumberOrUndefined,
-} from '@brotocol-xyz/bro-sdk';
-import { serializeCVBytes, makeContractCall, broadcastTransaction } from '@stacks/transactions';
+> [!WARNING]
+>
+> - `TokenId` values **might change in future updates** (no backward compatibility guaranteed), so you should never cache these values: always get fresh `TokenId`s at runtime using the token address/ticker/runeid, as shown above.
+> - Since known tokens might change at any time, never create `TokenIds` manually - always use SDK methods to ensure validity.
 
-// Retrieve bridge information
-const bridgeInfo = await broSdk.bridgeInfoFromStacks({
-  fromChain: KnownChainId.Stacks.Mainnet,
+### Supported Routes
+
+```ts
+// Get all supported routes
+const allRoutes = await sdk.getSupportedRoutes();
+
+// Get all supported routes filtered by source chain
+const routesBySourceChain = await sdk.getSupportedRoutes({ fromChain: KnownChainId.BRC20.Mainnet });
+
+// Get all supported routes filtered by source and target chain
+const routesBySourceAndTargetChain = await sdk.getSupportedRoutes({
+  fromChain: KnownChainId.BRC20.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
-  fromToken: KnownTokenId.Stacks.sUSDT,
-  toToken: KnownTokenId.EVM.USDT,
-  amount: toSDKNumberOrUndefined(100),
 });
 
-console.log("Bridge Info:", bridgeInfo);
+// Check if a specific token pair is supported for at least one route 
+const isSupported = await sdk.isSupportedRoute({
+  fromChain: KnownChainId.BRC20.Mainnet,
+  toChain: KnownChainId.EVM.Ethereum,
+  fromToken: brc20Token as KnownTokenId.BRC20Token,
+  toToken: evmToken as KnownTokenId.EVMToken,
+});
+
+// If the token pair is supported, get all available routes for that pair
+if (isSupported) {
+  const routesByPair = await sdk.getSupportedRoutes({
+    fromChain: KnownChainId.BRC20.Mainnet,
+    toChain: KnownChainId.EVM.Ethereum,
+    fromToken: brc20Token as KnownTokenId.BRC20Token,
+    toToken: evmToken as KnownTokenId.EVMToken,
+  });
+}
+```
+
+### Basic Operations
+
+The SDK provides two main types of methods for handling cross-chain asset transfers.
+
+#### `bridgeInfoFrom****`
+
+Retrieve essential data before performing the cross-chain transfer. Purpose:
+
+- Validate whether the route is supported (throws an error if not).
+- Retrieve Brotocol fee values and calculate the exact amount that will arrive on destination chain.
+
+> [!NOTE]
+> These methods do not check the bridge's min/max amount limits. These checks are enforced on-chain, and the transaction will revert if the amount conditions are not met.
+
+Example:
+
+```ts
+import { toSDKNumberOrUndefined } from "@brotocol-xyz/bro-sdk";
+
+// Retrieve bridge info to perform a transfer from Stacks to EVM
+const bridgeInfo = await sdk.bridgeInfoFromStacks({
+  fromChain: KnownChainId.Stacks.Mainnet,
+  toChain: KnownChainId.EVM.Ethereum,
+  fromToken: stacksToken as KnownTokenId.StacksToken,
+  toToken: evmToken as KnownTokenId.EVMToken,
+  amount: toSDKNumberOrUndefined(100_000_000), // Assume 6 decimals
+});
+```
+
+#### `bridgeFrom****`
+
+Once the route is validated, the cross-chain transfer can be initiated. These methods **construct and submit** the transaction on the source chain.
+
+> [!IMPORTANT]
+> The SDK does not broadcast transactions—it provides the data required to sign and send them. The `sendTransaction` function parameter must be implemented by the developer using their preferred web3 library. The SDK provides the necessary arguments, including contract addresses, function to call and call data.
+
+### Bridge From Stacks
+
+```ts
+import { BridgeFromStacksInput, toSDKNumberOrUndefined, KnownChainId, KnownTokenId } from "@brotocol-xyz/bro-sdk";
+import { makeContractCall, broadcastTransaction } from "@stacks/transactions";
 
 // Define bridge operation input
 const bridgeFromStacksInput: BridgeFromStacksInput = {
   fromChain: KnownChainId.Stacks.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
-  fromToken: KnownTokenId.Stacks.sUSDT,
-  toToken: KnownTokenId.EVM.USDT,
-  fromAddress: /* Sender Stacks principal */,
-  toAddress: /* Receiver EVM address */,
+  fromToken: stacksToken as KnownTokenId.StacksToken,
+  toToken: evmToken as KnownTokenId.EVMToken,
+  // Sender Stacks principal
+  fromAddress: "SP2ZD731ANQZT6J4K3F5N8A40ZXWXC1XFXHVVQFKE",
+  // Receiver EVM address
+  toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
   amount: toSDKNumberOrUndefined(100),
-  sendTransaction: async (tx: ContractCallOptions) => {
+  sendTransaction: async tx => {
     /**
      * Implementation for sending transaction on Stacks mainnet.
-     * Refer to: https://github.com/hirosystems/stacks.js/tree/main/packages/transactions#smart-contract-function-call
+     * Refer to:
+     *   - https://github.com/hirosystems/stacks.js/tree/main/packages/transactions#smart-contract-function-call
+     *   - https://stacks.js.org/functions/_stacks_transactions.makeContractCall
+     *   - https://stacks.js.org/functions/_stacks_transactions.broadcastTransaction
      */
     const transaction = await makeContractCall({
       contractAddress: tx.contractAddress,
       contractName: tx.contractName,
       functionName: tx.functionName,
       functionArgs: tx.functionArgs,
-      postConditions: /* Add post conditions if necessary */,
+      postConditions: [] /* Add post conditions */,
       validateWithAbi: true,
-      senderKey: /* Sender private key */,
+      senderKey: "b244296d5907de9864c0b0d51f98a13c52890be0404e83f273144cd5b9960eed01",
       network: "mainnet",
     });
 
-    const broadcastResponse = await broadcastTransaction(transaction, "mainnet");
+    const broadcastResponse = await broadcastTransaction({ transaction, network: "mainnet" });
     return { txid: broadcastResponse.txid };
-  },
-};
-
-// Example of how a `sendTransaction` argument would look like
-const contractCallOptionsExample: ContractCallOptions = {
-  contractAddress: "SP2XD7417HGPRTREMKF748VNEQPDRR0RMANB7X1NK",
-  contractName: "cross-peg-out-endpoint-v2-01",
-  functionName: "transfer-to-unwrap",
-  functionArgs: [].map(arg => serializeCVBytes(arg)), // Array elements must be Clarity values
+  };
 };
 
 // Perform the bridge operation
-const result = await broSdk.bridgeFromStacks(bridgeFromStacksInput);
-console.log("Transaction ID:", result.txid);
+const result = await sdk.bridgeFromStacks(bridgeFromStacksInput);
+console.log("Stacks Transaction ID:", result.txid);
 ```
 
-#### Bridge from EVM
+### Bridge From EVM
 
-Use case showcasing a transfer of 100 `USDT` from Ethereum to `UsSDT` on Stacks using BroSDK.
+> [!IMPORTANT]
+> Before initiating a bridge transaction, ensure that you have approved the Bridge Endpoint contract to spend `amount` tokens from `fromAddress`. Without this approval, the transaction will fail.
 
-```typescript
-import {
-  BridgeFromEVMInput,
-  KnownChainId,
-  KnownTokenId,
-  toSDKNumberOrUndefined,
-} from "@brotocol-xyz/bro-sdk"
+```ts
+import { BridgeFromEVMInput, EVMAddress, SDKNumber, KnownChainId, KnownTokenId } from "@brotocol-xyz/bro-sdk";
+// Choose your preferred web3 lib here
 import { ethers } from "ethers";
-  
-// Retrieve bridge information
-const bridgeInfo = await broSdk.bridgeInfoFromEVM({
-  fromChain: KnownChainId.EVM.Ethereum,
-  toChain: KnownChainId.Stacks.Mainnet,
-  fromToken: KnownTokenId.EVM.USDT,
-  toToken: KnownTokenId.Stacks.sUSDT,
-  amount: toSDKNumberOrUndefined(100),
-});
 
-console.log("Bridge Info:", bridgeInfo);
-  
 // Example signer setup using ethers.js
-const provider = new ethers.providers.JsonRpcProvider("https://mainnet.someprovider.io/YOUR_PROJECT_ID");
-const signer = new ethers.Wallet("SENDER_PRIVATE_KEY", provider);
+const provider = new ethers.JsonRpcProvider("https://mainnet.someprovider.io/YOUR_PROJECT_ID");
+const signer = new ethers.Wallet("000000000000000000000000000000000000000000000000000000000000002d", provider);
+const signerAddress = signer.address as `0x${string}`;
 
 const bridgeFromEVMInput: BridgeFromEVMInput = {
   fromChain: KnownChainId.EVM.Ethereum,
   toChain: KnownChainId.Stacks.Mainnet,
-  fromToken: KnownTokenId.EVM.USDT,
-  toToken: KnownTokenId.Stacks.sUSDT,
-  fromAddress: /* Sender EVM address */,
-  toAddress: /* Receiver Stacks principal */,
+  fromToken: evmToken as KnownTokenId.EVMToken,
+  toToken: stacksToken as KnownTokenId.StacksToken,
+  // Sender Ethereum address
+  fromAddress: signerAddress,
+  // Receiver Stacks principal
+  toAddress: "SP2ZD731ANQZT6J4K3F5N8A40ZXWXC1XFXHVVQFKE",
   amount: toSDKNumberOrUndefined(100),
-  sendTransaction: async (tx: 
-    {
-      from: EVMAddress /* Sender EVM address */
-      to: EVMAddress /* Bridge Endpoint address */
-      data: Uint8Array /* Transaction data */
-      recommendedGasLimit: SDKNumber /* Recommended gas limit */
-      value?: SDKNumber /* Transaction value */
-    }
-  ): Promise<{ txHash: string }> => {
+  sendTransaction: async (tx: {
+    from: EVMAddress; // Sender Ethereum address
+    to: EVMAddress; // Bridge Endpoint address
+    data: Uint8Array;
+    recommendedGasLimit: SDKNumber;
+    value?: SDKNumber;
+  }): Promise<{ txHash: string }> => {
     /**
      * Implementation for sending transaction on Ethereum mainnet
-     * See https://docs.ethers.org/v5/api/contract/contract/ for reference
+     * See https://docs.ethers.org/v6/ for reference
      */
     const txRequest = {
-    from: tx.from,
-    to: tx.to,
-    data: ethers.utils.hexlify(tx.data),
-    gasLimit: ethers.BigNumber.from(tx.recommendedGasLimit.split(" ")[0]), // Convert string to BigNumber
+      from: tx.from,
+      to: tx.to,
+      data: ethers.hexlify(tx.data),
+      // Convert SDKNumber into BigNumber
+      gasLimit: ethers.toBigInt(tx.recommendedGasLimit.split(" ")[0]), 
     };
 
     const sentTx = await signer.sendTransaction(txRequest);
     const receipt = await sentTx.wait();
-    return { txHash: receipt.transactionHash };
+    if (receipt === null) throw new Error("Transaction receipt is null");
+    return { txHash: receipt.hash };
   },
 };
-  
+
 // Perform the bridge operation
-const result = await broSdk.bridgeFromEVM(bridgeFromEVMInput);
-console.log("Transaction ID:", result.txHash);
+const result = await sdk.bridgeFromEVM(bridgeFromEVMInput);
+console.log("Ethereum Transaction ID:", result.txHash);
 ```
 
-#### Bridge from Bitcoin
+### Bridge From Bitcoin
 
-Use case showcasing a transfer of 1 `BTC` from Bitcoin to `WBTC` on Ethereum using BroSDK.
+The following functions must be implemented by developer:
 
-```typescript
+- `reselectSpendableUTXOs`: Selects UTXOs from the sender wallet.
+- `signPsbt`: Signs the PSBT (Partially Signed Bitcoin Transaction).
+- `sendTransaction`: Broadcasts the final transaction to the Bitcoin network.
+
+```ts
+import { BridgeFromBitcoinInput, KnownChainId, KnownTokenId } from "@brotocol-xyz/bro-sdk";
 import {
-  BridgeFromBitcoinInput,
-  KnownChainId,
-  KnownTokenId,
-  toSDKNumberOrUndefined,
-} from "@brotocol-xyz/bro-sdk"
-/* Use your preferred Bitcoin libs here */
-import { Psbt, networks, Transaction, script } from "bitcoinjs-lib";
+  GetConfirmedSpendableUTXOFn,
+  reselectSpendableUTXOsFactory,
+  UTXOBasic,
+} from "@brotocol-xyz/bro-sdk/bitcoinHelpers";
 import { ECPairFactory } from "ecpair";
-import * as tinysecp from "tiny-secp256k1";
+import { Psbt, payments, Signer, networks } from "bitcoinjs-lib";
 import axios from "axios";
+import { randomBytes } from "crypto";
+import * as ecc from "tiny-secp256k1";
 
-// Retrieve bridge information
-const bridgeInfo = await broSdk.bridgeInfoFromBitcoin({
-  fromChain: KnownChainId.Bitcoin.Mainnet,
-  toChain: KnownChainId.EVM.Ethereum,
-  fromToken: KnownTokenId.Bitcoin.BTC,
-  toToken: KnownTokenId.EVM.WBTC,
-  amount: toSDKNumberOrUndefined(1),
+const rng = (size?: number) => {
+  const buffer = randomBytes(size || 0);
+  return Buffer.from(buffer);
+};
+
+// Create ECPair instance
+const ECPair = ECPairFactory(ecc);
+
+// Generate a new random key pair
+const keyPair = ECPair.makeRandom({ rng });
+
+// Get sender address and scriptPubKey
+const { address: senderAddress, output: scriptPubKey } = payments.p2wpkh({
+  pubkey: Buffer.from(keyPair.publicKey),
+  network: networks.bitcoin,
 });
 
-console.log("Bridge Info:", bridgeInfo)
+// Select UTXOs to spend
+const reselectSpendableUTXOs: BridgeFromBitcoinInput["reselectSpendableUTXOs"] =
+  async (satsToSend, lastTimeSelectedUTXOs) => {
+    /**
+     * This function should fetch UTXOs from a Bitcoin node or API.
+     * Replace the placeholder logic below with your actual UTXO source.
+     */
+    const availableUTXOs: UTXOBasic[] = [];
+    const getUTXOSpendable: GetConfirmedSpendableUTXOFn = async (
+      utxo: UTXOBasic,
+    ) => {
+      // Placeholder for implementation - It should return a valid UTXOSpendable & UTXOConfirmed object
+      return undefined; 
+    };
+
+    // Create the reselect function with factory helper
+    const reselectFn = reselectSpendableUTXOsFactory(
+      availableUTXOs,
+      getUTXOSpendable,
+    );
+
+    return reselectFn(satsToSend, lastTimeSelectedUTXOs);
+  };
+
+// Sign a Bitcoin PSBT
+const signPsbt: BridgeFromBitcoinInput["signPsbt"] = async tx => {
+  /**
+   * Implementation example for signing a Bitcoin PSBT (Partially Signed Bitcoin Transaction)
+   */
+  const signer: Signer = {
+    publicKey: Buffer.from(keyPair.publicKey),
+    sign: hash => Buffer.from(keyPair.sign(hash)),
+  };
+  const psbt = Psbt.fromBuffer(Buffer.from(tx.psbt));
+  tx.signInputs.forEach(index => {
+    psbt.signInput(index, signer);
+  });
+  psbt.finalizeAllInputs();
+  return { psbt: psbt.toBuffer() };
+};
+
+// Broadcast the signed transaction 
+const sendTransaction: BridgeFromBitcoinInput["sendTransaction"] = async tx => {
+  /**
+   * Implementation example for broadcasting a Bitcoin transaction with Axios
+   */
+  const response = await axios.post("https://blockstream.info/api/tx", tx.hex, {
+    headers: { "Content-Type": "text/plain" },
+  });
+  return { txid: response.data };
+};
 
 const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
   fromChain: KnownChainId.Bitcoin.Mainnet,
   fromToken: KnownTokenId.Bitcoin.BTC,
   toChain: KnownChainId.EVM.Ethereum,
-  toToken: KnownTokenId.EVM.WBTC,
-  fromAddress: /* Sender Bitcoin address */,
-  toAddress: /* Receiver EVM address */,
+  toToken: evmToken as KnownTokenId.EVMToken,
+  fromAddressScriptPubKey: scriptPubKey!,
+  fromAddress: senderAddress!,
+  toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
   amount: toSDKNumberOrUndefined(1),
   networkFeeRate: 10n,
-  reselectSpendableUTXOs: async (
-    satsToSend: bigint,
-    pinnedUTXOs: UTXOSpendable[],
-    lastTimeSelectedUTXOs: UTXOSpendable[]
-  ): Promise<UTXOSpendable[]> => {
-    /**
-     * Implementation for selecting spendable UTXOs from the wallet
-     * This should fetch available UTXOs from a Bitcoin node or explorer API
-     */
-    return [];
-  },
-  signPsbt: async (tx: { psbt: Uint8Array; signInputs: number[] }): Promise<{ psbt: Uint8Array }> => {
-    /**
-     * Implementation for signing a Bitcoin PSBT (Partially Signed Bitcoin Transaction)
-     * See https://github.com/bitcoinjs/bitcoinjs-lib for reference
-     */
-    let psbt = Psbt.fromBuffer(tx.psbt);
-    tx.signInputs.forEach((index) => {
-      psbt.signInput(index, keyPair);
-    });
-    psbt.finalizeAllInputs();
-    return { psbt: psbt.toBuffer() };
-  },
-  sendTransaction: async (tx: { hex: string }): Promise<{ txid: string }> => {
-    /**
-     * Implementation for broadcasting a Bitcoin transaction with Axios
-     * Using a Bitcoin node or explorer API (e.g., Blockstream API)
-     */
-    const response = await axios.post("https://some-mempool/api/tx", tx.hex, {
-      headers: { "Content-Type": "text/plain" },
-    });
-    return { txid: response.data };
-  },
+  reselectSpendableUTXOs,
+  signPsbt,
+  sendTransaction,
 };
 
 // Perform the bridge operation
-const result = await broSdk.bridgeFromBitcoin(bridgeFromBitcoinInput);
-console.log("Transaction ID:", result.txid);
+const result = await sdk.bridgeFromBitcoin(bridgeFromBitcoinInput);
+console.log("Bitcoin Transaction ID:", result.txid);
 ```
+
+### Bridge From BRC20
+
+Comming soon.
+
+<!-- The following functions must be implemented by developer:
+
+- `reselectSpendableNetworkFeeUTXOs`: Selects UTXOs from the sender wallet.
+- `signPsbt`: Signs the PSBT (Partially Signed Bitcoin Transaction).
+- `sendTransaction`: Broadcasts the final transaction to the Bitcoin network. -->
+
+### Bridge From Runes
+
+Comming soon.
