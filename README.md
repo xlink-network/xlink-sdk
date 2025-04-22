@@ -4,6 +4,22 @@
 
 🐙 **Brotocol isn't just a bridge—it's the liquidity layer for Bitcoin and the essential connector for Bitcoin DeFi** 🐙
 
+## Table of Contents
+
+- [Features](#features)
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Supported Chains](#supported-chains)
+  - [Supported Tokens](#supported-tokens)
+  - [Supported Routes](#supported-routes)
+  - [Basic Operations](#basic-operations)
+  - [Bridge From Stacks](#bridge-from-stacks)
+  - [Bridge From EVM](#bridge-from-evm)
+  - [Bridge From Bitcoin](#bridge-from-bitcoin)
+  - [Bridge From BRC20](#bridge-from-brc20)
+  - [Bridge From Runes](#bridge-from-runes)
+- [API reference](https://releases-latest.xlink-sdk.pages.dev)
+
 ## Features
 
 - Asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains
@@ -152,11 +168,15 @@ if (isSupported) {
 
 ### Basic Operations
 
-The SDK provides two main types of methods for handling cross-chain asset transfers.
+The SDK provides three main types of methods for handling cross-chain asset transfers.
+
+- [`bridgeInfoFrom****`](#bridgeinfofrom)
+- [`estimateBridgeTransactionFrom****`](#estimatebridgetransactionfrom)
+- [`bridgeFrom****`](#bridgefrom)
 
 #### `bridgeInfoFrom****`
 
-Retrieve essential data before performing the cross-chain transfer. Purpose:
+Retrieves essential data before performing the cross-chain transfer. Purpose:
 
 - Validate whether the route is supported (throws an error if not).
 - Retrieve Brotocol fee values and calculate the exact amount that will arrive on destination chain.
@@ -178,6 +198,20 @@ const bridgeInfo = await sdk.bridgeInfoFromStacks({
   amount: toSDKNumberOrUndefined(100_000_000), // Assume 6 decimals
 });
 ```
+
+#### `estimateBridgeTransactionFrom****`
+
+Estimates the transaction fee and virtual size (vbytes) for bridging from Bitcoin-based networks (Bitcoin, Runes, BRC20). Fees are calculated as:
+
+```any
+fee = virtualSize [vbytes] × networkFeeRate [sat/vbyte]
+```
+
+`networkFeeRate` is provided by dev. Typical fee rates range from 1–100 sat/vbyte, depending on network congestion and desired confirmation speed. See this [reference](https://learnmeabitcoin.com/technical/transaction/size/) for more on transaction size.
+
+**Why is this important?** Miners prioritize transactions with higher fees per vbyte. Accurately estimating the transaction virtual size allows to set an appropriate fee, so the transaction is confirmed in a timely manner.
+
+See the [Bridge From Bitcoin](#bridge-from-bitcoin) section for usage example.
 
 #### `bridgeFrom****`
 
@@ -384,6 +418,20 @@ const sendTransaction: BridgeFromBitcoinInput["sendTransaction"] = async tx => {
   });
   return { txid: response.data };
 };
+
+// Estimate transaction fee and virtual size before performing the bridge operation
+const estimateTransaction = await sdk.estimateBridgeTransactionFromBitcoin({
+  fromChain: KnownChainId.Bitcoin.Mainnet,
+  fromToken: KnownTokenId.Bitcoin.BTC,
+  toChain: KnownChainId.EVM.Ethereum,
+  toToken: evmToken as KnownTokenId.EVMToken,
+  fromAddressScriptPubKey: scriptPubKey!,
+  fromAddress: senderAddress!,
+  toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
+  amount: toSDKNumberOrUndefined(1),
+  networkFeeRate: 10n, // Expressed in satoshis per virtual byte (sat/vbyte).
+  reselectSpendableUTXOs: reselectSpendableUTXOs,
+});
 
 const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
   fromChain: KnownChainId.Bitcoin.Mainnet,

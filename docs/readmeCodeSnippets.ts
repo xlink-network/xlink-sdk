@@ -285,7 +285,8 @@ const sendTransaction: BridgeFromBitcoinInput["sendTransaction"] = async tx => {
   return { txid: response.data };
 };
 
-const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
+// Estimate transaction fee and virtual size before performing the bridge operation
+const estimateTransaction = await sdk.estimateBridgeTransactionFromBitcoin({
   fromChain: KnownChainId.Bitcoin.Mainnet,
   fromToken: KnownTokenId.Bitcoin.BTC,
   toChain: KnownChainId.EVM.Ethereum,
@@ -295,6 +296,19 @@ const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
   toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
   amount: toSDKNumberOrUndefined(1),
   networkFeeRate: 10n,
+  reselectSpendableUTXOs: reselectSpendableUTXOs,
+});
+
+const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
+  fromChain: KnownChainId.Bitcoin.Mainnet,
+  fromToken: KnownTokenId.Bitcoin.BTC,
+  toChain: KnownChainId.EVM.Ethereum,
+  toToken: evmToken as KnownTokenId.EVMToken,
+  fromAddressScriptPubKey: scriptPubKey!,
+  fromAddress: senderAddress!,
+  toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
+  amount: toSDKNumberOrUndefined(1),
+  networkFeeRate: 10n, // Expressed in satoshis per virtual byte (sat/vbyte).
   reselectSpendableUTXOs,
   signPsbt,
   sendTransaction,
