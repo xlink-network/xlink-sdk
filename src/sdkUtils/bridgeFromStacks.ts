@@ -2,9 +2,6 @@ import * as btc from "@scure/btc-signer"
 import { FungiblePostConditionWire } from "@stacks/transactions"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
-import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   composeTxBro,
   ContractCallOptions,
@@ -12,6 +9,9 @@ import {
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
+import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
+import { isSupportedStacksRoute } from "../stacksUtils/peggingHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   checkRouteValid,
   KnownRoute_FromStacks_ToBitcoin,
@@ -26,6 +26,14 @@ import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
 
+export type BridgeFromStacksInput_ContractCallOptions = ContractCallOptions
+
+export type BridgeFromStacksInput_sendTransactionFn = (
+  tx: BridgeFromStacksInput_ContractCallOptions,
+) => Promise<{
+  txid: string
+}>
+
 export interface BridgeFromStacksInput {
   fromChain: ChainId
   toChain: ChainId
@@ -34,9 +42,7 @@ export interface BridgeFromStacksInput {
   fromAddress: string
   toAddress: string
   amount: SDKNumber
-  sendTransaction: (tx: ContractCallOptions) => Promise<{
-    txid: string
-  }>
+  sendTransaction: BridgeFromStacksInput_sendTransactionFn
 }
 
 export interface BridgeFromStacksOutput {
