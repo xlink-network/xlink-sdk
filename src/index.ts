@@ -6,6 +6,7 @@ export {
   SDKNumber,
   SDKNumberifyNestly,
   toSDKNumberOrUndefined,
+  formatSDKNumber,
   EVMAddress,
   evmNativeCurrencyAddress,
   EVMNativeCurrencyAddress,
