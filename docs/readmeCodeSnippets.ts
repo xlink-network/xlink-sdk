@@ -53,15 +53,15 @@ const evmToken = await sdk.evmAddressToEVMToken(
 
 // Supported routes
 
-// Get all possible routes
+// Get all Brotocol available routes 
 const allRoutes = await sdk.getPossibleRoutes();
 
-// Get all possible routes filtered by source chain
+// Get routes filtered by source chain
 const routesBySourceChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
 });
 
-// Get all possible routes filtered by source and target chain
+// Get routes filtered by source and target chain
 const routesBySourceAndTargetChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
@@ -75,7 +75,7 @@ const isSupported = await sdk.isSupportedRoute({
   toToken: evmToken as KnownTokenId.EVMToken,
 });
 
-// If the token pair is supported, get all available routes for that pair
+// If the token pair is supported, get available routes for that pair
 if (isSupported) {
   const routesByPair = await sdk.getPossibleRoutes({
     fromChain: KnownChainId.BRC20.Mainnet,

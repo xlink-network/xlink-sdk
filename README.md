@@ -25,7 +25,7 @@
 - Asset transfers between Bitcoin, Stacks, and EVM-compatible blockchains
 - Support for Runes and BRC20 metaprotocols
 - Cross-chain swaps and DEX aggregator integrations
-- Designed for flexibility, allowing integration with any Bitcoin and web3 library
+- Flexible design, allowing integration with any Bitcoin and web3 library
 
 ## Installation
 
@@ -48,7 +48,7 @@ For the full API reference, including a full list of available methods and their
 
 ### Supported Chains
 
-The [`KnownChainId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownChainId) namespace defines types and utility functions for all supported mainnet and testnet networks, ensuring only valid chains can be used within the SDK. Whenever referring to a chain, always use the types provided by the SDK.
+The [`KnownChainId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownChainId) namespace defines types and utility functions for all supported mainnet and testnet networks.
 
 Usage example:
 
@@ -98,9 +98,9 @@ Decided to remove the table as it seemed a little bulky for the README. But left
 
 ### Supported Tokens
 
-Token support is **dynamic**, meaning new tokens can be added without requiring SDK updates. Instead of relying on a static list, the SDK provides methods to fetch supported tokens at runtime.
+Token support is **dynamic**, meaning new tokens can be added without requiring SDK updates. Instead of relying on a static list, the SDK provides methods to fetch supported tokens at runtime. Tokens are represented using the `TokenId` type — this is how the library internally handles and identifies tokens.
 
-Check the [`KnownTokenId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownTokenId) namespace to see types and utility functions for all supported tokens.
+Also, check the [`KnownTokenId`](https://releases-latest.xlink-sdk.pages.dev/modules/index.KnownTokenId) namespace to see types and utility functions for all supported tokens.
 
 #### Retrieve a `TokenId`
 
@@ -127,21 +127,20 @@ If a token is **unsupported**, these functions return `Promise<undefined>`.
 
 > [!WARNING]
 >
-> - `TokenId` values **might change in future updates** (no backward compatibility guaranteed), so you should never cache these values: always get fresh `TokenId`s at runtime using the token address/ticker/runeid, as shown above.
-> - Since known tokens might change at any time, never create `TokenIds` manually - always use SDK methods to ensure validity.
+> `TokenId` values **might change in future updates** (no backward compatibility guaranteed). To ensure validity, always get fresh `TokenId`s at runtime using SDK methods—never cache them or construct them manually.
 
-### Supported Routes
+### Available Routes
 
 ```ts
-// Get all possible routes
+// Get all Brotocol available routes 
 const allRoutes = await sdk.getPossibleRoutes();
 
-// Get all possible routes filtered by source chain
+// Get routes filtered by source chain
 const routesBySourceChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
 });
 
-// Get all possible routes filtered by source and target chain
+// Get routes filtered by source and target chain
 const routesBySourceAndTargetChain = await sdk.getPossibleRoutes({
   fromChain: KnownChainId.BRC20.Mainnet,
   toChain: KnownChainId.EVM.Ethereum,
@@ -155,7 +154,7 @@ const isSupported = await sdk.isSupportedRoute({
   toToken: evmToken as KnownTokenId.EVMToken,
 });
 
-// If the token pair is supported, get all available routes for that pair
+// If the token pair is supported, get available routes for that pair
 if (isSupported) {
   const routesByPair = await sdk.getPossibleRoutes({
     fromChain: KnownChainId.BRC20.Mainnet,
@@ -168,23 +167,21 @@ if (isSupported) {
 
 ### Basic Operations
 
-The SDK provides three main types of methods for handling cross-chain asset transfers.
+The SDK provides three main methods for handling cross-chain asset transfers.
 
-- [`bridgeInfoFrom****`](#bridgeinfofrom)
-- [`estimateBridgeTransactionFrom****`](#estimatebridgetransactionfrom)
-- [`bridgeFrom****`](#bridgefrom)
+- [`bridgeInfoFrom<Chain>`](#bridgeinfofrom-methods)
+- [`estimateBridgeTransactionFrom<Chain>`](#estimatebridgetransactionfrom-methods)
+- [`bridgeFrom<Chain>`](#bridgefrom-methods)
 
-#### `bridgeInfoFrom****`
+#### `bridgeInfoFrom` methods
 
-Retrieves essential data before performing the cross-chain transfer. Purpose:
+Retrieve data to perform a cross-chain transfer:
 
 - Validate whether the route is supported (throws an error if not).
-- Retrieve Brotocol fee values and calculate the exact amount that will arrive on destination chain.
+- Retrieve Brotocol fee values and the exact amount that will arrive on destination chain.
 
 > [!NOTE]
 > These methods do not check the bridge's min/max amount limits. These checks are enforced on-chain, and the transaction will revert if the amount conditions are not met.
-
-Example:
 
 ```ts
 import { toSDKNumberOrUndefined } from "@brotocol-xyz/bro-sdk";
@@ -199,9 +196,9 @@ const bridgeInfo = await sdk.bridgeInfoFromStacks({
 });
 ```
 
-#### `estimateBridgeTransactionFrom****`
+#### `estimateBridgeTransactionFrom` methods
 
-Estimates the transaction fee and virtual size (vbytes) for bridging from Bitcoin-based networks (Bitcoin, Runes, BRC20). Fees are calculated as:
+Estimate the transaction fee and virtual size (vbytes) for bridging from Bitcoin-based networks (Bitcoin, Runes, BRC20). Fees are calculated as:
 
 ```any
 fee = virtualSize [vbytes] × networkFeeRate [sat/vbyte]
@@ -213,7 +210,7 @@ fee = virtualSize [vbytes] × networkFeeRate [sat/vbyte]
 
 See the [Bridge From Bitcoin](#bridge-from-bitcoin) section for usage example.
 
-#### `bridgeFrom****`
+#### `bridgeFrom` methods
 
 Once the route is validated, the cross-chain transfer can be initiated. These methods **construct and submit** the transaction on the source chain.
 
