@@ -275,3 +275,7 @@ const bridgeFromBitcoinInput: BridgeFromBitcoinInput = {
 const result = await broSdk.bridgeFromBitcoin(bridgeFromBitcoinInput);
 console.log("Transaction ID:", result.txid);
 ```
+
+## License
+
+This project is licensed under the terms of the [MIT license](LICENSE).
