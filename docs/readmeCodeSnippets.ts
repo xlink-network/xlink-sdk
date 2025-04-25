@@ -320,7 +320,51 @@ console.log("Bitcoin Transaction ID:", result3.txid);
 
 // Bridge From BRC20
 
-import { BridgeFromBRC20Input } from "../src/index";
+import { BridgeFromBRC20Input } from "../src/index"
+
+// Select UTXOs to spend
+const reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input["reselectSpendableNetworkFeeUTXOs"] =
+  async (satsToSend, lastTimeSelectedUTXOs) => {
+    // Example of available UTXOs from a Bitcoin node or API
+    const availableUTXOs: UTXOBasic[] = [
+      {
+        txId: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        index: 0,
+        amount: 5000n,
+      },
+      {
+        txId: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        index: 1,
+        amount: 3000n,
+      },
+      {
+        txId: "7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456",
+        index: 2,
+        amount: 2000n,
+      },
+    ]
+
+    // Function to convert basic UTXOs to spendable UTXOs with scriptPubKey
+    const getUTXOSpendable: GetConfirmedSpendableUTXOFn = async (
+      utxo: UTXOBasic,
+    ) => {
+      // For this example, we'll create a simple UTXOSpendable object
+      return {
+        ...utxo,
+        scriptPubKey: scriptPubKey!,
+        addressType: "p2wpkh",
+        blockHeight: 800000n, // Example block height
+      }
+    }
+
+    // Create the reselect function with factory helper
+    const reselectFn = reselectSpendableUTXOsFactory(
+      availableUTXOs,
+      getUTXOSpendable,
+    )
+
+    return reselectFn(satsToSend, lastTimeSelectedUTXOs)
+  }
 
 const bridgeFromBRC20Input: BridgeFromBRC20Input = {
   fromChain: KnownChainId.BRC20.Mainnet,
@@ -330,15 +374,154 @@ const bridgeFromBRC20Input: BridgeFromBRC20Input = {
   fromAddress: senderAddress!,
   fromAddressScriptPubKey: scriptPubKey!,
   toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
-  inputInscriptionUTXO: /** Hasta acá llegué :( */,
+  inputInscriptionUTXO: {
+    txId: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    index: 0,
+    amount: 1000n,
+    scriptPubKey: scriptPubKey!,
+    addressType: "p2wpkh",
+  },
   networkFeeRate: 10n,
   reselectSpendableNetworkFeeUTXOs,
   networkFeeChangeAddress: senderAddress!,
   networkFeeChangeAddressScriptPubKey: scriptPubKey!,
-  signPsbt,
+  signPsbt: async tx => {
+    const signer: Signer = {
+      publicKey: Buffer.from(keyPair.publicKey),
+      sign: hash => Buffer.from(keyPair.sign(hash)),
+    }
+    const psbt = Psbt.fromBuffer(Buffer.from(tx.psbt))
+    tx.signBitcoinInputs.forEach(index => {
+      psbt.signInput(index, signer)
+    })
+    tx.signInscriptionInputs.forEach(index => {
+      psbt.signInput(index, signer)
+    })
+    psbt.finalizeAllInputs()
+    return { psbt: psbt.toBuffer() }
+  },
   sendTransaction,
-};
+}
 
 // Perform the bridge operation
-const result4 = await sdk.bridgeFromBRC20(bridgeFromBRC20Input);
-console.log("Bitcoin Transaction ID:", result4.txid);
+const result4 = await sdk.bridgeFromBRC20(bridgeFromBRC20Input)
+console.log("Bitcoin Transaction ID:", result4.txid)
+
+// Bridge From Runes
+
+import { BridgeFromRunesInput, RunesUTXOSpendable } from "../src/index"
+
+// Select UTXOs to spend for network fees
+const reselectSpendableNetworkFeeUTXOsForRunes: BridgeFromRunesInput["reselectSpendableNetworkFeeUTXOs"] =
+  async (satsToSend, lastTimeSelectedUTXOs) => {
+    // Example of available UTXOs from a Bitcoin node or API
+    const availableUTXOs: UTXOBasic[] = [
+      {
+        txId: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        index: 0,
+        amount: 5000n,
+      },
+      {
+        txId: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        index: 1,
+        amount: 3000n,
+      },
+      {
+        txId: "7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456",
+        index: 2,
+        amount: 2000n,
+      },
+    ]
+
+    // Function to convert basic UTXOs to spendable UTXOs with scriptPubKey
+    const getUTXOSpendable: GetConfirmedSpendableUTXOFn = async (
+      utxo: UTXOBasic,
+    ) => {
+      // For this example, we'll create a simple UTXOSpendable object
+      return {
+        ...utxo,
+        scriptPubKey: scriptPubKey!,
+        addressType: "p2wpkh",
+        blockHeight: 800000n, // Example block height
+      }
+    }
+
+    // Create the reselect function with factory helper
+    const reselectFn = reselectSpendableUTXOsFactory(
+      availableUTXOs,
+      getUTXOSpendable,
+    )
+
+    return reselectFn(satsToSend, lastTimeSelectedUTXOs)
+  }
+
+// Example Runes UTXOs
+const runesUTXOs: RunesUTXOSpendable[] = [
+  {
+    txId: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+    index: 0,
+    amount: 1000n,
+    scriptPubKey: scriptPubKey!,
+    addressType: "p2wpkh",
+    runes: [
+      {
+        runeId: "500:20",
+        runeDivisibility: 8,
+        runeAmount: 100000000n, // 1.0 rune
+      },
+    ],
+  },
+]
+
+// Sign a Bitcoin PSBT for Runes
+const signPsbtForRunes: BridgeFromRunesInput["signPsbt"] = async tx => {
+  const signer: Signer = {
+    publicKey: Buffer.from(keyPair.publicKey),
+    sign: hash => Buffer.from(keyPair.sign(hash)),
+  }
+  const psbt = Psbt.fromBuffer(Buffer.from(tx.psbt))
+  tx.signBitcoinInputs.forEach(index => {
+    psbt.signInput(index, signer)
+  })
+  tx.signRunesInputs.forEach(index => {
+    psbt.signInput(index, signer)
+  })
+  psbt.finalizeAllInputs()
+  return { psbt: psbt.toBuffer() }
+}
+
+// Broadcast the signed transaction
+const sendTransactionForRunes: BridgeFromRunesInput["sendTransaction"] =
+  async tx => {
+    const response = await axios.post(
+      "https://blockstream.info/api/tx",
+      tx.hex,
+      {
+        headers: { "Content-Type": "text/plain" },
+      },
+    )
+    return { txid: response.data }
+  }
+
+// Create the bridge input
+const bridgeFromRunesInput: BridgeFromRunesInput = {
+  fromChain: KnownChainId.Runes.Mainnet,
+  fromToken: runesToken as KnownTokenId.RunesToken,
+  toChain: KnownChainId.EVM.Ethereum,
+  toToken: evmToken as KnownTokenId.EVMToken,
+  fromAddress: senderAddress!,
+  fromAddressScriptPubKey: scriptPubKey!,
+  toAddress: "0x31751a152F1e95F966C041291644129144233b0B",
+  amount: toSDKNumberOrUndefined(1), // 1.0 rune
+  inputRuneUTXOs: runesUTXOs,
+  networkFeeRate: 10n,
+  reselectSpendableNetworkFeeUTXOs: reselectSpendableNetworkFeeUTXOsForRunes,
+  networkFeeChangeAddress: senderAddress!,
+  networkFeeChangeAddressScriptPubKey: scriptPubKey!,
+  signPsbt: signPsbtForRunes,
+  sendTransaction: sendTransactionForRunes,
+}
+
+// Perform the bridge operation
+const result5 = await sdk.bridgeFromRunes(bridgeFromRunesInput)
+console.log("Bitcoin Transaction ID:", result5.txid)
