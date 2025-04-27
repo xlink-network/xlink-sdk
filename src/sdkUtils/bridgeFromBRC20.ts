@@ -129,6 +129,10 @@ export interface BridgeFromBRC20Input {
 
 export interface BridgeFromBRC20Output {
   txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }
 
 export async function bridgeFromBRC20(
@@ -592,7 +596,13 @@ async function broadcastBRC20Transaction(
     sendTransaction: BridgeFromBRC20Input["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
-): Promise<{ txid: string }> {
+): Promise<{
+  txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
+}> {
   const pegInAddress = getMetaPegInAddress(info.fromChain, info.toChain)
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
@@ -674,7 +684,10 @@ async function broadcastBRC20Transaction(
     )
   }
 
-  return { txid: delegateBroadcastedTxId }
+  return {
+    txid: delegateBroadcastedTxId,
+    extraOutputs: tx.extraOutputs,
+  }
 }
 
 type ConstructBRC20TransactionInput = PrepareBRC20TransactionInput & {
@@ -703,6 +716,10 @@ async function constructBRC20Transaction(
     index: number
     satsAmount: bigint
   }
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }> {
   const txOptions = await prepareBRC20Transaction(sdkContext, info)
 
@@ -763,6 +780,7 @@ async function constructBRC20Transaction(
   return {
     hex: signedTx.hex,
     revealOutput: txOptions.revealOutput,
+    extraOutputs: txOptions.extraOutputs,
   }
 }
 

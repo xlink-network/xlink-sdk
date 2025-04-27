@@ -140,6 +140,10 @@ export interface BridgeFromRunesInput {
 
 export interface BridgeFromRunesOutput {
   txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }
 
 export async function bridgeFromRunes(
@@ -534,7 +538,13 @@ async function broadcastRunesTransaction(
     sendTransaction: BridgeFromRunesInput["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
-): Promise<{ txid: string }> {
+): Promise<{
+  txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
+}> {
   const pegInAddress = getMetaPegInAddress(info.fromChain, info.toChain)
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
@@ -616,7 +626,10 @@ async function broadcastRunesTransaction(
     )
   }
 
-  return { txid: delegateBroadcastedTxId }
+  return {
+    txid: delegateBroadcastedTxId,
+    extraOutputs: tx.extraOutputs,
+  }
 }
 
 type ConstructRunesTransactionInput = PrepareRunesTransactionInput & {
@@ -645,6 +658,10 @@ async function constructRunesTransaction(
     index: number
     satsAmount: bigint
   }
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }> {
   const txOptions = await prepareRunesTransaction(
     sdkContext,
@@ -709,6 +726,7 @@ async function constructRunesTransaction(
   return {
     hex: signedTx.hex,
     revealOutput: txOptions.revealOutput,
+    extraOutputs: txOptions.extraOutputs,
   }
 }
 

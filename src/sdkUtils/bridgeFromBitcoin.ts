@@ -114,6 +114,10 @@ export interface BridgeFromBitcoinInput {
 
 export interface BridgeFromBitcoinOutput {
   txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }
 
 export async function bridgeFromBitcoin(
@@ -423,7 +427,13 @@ async function broadcastBitcoinTransaction(
     sendTransaction: BridgeFromBitcoinInput["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
-): Promise<{ txid: string }> {
+): Promise<{
+  txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
+}> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
@@ -508,7 +518,10 @@ async function broadcastBitcoinTransaction(
     )
   }
 
-  return { txid: delegateBroadcastedTxId }
+  return {
+    txid: delegateBroadcastedTxId,
+    extraOutputs: tx.extraOutputs,
+  }
 }
 
 type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
