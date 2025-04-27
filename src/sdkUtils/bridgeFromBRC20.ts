@@ -899,6 +899,7 @@ export async function prepareBRC20Transaction(
     pegInOrderDataCausedOffset + (info.bridgeFeeOutput == null ? 0 : 1)
   const hardLinkageCausedOffset =
     bridgeFeeCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
+  const extraOutputsStartOffset = hardLinkageCausedOffset
 
   return {
     ...result,
@@ -927,7 +928,7 @@ export async function prepareBRC20Transaction(
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
     extraOutputs: info.extraOutputs.map((o, i) => ({
-      index: hardLinkageCausedOffset + i,
+      index: extraOutputsStartOffset + i,
       satsAmount: o.satsAmount,
     })),
   }

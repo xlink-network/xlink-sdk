@@ -692,6 +692,7 @@ export async function prepareBitcoinTransaction(
   const pegInBitcoinTokenCausedOffset = pegInOrderDataCausedOffset + 1
   const hardLinkageCausedOffset =
     pegInBitcoinTokenCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
+  const extraOutputsStartOffset = hardLinkageCausedOffset
 
   return {
     ...result,
@@ -708,7 +709,7 @@ export async function prepareBitcoinTransaction(
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
     extraOutputs: info.extraOutputs.map((o, i) => ({
-      index: hardLinkageCausedOffset + i,
+      index: extraOutputsStartOffset + i,
       satsAmount: o.satsAmount,
     })),
   }

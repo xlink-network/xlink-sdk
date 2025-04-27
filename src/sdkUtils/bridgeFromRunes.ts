@@ -868,6 +868,7 @@ export async function prepareRunesTransaction(
   const hardLinkageCausedOffset =
     bridgeFeeCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
   const pegInRuneTokensCausedOffset = hardLinkageCausedOffset + 1
+  const extraOutputsStartOffset = pegInRuneTokensCausedOffset
 
   const runesOpReturnScript = toBitcoinOpReturnScript({
     edicts: [
@@ -970,7 +971,7 @@ export async function prepareRunesTransaction(
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
     extraOutputs: info.extraOutputs.map((o, i) => ({
-      index: hardLinkageCausedOffset + i,
+      index: extraOutputsStartOffset + i,
       satsAmount: o.satsAmount,
     })),
   }
