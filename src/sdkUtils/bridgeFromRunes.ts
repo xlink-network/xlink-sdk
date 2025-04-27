@@ -652,12 +652,17 @@ async function constructRunesTransaction(
     info,
   )
 
+  const recipients =
+    txOptions.changeAmount > 0n
+      ? txOptions.recipients.concat({
+          addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
+          satsAmount: txOptions.changeAmount,
+        })
+      : txOptions.recipients
+
   const tx = createTransaction(
     txOptions.inputs,
-    txOptions.recipients.concat({
-      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
-      satsAmount: txOptions.changeAmount,
-    }),
+    recipients,
     txOptions.opReturnScripts ?? [],
   )
 
@@ -742,6 +747,7 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
  *   * Bridge fee (optional)
  *   * Hard linkage (optional)
  *   * Peg-in Rune tokens
+ *   * ...extra outputs
  *   * BTC change (optional)
  *   * Runestone
  *
@@ -924,6 +930,10 @@ export async function prepareRunesTransaction(
           }),
         ),
       },
+      ...info.extraOutputs.map(o => ({
+        addressScriptPubKey: o.address.scriptPubKey,
+        satsAmount: o.satsAmount,
+      })),
     ],
     changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
