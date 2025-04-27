@@ -89,9 +89,16 @@ export interface BridgeFromBitcoinInput {
   toAddressScriptPubKey?: Uint8Array
 
   amount: SDKNumber
-  networkFeeRate: bigint
   swapRoute?: SwapRoute_WithMinimumAmountsToReceive_Public
+
+  networkFeeRate: bigint
   reselectSpendableUTXOs: BridgeFromBitcoinInput_reselectSpendableUTXOs
+
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
+
   signPsbt: BridgeFromBitcoinInput_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -289,7 +296,12 @@ async function bridgeFromBitcoin_toStacks(
 
   return broadcastBitcoinTransaction(
     sdkContext,
-    { ...info, withHardLinkageOutput: false, swapRoute: info.swapRoute },
+    {
+      ...info,
+      withHardLinkageOutput: false,
+      swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
+    },
     createdOrder,
   )
 }
@@ -331,7 +343,12 @@ async function bridgeFromBitcoin_toEVM(
 
   return broadcastBitcoinTransaction(
     sdkContext,
-    { ...info, withHardLinkageOutput: false, swapRoute: info.swapRoute },
+    {
+      ...info,
+      withHardLinkageOutput: false,
+      swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
+    },
     createdOrder,
   )
 }
@@ -386,7 +403,12 @@ async function bridgeFromBitcoin_toMeta(
 
   return broadcastBitcoinTransaction(
     sdkContext,
-    { ...info, withHardLinkageOutput: true, swapRoute: info.swapRoute },
+    {
+      ...info,
+      withHardLinkageOutput: true,
+      swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
+    },
     createdOrder,
   )
 }
@@ -495,7 +517,6 @@ type ConstructBitcoinTransactionInput = PrepareBitcoinTransactionInput & {
     | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
     | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   signPsbt: BridgeFromBitcoinInput["signPsbt"]
-  pegInAddress: BitcoinAddress
   validateBridgeOrder: (
     pegInTx: Uint8Array,
     revealTx: undefined | Uint8Array,
@@ -511,6 +532,10 @@ async function constructBitcoinTransaction(
     index: number
     satsAmount: bigint
   }
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }> {
   const txOptions = await prepareBitcoinTransaction(sdkContext, info)
 
@@ -565,6 +590,7 @@ async function constructBitcoinTransaction(
   return {
     hex: signedTx.hex,
     revealOutput: txOptions.revealOutput,
+    extraOutputs: txOptions.extraOutputs,
   }
 }
 
@@ -578,6 +604,10 @@ export type PrepareBitcoinTransactionInput = KnownRoute_FromBitcoin & {
   orderData: Uint8Array
   hardLinkageOutput: null | BitcoinAddress
   pegInAddress: BitcoinAddress
+  extraOutputs: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 /**
  * Bitcoin Tx Structure:
@@ -603,6 +633,10 @@ export async function prepareBitcoinTransaction(
       index: number
       satsAmount: bigint
     }
+    extraOutputs: {
+      index: number
+      satsAmount: bigint
+    }[]
   }
 > {
   const bitcoinNetwork =
@@ -642,6 +676,10 @@ export async function prepareBitcoinTransaction(
               satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
             },
           ]),
+      ...info.extraOutputs.map(o => ({
+        addressScriptPubKey: o.address.scriptPubKey,
+        satsAmount: o.satsAmount,
+      })),
     ],
     changeAddressScriptPubKey: info.fromAddressScriptPubKey,
     feeRate: info.networkFeeRate,
@@ -650,20 +688,29 @@ export async function prepareBitcoinTransaction(
     ),
   })
 
+  const pegInOrderDataCausedOffset = 1
+  const pegInBitcoinTokenCausedOffset = pegInOrderDataCausedOffset + 1
+  const hardLinkageCausedOffset =
+    pegInBitcoinTokenCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
+
   return {
     ...result,
     bitcoinNetwork,
     revealOutput: {
-      index: 0,
+      index: pegInOrderDataCausedOffset - 1,
       satsAmount: recipient.satsAmount,
     },
     hardLinkageOutput:
-      info.hardLinkageOutput == null
+      hardLinkageCausedOffset == null
         ? undefined
         : {
-            index: 2,
+            index: hardLinkageCausedOffset - 1,
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
+    extraOutputs: info.extraOutputs.map((o, i) => ({
+      index: hardLinkageCausedOffset + i,
+      satsAmount: o.satsAmount,
+    })),
   }
 }
 

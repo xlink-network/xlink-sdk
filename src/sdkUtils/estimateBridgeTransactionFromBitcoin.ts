@@ -1,4 +1,5 @@
 import {
+  BitcoinAddress,
   getBitcoinHardLinkageAddress,
   getBTCPegInAddress,
 } from "../bitcoinUtils/btcAddresses"
@@ -65,6 +66,11 @@ export interface EstimateBridgeTransactionFromBitcoinInput {
     | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
   networkFeeRate: bigint
   reselectSpendableUTXOs: BridgeFromBitcoinInput_reselectSpendableUTXOs
+
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 
 export interface EstimateBridgeTransactionFromBitcoinOutput {
@@ -187,6 +193,7 @@ async function estimateFromBitcoin_toStacks(
     ...info,
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -227,6 +234,7 @@ async function estimateFromBitcoin_toEVM(
     ...info,
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -281,6 +289,7 @@ async function estimateFromBitcoin_toMeta(
     ...info,
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 

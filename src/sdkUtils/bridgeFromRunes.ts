@@ -120,6 +120,11 @@ export interface BridgeFromRunesInput {
   networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs
 
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
+
   signPsbt: BridgeFromRunesInput_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -336,6 +341,7 @@ async function bridgeFromRunes_toStacks(
       ...info,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -385,6 +391,7 @@ async function bridgeFromRunes_toEVM(
       ...info,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -447,6 +454,7 @@ async function bridgeFromRunes_toBitcoin(
       ...info,
       withHardLinkageOutput: true,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -509,6 +517,7 @@ async function bridgeFromRunes_toMeta(
       ...info,
       withHardLinkageOutput: true,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -718,6 +727,10 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
     satsAmount: BigNumber
   }
   hardLinkageOutput: null | BitcoinAddress
+  extraOutputs: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 /**
  * Bitcoin Tx Structure:
@@ -757,6 +770,10 @@ export async function prepareRunesTransaction(
       index: number
       satsAmount: bigint
     }
+    extraOutputs: {
+      index: number
+      satsAmount: bigint
+    }[]
   }
 > {
   const bitcoinNetwork =
@@ -942,6 +959,10 @@ export async function prepareRunesTransaction(
             index: hardLinkageCausedOffset - 1,
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
+    extraOutputs: info.extraOutputs.map((o, i) => ({
+      index: hardLinkageCausedOffset + i,
+      satsAmount: o.satsAmount,
+    })),
   }
 }
 

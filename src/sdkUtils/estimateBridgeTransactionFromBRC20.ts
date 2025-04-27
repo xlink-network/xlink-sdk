@@ -1,5 +1,8 @@
 import { UTXOSpendable } from "../bitcoinHelpers"
-import { getBitcoinHardLinkageAddress } from "../bitcoinUtils/btcAddresses"
+import {
+  BitcoinAddress,
+  getBitcoinHardLinkageAddress,
+} from "../bitcoinUtils/btcAddresses"
 import { SDK_NAME } from "../bitcoinUtils/constants"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedBRC20Route } from "../metaUtils/peggingHelpers"
@@ -65,6 +68,11 @@ export interface EstimateBridgeTransactionFromBRC20Input {
   networkFeeChangeAddress: string
   networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs
+
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 
 export interface EstimateBridgeTransactionFromBRC20Output {
@@ -203,6 +211,7 @@ async function estimateFromBRC20_toStacks(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -246,6 +255,7 @@ async function estimateFromBRC20_toEVM(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -303,6 +313,7 @@ async function estimateFromBRC20_toBitcoin(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -360,6 +371,7 @@ async function estimateFromBRC20_toMeta(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
