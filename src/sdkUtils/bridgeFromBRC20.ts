@@ -723,12 +723,17 @@ async function constructBRC20Transaction(
 }> {
   const txOptions = await prepareBRC20Transaction(sdkContext, info)
 
+  const recipients =
+    txOptions.changeAmount > 0n
+      ? txOptions.recipients.concat({
+          addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
+          satsAmount: txOptions.changeAmount,
+        })
+      : txOptions.recipients
+
   const tx = createTransaction(
     txOptions.inputs,
-    txOptions.recipients.concat({
-      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
-      satsAmount: txOptions.changeAmount,
-    }),
+    recipients,
     txOptions.opReturnScripts ?? [],
   )
 
@@ -812,6 +817,7 @@ export type PrepareBRC20TransactionInput = KnownRoute_FromBRC20 & {
  *   * Peg-in order data
  *   * Bridge fee (optional)
  *   * Hard linkage (optional)
+ *   * ...extra outputs
  *   * BTC change (optional)
  *
  * (with bridge fee example tx) https://mempool.space/testnet/tx/e127a2d3c343675a1cde8ca8d10ae5621b40d309ce44b4f45bedc10499f8d596
