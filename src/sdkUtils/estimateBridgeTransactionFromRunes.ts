@@ -1,4 +1,7 @@
-import { getBitcoinHardLinkageAddress } from "../bitcoinUtils/btcAddresses"
+import {
+  BitcoinAddress,
+  getBitcoinHardLinkageAddress,
+} from "../bitcoinUtils/btcAddresses"
 import { SDK_NAME } from "../bitcoinUtils/constants"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
@@ -66,6 +69,11 @@ export interface EstimateBridgeTransactionFromRunesInput {
   networkFeeChangeAddress: string
   networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs
+
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 
 export interface EstimateBridgeTransactionFromRunesOutput {
@@ -204,6 +212,7 @@ async function estimateFromRunes_toStacks(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -247,6 +256,7 @@ async function estimateFromRunes_toEVM(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -304,6 +314,7 @@ async function estimateFromRunes_toBitcoin(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
@@ -361,6 +372,7 @@ async function estimateFromRunes_toMeta(
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
   })
 }
 
