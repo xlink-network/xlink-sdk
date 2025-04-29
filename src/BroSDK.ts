@@ -151,6 +151,8 @@ export {
 } from "./sdkUtils/bridgeFromRunes"
 export {
   BridgeFromStacksInput,
+  BridgeFromStacksInput_ContractCallOptions,
+  BridgeFromStacksInput_sendTransactionFn,
   BridgeFromStacksOutput,
 } from "./sdkUtils/bridgeFromStacks"
 export {

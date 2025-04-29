@@ -70,8 +70,8 @@
     "@stacks/stacks-blockchain-api-types": "^7.14.1",
     "@types/big.js": "^6.2.2",
     "@types/node": "^22.14.1",
-    "@typescript-eslint/eslint-plugin": "^8.24.0",
-    "@typescript-eslint/parser": "^8.24.0",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
     "eslint": "^9.20.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.3",
@@ -79,7 +79,7 @@
     "tsup": "^8.4.0",
     "tsx": "^4.19.3",
     "typedoc": "^0.27.9",
-    "typescript": "^5.8.2",
-    "vitest": "^3.0.8"
+    "typescript": "^5.8.3",
+    "vitest": "^3.1.2"
   }
 }

@@ -6,19 +6,27 @@
 
 ## Table of Contents
 
-- [Features](#features)
-- [Installation](#installation)
-- [Usage](#usage)
-  - [Supported Chains](#supported-chains)
-  - [Supported Tokens](#supported-tokens)
-  - [Supported Routes](#supported-routes)
-  - [Basic Operations](#basic-operations)
-  - [Bridge From Stacks](#bridge-from-stacks)
-  - [Bridge From EVM](#bridge-from-evm)
-  - [Bridge From Bitcoin](#bridge-from-bitcoin)
-  - [Bridge From BRC20](#bridge-from-brc20)
-  - [Bridge From Runes](#bridge-from-runes)
-- [API reference](https://releases-latest.xlink-sdk.pages.dev)
+- [BroSDK](#brosdk)
+  - [Table of Contents](#table-of-contents)
+  - [Features](#features)
+  - [Installation](#installation)
+  - [Usage](#usage)
+    - [Supported Chains](#supported-chains)
+      - [Mainnet Chains](#mainnet-chains)
+      - [Testnet Chains](#testnet-chains)
+    - [Supported Tokens](#supported-tokens)
+      - [Retrieve a `TokenId`](#retrieve-a-tokenid)
+    - [Available Routes](#available-routes)
+    - [Basic Operations](#basic-operations)
+      - [`bridgeInfoFrom` methods](#bridgeinfofrom-methods)
+      - [`estimateBridgeTransactionFrom` methods](#estimatebridgetransactionfrom-methods)
+      - [`bridgeFrom` methods](#bridgefrom-methods)
+    - [Bridge From Stacks](#bridge-from-stacks)
+    - [Bridge From EVM](#bridge-from-evm)
+    - [Bridge From Bitcoin](#bridge-from-bitcoin)
+    - [Bridge From BRC20](#bridge-from-brc20)
+    - [Bridge From Runes](#bridge-from-runes)
+  - [License](#license)
 
 ## Features
 
@@ -463,3 +471,8 @@ Comming soon.
 ### Bridge From Runes
 
 Comming soon.
+
+
+## License
+
+This project is licensed under the terms of the [MIT license](LICENSE).

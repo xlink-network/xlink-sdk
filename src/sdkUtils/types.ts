@@ -66,6 +66,10 @@ export function toSDKNumberOrUndefined<
   return BigNumber.toString(n) as SDKNumber
 }
 
+export function formatSDKNumber(n: SDKNumber | number | bigint | BigNumber): `${number}` {
+  return toSDKNumberOrUndefined(n) as `${number}`
+}
+
 export type EVMAddress = `0x${string}`
 export const isEVMAddress = isAddress
 
