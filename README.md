@@ -214,7 +214,7 @@ fee = virtualSize [vbytes] × networkFeeRate [sat/vbyte]
 
 **Why is this important?** Miners prioritize transactions with higher fees per vbyte. Accurately estimating the transaction virtual size allows to set an appropriate fee, so the transaction is confirmed in a timely manner.
 
-See the [Bridge From Bitcoin](#bridge-from-bitcoin) section for usage example.
+See the [Bridge From Bitcoin](examples/code-snippets/bridgeFrom/Bitcoin.ts) file for usage example.
 
 #### `bridgeFrom` methods
 
