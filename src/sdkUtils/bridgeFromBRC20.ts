@@ -109,6 +109,11 @@ export interface BridgeFromBRC20Input {
   networkFeeChangeAddress: string
   networkFeeChangeAddressScriptPubKey: Uint8Array
 
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
+
   signPsbt: BridgeFromBRC20Input_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -124,6 +129,10 @@ export interface BridgeFromBRC20Input {
 
 export interface BridgeFromBRC20Output {
   txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }
 
 export async function bridgeFromBRC20(
@@ -395,6 +404,7 @@ async function bridgeFromBRC20_toStacks(
       withHardLinkageOutput: false,
       bridgeFeeOutput,
       swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
   )
@@ -444,6 +454,7 @@ async function bridgeFromBRC20_toEVM(
       withHardLinkageOutput: false,
       bridgeFeeOutput,
       swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
   )
@@ -506,6 +517,7 @@ async function bridgeFromBRC20_toBitcoin(
       withHardLinkageOutput: true,
       bridgeFeeOutput,
       swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
   )
@@ -568,6 +580,7 @@ async function bridgeFromBRC20_toMeta(
       withHardLinkageOutput: true,
       bridgeFeeOutput,
       swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
   )
@@ -583,7 +596,13 @@ async function broadcastBRC20Transaction(
     sendTransaction: BridgeFromBRC20Input["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
-): Promise<{ txid: string }> {
+): Promise<{
+  txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
+}> {
   const pegInAddress = getMetaPegInAddress(info.fromChain, info.toChain)
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
@@ -665,7 +684,10 @@ async function broadcastBRC20Transaction(
     )
   }
 
-  return { txid: delegateBroadcastedTxId }
+  return {
+    txid: delegateBroadcastedTxId,
+    extraOutputs: tx.extraOutputs,
+  }
 }
 
 type ConstructBRC20TransactionInput = PrepareBRC20TransactionInput & {
@@ -694,15 +716,24 @@ async function constructBRC20Transaction(
     index: number
     satsAmount: bigint
   }
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }> {
   const txOptions = await prepareBRC20Transaction(sdkContext, info)
 
+  const recipients =
+    txOptions.changeAmount > 0n
+      ? txOptions.recipients.concat({
+          addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
+          satsAmount: txOptions.changeAmount,
+        })
+      : txOptions.recipients
+
   const tx = createTransaction(
     txOptions.inputs,
-    txOptions.recipients.concat({
-      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
-      satsAmount: txOptions.changeAmount,
-    }),
+    recipients,
     txOptions.opReturnScripts ?? [],
   )
 
@@ -749,6 +780,7 @@ async function constructBRC20Transaction(
   return {
     hex: signedTx.hex,
     revealOutput: txOptions.revealOutput,
+    extraOutputs: txOptions.extraOutputs,
   }
 }
 
@@ -771,6 +803,10 @@ export type PrepareBRC20TransactionInput = KnownRoute_FromBRC20 & {
     satsAmount: BigNumber
   }
   hardLinkageOutput: null | BitcoinAddress
+  extraOutputs: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 /**
  * Bitcoin Tx Structure:
@@ -781,6 +817,7 @@ export type PrepareBRC20TransactionInput = KnownRoute_FromBRC20 & {
  *   * Peg-in order data
  *   * Bridge fee (optional)
  *   * Hard linkage (optional)
+ *   * ...extra outputs
  *   * BTC change (optional)
  *
  * (with bridge fee example tx) https://mempool.space/testnet/tx/e127a2d3c343675a1cde8ca8d10ae5621b40d309ce44b4f45bedc10499f8d596
@@ -807,6 +844,10 @@ export async function prepareBRC20Transaction(
       index: number
       satsAmount: bigint
     }
+    extraOutputs: {
+      index: number
+      satsAmount: bigint
+    }[]
   }
 > {
   const bitcoinNetwork =
@@ -858,6 +899,10 @@ export async function prepareBRC20Transaction(
               satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
             },
           ]),
+      ...info.extraOutputs.map(o => ({
+        addressScriptPubKey: o.address.scriptPubKey,
+        satsAmount: o.satsAmount,
+      })),
     ],
     changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
@@ -872,6 +917,7 @@ export async function prepareBRC20Transaction(
     pegInOrderDataCausedOffset + (info.bridgeFeeOutput == null ? 0 : 1)
   const hardLinkageCausedOffset =
     bridgeFeeCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
+  const extraOutputsStartOffset = hardLinkageCausedOffset
 
   return {
     ...result,
@@ -899,5 +945,9 @@ export async function prepareBRC20Transaction(
             index: hardLinkageCausedOffset - 1,
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
+    extraOutputs: info.extraOutputs.map((o, i) => ({
+      index: extraOutputsStartOffset + i,
+      satsAmount: o.satsAmount,
+    })),
   }
 }

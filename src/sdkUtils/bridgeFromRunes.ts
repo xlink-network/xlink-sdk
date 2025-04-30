@@ -120,6 +120,11 @@ export interface BridgeFromRunesInput {
   networkFeeChangeAddressScriptPubKey: Uint8Array
   reselectSpendableNetworkFeeUTXOs: BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs
 
+  extraOutputs?: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
+
   signPsbt: BridgeFromRunesInput_signPsbtFn
   sendTransaction: (tx: {
     hex: string
@@ -135,6 +140,10 @@ export interface BridgeFromRunesInput {
 
 export interface BridgeFromRunesOutput {
   txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }
 
 export async function bridgeFromRunes(
@@ -336,6 +345,7 @@ async function bridgeFromRunes_toStacks(
       ...info,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -385,6 +395,7 @@ async function bridgeFromRunes_toEVM(
       ...info,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -447,6 +458,7 @@ async function bridgeFromRunes_toBitcoin(
       ...info,
       withHardLinkageOutput: true,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -509,6 +521,7 @@ async function bridgeFromRunes_toMeta(
       ...info,
       withHardLinkageOutput: true,
       bridgeFeeOutput,
+      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
     },
     createdOrder,
@@ -525,7 +538,13 @@ async function broadcastRunesTransaction(
     sendTransaction: BridgeFromRunesInput["sendTransaction"]
   },
   createdOrder: CreateBridgeOrderResult,
-): Promise<{ txid: string }> {
+): Promise<{
+  txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
+}> {
   const pegInAddress = getMetaPegInAddress(info.fromChain, info.toChain)
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
@@ -607,7 +626,10 @@ async function broadcastRunesTransaction(
     )
   }
 
-  return { txid: delegateBroadcastedTxId }
+  return {
+    txid: delegateBroadcastedTxId,
+    extraOutputs: tx.extraOutputs,
+  }
 }
 
 type ConstructRunesTransactionInput = PrepareRunesTransactionInput & {
@@ -636,6 +658,10 @@ async function constructRunesTransaction(
     index: number
     satsAmount: bigint
   }
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
 }> {
   const txOptions = await prepareRunesTransaction(
     sdkContext,
@@ -643,12 +669,17 @@ async function constructRunesTransaction(
     info,
   )
 
+  const recipients =
+    txOptions.changeAmount > 0n
+      ? txOptions.recipients.concat({
+          addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
+          satsAmount: txOptions.changeAmount,
+        })
+      : txOptions.recipients
+
   const tx = createTransaction(
     txOptions.inputs,
-    txOptions.recipients.concat({
-      addressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
-      satsAmount: txOptions.changeAmount,
-    }),
+    recipients,
     txOptions.opReturnScripts ?? [],
   )
 
@@ -695,6 +726,7 @@ async function constructRunesTransaction(
   return {
     hex: signedTx.hex,
     revealOutput: txOptions.revealOutput,
+    extraOutputs: txOptions.extraOutputs,
   }
 }
 
@@ -718,6 +750,10 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
     satsAmount: BigNumber
   }
   hardLinkageOutput: null | BitcoinAddress
+  extraOutputs: {
+    address: BitcoinAddress
+    satsAmount: bigint
+  }[]
 }
 /**
  * Bitcoin Tx Structure:
@@ -729,6 +765,7 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
  *   * Bridge fee (optional)
  *   * Hard linkage (optional)
  *   * Peg-in Rune tokens
+ *   * ...extra outputs
  *   * BTC change (optional)
  *   * Runestone
  *
@@ -757,6 +794,10 @@ export async function prepareRunesTransaction(
       index: number
       satsAmount: bigint
     }
+    extraOutputs: {
+      index: number
+      satsAmount: bigint
+    }[]
   }
 > {
   const bitcoinNetwork =
@@ -845,6 +886,7 @@ export async function prepareRunesTransaction(
   const hardLinkageCausedOffset =
     bridgeFeeCausedOffset + (info.hardLinkageOutput == null ? 0 : 1)
   const pegInRuneTokensCausedOffset = hardLinkageCausedOffset + 1
+  const extraOutputsStartOffset = pegInRuneTokensCausedOffset
 
   const runesOpReturnScript = toBitcoinOpReturnScript({
     edicts: [
@@ -907,6 +949,10 @@ export async function prepareRunesTransaction(
           }),
         ),
       },
+      ...info.extraOutputs.map(o => ({
+        addressScriptPubKey: o.address.scriptPubKey,
+        satsAmount: o.satsAmount,
+      })),
     ],
     changeAddressScriptPubKey: info.networkFeeChangeAddressScriptPubKey,
     feeRate: info.networkFeeRate,
@@ -942,6 +988,10 @@ export async function prepareRunesTransaction(
             index: hardLinkageCausedOffset - 1,
             satsAmount: BITCOIN_OUTPUT_MINIMUM_AMOUNT,
           },
+    extraOutputs: info.extraOutputs.map((o, i) => ({
+      index: extraOutputsStartOffset + i,
+      satsAmount: o.satsAmount,
+    })),
   }
 }
 
