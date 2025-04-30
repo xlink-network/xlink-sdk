@@ -1,6 +1,6 @@
 module.exports = {
   trailingComma: "all",
-  semi: false, // set to true to format docs/readmeCodeSnippets.ts with semicolons
+  semi: false,
   arrowParens: "avoid",
   singleQuote: false,
 }

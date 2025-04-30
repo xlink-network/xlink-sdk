@@ -25,15 +25,11 @@ Open `http://localhost:8080` in your browser to view the documentation.
 
 ## README Code Snippets
 
-Version history of the README code snippets is tracked at [`docs/readmeCodeSnippets.ts`](../docs/readmeCodeSnippets.ts).
-
-### Formatting
-
-To format `docs/readmeCodeSnippets.ts` with semicolons, temporarily set `semi: true` in the `.prettierrc.cjs` file. **Do not commit changes to `.prettierrc.cjs`.**
+Version history of the README code snippets is tracked at [`../examples/code-snippets`](../examples/code-snippets).
 
 ### Dependencies
 
-To read or write `docs/readmeCodeSnippets.ts`, you may need to temporarily install dependencies to ensure code correctness. **Do not commit any changes to `package.json` or `pnpm-lock.yaml`** resulting from these temporary installations.
+To read or write `examples/code-snippets`, you may need to temporarily install dependencies to ensure code correctness. **Do not commit any changes to `package.json` or `pnpm-lock.yaml`** resulting from these temporary installations.
 
 ```bash
 pnpm install -D ethers
