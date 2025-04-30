@@ -47,16 +47,36 @@ const { address: senderAddress, output: scriptPubKey } = payments.p2wpkh({
 // Select UTXOs to spend
 const reselectSpendableUTXOs: BridgeFromBitcoinInput["reselectSpendableUTXOs"] =
   async (satsToSend, lastTimeSelectedUTXOs) => {
-    /**
-     * This function should fetch UTXOs from a Bitcoin node or API.
-     * Replace the placeholder logic below with your actual UTXO source.
-     */
-    const availableUTXOs: UTXOBasic[] = []
+    // Example of available UTXOs from a Bitcoin node or API
+    const availableUTXOs: UTXOBasic[] = [
+      {
+        txId: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
+        index: 0,
+        amount: 5000n,
+      },
+      {
+        txId: "abcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+        index: 1,
+        amount: 3000n,
+      },
+      {
+        txId: "7890abcdef1234567890abcdef1234567890abcdef1234567890abcdef123456",
+        index: 2,
+        amount: 2000n,
+      },
+    ]
+
+    // Function to convert basic UTXOs to spendable UTXOs with scriptPubKey
     const getUTXOSpendable: GetConfirmedSpendableUTXOFn = async (
       utxo: UTXOBasic,
     ) => {
-      // Placeholder for implementation - It should return a valid UTXOSpendable & UTXOConfirmed object
-      return undefined
+      // For this example, we'll create a simple UTXOSpendable object
+      return {
+        ...utxo,
+        scriptPubKey: scriptPubKey!,
+        addressType: "p2wpkh",
+        blockHeight: 800000n, // Example block height
+      }
     }
 
     // Create the reselect function with factory helper
