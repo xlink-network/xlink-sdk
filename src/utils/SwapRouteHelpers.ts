@@ -58,6 +58,7 @@ export interface SwapRouteViaEVMDexAggregator {
   evmChain: KnownChainId.EVMChain
   fromEVMToken: KnownTokenId.EVMToken
   toEVMToken: KnownTokenId.EVMToken
+  expiredAt?: null | Date
 }
 
 export interface SwapRouteViaEVMDexAggregator_WithExchangeRate

@@ -125,6 +125,7 @@ export const metaPegInEndpointV206Agg = defineContract({
         type: tupleT({
           'chain-id': optionalT(uintT, ),
           'dest-chain-id': uintT,
+          expiry: uintT,
           from: bufferT,
           'min-amount-out': optionalT(uintT, ),
           'swap-token-in': principalT,
@@ -147,6 +148,7 @@ export const metaPegInEndpointV206Agg = defineContract({
       'order-details': tupleT({
         'chain-id': optionalT(uintT, ),
         'dest-chain-id': uintT,
+        expiry: uintT,
         from: bufferT,
         'min-amount-out': optionalT(uintT, ),
         'swap-token-in': principalT,
@@ -165,6 +167,7 @@ export const metaPegInEndpointV206Agg = defineContract({
     output: responseSimpleT(tupleT({
       'chain-id': optionalT(uintT, ),
       'dest-chain-id': uintT,
+      expiry: uintT,
       from: bufferT,
       'min-amount-out': optionalT(uintT, ),
       'swap-token-in': principalT,
@@ -278,6 +281,7 @@ export const metaPegInEndpointV206Agg = defineContract({
     output: responseSimpleT(tupleT({
       'amount-in-fixed': uintT,
       'dest-chain-id': uintT,
+      expiry: uintT,
       'fail-settle': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, ),
       'min-amount-out': optionalT(uintT, ),
       'success-settle': tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, ),
