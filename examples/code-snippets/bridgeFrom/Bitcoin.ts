@@ -12,7 +12,7 @@ import {
   toSDKNumberOrUndefined,
   BridgeFromBitcoinInput,
 } from "../../../src/index"
-import { Psbt, payments, Signer, networks } from "bitcoinjs-lib"
+import { Psbt, payments, networks } from "bitcoinjs-lib"
 import axios from "axios"
 
 const sdk = new BroSDK()
@@ -99,6 +99,7 @@ const signPsbt: BridgeFromBitcoinInput["signPsbt"] = async tx => {
   for (const index of tx.signInputs) {
     // Get the input's sighash
     const input = psbt.data.inputs[index]
+    // @ts-ignore
     const sighash = input.sighashType
 
     // Sign the transaction using the mocked signTx function

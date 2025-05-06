@@ -23,9 +23,9 @@ python -m http.server 8080
 
 Open `http://localhost:8080` in your browser to view the documentation.
 
-## README Code Snippets
+## README Examples
 
-Version history of the README code snippets is tracked at [`../examples/code-snippets`](../examples/code-snippets).
+Version history of the README examples is tracked at [`../examples/code-snippets`](../examples/code-snippets).
 
 ### Dependencies
 
@@ -34,7 +34,5 @@ To read or write `examples/code-snippets`, you may need to temporarily install d
 ```bash
 pnpm install -D ethers
 pnpm install -D bitcoinjs-lib
-pnpm install -D ecpair bip32
-pnpm install -D tiny-secp256k1
 pnpm install -D axios
 ```
