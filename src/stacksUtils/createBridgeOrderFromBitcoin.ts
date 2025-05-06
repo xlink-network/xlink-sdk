@@ -345,6 +345,10 @@ async function createBridgeOrderFromBitcoinImpl(
           "swap-token-in": `${swapFromTokenStacksAddress.deployerAddress}.${swapFromTokenStacksAddress.contractName}`,
           "swap-token-out": `${swapToTokenStacksAddress.deployerAddress}.${swapToTokenStacksAddress.contractName}`,
           "token-out": `${tokenOutStacksAddress.deployerAddress}.${tokenOutStacksAddress.contractName}`,
+          expiry:
+            swapInfo.expiredAt == null
+              ? 0n
+              : BigInt(Math.ceil(swapInfo.expiredAt.getTime() / 1000)),
         },
       },
       contractAggCallInfo.executeOptions,

@@ -27,6 +27,7 @@ export const crossPegOutEndpointV201Agg = defineContract({
       { name: 'token-out', type: principalT },
       { name: 'min-amount-out', type: optionalT(uintT, ) },
       { name: 'dest-chain-id', type: uintT },
+      { name: 'expiry', type: uintT },
       {
         name: 'success-settle',
         type: tupleT({ address: bufferT, 'chain-id': optionalT(uintT, ), token: principalT }, )
