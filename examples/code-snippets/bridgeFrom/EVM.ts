@@ -64,7 +64,6 @@ const bridgeFromEVMInput: BridgeFromEVMInput = {
       from: tx.from,
       to: tx.to,
       data: ethers.hexlify(tx.data),
-      // Convert SDKNumber into BigNumber
       gasLimit: formatSDKNumber(tx.recommendedGasLimit),
     }
 
