@@ -16,13 +16,15 @@ export namespace KnownTokenId {
     | RunesToken
     | EVMToken
     | StacksToken
+    | TronToken
   export function isKnownToken(value: TokenId): value is KnownToken {
     return (
       isBitcoinToken(value) ||
       isBRC20Token(value) ||
       isRunesToken(value) ||
       isEVMToken(value) ||
-      isStacksToken(value)
+      isStacksToken(value) ||
+      isTronToken(value)
     )
   }
 
@@ -161,6 +163,17 @@ export namespace KnownTokenId {
   export function isStacksToken(value: TokenId): value is StacksToken {
     return value.startsWith("stx-")
   }
+
+  /** A namespace that contains constants and types for Tron tokens. */
+  export namespace Tron {
+    /** Represents the USDT token ID on the Tron blockchain. */
+    export const USDT = tokenId("tron-usdt")
+  }
+  /** This type defines known tokens on the Tron blockchain. */
+  export type TronToken = (typeof _allKnownTronTokens)[number]
+  export function isTronToken(value: TokenId): value is TronToken {
+    return _allKnownTronTokens.includes(value as any)
+  }
 }
 export const createStacksToken = (
   stacksTokenId: string,
@@ -179,6 +192,7 @@ export const createRunesToken = (
 }
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
+export const _allKnownTronTokens = Object.values(KnownTokenId.Tron)
 
 /**
  * The `KnownChainId` namespace provides types of blockchain networks
@@ -192,13 +206,15 @@ export namespace KnownChainId {
     | RunesChain
     | EVMChain
     | StacksChain
+    | TronChain
   export function isKnownChain(value: ChainId): value is KnownChain {
     return (
       isBitcoinChain(value) ||
       isBRC20Chain(value) ||
       isRunesChain(value) ||
       isEVMChain(value) ||
-      isStacksChain(value)
+      isStacksChain(value) ||
+      isTronChain(value)
     )
   }
 
@@ -379,12 +395,27 @@ export namespace KnownChainId {
   export function isStacksChain(value: ChainId): value is StacksChain {
     return _allKnownStacksChains.includes(value as any)
   }
+
+  /** A namespace that contains constants and types for Tron networks. */
+  export namespace Tron {
+    /** Represents the Tron mainnet chain ID. */
+    export const Mainnet = chainId("tron-mainnet")
+    /** Represents the Tron testnet chain ID. */
+    export const Testnet = chainId("tron-testnet")
+  }
+  /** Represents a Tron blockchain network. */
+  export type TronChain = (typeof _allKnownTronChains)[number]
+  export function isTronChain(value: ChainId): value is TronChain {
+    return _allKnownTronChains.includes(value as any)
+  }
 }
 export const _allKnownBitcoinChains = Object.values(KnownChainId.Bitcoin)
 export const _allKnownRunesChains = Object.values(KnownChainId.Runes)
 export const _allKnownBRC20Chains = Object.values(KnownChainId.BRC20)
 export const _allKnownEVMChains = Object.values(KnownChainId.EVM)
 export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
+export const _allKnownTronChains = Object.values(KnownChainId.Tron)
+
 export const getChainIdNetworkType = (
   chainId: KnownChainId.KnownChain,
 ): "mainnet" | "testnet" => {
@@ -402,6 +433,9 @@ export const getChainIdNetworkType = (
 
   if (chainId === KnownChainId.Runes.Mainnet) return "mainnet"
   if (chainId === KnownChainId.Runes.Testnet) return "testnet"
+
+  if (chainId === KnownChainId.Tron.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Tron.Testnet) return "testnet"
 
   checkNever(chainId)
   return "mainnet"
@@ -461,6 +495,8 @@ export const _knownChainIdToErrorMessagePart = (chainId: ChainId): string => {
     return "Stacks"
   } else if (KnownChainId.isEVMChain(chainId)) {
     return "EVM"
+  } else if (KnownChainId.isTronChain(chainId)) {
+    return "Tron"
   }
 
   checkNever(chainId)
