@@ -13,6 +13,8 @@ import {
   createBridgeOrder_MetaToEVM,
   createBridgeOrder_MetaToMeta,
   createBridgeOrder_MetaToStacks,
+  createBridgeOrder_MetaToSolana,
+  createBridgeOrder_MetaToTron,
 } from "../stacksUtils/createBridgeOrderFromMeta"
 import { BigNumber } from "../utils/BigNumber"
 import {
@@ -21,6 +23,8 @@ import {
   KnownRoute_FromRunes_ToEVM,
   KnownRoute_FromRunes_ToRunes,
   KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromRunes_ToSolana,
+  KnownRoute_FromRunes_ToTron,
   checkRouteValid,
 } from "../utils/buildSupportedRoutes"
 import {
@@ -171,6 +175,32 @@ export async function bridgeFromRunes(
           toToken: route.toToken,
         })
       }
+    } else if (KnownChainId.isSolanaChain(route.toChain)) {
+      if (
+        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isSolanaToken(route.toToken)
+      ) {
+        return bridgeFromRunes_toSolana(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isTronChain(route.toChain)) {
+      if (
+        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isTronToken(route.toToken)
+      ) {
+        return bridgeFromRunes_toTron(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
     } else if (KnownChainId.isBitcoinChain(route.toChain)) {
       if (
         KnownTokenId.isRunesToken(route.fromToken) &&
@@ -211,14 +241,16 @@ export async function bridgeFromRunes(
         })
       }
     } else {
-      assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.RunesChain>())
       checkNever(route)
     }
   } else {
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
-    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.SolanaChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.TronChain>())
     checkNever(route)
   }
 
@@ -533,6 +565,102 @@ async function bridgeFromRunes_toMeta(
       withHardLinkageOutput: true,
       bridgeFeeOutput,
       swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
+    },
+    createdOrder,
+  )
+}
+
+async function bridgeFromRunes_toSolana(
+  sdkContext: SDKGlobalContext,
+  info: Omit<
+    BridgeFromRunesInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    KnownRoute_FromRunes_ToSolana,
+): Promise<BridgeFromRunesOutput> {
+  const swapRoute = info.swapRoute
+
+  const createdOrder = await createBridgeOrder_MetaToSolana(sdkContext, {
+    ...info,
+    fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
+    toSolanaAddress: info.toAddress,
+    swap:
+      swapRoute == null
+        ? undefined
+        : {
+            ...swapRoute,
+            minimumAmountsToReceive: BigNumber.from(
+              swapRoute.minimumAmountsToReceive,
+            ),
+          },
+  })
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
+
+  return broadcastRunesTransaction(
+    sdkContext,
+    {
+      ...info,
+      withHardLinkageOutput: false,
+      bridgeFeeOutput,
+      swapRoute: info.swapRoute,
+      extraOutputs: info.extraOutputs ?? [],
+    },
+    createdOrder,
+  )
+}
+
+async function bridgeFromRunes_toTron(
+  sdkContext: SDKGlobalContext,
+  info: Omit<
+    BridgeFromRunesInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    KnownRoute_FromRunes_ToTron,
+): Promise<BridgeFromRunesOutput> {
+  const swapRoute = info.swapRoute
+
+  const createdOrder = await createBridgeOrder_MetaToTron(sdkContext, {
+    ...info,
+    fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
+    toTronAddress: info.toAddress,
+    swap:
+      swapRoute == null
+        ? undefined
+        : {
+            ...swapRoute,
+            minimumAmountsToReceive: BigNumber.from(
+              swapRoute.minimumAmountsToReceive,
+            ),
+          },
+  })
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
+
+  return broadcastRunesTransaction(
+    sdkContext,
+    {
+      ...info,
+      withHardLinkageOutput: false,
+      bridgeFeeOutput,
+      swapRoute: info.swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,

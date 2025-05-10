@@ -14,6 +14,7 @@ import {
   createBridgeOrder_MetaToBitcoin,
   createBridgeOrder_MetaToEVM,
   createBridgeOrder_MetaToMeta,
+  createBridgeOrder_MetaToSolana,
   createBridgeOrder_MetaToStacks,
 } from "../stacksUtils/createBridgeOrderFromMeta"
 import { BigNumber } from "../utils/BigNumber"
@@ -23,7 +24,9 @@ import {
   KnownRoute_FromRunes_ToBRC20,
   KnownRoute_FromRunes_ToEVM,
   KnownRoute_FromRunes_ToRunes,
+  KnownRoute_FromRunes_ToSolana,
   KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromRunes_ToTron,
 } from "../utils/buildSupportedRoutes"
 import {
   InvalidMethodParametersError,
@@ -144,6 +147,32 @@ export async function estimateBridgeTransactionFromRunes(
           toToken: route.toToken,
         })
       }
+    } else if (KnownChainId.isSolanaChain(route.toChain)) {
+      if (
+        KnownTokenId.isSolanaToken(route.toToken) &&
+        KnownTokenId.isRunesToken(route.fromToken)
+      ) {
+        return estimateFromRunes_toSolana(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isTronChain(route.toChain)) {
+      if (
+        KnownTokenId.isTronToken(route.toToken) &&
+        KnownTokenId.isRunesToken(route.fromToken)
+      ) {
+        return estimateFromRunes_toTron(ctx, {
+          ...info,
+          fromChain: route.fromChain,
+          toChain: route.toChain,
+          fromToken: route.fromToken,
+          toToken: route.toToken,
+        })
+      }
     } else {
       assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
       checkNever(route)
@@ -153,6 +182,8 @@ export async function estimateBridgeTransactionFromRunes(
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.SolanaChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.TronChain>())
     checkNever(route)
   }
 
@@ -410,7 +441,6 @@ async function estimateFromRunes_toMeta(
         swapRoute: info.swapRoute,
       })
     }
-
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,
@@ -429,4 +459,57 @@ async function estimateFromRunes_toMeta(
     extraOutputs: info.extraOutputs ?? [],
     swapRoute: info.swapRoute ?? undefined,
   })
+}
+
+async function estimateFromRunes_toSolana(
+  sdkContext: SDKGlobalContext,
+  info: Omit<
+    EstimateBridgeTransactionFromRunesInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    KnownRoute_FromRunes_ToSolana,
+): Promise<EstimateBridgeTransactionFromRunesOutput> {
+  const createdOrder = await createBridgeOrder_MetaToSolana(sdkContext, {
+    ...info,
+    fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
+    toSolanaAddress: info.toAddress,
+    swap:
+      info.swapRoute == null
+        ? undefined
+        : {
+            ...info.swapRoute,
+            minimumAmountsToReceive: BigNumber.from(
+              info.swapRoute.minimumAmountsToReceive,
+            ),
+          },
+  })
+  if (createdOrder == null) {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+    )
+  }
+
+  const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
+
+  return estimateRunesTransaction(sdkContext, {
+    ...info,
+    orderData: createdOrder.data,
+    withHardLinkageOutput: true,
+    bridgeFeeOutput,
+    extraOutputs: info.extraOutputs ?? [],
+  })
+}
+
+async function estimateFromRunes_toTron(
+  sdkContext: SDKGlobalContext,
+  info: Omit<
+    EstimateBridgeTransactionFromRunesInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    KnownRoute_FromRunes_ToTron,
+): Promise<EstimateBridgeTransactionFromRunesOutput> {
+  throw new Error("WIP")
 }
