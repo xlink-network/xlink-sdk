@@ -1,6 +1,6 @@
 import { Client } from "viem"
+import { EVMOnChainConfigByEVMChain } from "../evmUtils/apiHelpers/getEVMOnChainConfig"
 import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
-import { EVMOnChainAddresses } from "../evmUtils/evmContractAddresses"
 import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
 import { StacksTokenInfo } from "../stacksUtils/apiHelpers/getAllStacksTokens"
@@ -9,7 +9,6 @@ import { pMemoizeImpl } from "../utils/pMemoize"
 import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
 import { TransferProphet } from "../utils/types/TransferProphet"
-import { EVMAddress } from "./types"
 
 export interface SDKGlobalContextCache<K, V>
   extends GeneralCacheInterface<K, V> {}
@@ -82,8 +81,8 @@ export interface SDKGlobalContext {
       Promise<EVMSupportedRoute[]>
     >
     onChainConfigCache?: SDKGlobalContextCache<
-      `${KnownChainId.EVMChain}:${EVMAddress}`,
-      Promise<EVMOnChainAddresses>
+      "mainnet" | "testnet",
+      Promise<EVMOnChainConfigByEVMChain>
     >
     viemClients: Partial<Record<KnownChainId.EVMChain, Client>>
   }

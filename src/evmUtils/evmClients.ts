@@ -24,9 +24,11 @@ import {
   lorenzo,
   xLayer,
 } from "./evmChainInfos"
-import { EVMChain } from "./evmContractAddresses"
 import { KnownChainId } from "../utils/types/knownIds"
 import { entries } from "../utils/objectHelper"
+
+type EVMChain = KnownChainId.EVMChain
+const EVMChain = KnownChainId.EVM
 
 export const defaultEvmClients: Partial<Record<KnownChainId.EVMChain, Client>> =
   {
