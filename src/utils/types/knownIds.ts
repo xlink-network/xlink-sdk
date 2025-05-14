@@ -1,8 +1,35 @@
-import { ChainId, RuneIdCombined, TokenId } from "../../sdkUtils/types"
+import {
+  ChainId,
+  EVMAddress,
+  RuneIdCombined,
+  TokenId,
+} from "../../sdkUtils/types"
 import { checkNever } from "../typeHelpers"
 
 const chainId = <const T extends string>(value: T): ChainId<T> => value as any
 const tokenId = <const T extends string>(value: T): TokenId<T> => value as any
+
+export const createStacksToken = (
+  stacksTokenId: string,
+): KnownTokenId.StacksToken => {
+  return `stx-token-${stacksTokenId}` as any
+}
+export const createBRC20Token = (
+  brc20tick: string,
+): KnownTokenId.BRC20Token => {
+  return `brc20-token-${brc20tick}` as any
+}
+export const createRunesToken = (
+  runeId: RuneIdCombined,
+): KnownTokenId.RunesToken => {
+  return `runes-token-${runeId}` as any
+}
+export const createEVMToken = (
+  evmChain: KnownChainId.EVMChain,
+  evmTokenAddress: EVMAddress,
+): KnownTokenId.EVMToken => {
+  return `evm-token-${evmTokenAddress}(${evmChain})` as any
+}
 
 /**
  * The `KnownTokenId` namespace provides types of tokens supported by the SDK,
@@ -29,7 +56,7 @@ export namespace KnownTokenId {
   /** A namespace that contains constants and types for Bitcoin tokens. */
   export namespace Bitcoin {
     /** Represents the Bitcoin token ID (BTC). */
-    export const BTC = tokenId("btc-btc")
+    export const BTC = tokenId("btc-token-btc")
   }
   /** This type defines known Bitcoin tokens. */
   export type BitcoinToken = (typeof _allKnownBitcoinTokens)[number]
@@ -40,144 +67,115 @@ export namespace KnownTokenId {
   /** This type defines known BRC20 tokens. */
   export type BRC20Token = TokenId<"a brc20 token">
   export function isBRC20Token(value: TokenId): value is BRC20Token {
-    return value.startsWith("brc20-")
+    return value.startsWith("brc20-token-")
   }
 
   /** This type defines known Runes tokens. */
   export type RunesToken = TokenId<"a runes token">
   export function isRunesToken(value: TokenId): value is RunesToken {
-    return value.startsWith("runes-")
+    return value.startsWith("runes-token-")
   }
 
   /** A namespace that contains constants and types for EVM-compatible tokens. */
   export namespace EVM {
     // USD[X]s
     /** Represents the sUSDT token ID on EVM-compatible blockchains. */
-    export const sUSDT = tokenId("evm-susdt")
+    export const sUSDT = tokenId("evm-token-susdt")
     /** Represents the USDT token ID on EVM-compatible blockchains. */
-    export const USDT = tokenId("evm-usdt")
+    export const USDT = tokenId("evm-token-usdt")
     /** Represents the USDC token ID on EVM-compatible blockchains. */
-    export const USDC = tokenId("evm-usdc")
+    export const USDC = tokenId("evm-token-usdc")
 
     // BTC
     /** Represents the aBTC token ID on EVM-compatible blockchains. */
-    export const aBTC = tokenId("evm-abtc")
+    export const aBTC = tokenId("evm-token-abtc")
     /** Represents the WBTC token ID on EVM-compatible blockchains. */
-    export const WBTC = tokenId("evm-wbtc")
+    export const WBTC = tokenId("evm-token-wbtc")
     /** Represents the BTCB token ID on EVM-compatible blockchains. */
-    export const BTCB = tokenId("evm-btcb")
+    export const BTCB = tokenId("evm-token-btcb")
     /** Represents the cbBTC token ID on EVM-compatible blockchains. */
-    export const cbBTC = tokenId("evm-cbbtc")
+    export const cbBTC = tokenId("evm-token-cbbtc")
 
     /** Represents the LUNR token ID on EVM-compatible blockchains. */
-    export const LUNR = tokenId("evm-lunr")
+    export const LUNR = tokenId("evm-token-lunr")
     /** Represents the ALEX token ID on EVM-compatible blockchains. */
-    export const ALEX = tokenId("evm-alex")
+    export const ALEX = tokenId("evm-token-alex")
     /** Represents the SKO token ID on EVM-compatible blockchains. */
-    export const SKO = tokenId("evm-sko")
+    export const SKO = tokenId("evm-token-sko")
     /** Represents the vLiSTX token ID on EVM-compatible blockchains. */
-    export const vLiSTX = tokenId("evm-vlistx")
+    export const vLiSTX = tokenId("evm-token-vlistx")
     /** Represents the vLiALEX token ID on EVM-compatible blockchains. */
-    export const vLiALEX = tokenId("evm-vlialex")
+    export const vLiALEX = tokenId("evm-token-vlialex")
     /** Represents the uBTC token ID on EVM-compatible blockchains. */
-    export const uBTC = tokenId("evm-ubtc")
+    export const uBTC = tokenId("evm-token-ubtc")
     /** Represents the wuBTC token ID on EVM-compatible blockchains. */
-    export const wuBTC = tokenId("evm-wubtc")
+    export const wuBTC = tokenId("evm-token-wubtc")
     /** Represents the DB20 token ID on EVM-compatible blockchains. */
-    export const DB20 = tokenId("evm-db20")
+    export const DB20 = tokenId("evm-token-db20")
     /** Represents the DOG token ID on EVM-compatible blockchains. */
-    export const DOG = tokenId("evm-dog")
+    export const DOG = tokenId("evm-token-dog")
     /** Represents the STX token ID on EVM-compatible blockchains. */
-    export const STX = tokenId("evm-stx")
+    export const STX = tokenId("evm-token-stx")
     /** Represents the TRUMP token ID on EVM-compatible blockchains. */
-    export const TRUMP = tokenId("evm-trump")
-    export const GHIBLICZ = tokenId("evm-ghiblicz")
-    export const ETH = tokenId("evm-eth")
-    export const SOL = tokenId("evm-sol")
-    export const LINK = tokenId("evm-link")
+    export const TRUMP = tokenId("evm-token-trump")
+    export const GHIBLICZ = tokenId("evm-token-ghiblicz")
+    export const ETH = tokenId("evm-token-eth")
+    export const SOL = tokenId("evm-token-sol")
+    export const LINK = tokenId("evm-token-link")
   }
-  /** This type defines known tokens on EVM-compatible blockchains. */
-  export type EVMToken = (typeof _allKnownEVMTokens)[number]
+  /** This type includes all known tokens on EVM-compatible blockchains. */
+  export type EVMToken =
+    | TokenId<`a EVM token`>
+    | (typeof _allKnownEVMTokens)[number]
   export function isEVMToken(value: TokenId): value is EVMToken {
-    return _allKnownEVMTokens.includes(value as any)
+    return value.startsWith("evm-token-")
   }
 
   /** A namespace that contains constants and types for Stacks tokens. */
   export namespace Stacks {
     /** Represents the sUSDT token ID on the Stacks blockchain. */
-    export const sUSDT = tokenId("stx-susdt")
+    export const sUSDT = tokenId("stx-token-susdt")
     /** Represents the sLUNR token ID on the Stacks blockchain. */
-    export const sLUNR = tokenId("stx-slunr")
+    export const sLUNR = tokenId("stx-token-slunr")
 
     /** Represents the aBTC token ID on the Stacks blockchain. */
-    export const aBTC = tokenId("stx-abtc")
+    export const aBTC = tokenId("stx-token-abtc")
     /** Represents the ALEX token ID on the Stacks blockchain. */
-    export const ALEX = tokenId("stx-alex")
+    export const ALEX = tokenId("stx-token-alex")
     /** Represents the sSKO token ID on the Stacks blockchain. */
-    export const sSKO = tokenId("stx-ssko")
+    export const sSKO = tokenId("stx-token-ssko")
     /** Represents the vLiSTX token ID on the Stacks blockchain. */
-    export const vLiSTX = tokenId("stx-vlistx")
+    export const vLiSTX = tokenId("stx-token-vlistx")
     /** Represents the vLiALEX token ID on the Stacks blockchain. */
-    export const vLiALEX = tokenId("stx-vlialex")
+    export const vLiALEX = tokenId("stx-token-vlialex")
     /** Represents the vLiaBTC token ID on the Stacks blockchain. */
-    export const vLiaBTC = tokenId("stx-vliabtc")
+    export const vLiaBTC = tokenId("stx-token-vliabtc")
     /** Represents the DB20 token ID on the Stacks blockchain. */
-    export const DB20 = tokenId("stx-db20")
+    export const DB20 = tokenId("stx-token-db20")
     /** Represents the uBTC token ID on the Stacks blockchain. */
-    export const uBTC = tokenId("stx-ubtc")
+    export const uBTC = tokenId("stx-token-ubtc")
     /** Represents the DOG token ID on the Stacks blockchain. */
-    export const DOG = tokenId("stx-dog")
+    export const DOG = tokenId("stx-token-dog")
     /** Represents the STX token ID on the Stacks blockchain. */
-    export const STX = tokenId("stx-stx")
+    export const STX = tokenId("stx-token-stx")
     /** Represents the TRUMP token ID on the Stacks blockchain. */
-    export const TRUMP = tokenId("stx-trump")
-    export const GHIBLICZ = tokenId("stx-ghiblicz")
-    export const ETH = tokenId("stx-eth")
-    export const SOL = tokenId("stx-sol")
-    export const LINK = tokenId("stx-link")
+    export const TRUMP = tokenId("stx-token-trump")
+    export const GHIBLICZ = tokenId("stx-token-ghiblicz")
+    export const ETH = tokenId("stx-token-eth")
+    export const SOL = tokenId("stx-token-sol")
+    export const LINK = tokenId("stx-token-link")
   }
-  const _allKnownStacksTokens = [
-    Stacks.sUSDT,
-    Stacks.sLUNR,
-    Stacks.aBTC,
-    Stacks.ALEX,
-    Stacks.sSKO,
-    Stacks.vLiSTX,
-    Stacks.vLiALEX,
-    Stacks.vLiaBTC,
-    Stacks.DB20,
-    Stacks.uBTC,
-    Stacks.DOG,
-    Stacks.STX,
-    Stacks.TRUMP,
-    Stacks.GHIBLICZ,
-    Stacks.ETH,
-    Stacks.SOL,
-    Stacks.LINK,
-  ] as const
+
   export type StacksToken =
     | TokenId<`a Stacks token`>
     | (typeof _allKnownStacksTokens)[number]
   export function isStacksToken(value: TokenId): value is StacksToken {
-    return value.startsWith("stx-")
+    return value.startsWith("stx-token-")
   }
 }
-export const createStacksToken = (
-  stacksTokenId: string,
-): KnownTokenId.StacksToken => {
-  return `stx-${stacksTokenId}` as any
-}
-export const createBRC20Token = (
-  brc20tick: string,
-): KnownTokenId.BRC20Token => {
-  return `brc20-${brc20tick}` as any
-}
-export const createRunesToken = (
-  runeId: RuneIdCombined,
-): KnownTokenId.RunesToken => {
-  return `runes-${runeId}` as any
-}
+
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
+export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
 
 /**

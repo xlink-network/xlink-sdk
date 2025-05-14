@@ -1,14 +1,20 @@
+import {
+  EVMAddress,
+  StacksContractAddress,
+  TokenId,
+} from "../../sdkUtils/types"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
 import { getStacksToken } from "../../stacksUtils/contractHelpers"
 import { requestAPI } from "../../utils/apiHelpers"
 import { BigNumber } from "../../utils/BigNumber"
 import { isNotNull } from "../../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
-import { StacksContractAddress } from "../../sdkUtils/types"
-import { SDKGlobalContext } from "../../sdkUtils/types.internal"
+import { createEVMToken, KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
+import { evmChainIdToKnownChainId } from "../evmClients"
 
 export interface EVMSupportedRoute {
   evmChain: KnownChainId.EVMChain
   evmToken: KnownTokenId.EVMToken
+  evmTokenAddress: EVMAddress
   stacksChain: KnownChainId.StacksChain
   stacksToken: KnownTokenId.StacksToken
   proxyStacksTokenContractAddress: null | StacksContractAddress
@@ -71,8 +77,7 @@ async function _getEVMSupportedRoutes(
 
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | EVMSupportedRoute> => {
-      const evmChain = route.evmChain as KnownChainId.KnownChain
-      const evmToken = route.evmToken as KnownTokenId.KnownToken
+      const evmChain = evmChainIdToKnownChainId(BigInt(route.evmChainId))
       const stacksToken = await getStacksToken(
         sdkContext,
         stacksChain,
@@ -80,12 +85,15 @@ async function _getEVMSupportedRoutes(
       )
 
       if (stacksToken == null) return null
-      if (!KnownChainId.isEVMChain(evmChain)) return null
-      if (!KnownTokenId.isEVMToken(evmToken)) return null
+      if (route.evmToken != null && !KnownTokenId.isEVMToken(route.evmToken)) {
+        return null
+      }
+      if (evmChain == null || !KnownChainId.isEVMChain(evmChain)) return null
 
       return {
         evmChain,
-        evmToken,
+        evmToken: route.evmToken ?? createEVMToken(evmChain, route.evmTokenAddress),
+        evmTokenAddress: route.evmTokenAddress,
         stacksChain,
         stacksToken,
         proxyStacksTokenContractAddress: route.proxyStacksTokenContractAddress,
@@ -109,8 +117,9 @@ async function _getEVMSupportedRoutes(
   return routes.filter(isNotNull)
 }
 interface SupportedEVMBridgeRoute {
-  evmChain: string
-  evmToken: string
+  evmChainId: `${number}`
+  evmToken?: TokenId
+  evmTokenAddress: EVMAddress
   stacksTokenContractAddress: StacksContractAddress
   proxyStacksTokenContractAddress: null | StacksContractAddress
   pegOutFeeRate: `${number}`

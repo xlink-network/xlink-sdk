@@ -1,6 +1,8 @@
 import { BroSDK } from "../src"
-import { getAllAddresses } from "../src/evmUtils/contractHelpers"
+import { getEVMOnChainConfig } from "../src/evmUtils/apiHelpers/getEVMOnChainConfig"
+import { getEVMSupportedRoutes } from "../src/evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { getSDKContext } from "../src/lowlevelUnstableInfos"
+import { props } from "../src/utils/promiseHelpers"
 import { _allKnownEVMChains } from "../src/utils/types/knownIds"
 
 async function print(matchers: { chain: string[] }): Promise<void> {
@@ -13,8 +15,11 @@ async function print(matchers: { chain: string[] }): Promise<void> {
 
   await Promise.all(
     chainIds.map(chainId =>
-      getAllAddresses(ctx, chainId).then(resp => {
-        console.log(chainId, resp?.onChainAddresses ?? "undefined")
+      props({
+        config: getEVMOnChainConfig(ctx, chainId),
+        routes: getEVMSupportedRoutes(ctx, chainId),
+      }).then(resp => {
+        console.log(chainId, resp)
         return resp
       }),
     ),
