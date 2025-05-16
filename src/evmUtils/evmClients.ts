@@ -2,6 +2,7 @@ import { Client, createClient, fallback, http } from "viem"
 import {
   arbitrum,
   aurora,
+  avalanche,
   base,
   bob,
   bsc,
@@ -14,6 +15,8 @@ import {
   mode,
   sepolia,
 } from "viem/chains"
+import { entries } from "../utils/objectHelper"
+import { KnownChainId } from "../utils/types/knownIds"
 import {
   ailayer,
   berachainTestnet,
@@ -24,8 +27,6 @@ import {
   lorenzo,
   xLayer,
 } from "./evmChainInfos"
-import { KnownChainId } from "../utils/types/knownIds"
-import { entries } from "../utils/objectHelper"
 
 type EVMChain = KnownChainId.EVMChain
 const EVMChain = KnownChainId.EVM
@@ -150,6 +151,12 @@ export const defaultEvmClients: Partial<Record<KnownChainId.EVMChain, Client>> =
 
     [EVMChain.BeraTestnet]: createClient({
       chain: berachainTestnet,
+      transport: http(),
+      batch: { multicall: true },
+    }),
+
+    [EVMChain.Avalanche]: createClient({
+      chain: avalanche,
       transport: http(),
       batch: { multicall: true },
     }),

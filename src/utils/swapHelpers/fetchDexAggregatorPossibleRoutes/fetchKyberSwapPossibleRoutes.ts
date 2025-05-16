@@ -183,6 +183,8 @@ function mapSDKChainIdToKyberChainId(
       return "base"
     case KnownChainId.EVM.Linea:
       return "linea"
+    case KnownChainId.EVM.Avalanche:
+      return "avalanche"
     case KnownChainId.EVM.Sepolia:
     case KnownChainId.EVM.BSCTestnet:
     case KnownChainId.EVM.CoreDAOTestnet:
