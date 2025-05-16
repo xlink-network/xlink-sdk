@@ -348,6 +348,12 @@ export namespace KnownChainId {
     // export const Bera = chainId("evm-bera")
     /** Represents the Bera testnet chain ID. */
     export const BeraTestnet = chainId("evm-bera-testnet")
+
+    // Avalanche
+    /** Represents the Avalanche mainnet chain ID. */
+    export const Avalanche = chainId("evm-avalanche")
+    /** Represents the Avalanche testnet chain ID. */
+    // export const AvalancheTestnet = chainId("evm-avalanche-testnet")
   }
   /** Represents a mainnet EVM-compatible blockchain network. */
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
@@ -422,6 +428,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Manta,
   KnownChainId.EVM.Linea,
   KnownChainId.EVM.Base,
+  KnownChainId.EVM.Avalanche,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,
