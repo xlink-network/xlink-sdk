@@ -277,6 +277,20 @@ async function toCorrespondingStacksChain(
     return KnownChainId.Stacks.Testnet
   }
 
+  if (chain === KnownChainId.Tron.Mainnet) {
+    return KnownChainId.Stacks.Mainnet
+  }
+  if (chain === KnownChainId.Tron.Testnet) {
+    return KnownChainId.Stacks.Testnet
+  }
+
+  if (chain === KnownChainId.Solana.Mainnet) {
+    return KnownChainId.Stacks.Mainnet
+  }
+  if (chain === KnownChainId.Solana.Testnet) {
+    return KnownChainId.Stacks.Testnet
+  }
+
   checkNever(chain)
   return undefined
 }
@@ -319,6 +333,14 @@ export async function toCorrespondingStacksToken(
   } else if (KnownChainId.isStacksChain(chain)) {
     if (KnownTokenId.isStacksToken(token)) {
       toStacksTokenPromise = Promise.resolve(token)
+    }
+  } else if (KnownChainId.isTronChain(chain)) {
+    if (KnownTokenId.isTronToken(token)) {
+      throw new Error("Not implemented")
+    }
+  } else if (KnownChainId.isSolanaChain(chain)) {
+    if (KnownTokenId.isSolanaToken(token)) {
+      throw new Error("Not implemented")
     }
   } else {
     checkNever(chain)
