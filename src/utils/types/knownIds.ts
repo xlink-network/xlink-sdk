@@ -44,6 +44,7 @@ export namespace KnownTokenId {
     | EVMToken
     | StacksToken
     | TronToken
+    | SolanaToken
   export function isKnownToken(value: TokenId): value is KnownToken {
     return (
       isBitcoinToken(value) ||
@@ -51,7 +52,8 @@ export namespace KnownTokenId {
       isRunesToken(value) ||
       isEVMToken(value) ||
       isStacksToken(value) ||
-      isTronToken(value)
+      isTronToken(value) ||
+      isSolanaToken(value)
     )
   }
 
@@ -185,12 +187,28 @@ export namespace KnownTokenId {
   export function isTronToken(value: TokenId): value is TronToken {
     return _allKnownTronTokens.includes(value as any)
   }
+
+  /** A namespace that contains constants and types for Solana tokens. */
+  export namespace Solana {
+    /** Represents the USDC token ID on the Solana blockchain. */
+    export const USDC = tokenId("solana-usdc")
+    /** Represents the USDT token ID on the Solana blockchain. */
+    export const USDT = tokenId("solana-usdt")
+    /** Represents the SOL token ID on the Solana blockchain. */
+    export const SOL = tokenId("solana-sol")
+  }
+  /** This type defines known tokens on the Solana blockchain. */
+  export type SolanaToken = (typeof _allKnownSolanaTokens)[number]
+  export function isSolanaToken(value: TokenId): value is SolanaToken {
+    return _allKnownSolanaTokens.includes(value as any)
+  }
 }
 
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
 export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
 export const _allKnownTronTokens = Object.values(KnownTokenId.Tron)
+export const _allKnownSolanaTokens = Object.values(KnownTokenId.Solana)
 
 /**
  * The `KnownChainId` namespace provides types of blockchain networks
@@ -205,6 +223,8 @@ export namespace KnownChainId {
     | EVMChain
     | StacksChain
     | TronChain
+    | SolanaChain
+
   export function isKnownChain(value: ChainId): value is KnownChain {
     return (
       isBitcoinChain(value) ||
@@ -212,7 +232,8 @@ export namespace KnownChainId {
       isRunesChain(value) ||
       isEVMChain(value) ||
       isStacksChain(value) ||
-      isTronChain(value)
+      isTronChain(value) ||
+      isSolanaChain(value)
     )
   }
 
@@ -418,13 +439,27 @@ export namespace KnownChainId {
   export function isTronChain(value: ChainId): value is TronChain {
     return _allKnownTronChains.includes(value as any)
   }
+
+  export namespace Solana {
+    /** Represents the Solana mainnet chain ID. */
+    export const Mainnet = chainId("solana-mainnet")
+    /** Represents the Solana testnet chain ID. */
+    export const Testnet = chainId("solana-testnet")
+  }
+  /** Represents a Solana blockchain network. */
+  export type SolanaChain = (typeof _allKnownSolanaChains)[number]
+  export function isSolanaChain(value: ChainId): value is SolanaChain {
+    return _allKnownSolanaChains.includes(value as any)
+  }
 }
+
 export const _allKnownBitcoinChains = Object.values(KnownChainId.Bitcoin)
 export const _allKnownRunesChains = Object.values(KnownChainId.Runes)
 export const _allKnownBRC20Chains = Object.values(KnownChainId.BRC20)
 export const _allKnownEVMChains = Object.values(KnownChainId.EVM)
 export const _allKnownStacksChains = Object.values(KnownChainId.Stacks)
 export const _allKnownTronChains = Object.values(KnownChainId.Tron)
+export const _allKnownSolanaChains = Object.values(KnownChainId.Solana)
 
 export const getChainIdNetworkType = (
   chainId: KnownChainId.KnownChain,
@@ -446,6 +481,9 @@ export const getChainIdNetworkType = (
 
   if (chainId === KnownChainId.Tron.Mainnet) return "mainnet"
   if (chainId === KnownChainId.Tron.Testnet) return "testnet"
+
+  if (chainId === KnownChainId.Solana.Mainnet) return "mainnet"
+  if (chainId === KnownChainId.Solana.Testnet) return "testnet"
 
   checkNever(chainId)
   return "mainnet"
@@ -509,6 +547,8 @@ export const _knownChainIdToErrorMessagePart = (chainId: ChainId): string => {
     return "EVM"
   } else if (KnownChainId.isTronChain(chainId)) {
     return "Tron"
+  } else if (KnownChainId.isSolanaChain(chainId)) {
+    return "Solana"
   }
 
   checkNever(chainId)
