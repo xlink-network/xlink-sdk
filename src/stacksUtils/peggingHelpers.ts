@@ -82,6 +82,18 @@ export const isSupportedStacksRoute: IsSupportedFn = async (ctx, route) => {
     )
   }
 
+  // stacks -> tron
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+    throw new Error("Not implemented")
+  }
+
+  // stacks -> solana
+  if (KnownChainId.isSolanaChain(toChain)) {
+    if (!KnownTokenId.isSolanaToken(toToken)) return false
+    throw new Error("Not implemented")
+  }
+
   checkNever(toChain)
   return false
 }

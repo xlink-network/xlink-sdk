@@ -473,6 +473,18 @@ export const isSupportedBRC20Route: IsSupportedFn = async (ctx, route) => {
     )
   }
 
+  // brc20 -> tron
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+    throw new Error("Not implemented")
+  }
+
+  // brc20 -> solana
+  if (KnownChainId.isSolanaChain(toChain)) {
+    if (!KnownTokenId.isSolanaToken(toToken)) return false
+    throw new Error("Not implemented")
+  }
+
   checkNever(toChain)
   return false
 }
@@ -593,6 +605,18 @@ export const isSupportedRunesRoute: IsSupportedFn = async (ctx, route) => {
           route.stacksToken === lastStepFromStacksToken,
       ) != null
     )
+  }
+
+  // runes -> tron
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+    throw new Error("Not implemented")
+  }
+
+  // runes -> solana
+  if (KnownChainId.isSolanaChain(toChain)) {
+    if (!KnownTokenId.isSolanaToken(toToken)) return false
+    throw new Error("Not implemented")
   }
 
   checkNever(toChain)
