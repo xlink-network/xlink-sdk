@@ -367,6 +367,13 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     )
   }
 
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+
+    // TODO: implement tron support
+    return false
+  }
+
   // btc -> btc
   if (KnownChainId.isBitcoinChain(toChain)) {
     return false
@@ -402,6 +409,18 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
           route.stacksToken === lastStepFromStacksToken,
       )
     )
+  }
+
+  // btc -> tron
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+    throw new Error("Not implemented")
+  }
+
+  // btc -> solana
+  if (KnownChainId.isSolanaChain(toChain)) {
+    if (!KnownTokenId.isSolanaToken(toToken)) return false
+    throw new Error("Not implemented")
   }
 
   checkNever(toChain)
