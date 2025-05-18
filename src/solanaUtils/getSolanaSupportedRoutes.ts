@@ -11,8 +11,9 @@ type NetworkType = "mainnet" | "testnet"
 
 export async function getSolanaSupportedRoutes(
   sdkContext: SDKGlobalContext,
+  toChain: KnownChainId.SolanaChain,
 ): Promise<SolanaSupportedRoute[]> {
-  return getSolanaSupportedRoutesByNetwork(sdkContext, "mainnet" as NetworkType)
+  return getSolanaSupportedRoutesByNetwork(sdkContext, toChain === KnownChainId.Solana.Mainnet ? "mainnet" : "testnet")
 }
 
 async function getSolanaSupportedRoutesByNetwork(
