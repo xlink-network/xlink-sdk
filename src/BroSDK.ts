@@ -293,6 +293,9 @@ export class BroSDK {
           ...options.evm?.viemClients,
         },
       },
+      tron: {
+        routesConfigCache: new Map(),
+      },
     }
   }
 
@@ -1080,9 +1083,9 @@ export class BroSDK {
    * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, Bitcoin or BRC20).
    * - `fromToken: TokenId` - The token being transferred from the Runes chain.
    * - `toToken: TokenId` - The token expected on the destination chain.
-   * - `fromAddress: string` - The sender’s address on the Runes chain.
+   * - `fromAddress: string` - The sender's address on the Runes chain.
    * - `fromAddressScriptPubKey: Uint8Array` - The script public key for `fromAddress`.
-   * - `toAddress: string` - The recipient’s address on the destination blockchain.
+   * - `toAddress: string` - The recipient's address on the destination blockchain.
    * - `toAddressScriptPubKey?: Uint8Array` - Required when the destination chain is Bitcoin or BRC20.
    * - `amount: SDKNumber` - The amount of tokens to transfer.
    * - `inputRuneUTXOs: RunesUTXOSpendable[]` - UTXOs containing the Runes to be spent.
