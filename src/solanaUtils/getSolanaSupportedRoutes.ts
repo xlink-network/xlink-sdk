@@ -1,21 +1,11 @@
-import { getStacksToken } from "../../stacksUtils/contractHelpers"
-import { requestAPI } from "../../utils/apiHelpers"
-import { BigNumber } from "../../utils/BigNumber"
-import { isNotNull } from "../../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
-import { StacksContractAddress } from "../../sdkUtils/types"
-import { SDKGlobalContext } from "../../sdkUtils/types.internal"
-
-export interface SolanaSupportedRoute {
-  evmToken: KnownTokenId.EVMToken
-  stacksChain: KnownChainId.StacksChain
-  stacksToken: KnownTokenId.StacksToken
-  proxyStacksTokenContractAddress: null | StacksContractAddress
-  pegOutFeeRate: BigNumber
-  pegOutMinFeeAmount: null | BigNumber
-  pegOutMinAmount: null | BigNumber
-  pegOutMaxAmount: null | BigNumber
-}
+import { getStacksToken } from "../stacksUtils/contractHelpers"
+import { requestAPI } from "../utils/apiHelpers"
+import { BigNumber } from "../utils/BigNumber"
+import { isNotNull } from "../utils/typeHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
+import { StacksContractAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
+import { SolanaSupportedRoute } from "./types"
 
 type NetworkType = "mainnet" | "testnet"
 
@@ -29,22 +19,22 @@ async function getSolanaSupportedRoutesByNetwork(
   sdkContext: SDKGlobalContext,
   network: NetworkType,
 ): Promise<SolanaSupportedRoute[]> {
-  const cacheKey = `solana-${network}`
+  const cacheKey = network
   if (
-    sdkContext.evm.routesConfigCache != null &&
-    sdkContext.evm.routesConfigCache.get(cacheKey) != null
+    sdkContext.solana.routesConfigCache != null &&
+    sdkContext.solana.routesConfigCache.get(cacheKey) != null
   ) {
-    return sdkContext.evm.routesConfigCache.get(cacheKey)!
+    return sdkContext.solana.routesConfigCache.get(cacheKey)!
   }
 
   const promise = _getSolanaSupportedRoutes(sdkContext, network).catch(err => {
-    const cachedPromise = sdkContext.evm.routesConfigCache?.get(cacheKey)
+    const cachedPromise = sdkContext.solana.routesConfigCache?.get(cacheKey)
     if (promise === cachedPromise) {
-      sdkContext.evm.routesConfigCache?.delete(cacheKey)
+      sdkContext.solana.routesConfigCache?.delete(cacheKey)
     }
     throw err
   })
-  sdkContext.evm.routesConfigCache?.set(cacheKey, promise)
+  sdkContext.solana.routesConfigCache?.set(cacheKey, promise)
   return promise
 }
 
@@ -70,7 +60,7 @@ async function _getSolanaSupportedRoutes(
 
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | SolanaSupportedRoute> => {
-      const evmToken = route.evmToken as KnownTokenId.KnownToken
+      const solanaToken = KnownTokenId.createSolanaToken(route.tokenAddress)
       const stacksToken = await getStacksToken(
         sdkContext,
         stacksChain,
@@ -78,10 +68,10 @@ async function _getSolanaSupportedRoutes(
       )
 
       if (stacksToken == null) return null
-      if (!KnownTokenId.isEVMToken(evmToken)) return null
+      if (!KnownTokenId.isSolanaToken(solanaToken)) return null
 
       return {
-        evmToken,
+        solanaToken,
         stacksChain,
         stacksToken,
         proxyStacksTokenContractAddress: route.proxyStacksTokenContractAddress,
@@ -106,7 +96,7 @@ async function _getSolanaSupportedRoutes(
 }
 
 interface SupportedSolanaBridgeRoute {
-  evmToken: string
+  tokenAddress: `0x${string}`
   stacksTokenContractAddress: StacksContractAddress
   proxyStacksTokenContractAddress: null | StacksContractAddress
   pegOutFeeRate: `${number}`
