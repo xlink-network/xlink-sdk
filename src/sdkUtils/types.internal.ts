@@ -9,6 +9,7 @@ import { pMemoizeImpl } from "../utils/pMemoize"
 import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
 import { TransferProphet } from "../utils/types/TransferProphet"
+import { TronSupportedRoute } from "../tronUtils/types"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SDKGlobalContextCache<K, V>
@@ -86,5 +87,11 @@ export interface SDKGlobalContext {
       Promise<EVMOnChainConfigByEVMChain>
     >
     viemClients: Partial<Record<KnownChainId.EVMChain, Client>>
+  }
+  tron: {
+    routesConfigCache?: SDKGlobalContextCache<
+      "mainnet" | "testnet",
+      Promise<TronSupportedRoute[]>
+    >
   }
 }
