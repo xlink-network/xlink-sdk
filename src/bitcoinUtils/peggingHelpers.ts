@@ -39,6 +39,8 @@ import {
   TransferProphet_Fee_Rate,
 } from "../utils/types/TransferProphet"
 import { getBTCPegInAddress } from "./btcAddresses"
+import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
+import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 
 export const getBtc2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
@@ -428,13 +430,33 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
   // btc -> tron
   if (KnownChainId.isTronChain(toChain)) {
     if (!KnownTokenId.isTronToken(toToken)) return false
-    throw new Error("Not implemented")
+
+    const toRoutes = await getTronSupportedRoutes(ctx, toChain)
+
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.tronToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
+    )
   }
 
   // btc -> solana
   if (KnownChainId.isSolanaChain(toChain)) {
     if (!KnownTokenId.isSolanaToken(toToken)) return false
-    throw new Error("Not implemented")
+
+    const toRoutes = await getSolanaSupportedRoutes(ctx, toChain)
+
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.solanaToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
+    )
   }
 
   checkNever(toChain)

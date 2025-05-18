@@ -40,6 +40,8 @@ import {
 import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
 import { getMetaPegInAddress } from "./btcAddresses"
+import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
+import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 
 export async function metaTokenFromCorrespondingStacksToken(
   ctx: SDKGlobalContext,
@@ -481,13 +483,43 @@ export const isSupportedBRC20Route: IsSupportedFn = async (ctx, route) => {
   // brc20 -> tron
   if (KnownChainId.isTronChain(toChain)) {
     if (!KnownTokenId.isTronToken(toToken)) return false
-    throw new Error("Not implemented")
+
+    const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
+    const toRoutes = await getTronSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.find(
+        route =>
+          route.brc20Token === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      toRoutes.find(
+        route =>
+          route.tronToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
   }
 
   // brc20 -> solana
   if (KnownChainId.isSolanaChain(toChain)) {
     if (!KnownTokenId.isSolanaToken(toToken)) return false
-    throw new Error("Not implemented")
+
+    const fromRoutes = await getBRC20SupportedRoutes(ctx, fromChain)
+    const toRoutes = await getSolanaSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.find(
+        route =>
+          route.brc20Token === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      toRoutes.find(
+        route =>
+          route.solanaToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
   }
 
   checkNever(toChain)
@@ -615,13 +647,43 @@ export const isSupportedRunesRoute: IsSupportedFn = async (ctx, route) => {
   // runes -> tron
   if (KnownChainId.isTronChain(toChain)) {
     if (!KnownTokenId.isTronToken(toToken)) return false
-    throw new Error("Not implemented")
+
+    const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getTronSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.find(
+        route =>
+          route.runesToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      toRoutes.find(
+        route =>
+          route.tronToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
   }
 
   // runes -> solana
   if (KnownChainId.isSolanaChain(toChain)) {
     if (!KnownTokenId.isSolanaToken(toToken)) return false
-    throw new Error("Not implemented")
+
+    const fromRoutes = await getRunesSupportedRoutes(ctx, fromChain)
+    const toRoutes = await getSolanaSupportedRoutes(ctx, toChain)
+
+    return (
+      fromRoutes.find(
+        route =>
+          route.runesToken === fromToken &&
+          route.stacksToken === firstStepToStacksToken,
+      ) != null &&
+      toRoutes.find(
+        route =>
+          route.solanaToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      ) != null
+    )
   }
 
   checkNever(toChain)

@@ -10,9 +10,10 @@ import { TronSupportedRoute } from "./types"
 type NetworkType = "mainnet" | "testnet"
 
 export async function getTronSupportedRoutes(
-  sdkContext: SDKGlobalContext,
+sdkContext: SDKGlobalContext, 
+toChain: KnownChainId.TronChain,
 ): Promise<TronSupportedRoute[]> {
-  return getTronSupportedRoutesByNetwork(sdkContext, "mainnet" as NetworkType)
+  return getTronSupportedRoutesByNetwork(sdkContext, toChain === KnownChainId.Tron.Mainnet ? "mainnet" : "testnet")
 }
 
 async function getTronSupportedRoutesByNetwork(
