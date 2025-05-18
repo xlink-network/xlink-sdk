@@ -296,6 +296,9 @@ export class BroSDK {
       tron: {
         routesConfigCache: new Map(),
       },
+      solana: {
+        routesConfigCache: new Map(),
+      },
     }
   }
 

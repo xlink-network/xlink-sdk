@@ -1,11 +1,11 @@
-import { getStacksToken } from "../../stacksUtils/contractHelpers"
-import { requestAPI } from "../../utils/apiHelpers"
-import { BigNumber } from "../../utils/BigNumber"
-import { isNotNull } from "../../utils/typeHelpers"
-import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
-import { StacksContractAddress } from "../../sdkUtils/types"
-import { SDKGlobalContext } from "../../sdkUtils/types.internal"
-import { TronSupportedRoute } from "../../tronUtils/types"
+import { getStacksToken } from "../stacksUtils/contractHelpers"
+import { requestAPI } from "../utils/apiHelpers"
+import { BigNumber } from "../utils/BigNumber"
+import { isNotNull } from "../utils/typeHelpers"
+import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
+import { StacksContractAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
+import { TronSupportedRoute } from "./types"
 
 type NetworkType = "mainnet" | "testnet"
 
@@ -19,22 +19,22 @@ async function getTronSupportedRoutesByNetwork(
   sdkContext: SDKGlobalContext,
   network: NetworkType,
 ): Promise<TronSupportedRoute[]> {
-  const cacheKey = `tron-${network}`
+  const cacheKey = network
   if (
-    sdkContext.tron?.routesConfigCache != null &&
+    sdkContext.tron.routesConfigCache != null &&
     sdkContext.tron.routesConfigCache.get(cacheKey) != null
   ) {
     return sdkContext.tron.routesConfigCache.get(cacheKey)!
   }
 
   const promise = _getTronSupportedRoutes(sdkContext, network).catch(err => {
-    const cachedPromise = sdkContext.tron?.routesConfigCache?.get(cacheKey)
+    const cachedPromise = sdkContext.tron.routesConfigCache?.get(cacheKey)
     if (promise === cachedPromise) {
-      sdkContext.tron?.routesConfigCache?.delete(cacheKey)
+      sdkContext.tron.routesConfigCache?.delete(cacheKey)
     }
     throw err
   })
-  sdkContext.tron?.routesConfigCache?.set(cacheKey, promise)
+  sdkContext.tron.routesConfigCache?.set(cacheKey, promise)
   return promise
 }
 
@@ -60,7 +60,7 @@ async function _getTronSupportedRoutes(
 
   const routes = await Promise.all(
     resp.routes.map(async (route): Promise<null | TronSupportedRoute> => {
-      const tronToken = route.evmToken as KnownTokenId.KnownToken
+      const tronToken = KnownTokenId.createTronToken(route.tokenAddress)
       const stacksToken = await getStacksToken(
         sdkContext,
         stacksChain,
@@ -96,7 +96,7 @@ async function _getTronSupportedRoutes(
 }
 
 interface SupportedTronBridgeRoute {
-  evmToken: string
+  tokenAddress: `0x${string}`
   stacksTokenContractAddress: StacksContractAddress
   proxyStacksTokenContractAddress: null | StacksContractAddress
   pegOutFeeRate: `${number}`

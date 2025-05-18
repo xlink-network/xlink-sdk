@@ -177,38 +177,32 @@ export namespace KnownTokenId {
     return value.startsWith("stx-")
   }
 
-  /** A namespace that contains constants and types for Tron tokens. */
-  export namespace Tron {
-    /** Represents the USDT token ID on the Tron blockchain. */
-    export const USDT = tokenId("tron-usdt")
-  }
   /** This type defines known tokens on the Tron blockchain. */
-  export type TronToken = (typeof _allKnownTronTokens)[number]
+  export type TronToken = TokenId<"a tron token">
   export function isTronToken(value: TokenId): value is TronToken {
-    return _allKnownTronTokens.includes(value as any)
+    return value.startsWith("tron-")
+  }
+  export const createTronToken = (
+    evmTokenAddress: `0x${string}`,
+  ): KnownTokenId.TronToken => {
+    return `tron-${evmTokenAddress}` as any
   }
 
-  /** A namespace that contains constants and types for Solana tokens. */
-  export namespace Solana {
-    /** Represents the USDC token ID on the Solana blockchain. */
-    export const USDC = tokenId("solana-usdc")
-    /** Represents the USDT token ID on the Solana blockchain. */
-    export const USDT = tokenId("solana-usdt")
-    /** Represents the SOL token ID on the Solana blockchain. */
-    export const SOL = tokenId("solana-sol")
-  }
   /** This type defines known tokens on the Solana blockchain. */
-  export type SolanaToken = (typeof _allKnownSolanaTokens)[number]
+  export type SolanaToken = TokenId<"a solana token">
   export function isSolanaToken(value: TokenId): value is SolanaToken {
-    return _allKnownSolanaTokens.includes(value as any)
+    return value.startsWith("solana-")
+  }
+  export const createSolanaToken = (
+    evmTokenAddress: `0x${string}`,
+  ): KnownTokenId.SolanaToken => {
+    return `solana-${evmTokenAddress}` as any
   }
 }
 
 export const _allKnownBitcoinTokens = Object.values(KnownTokenId.Bitcoin)
 export const _allKnownStacksTokens = Object.values(KnownTokenId.Stacks)
 export const _allKnownEVMTokens = Object.values(KnownTokenId.EVM)
-export const _allKnownTronTokens = Object.values(KnownTokenId.Tron)
-export const _allKnownSolanaTokens = Object.values(KnownTokenId.Solana)
 
 /**
  * The `KnownChainId` namespace provides types of blockchain networks
