@@ -328,9 +328,7 @@ const _getStacks2EvmFeeInfo = async (
 
   const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
     initialRoute: options.initialRoute,
-    swapRoute: {
-      via: options.toDexAggregator ? "evmDexAggregator" : "ALEX",
-    },
+    swapRoute: !options.toDexAggregator ? null : { via: "evmDexAggregator" },
   })
 
   if (ctx.debugLog) {
