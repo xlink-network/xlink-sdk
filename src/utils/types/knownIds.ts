@@ -354,6 +354,12 @@ export namespace KnownChainId {
     export const Avalanche = chainId("evm-avalanche")
     /** Represents the Avalanche testnet chain ID. */
     // export const AvalancheTestnet = chainId("evm-avalanche-testnet")
+
+    // Mezo
+    /** Represents the Mezo mainnet chain ID. */
+    export const Mezo = chainId("evm-mezo")
+    /** Represents the Mezo testnet chain ID. */
+    // export const MezoTestnet = chainId("evm-mezo-testnet")
   }
   /** Represents a mainnet EVM-compatible blockchain network. */
   export type EVMMainnetChain = (typeof _allKnownEVMMainnetChains)[number]
@@ -429,6 +435,7 @@ export const _allKnownEVMMainnetChains = [
   KnownChainId.EVM.Linea,
   KnownChainId.EVM.Base,
   KnownChainId.EVM.Avalanche,
+  KnownChainId.EVM.Mezo,
 ] as const
 export const _allKnownEVMTestnetChains = [
   KnownChainId.EVM.Sepolia,

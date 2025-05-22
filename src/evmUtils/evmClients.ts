@@ -25,6 +25,7 @@ import {
   bsquared,
   coreDaoTestnet,
   lorenzo,
+  mezo,
   xLayer,
 } from "./evmChainInfos"
 
@@ -157,6 +158,12 @@ export const defaultEvmClients: Partial<Record<KnownChainId.EVMChain, Client>> =
 
     [EVMChain.Avalanche]: createClient({
       chain: avalanche,
+      transport: http(),
+      batch: { multicall: true },
+    }),
+
+    [EVMChain.Mezo]: createClient({
+      chain: mezo,
       transport: http(),
       batch: { multicall: true },
     }),

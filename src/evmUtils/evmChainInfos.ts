@@ -355,3 +355,26 @@ export const berachainTestnet = defineChain({
   },
   testnet: true,
 })
+
+export const mezo = defineChain({
+  id: 31612,
+  name: "Mezo",
+  nativeCurrency: {
+    decimals: 18,
+    name: "BTC",
+    symbol: "BTC",
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.mezo.org"],
+      webSocket: ["wss://rpc-ws.mezo.org"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Mezo Explorer",
+      url: "https://explorer.mezo.org/",
+      apiUrl: "",
+    },
+  },
+})

@@ -58,6 +58,8 @@ export function contractAssignedChainIdFromKnownChain(
       return 16n
     case KnownChainId.EVM.Avalanche:
       return 17n
+    case KnownChainId.EVM.Mezo:
+      return 18n
     case KnownChainId.BRC20.Mainnet:
     case KnownChainId.BRC20.Testnet:
       return 1001n
@@ -172,6 +174,11 @@ export function contractAssignedChainIdToKnownChain(
     return [KnownChainId.EVM.Avalanche]
   }
   assertExclude(resPossibilities, KnownChainId.EVM.Avalanche)
+
+  if (chainId === 18n) {
+    return [KnownChainId.EVM.Mezo]
+  }
+  assertExclude(resPossibilities, KnownChainId.EVM.Mezo)
 
   if (chainId === 1001n) {
     return [KnownChainId.BRC20.Mainnet, KnownChainId.BRC20.Testnet]

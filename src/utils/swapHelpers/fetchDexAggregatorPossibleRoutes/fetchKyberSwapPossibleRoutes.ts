@@ -202,6 +202,7 @@ function mapSDKChainIdToKyberChainId(
     case KnownChainId.EVM.XLayer:
     case KnownChainId.EVM.Aurora:
     case KnownChainId.EVM.Manta:
+    case KnownChainId.EVM.Mezo:
       return undefined
     default:
       checkNever(chainId)
