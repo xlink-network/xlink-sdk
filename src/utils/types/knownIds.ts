@@ -183,9 +183,9 @@ export namespace KnownTokenId {
     return value.startsWith("tron-")
   }
   export const createTronToken = (
-    evmTokenAddress: `0x${string}`,
+    tronTokenAddress: string,
   ): KnownTokenId.TronToken => {
-    return `tron-${evmTokenAddress}` as any
+    return `tron-${tronTokenAddress}` as any
   }
 
   /** This type defines known tokens on the Solana blockchain. */
@@ -194,9 +194,9 @@ export namespace KnownTokenId {
     return value.startsWith("solana-")
   }
   export const createSolanaToken = (
-    evmTokenAddress: `0x${string}`,
+    solanaTokenAddress: string,
   ): KnownTokenId.SolanaToken => {
-    return `solana-${evmTokenAddress}` as any
+    return `solana-${solanaTokenAddress}` as any
   }
 }
 

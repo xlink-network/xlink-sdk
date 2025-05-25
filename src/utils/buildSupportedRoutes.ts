@@ -81,25 +81,25 @@ export type KnownRoute_FromBitcoin_ToRunes = {
   toChain: KnownChainId.RunesChain
   toToken: KnownTokenId.RunesToken
 }
-export type KnownRoute_FromBitcoin_ToTron = {
-  fromChain: KnownChainId.BitcoinChain
-  fromToken: KnownTokenId.BitcoinToken
-  toChain: KnownChainId.TronChain
-  toToken: KnownTokenId.TronToken
-}
 export type KnownRoute_FromBitcoin_ToSolana = {
   fromChain: KnownChainId.BitcoinChain
   fromToken: KnownTokenId.BitcoinToken
   toChain: KnownChainId.SolanaChain
   toToken: KnownTokenId.SolanaToken
 }
+export type KnownRoute_FromBitcoin_ToTron = {
+  fromChain: KnownChainId.BitcoinChain
+  fromToken: KnownTokenId.BitcoinToken
+  toChain: KnownChainId.TronChain
+  toToken: KnownTokenId.TronToken
+}
 export type KnownRoute_FromBitcoin =
   | KnownRoute_FromBitcoin_ToStacks
   | KnownRoute_FromBitcoin_ToEVM
   | KnownRoute_FromBitcoin_ToBRC20
   | KnownRoute_FromBitcoin_ToRunes
-  | KnownRoute_FromBitcoin_ToTron
   | KnownRoute_FromBitcoin_ToSolana
+  | KnownRoute_FromBitcoin_ToTron
 
 export type KnownRoute_FromEVM_ToStacks = {
   fromChain: KnownChainId.EVMChain
