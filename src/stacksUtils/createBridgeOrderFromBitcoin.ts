@@ -32,6 +32,7 @@ import {
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./contractHelpers"
+import bs58check from "bs58check"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -87,6 +88,30 @@ export async function createBridgeOrderFromBitcoin(
     }
   }
   assertExclude(info.toChain, assertExclude.i<KnownChainId.EVMChain>())
+
+  if (KnownChainId.isSolanaChain(info.toChain)) {
+    if (KnownTokenId.isSolanaToken(info.toToken)) {
+      return createBridgeOrder_BitcoinToSolana(sdkContext, {
+        ...info,
+        toChain: info.toChain,
+        toToken: info.toToken,
+        toSolanaAddress: info.toAddress,
+      })
+    }
+  }
+  assertExclude(info.toChain, assertExclude.i<KnownChainId.SolanaChain>())
+
+  if (KnownChainId.isTronChain(info.toChain)) {
+    if (KnownTokenId.isTronToken(info.toToken)) {
+      return createBridgeOrder_BitcoinToTron(sdkContext, {
+        ...info,
+        toChain: info.toChain,
+        toToken: info.toToken,
+        toTronAddress: info.toAddress,
+      })
+    }
+  }
+  assertExclude(info.toChain, assertExclude.i<KnownChainId.TronChain>())
 
   if (KnownChainId.isBRC20Chain(info.toChain)) {
     if (KnownTokenId.isBRC20Token(info.toToken)) {
@@ -181,6 +206,44 @@ export async function createBridgeOrder_BitcoinToMeta(
     ...info,
     fromAddressBuffer: info.fromBitcoinScriptPubKey,
     toAddressBuffer: info.toBitcoinScriptPubKey,
+  })
+}
+
+export async function createBridgeOrder_BitcoinToSolana(
+  sdkContext: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    fromToken: KnownTokenId.BitcoinToken
+    fromBitcoinScriptPubKey: Uint8Array
+    toChain: KnownChainId.SolanaChain
+    toToken: KnownTokenId.SolanaToken
+    toSolanaAddress: string
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
+  return createBridgeOrderFromBitcoinImpl(sdkContext, {
+    ...info,
+    fromAddressBuffer: info.fromBitcoinScriptPubKey,
+    toAddressBuffer: decodeHex(info.toSolanaAddress),
+  })
+}
+
+export async function createBridgeOrder_BitcoinToTron(
+  sdkContext: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    fromToken: KnownTokenId.BitcoinToken
+    fromBitcoinScriptPubKey: Uint8Array
+    toChain: KnownChainId.TronChain
+    toToken: KnownTokenId.TronToken
+    toTronAddress: string
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
+  return createBridgeOrderFromBitcoinImpl(sdkContext, {
+    ...info,
+    fromAddressBuffer: info.fromBitcoinScriptPubKey,
+    toAddressBuffer: bs58check.decode(info.toTronAddress),
   })
 }
 

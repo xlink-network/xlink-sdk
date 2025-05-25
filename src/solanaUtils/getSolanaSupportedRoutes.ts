@@ -73,6 +73,7 @@ async function _getSolanaSupportedRoutes(
 
       return {
         solanaToken,
+        solanaTokenAddress: route.tokenAddress,
         stacksChain,
         stacksToken,
         proxyStacksTokenContractAddress: route.proxyStacksTokenContractAddress,
@@ -97,7 +98,7 @@ async function _getSolanaSupportedRoutes(
 }
 
 interface SupportedSolanaBridgeRoute {
-  tokenAddress: `0x${string}`
+  tokenAddress: string
   stacksTokenContractAddress: StacksContractAddress
   proxyStacksTokenContractAddress: null | StacksContractAddress
   pegOutFeeRate: `${number}`
