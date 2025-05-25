@@ -73,6 +73,7 @@ async function _getTronSupportedRoutes(
 
       return {
         tronToken,
+        tronTokenAddress: route.tokenAddress,
         stacksChain,
         stacksToken,
         proxyStacksTokenContractAddress: route.proxyStacksTokenContractAddress,
@@ -97,7 +98,7 @@ async function _getTronSupportedRoutes(
 }
 
 interface SupportedTronBridgeRoute {
-  tokenAddress: `0x${string}`
+  tokenAddress: string
   stacksTokenContractAddress: StacksContractAddress
   proxyStacksTokenContractAddress: null | StacksContractAddress
   pegOutFeeRate: `${number}`

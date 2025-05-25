@@ -7,6 +7,8 @@ import {
   KnownRoute_FromMeta_ToEVM,
   KnownRoute_FromMeta_ToMeta,
   KnownRoute_FromMeta_ToStacks,
+  KnownRoute_FromMeta_ToSolana,
+  KnownRoute_FromMeta_ToTron,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { decodeHex } from "../utils/hexHelpers"
@@ -31,6 +33,8 @@ import {
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./contractHelpers"
+import { isEVMAddress } from "../sdkUtils/types"
+import bs58check from "bs58check"
 
 export async function createBridgeOrderFromMeta(
   sdkContext: SDKGlobalContext,
@@ -54,16 +58,40 @@ export async function createBridgeOrderFromMeta(
   assertExclude(info.toChain, assertExclude.i<KnownChainId.StacksChain>())
 
   if (KnownChainId.isEVMChain(info.toChain)) {
-    if (KnownTokenId.isEVMToken(info.toToken)) {
+    if (KnownTokenId.isEVMToken(info.toToken) && isEVMAddress(info.toAddress)) {
       return createBridgeOrder_MetaToEVM(sdkContext, {
         ...info,
         toChain: info.toChain,
         toToken: info.toToken,
-        toEVMAddress: info.toAddress as EVMAddress,
+        toEVMAddress: info.toAddress,
       })
     }
   }
   assertExclude(info.toChain, assertExclude.i<KnownChainId.EVMChain>())
+
+  if (KnownChainId.isSolanaChain(info.toChain)) {
+    if (KnownTokenId.isSolanaToken(info.toToken)) {
+      return createBridgeOrder_MetaToSolana(sdkContext, {
+        ...info,
+        toChain: info.toChain,
+        toToken: info.toToken,
+        toSolanaAddress: info.toAddress,
+      })
+    }
+  }
+  assertExclude(info.toChain, assertExclude.i<KnownChainId.SolanaChain>())
+
+  if (KnownChainId.isTronChain(info.toChain)) {
+    if (KnownTokenId.isTronToken(info.toToken)) {
+      return createBridgeOrder_MetaToTron(sdkContext, {
+        ...info,
+        toChain: info.toChain,
+        toToken: info.toToken,
+        toTronAddress: info.toAddress,
+      })
+    }
+  }
+  assertExclude(info.toChain, assertExclude.i<KnownChainId.TronChain>())
 
   if (KnownChainId.isBitcoinChain(info.toChain)) {
     if (KnownTokenId.isBitcoinToken(info.toToken)) {
@@ -177,6 +205,36 @@ export async function createBridgeOrder_MetaToMeta(
     ...info,
     fromAddressBuffer: info.fromBitcoinScriptPubKey,
     toAddressBuffer: info.toBitcoinScriptPubKey,
+  })
+}
+
+export async function createBridgeOrder_MetaToSolana(
+  sdkContext: SDKGlobalContext,
+  info: KnownRoute_FromMeta_ToSolana & {
+    fromBitcoinScriptPubKey: Uint8Array
+    toSolanaAddress: string
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
+  return createBridgeOrderFromMetaImpl(sdkContext, {
+    ...info,
+    fromAddressBuffer: info.fromBitcoinScriptPubKey,
+    toAddressBuffer: decodeHex(info.toSolanaAddress as `0x${string}`),
+  })
+}
+
+export async function createBridgeOrder_MetaToTron(
+  sdkContext: SDKGlobalContext,
+  info: KnownRoute_FromMeta_ToTron & {
+    fromBitcoinScriptPubKey: Uint8Array
+    toTronAddress: string
+    swap?: SwapRoute_WithMinimumAmountsToReceive
+  },
+): Promise<undefined | CreateBridgeOrderResult> {
+  return createBridgeOrderFromMetaImpl(sdkContext, {
+    ...info,
+    fromAddressBuffer: info.fromBitcoinScriptPubKey,
+    toAddressBuffer: bs58check.decode(info.toTronAddress),
   })
 }
 

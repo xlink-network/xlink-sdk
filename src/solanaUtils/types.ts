@@ -4,6 +4,7 @@ import { StacksContractAddress } from "../sdkUtils/types"
 
 export interface SolanaSupportedRoute {
   solanaToken: KnownTokenId.SolanaToken
+  solanaTokenAddress: string
   stacksChain: KnownChainId.StacksChain
   stacksToken: KnownTokenId.StacksToken
   proxyStacksTokenContractAddress: null | StacksContractAddress
