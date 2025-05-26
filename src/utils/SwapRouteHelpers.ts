@@ -542,6 +542,12 @@ export async function getSpecialFeeDetailsForSwapRoute(
         )
       } else if (KnownChainId.isEVMChain(route.toChain)) {
         minFeeAmount = context.fromBitcoin.getFixedFeeAmount()
+      } else if (KnownChainId.isSolanaChain(route.toChain)) {
+        // Solana fee handling not yet implemented
+        minFeeAmount = context.fromBitcoin.getFixedFeeAmount()
+      } else if (KnownChainId.isTronChain(route.toChain)) {
+        // Tron fee handling not yet implemented
+        minFeeAmount = context.fromBitcoin.getFixedFeeAmount()
       } else {
         checkNever(route.toChain)
       }
@@ -578,6 +584,12 @@ export async function getSpecialFeeDetailsForSwapRoute(
         )
       } else if (KnownChainId.isEVMChain(route.toChain)) {
         minFeeAmount = context.fromMeta.getFixedFeeAmount()
+      } else if (KnownChainId.isSolanaChain(route.toChain)) {
+        // Solana fee handling not yet implemented
+        minFeeAmount = context.fromMeta.getFixedFeeAmount()
+      } else if (KnownChainId.isTronChain(route.toChain)) {
+        // Tron fee handling not yet implemented
+        minFeeAmount = context.fromMeta.getFixedFeeAmount()
       } else {
         checkNever(route.toChain)
       }
@@ -611,6 +623,12 @@ export async function getSpecialFeeDetailsForSwapRoute(
         )
       } else if (KnownChainId.isEVMChain(route.toChain)) {
         minFeeAmount = context.fromEVM.getFixedFeeAmount()
+      } else if (KnownChainId.isSolanaChain(route.toChain)) {
+        // Solana fee handling not yet implemented
+        minFeeAmount = context.fromEVM.getFixedFeeAmount()
+      } else if (KnownChainId.isTronChain(route.toChain)) {
+        // Tron fee handling not yet implemented
+        minFeeAmount = context.fromEVM.getFixedFeeAmount()
       } else {
         checkNever(route.toChain)
       }
@@ -620,6 +638,12 @@ export async function getSpecialFeeDetailsForSwapRoute(
         minFeeAmount,
         gasFee,
       })
+    } else if (KnownChainId.isSolanaChain(options.initialRoute.fromChain)) {
+      // Solana swap route fee handling not yet implemented
+      return
+    } else if (KnownChainId.isTronChain(options.initialRoute.fromChain)) {
+      // Tron swap route fee handling not yet implemented
+      return
     } else {
       checkNever(options.initialRoute.fromChain)
     }
