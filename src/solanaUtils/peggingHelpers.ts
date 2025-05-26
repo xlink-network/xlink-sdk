@@ -12,6 +12,12 @@ import {
   KnownTokenId,
 } from "../utils/types/knownIds"
 import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
+import {
+  KnownRoute_FromSolana_ToStacks,
+  KnownRoute_FromStacks_ToSolana,
+  KnownRoute_ToStacks,
+} from "../utils/buildSupportedRoutes"
+import { TransferProphet } from "../utils/types/TransferProphet"
 
 export const isSupportedSolanaRoute: IsSupportedFn = async (ctx, route) => {
   const { fromChain, toChain, fromToken, toToken } = route
@@ -194,4 +200,27 @@ export async function solanaTokenFromCorrespondingStacksToken(
       route.stacksToken === fromStacksToken ? [...acc, route.solanaToken] : acc,
     [] as KnownTokenId.SolanaToken[],
   )
+}
+
+export const getSolana2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromSolana_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  throw new Error("WIP: Solana to Stacks fee info not implemented yet")
+}
+
+export const getStacks2SolanaFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromStacks_ToSolana,
+  options: {
+    toDexAggregator: boolean
+    /**
+     * The entry route step that triggered the Stacks transaction.
+     * It's crucial for correctly calculating fees in multi-step bridging
+     * processes.
+     */
+    initialRoute: null | KnownRoute_ToStacks
+  },
+): Promise<undefined | TransferProphet> => {
+  throw new Error("WIP: Stacks to Solana fee info not implemented yet")
 } 
