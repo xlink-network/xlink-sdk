@@ -19,12 +19,16 @@ import {
   KnownRoute_FromBRC20_ToBRC20,
   KnownRoute_FromBRC20_ToEVM,
   KnownRoute_FromBRC20_ToRunes,
+  KnownRoute_FromBRC20_ToSolana,
   KnownRoute_FromBRC20_ToStacks,
+  KnownRoute_FromBRC20_ToTron,
   KnownRoute_FromRunes_ToBitcoin,
   KnownRoute_FromRunes_ToBRC20,
   KnownRoute_FromRunes_ToEVM,
   KnownRoute_FromRunes_ToRunes,
+  KnownRoute_FromRunes_ToSolana,
   KnownRoute_FromRunes_ToStacks,
+  KnownRoute_FromRunes_ToTron,
   KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { UnsupportedBridgeRouteError } from "../utils/errors"
@@ -135,6 +139,32 @@ export const bridgeInfoFromBRC20 = async (
           toToken: route.toToken,
         })
       }
+    } else if (KnownChainId.isSolanaChain(route.toChain)) {
+      if (
+        KnownTokenId.isBRC20Token(route.fromToken) &&
+        KnownTokenId.isSolanaToken(route.toToken)
+      ) {
+        return bridgeInfoFromMeta_toSolana(ctx, {
+          ...info,
+          fromChain: route.fromChain as KnownChainId.BRC20Chain,
+          fromToken: route.fromToken as KnownTokenId.BRC20Token,
+          toChain: route.toChain,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isTronChain(route.toChain)) {
+      if (
+        KnownTokenId.isBRC20Token(route.fromToken) &&
+        KnownTokenId.isTronToken(route.toToken)
+      ) {
+        return bridgeInfoFromMeta_toTron(ctx, {
+          ...info,
+          fromChain: route.fromChain as KnownChainId.BRC20Chain,
+          fromToken: route.fromToken as KnownTokenId.BRC20Token,
+          toChain: route.toChain,
+          toToken: route.toToken,
+        })
+      }
     } else {
       checkNever(route.toChain)
     }
@@ -143,6 +173,8 @@ export const bridgeInfoFromBRC20 = async (
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.RunesChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.SolanaChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.TronChain>())
     checkNever(route)
   }
 
@@ -226,6 +258,32 @@ export const bridgeInfoFromRunes = async (
           toToken: route.toToken,
         })
       }
+    } else if (KnownChainId.isSolanaChain(route.toChain)) {
+      if (
+        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isSolanaToken(route.toToken)
+      ) {
+        return bridgeInfoFromMeta_toSolana(ctx, {
+          ...info,
+          fromChain: route.fromChain as KnownChainId.BRC20Chain,
+          fromToken: route.fromToken as KnownTokenId.BRC20Token,
+          toChain: route.toChain,
+          toToken: route.toToken,
+        })
+      }
+    } else if (KnownChainId.isTronChain(route.toChain)) {
+      if (
+        KnownTokenId.isRunesToken(route.fromToken) &&
+        KnownTokenId.isTronToken(route.toToken)
+      ) {
+        return bridgeInfoFromMeta_toTron(ctx, {
+          ...info,
+          fromChain: route.fromChain as KnownChainId.BRC20Chain,
+          fromToken: route.fromToken as KnownTokenId.BRC20Token,
+          toChain: route.toChain,
+          toToken: route.toToken,
+        })
+      }
     } else {
       checkNever(route.toChain)
     }
@@ -234,6 +292,8 @@ export const bridgeInfoFromRunes = async (
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.SolanaChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.TronChain>())
     checkNever(route)
   }
 
@@ -826,4 +886,26 @@ async function bridgeInfoFromMeta_toMeta(
     BigNumber.from(info.amount),
     exchangeRates,
   )
+}
+
+async function bridgeInfoFromMeta_toSolana(
+  ctx: SDKGlobalContext,
+  info: Omit<
+    BridgeInfoFromMetaInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    (KnownRoute_FromBRC20_ToSolana | KnownRoute_FromRunes_ToSolana),
+): Promise<BridgeInfoFromMetaOutput> {
+  throw new Error("WIP")
+}
+
+async function bridgeInfoFromMeta_toTron(
+  ctx: SDKGlobalContext,
+  info: Omit<
+    BridgeInfoFromMetaInput,
+    "fromChain" | "toChain" | "fromToken" | "toToken"
+  > &
+    (KnownRoute_FromBRC20_ToTron | KnownRoute_FromRunes_ToTron),
+): Promise<BridgeInfoFromMetaOutput> {
+  throw new Error("WIP")
 }
