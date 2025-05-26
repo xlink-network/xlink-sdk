@@ -131,6 +131,10 @@ import {
 } from "./solanaUtils/peggingHelpers"
 import { isSupportedTronRoute } from "./tronUtils/peggingHelpers"
 import { isSupportedSolanaRoute } from "./solanaUtils/peggingHelpers"
+import { getSolanaSupportedRoutes } from "./solanaUtils/getSolanaSupportedRoutes"
+import { SolanaSupportedRoute } from "./solanaUtils/types"
+import { getTronSupportedRoutes } from "./tronUtils/getTronSupportedRoutes"
+import { TronSupportedRoute } from "./tronUtils/types"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -1236,6 +1240,54 @@ export class BroSDK {
   ): Promise<KnownTokenId.SolanaToken[]> {
     if (!KnownChainId.isSolanaChain(chain)) return []
     return solanaTokenFromCorrespondingStacksToken(this.sdkContext, chain, token)
+  }
+
+  /**
+   * Retrieves the `KnownTokenId.SolanaToken` associated with a given Solana token address
+   * on a specific Solana blockchain.
+   * This function queries the list of supported Solana tokens for the specified chain,
+   * and returns the known Solana token ID mapped to the provided token address.
+   *
+   * Always use this function to retrieve a `SolanaToken` ID at runtime.
+   * Do not hardcode or cache token IDs, as supported tokens may change dynamically.
+   *
+   * @param chain - The Solana blockchain (`solana-mainnet` or `solana-testnet`) to search in.
+   * @param address - The Solana token address to look up.
+   *
+   * @returns A promise that resolves with the corresponding `KnownTokenId.SolanaToken`,
+   * or `undefined` if the address is not recognized or the chain is not supported.
+   */
+  async solanaTokenAddressToSolanaToken(
+    chain: ChainId,
+    address: string,
+  ): Promise<undefined | KnownTokenId.SolanaToken> {
+    if (!KnownChainId.isSolanaChain(chain)) return
+    const routes = await getSolanaSupportedRoutes(this.sdkContext, chain)
+    return routes.find((r: SolanaSupportedRoute) => r.solanaTokenAddress === address)?.solanaToken
+  }
+
+  /**
+   * Retrieves the `KnownTokenId.TronToken` associated with a given Tron token address
+   * on a specific Tron blockchain.
+   * This function queries the list of supported Tron tokens for the specified chain,
+   * and returns the known Tron token ID mapped to the provided token address.
+   *
+   * Always use this function to retrieve a `TronToken` ID at runtime.
+   * Do not hardcode or cache token IDs, as supported tokens may change dynamically.
+   *
+   * @param chain - The Tron blockchain (`tron-mainnet` or `tron-testnet`) to search in.
+   * @param address - The Tron token address to look up.
+   *
+   * @returns A promise that resolves with the corresponding `KnownTokenId.TronToken`,
+   * or `undefined` if the address is not recognized or the chain is not supported.
+   */
+  async tronTokenAddressToTronToken(
+    chain: ChainId,
+    address: string,
+  ): Promise<undefined | KnownTokenId.TronToken> {
+    if (!KnownChainId.isTronChain(chain)) return
+    const routes = await getTronSupportedRoutes(this.sdkContext, chain)
+    return routes.find((r: TronSupportedRoute) => r.tronTokenAddress === address)?.tronToken
   }
 }
 
