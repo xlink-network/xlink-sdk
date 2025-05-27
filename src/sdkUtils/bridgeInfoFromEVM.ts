@@ -431,7 +431,6 @@ async function bridgeInfoFromEVM_toSolana(
     getEvm2StacksFeeInfo(ctx, step1Route),
     getStacks2SolanaFeeInfo(ctx, step2Route, {
       initialRoute: step1Route,
-      toDexAggregator: false,
     }),
   ])
   if (step1 == null || step2 == null) {
