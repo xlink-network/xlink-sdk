@@ -646,7 +646,6 @@ async function bridgeInfoFromBitcoin_toSolana(
       }),
       getStacks2SolanaFeeInfo(ctx, _routes[1], {
         initialRoute: _routes[0],
-        toDexAggregator: false,
       }),
     ])
 
@@ -702,7 +701,6 @@ async function bridgeInfoFromBitcoin_toSolana(
       ...intermediaryInfo.steps,
       getStacks2SolanaFeeInfo(ctx, solanaPegOutRoute, {
         initialRoute: last(intermediaryInfo.routes) as KnownRoute_ToStacks,
-        toDexAggregator: false,
       }),
     ])
 
