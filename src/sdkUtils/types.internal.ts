@@ -100,5 +100,9 @@ export interface SDKGlobalContext {
       "mainnet" | "testnet",
       Promise<SolanaSupportedRoute[]>
     >
+    feeRateCache?: SDKGlobalContextCache<
+      string,
+      Promise<undefined | TransferProphet>
+    >
   }
 }
