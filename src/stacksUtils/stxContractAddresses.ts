@@ -199,16 +199,6 @@ export const stxContractAddresses = {
       contractName: StacksContractName.MetaPegOutEndpoint,
     }),
   },
-  [StacksContractName.SolanaPegOutEndpoint]: {
-    [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: contractsMultisigMainnet,
-      contractName: StacksContractName.SolanaPegOutEndpoint,
-    }),
-    [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
-      deployerAddress: contractsMultisigTestnet,
-      contractName: StacksContractName.SolanaPegOutEndpoint,
-    }),
-  },
 } satisfies Record<
   StacksContractName,
   Record<typeof KnownChainId.Stacks.Mainnet | typeof KnownChainId.Stacks.Testnet, StacksContractAddress>

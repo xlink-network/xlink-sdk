@@ -231,7 +231,6 @@ async function bridgeInfoFromStacks_toSolana(
 ): Promise<BridgeInfoFromStacksOutput> {
   const step1 = await getStacks2SolanaFeeInfo(ctx, info, {
     initialRoute: null,
-    toDexAggregator: false,
   })
   if (step1 == null) {
     throw new UnsupportedBridgeRouteError(
