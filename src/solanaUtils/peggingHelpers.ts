@@ -5,7 +5,7 @@ import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupport
 import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
 import { IsSupportedFn } from "../utils/buildSupportedRoutes"
 import { checkNever } from "../utils/typeHelpers"
-import { SDKGlobalContext } from "../sdkUtils/types.internal"
+import { SDKGlobalContext, withGlobalContextCache } from "../sdkUtils/types.internal"
 import {
   _allNoLongerSupportedEVMChains,
   KnownChainId,
@@ -18,6 +18,13 @@ import {
   KnownRoute_ToStacks,
 } from "../utils/buildSupportedRoutes"
 import { TransferProphet } from "../utils/types/TransferProphet"
+import { BigNumber } from "../utils/BigNumber"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import { getSpecialFeeDetailsForSwapRoute } from "../utils/SwapRouteHelpers"
+import { TransferProphet_Fee_Fixed } from "../utils/types/TransferProphet"
+import { executeReadonlyCallBro, getStacksContractCallInfo, getStacksTokenContractInfo, numberFromStacksContractNumber } from "../stacksUtils/contractHelpers"
+import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
+import { unwrapResponse } from "clarity-codegen"
 
 export const isSupportedSolanaRoute: IsSupportedFn = async (ctx, route) => {
   const { fromChain, toChain, fromToken, toToken } = route
@@ -213,14 +220,151 @@ export const getStacks2SolanaFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromStacks_ToSolana,
   options: {
-    toDexAggregator: boolean
-    /**
-     * The entry route step that triggered the Stacks transaction.
-     * It's crucial for correctly calculating fees in multi-step bridging
-     * processes.
-     */
     initialRoute: null | KnownRoute_ToStacks
   },
 ): Promise<undefined | TransferProphet> => {
-  throw new Error("WIP: Stacks to Solana fee info not implemented yet")
-} 
+  return withGlobalContextCache(
+    ctx.solana.feeRateCache,
+    [
+      withGlobalContextCache.cacheKeyFromRoute(route),
+      options.initialRoute == null
+        ? ""
+        : withGlobalContextCache.cacheKeyFromRoute(options.initialRoute),
+    ].join("#"),
+    () => _getStacks2SolanaFeeInfo(ctx, route, options),
+  )
+}
+
+const _getStacks2SolanaFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromStacks_ToSolana,
+  options: {
+    initialRoute: null | KnownRoute_ToStacks
+  },
+): Promise<undefined | TransferProphet> => {
+  const stacksContractCallInfo = getStacksContractCallInfo(
+    route.fromChain,
+    StacksContractName.EVMPegOutEndpoint,
+  )
+  const stacksTokenContractCallInfo = await getStacksTokenContractInfo(
+    ctx,
+    route.fromChain,
+    route.fromToken,
+  )
+  const toChainId = contractAssignedChainIdFromKnownChain(route.toChain)
+  if (
+    stacksContractCallInfo == null ||
+    stacksTokenContractCallInfo == null
+  ) {
+    return
+  }
+
+  const terminatingStacksTokenAddress = stacksTokenContractCallInfo
+
+  const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+    initialRoute: options.initialRoute,
+    swapRoute: null,
+  })
+
+  if (ctx.debugLog) {
+    console.log("[getStacks2EvmFeeInfo/specialFeeInfo]", route, specialFeeInfo)
+  }
+
+  const tokenConf = await Promise.all([
+    executeReadonlyCallBro(
+      stacksContractCallInfo.contractName,
+      "get-approved-pair-or-fail",
+      {
+        pair: {
+          token: `${terminatingStacksTokenAddress.deployerAddress}.${terminatingStacksTokenAddress.contractName}`,
+          "chain-id": toChainId,
+        },
+      },
+      stacksContractCallInfo.executeOptions,
+    ),
+    executeReadonlyCallBro(
+      stacksContractCallInfo.contractName,
+      "get-paused",
+      {},
+      stacksContractCallInfo.executeOptions,
+    ),
+  ]).then(
+    ([resp, isPaused]) => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, resp, isPaused)
+      }
+
+      if (resp.type !== "success") return undefined
+
+      return {
+        ...unwrapResponse(resp),
+        isPaused,
+      }
+    },
+    err => {
+      if (ctx.debugLog) {
+        console.log("[getStacks2EvmFeeInfo]", route, err)
+      }
+      throw err
+    },
+  )
+
+  if (tokenConf == null) return undefined
+
+  const isPaused = tokenConf.isPaused || tokenConf.approved === false
+  const reserve = numberFromStacksContractNumber(tokenConf.reserve)
+
+  const minAmount = numberFromStacksContractNumber(tokenConf["min-amount"])
+  const maxAmount = BigNumber.min([
+    numberFromStacksContractNumber(tokenConf["max-amount"]),
+    reserve,
+  ])
+
+  if (specialFeeInfo != null) {
+    return {
+      isPaused,
+      bridgeToken: route.fromToken,
+      fees: [
+        {
+          type: "rate",
+          token: route.fromToken,
+          rate: specialFeeInfo.feeRate,
+          minimumAmount: specialFeeInfo.minFeeAmount,
+        },
+        ...(specialFeeInfo.gasFee == null
+          ? []
+          : [
+              {
+                type: "fixed",
+                token: specialFeeInfo.gasFee.token,
+                amount: specialFeeInfo.gasFee.amount,
+              } satisfies TransferProphet_Fee_Fixed,
+            ]),
+      ],
+      minBridgeAmount: BigNumber.isZero(minAmount)
+        ? specialFeeInfo.minFeeAmount
+        : BigNumber.max([minAmount, specialFeeInfo.minFeeAmount]),
+      maxBridgeAmount: maxAmount,
+    }
+  }
+
+  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
+  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
+
+  return {
+    isPaused,
+    bridgeToken: route.fromToken,
+    fees: [
+      {
+        type: "rate",
+        token: route.fromToken,
+        rate: feeRate,
+        minimumAmount: minFee,
+      },
+    ],
+    minBridgeAmount: BigNumber.isZero(minAmount)
+      ? minFee
+      : BigNumber.max([minAmount, minFee]),
+    maxBridgeAmount: maxAmount,
+  }
+}
