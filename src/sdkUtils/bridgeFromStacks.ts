@@ -276,30 +276,24 @@ async function bridgeFromStacks_toSolana(
     )
   }
 
-  // const terminatingTokenContractAddress =
-  //   (await getTerminatingStacksTokenContractAddress(ctx, {
-  //     stacksChain: info.fromChain,
-  //     evmChain: info.toChain,
-  //     evmToken: info.toToken,
-  //   })) ?? fromTokenContractInfo
+  const terminatingTokenContractAddress = fromTokenContractInfo
 
-  // const options = composeTxBro(
-  //   contractCallInfo.contractName,
-  //   "transfer-to-unwrap",
-  //   {
-  //     "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
-  //     "amount-in-fixed": numberToStacksContractNumber(info.amount),
-  //     "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
-  //     "settle-address": decodeHex(info.toAddress),
-  //   },
-  //   {
-  //     ...contractCallInfo.executeOptions,
-  //     postConditions: undefined as undefined | FungiblePostConditionWire[],
-  //   },
-  // )
+  const options = composeTxBro(
+    contractCallInfo.contractName,
+    "transfer-to-unwrap",
+    {
+      "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
+      "amount-in-fixed": numberToStacksContractNumber(info.amount),
+      "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
+      "settle-address": decodeHex(info.toAddress),
+    },
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
+  )
 
-  // return await info.sendTransaction(options)
-  throw new Error("Not implemented")
+  return await info.sendTransaction(options)
 }
 
 async function bridgeFromStacks_toTron(
@@ -328,30 +322,24 @@ async function bridgeFromStacks_toTron(
     )
   }
 
-  // const terminatingTokenContractAddress =
-  //   (await getTerminatingStacksTokenContractAddress(ctx, {
-  //     stacksChain: info.fromChain,
-  //     tronChain: info.toChain,
-  //     tronToken: info.toToken,
-  //   })) ?? fromTokenContractInfo
+  const terminatingTokenContractAddress = fromTokenContractInfo
 
-  // const options = composeTxBro(
-  //   contractCallInfo.contractName,
-  //   "transfer-to-unwrap",
-  //   {
-  //     "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
-  //     "amount-in-fixed": numberToStacksContractNumber(info.amount),
-  //     "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
-  //     "settle-address": decodeHex(info.toAddress),
-  //   },
-  //   {
-  //     ...contractCallInfo.executeOptions,
-  //     postConditions: undefined as undefined | FungiblePostConditionWire[],
-  //   },
-  // )
+  const options = composeTxBro(
+    contractCallInfo.contractName,
+    "transfer-to-unwrap",
+    {
+      "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
+      "amount-in-fixed": numberToStacksContractNumber(info.amount),
+      "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
+      "settle-address": decodeHex(info.toAddress),
+    },
+    {
+      ...contractCallInfo.executeOptions,
+      postConditions: undefined as undefined | FungiblePostConditionWire[],
+    },
+  )
 
-  // return await info.sendTransaction(options)
-  throw new Error("Not implemented")
+  return await info.sendTransaction(options)
 }
 
 async function bridgeFromStacks_toMeta(
