@@ -27,6 +27,7 @@ import { assertExclude, checkNever } from "../utils/typeHelpers"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { addressToBuffer } from "../lowlevelUnstableInfos"
 
 export type BridgeFromStacksInput_ContractCallOptions = ContractCallOptions
 
@@ -285,7 +286,7 @@ async function bridgeFromStacks_toSolana(
       "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
-      "settle-address": decodeHex(info.toAddress),
+      "settle-address": addressToBuffer(info.toChain, info.toAddress),
     },
     {
       ...contractCallInfo.executeOptions,
@@ -331,7 +332,7 @@ async function bridgeFromStacks_toTron(
       "token-trait": `${terminatingTokenContractAddress.deployerAddress}.${terminatingTokenContractAddress.contractName}`,
       "amount-in-fixed": numberToStacksContractNumber(info.amount),
       "dest-chain-id": contractAssignedChainIdFromKnownChain(info.toChain),
-      "settle-address": decodeHex(info.toAddress),
+      "settle-address": addressToBuffer(info.toChain, info.toAddress),
     },
     {
       ...contractCallInfo.executeOptions,
