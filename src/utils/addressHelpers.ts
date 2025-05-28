@@ -54,7 +54,7 @@ export function addressFromBuffer(
   }
 
   if (KnownChainId.isSolanaChain(chain)) {
-    return encodeZeroPrefixedHex(buffer)
+    return bs58check.encode(buffer)
   }
 
   checkNever(chain)
@@ -114,7 +114,7 @@ export function addressToBuffer(
   }
 
   if (KnownChainId.isSolanaChain(chain)) {
-    return decodeHex(address)
+    return bs58check.decode(address)
   }
 
   checkNever(chain)
