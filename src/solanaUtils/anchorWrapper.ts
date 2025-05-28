@@ -1,6 +1,6 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider, web3, Idl, Wallet } from "@coral-xyz/anchor";
-import bridgeRegistryIdl from "./idl/bridge_registry.json";
+import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
 import { numberFromSolanaContractNumber } from "./contractHelpers";
 import { BigNumber } from "../utils/BigNumber";
@@ -47,7 +47,7 @@ export class AnchorWrapper {
   async getTokenConfigAccount(mintAddress: PublicKey): Promise<TokenConfigAccount> {
     const [tokenConfigPda] = PublicKey.findProgramAddressSync(
       [
-        Buffer.from("token_config"),
+        new TextEncoder().encode("token_config"),
         mintAddress.toBuffer(),
       ],
       this.program.programId
@@ -69,14 +69,14 @@ export class AnchorWrapper {
   }
 } 
 
-if (require.main === module) {
-  (async () => {
-    const anchorWrapper = new AnchorWrapper(
-      new Connection("https://api.devnet.solana.com"),
-      "7ek62Vb634rwMhe44XC4FAs6Kff7MqrGx4XvSdsnDNoU"
-    );
+// if (require.main === module) {
+//   (async () => {
+//     const anchorWrapper = new AnchorWrapper(
+//       new Connection("https://api.devnet.solana.com"),
+//       "7ek62Vb634rwMhe44XC4FAs6Kff7MqrGx4XvSdsnDNoU"
+//     );
 
-    const tokenConfigAccount = await anchorWrapper.getTokenConfigAccount(new PublicKey("8hS2fqr3Zk1LNJ3Q8iiQD49goH5zVkQZvmk4tW3HNXmo"));
-    console.log(tokenConfigAccount);
-  })();
-}
+//     const tokenConfigAccount = await anchorWrapper.getTokenConfigAccount(new PublicKey("8hS2fqr3Zk1LNJ3Q8iiQD49goH5zVkQZvmk4tW3HNXmo"));
+//     console.log(tokenConfigAccount);
+//   })();
+// }
