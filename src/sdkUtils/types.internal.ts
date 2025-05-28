@@ -1,4 +1,5 @@
 import { Client } from "viem"
+import { Connection } from "@solana/web3.js"
 import { EVMOnChainConfigByEVMChain } from "../evmUtils/apiHelpers/getEVMOnChainConfig"
 import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
@@ -103,5 +104,6 @@ export interface SDKGlobalContext {
       string,
       Promise<undefined | TransferProphet>
     >
+    connection?: Connection
   }
 }
