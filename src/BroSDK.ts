@@ -135,6 +135,16 @@ import { getSolanaSupportedRoutes } from "./solanaUtils/getSolanaSupportedRoutes
 import { SolanaSupportedRoute } from "./solanaUtils/types"
 import { getTronSupportedRoutes } from "./tronUtils/getTronSupportedRoutes"
 import { TronSupportedRoute } from "./tronUtils/types"
+import {
+  BridgeFromSolanaInput,
+  BridgeFromSolanaOutput,
+  bridgeFromSolana,
+} from "./sdkUtils/bridgeFromSolana"
+import {
+  BridgeInfoFromSolanaInput,
+  BridgeInfoFromSolanaOutput,
+  bridgeInfoFromSolana,
+} from "./sdkUtils/bridgeInfoFromSolana"
 
 export {
   GetSupportedRoutesFn_Conditions,
@@ -1336,6 +1346,64 @@ export class BroSDK {
     if (!KnownChainId.isTronChain(chain)) return
     const routes = await getTronSupportedRoutes(this.sdkContext, chain)
     return routes.find((r: TronSupportedRoute) => r.tronToken === token)?.tronTokenAddress
+  }
+
+  /**
+   * This function provides detailed information about token transfers from the Solana network to other supported
+   * blockchain networks, including Stacks, EVM-compatible chains, Bitcoin, BRC-20, Runes, and other Solana chains.
+   * It verifies the validity of the transfer route and retrieves bridge information based on the destination chain and tokens.
+   *
+   * @param input - An object containing the input parameters required for retrieving bridge information:
+   * - `fromChain: ChainId` - The ID of the source blockchain (Solana in this case).
+   * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, Bitcoin, etc.).
+   * - `fromToken: TokenId` - The token being transferred from the Solana network.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `amount: SDKNumber` - The amount of tokens involved in the transfer.
+   *
+   * @returns A promise that resolves with an object containing detailed information about the token transfer, including:
+   * - `fromChain: KnownChainId.KnownChain` - The source blockchain.
+   * - `fromToken: KnownTokenId.KnownToken` - The token being transferred from the Solana network.
+   * - `toChain: KnownChainId.KnownChain` - The destination blockchain.
+   * - `toToken: KnownTokenId.KnownToken` - The token expected on the destination chain.
+   * - `fromAmount: SDKNumber` - The amount of tokens being transferred.
+   * - `toAmount: SDKNumber` - The amount of tokens expected on the destination chain after the transfer.
+   * - `feeAmount: SDKNumber` - The fee amount deducted during the transfer.
+   *
+   * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
+   * chains or tokens is unsupported.
+   */
+  bridgeInfoFromSolana(
+    input: BridgeInfoFromSolanaInput,
+  ): Promise<BridgeInfoFromSolanaOutput> {
+    return bridgeInfoFromSolana(this.sdkContext, input)
+  }
+
+  /**
+   * This function facilitates the transfer of tokens from the Solana network to other supported
+   * blockchain networks, including Stacks, EVM-compatible chains, Bitcoin, BRC-20, Runes, and other Solana chains.
+   * It validates the route and calls the appropriate bridging function based on the destination chain and tokens involved.
+   *
+   * @param input - An object containing the input parameters required for the bridging operation:
+   * - `fromChain: ChainId` - The ID of the source blockchain (Solana in this case).
+   * - `toChain: ChainId` - The ID of the destination blockchain (Stacks, EVM, Bitcoin, etc.).
+   * - `fromToken: TokenId` - The token being transferred from the Solana network.
+   * - `toToken: TokenId` - The token expected on the destination chain.
+   * - `fromAddress: string` - The sender's address on the Solana network.
+   * - `toAddress: string` - The recipient's address on the destination blockchain.
+   * - `toAddressScriptPubKey?: Uint8Array` - Required when the destination is a Bitcoin-based chain.
+   * - `amount: SDKNumber` - The amount of tokens to transfer.
+   * - `sendTransaction` - Function to send the transaction on the Solana network.
+   *
+   * @returns A promise that resolves with the transaction hash (`txHash`) of the bridging operation.
+   *
+   * @throws UnsupportedBridgeRouteError - If the provided route between the source and destination
+   * chains or tokens is unsupported.
+   * @throws InvalidMethodParametersError - If required parameters are missing or invalid.
+   */
+  bridgeFromSolana(
+    input: BridgeFromSolanaInput,
+  ): Promise<BridgeFromSolanaOutput> {
+    return bridgeFromSolana(this.sdkContext, input)
   }
 }
 

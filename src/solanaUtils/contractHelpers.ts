@@ -3,6 +3,7 @@ import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { KnownChainId } from "../utils/types/knownIds"
 import { getSolanaSupportedRoutes } from "./getSolanaSupportedRoutes"
 import { SolanaSupportedRoute } from "./types"
+import { BigNumber, type BigNumberSource } from "../utils/BigNumber"
 
 export async function getSolanaTokenContractInfo(
   sdkContext: SDKGlobalContext,
@@ -25,4 +26,26 @@ export async function getSolanaTokenContractInfo(
     client,
     tokenContractAddress: route.solanaTokenAddress,
   }
+}
+
+const SOLANA_CONTRACT_COMMON_NUMBER_SCALE = 9
+
+export const numberFromSolanaContractNumber = (
+  num: bigint,
+  decimals?: number,
+): BigNumber => {
+  return BigNumber.leftMoveDecimals(
+    decimals ?? SOLANA_CONTRACT_COMMON_NUMBER_SCALE,
+    num,
+  )
+}
+
+export const numberToSolanaContractNumber = (
+  num: BigNumberSource,
+  decimals?: number,
+): bigint => {
+  return BigNumber.toBigInt(
+    {},
+    BigNumber.rightMoveDecimals(decimals ?? SOLANA_CONTRACT_COMMON_NUMBER_SCALE, num),
+  )
 }

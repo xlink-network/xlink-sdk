@@ -2,6 +2,15 @@ import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider, web3, Idl, Wallet } from "@coral-xyz/anchor";
 import bridgeRegistryIdl from "./idl/bridge_registry.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
+import { numberFromSolanaContractNumber } from "./contractHelpers";
+import { BigNumber } from "../utils/BigNumber";
+
+export interface TokenConfigAccount {
+  feePct: BigNumber;
+  minFee: BigNumber;
+  minAmount: BigNumber;
+  maxAmount: BigNumber;
+}
 
 export class AnchorWrapper {
   private program: Program<BridgeRegistry>;
@@ -33,9 +42,9 @@ export class AnchorWrapper {
   /**
    * Get the token config account for a specific token mint
    * @param mintAddress The mint address of the token
-   * @returns The token config account data
+   * @returns The token config account data with BigNumber values
    */
-  async getTokenConfigAccount(mintAddress: PublicKey) {
+  async getTokenConfigAccount(mintAddress: PublicKey): Promise<TokenConfigAccount> {
     const [tokenConfigPda] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("token_config"),
@@ -46,7 +55,14 @@ export class AnchorWrapper {
 
     try {
       const tokenConfigAccount = await this.program.account.tokenConfigAccount.fetch(tokenConfigPda);
-      return tokenConfigAccount;
+      
+      // Map BN values to BigNumber
+      return {
+        feePct: numberFromSolanaContractNumber(tokenConfigAccount.feePct),
+        minFee: numberFromSolanaContractNumber(tokenConfigAccount.minFee),
+        minAmount: numberFromSolanaContractNumber(tokenConfigAccount.minAmount),
+        maxAmount: numberFromSolanaContractNumber(tokenConfigAccount.maxAmount),
+      };
     } catch (error) {
       throw new Error(`Failed to fetch token config account: ${error}`);
     }
