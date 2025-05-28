@@ -63,8 +63,9 @@ export function contractAssignedChainIdFromKnownChain(
     case KnownChainId.EVM.Mezo:
       return 18n
     case KnownChainId.Solana.Mainnet:
-    case KnownChainId.Solana.Testnet:
       return 19n
+    case KnownChainId.Solana.Testnet:
+      return 6n // for testing
     case KnownChainId.Tron.Mainnet:
     case KnownChainId.Tron.Testnet:
       return 20n
