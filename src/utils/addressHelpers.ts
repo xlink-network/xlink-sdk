@@ -13,6 +13,7 @@ import { decodeHex, encodeHex, encodeZeroPrefixedHex } from "./hexHelpers"
 import { checkNever } from "./typeHelpers"
 import { KnownChainId } from "./types/knownIds"
 import bs58check from "bs58check"
+import bs58 from "bs58"
 
 export function addressFromBuffer(
   chain: KnownChainId.KnownChain,
@@ -54,7 +55,7 @@ export function addressFromBuffer(
   }
 
   if (KnownChainId.isSolanaChain(chain)) {
-    return bs58check.encode(buffer)
+    return bs58.encode(buffer)
   }
 
   checkNever(chain)
@@ -114,7 +115,7 @@ export function addressToBuffer(
   }
 
   if (KnownChainId.isSolanaChain(chain)) {
-    return bs58check.decode(address)
+    return bs58.decode(address)
   }
 
   checkNever(chain)
