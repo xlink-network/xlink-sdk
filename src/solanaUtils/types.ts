@@ -1,6 +1,7 @@
 import { BigNumber } from "../utils/BigNumber"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../sdkUtils/types"
+import { PublicKey } from "@solana/web3.js"
 
 export interface SolanaSupportedRoute {
   solanaToken: KnownTokenId.SolanaToken
@@ -12,4 +13,33 @@ export interface SolanaSupportedRoute {
   pegOutMinFeeAmount: null | BigNumber
   pegOutMinAmount: null | BigNumber
   pegOutMaxAmount: null | BigNumber
+}
+
+export interface SolanaToken {
+  address: string;
+  name: string;
+  symbol: string;
+  decimals: number;
+}
+
+export interface SolanaConfig {
+  network: "mainnet" | "testnet";
+  rpcEndpoint: string;
+  programIds: {
+    bridgeEndpoint: string;
+    registry: string;
+  };
+  tokens: SolanaToken[];
+}
+
+export interface SolanaSupportedRoutesAndConfig {
+  routes: SolanaSupportedRoute[];
+  solanaConfig: SolanaConfig;
+}
+
+export interface TokenConfigAccount {
+  feePct: BigNumber;
+  minFee: BigNumber;
+  minAmount: BigNumber;
+  maxAmount: BigNumber;
 } 

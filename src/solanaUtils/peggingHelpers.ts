@@ -25,6 +25,10 @@ import { TransferProphet_Fee_Fixed } from "../utils/types/TransferProphet"
 import { executeReadonlyCallBro, getStacksContractCallInfo, getStacksTokenContractInfo, numberFromStacksContractNumber } from "../stacksUtils/contractHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
 import { unwrapResponse } from "clarity-codegen"
+import { getSolanaConfigs } from "./getSolanaSupportedRoutes"
+import { AnchorWrapper } from "./anchorWrapper"
+import { PublicKey } from "@solana/web3.js"
+import { TokenConfigAccount } from "./types"
 
 export const isSupportedSolanaRoute: IsSupportedFn = async (ctx, route) => {
   const { fromChain, toChain, fromToken, toToken } = route
@@ -213,7 +217,61 @@ export const getSolana2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromSolana_ToStacks,
 ): Promise<undefined | TransferProphet> => {
-  throw new Error("WIP: Solana to Stacks fee info not implemented yet")
+  return withGlobalContextCache(
+    ctx.solana.feeRateCache,
+    withGlobalContextCache.cacheKeyFromRoute(route),
+    () => _getSolana2StacksFeeInfo(ctx, route),
+  )
+}
+
+const _getSolana2StacksFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromSolana_ToStacks,
+): Promise<undefined | TransferProphet> => {
+  if (!ctx.solana.connection) {
+    throw new Error("Solana connection not available")
+  }
+
+  // Get Solana config
+  const solanaConfig = await getSolanaConfigs(ctx, KnownChainId.Solana.Mainnet)
+  
+  const anchorWrapper = new AnchorWrapper(
+    ctx.solana.connection,
+    solanaConfig.programIds.registry
+  )
+  
+  // Get token config from cache or fetch it
+  const tokenMint = new PublicKey(route.fromToken)
+  const cacheKey = tokenMint.toBase58()
+  let tokenConfig: TokenConfigAccount
+  
+  if (ctx.solana.tokenConfigCache?.has(cacheKey)) {
+    tokenConfig = await ctx.solana.tokenConfigCache.get(cacheKey)!
+  } else {
+    tokenConfig = await anchorWrapper.getTokenConfigAccount(tokenMint)
+    if (!ctx.solana.tokenConfigCache) {
+      ctx.solana.tokenConfigCache = new Map()
+    }
+    ctx.solana.tokenConfigCache.set(cacheKey, Promise.resolve(tokenConfig))
+  }
+
+  // Create a new TransferProphet with the fee information
+  const transferProphet: TransferProphet = {
+    isPaused: false,
+    bridgeToken: route.fromToken,
+    minBridgeAmount: tokenConfig.minAmount,
+    maxBridgeAmount: tokenConfig.maxAmount,
+    fees: [
+      {
+        type: "rate",
+        token: route.fromToken,
+        rate: tokenConfig.feePct,
+        minimumAmount: tokenConfig.minFee
+      }
+    ]
+  }
+
+  return transferProphet
 }
 
 export const getStacks2SolanaFeeInfo = async (

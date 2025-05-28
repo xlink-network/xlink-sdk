@@ -11,7 +11,8 @@ import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
 import { TransferProphet } from "../utils/types/TransferProphet"
 import { TronSupportedRoute } from "../tronUtils/types"
-import { SolanaSupportedRoute } from "../solanaUtils/types"
+import { SolanaSupportedRoute, SolanaSupportedRoutesAndConfig } from "../solanaUtils/types"
+import { TokenConfigAccount } from "../solanaUtils/types"
 
 export interface SDKGlobalContextCache<K, V>
   extends GeneralCacheInterface<K, V> {}
@@ -98,11 +99,15 @@ export interface SDKGlobalContext {
   solana: {
     routesConfigCache?: SDKGlobalContextCache<
       "mainnet" | "testnet",
-      Promise<SolanaSupportedRoute[]>
+      Promise<SolanaSupportedRoutesAndConfig>
     >
     feeRateCache?: SDKGlobalContextCache<
       string,
       Promise<undefined | TransferProphet>
+    >
+    tokenConfigCache?: SDKGlobalContextCache<
+      string,
+      Promise<TokenConfigAccount>
     >
     connection?: Connection
   }
