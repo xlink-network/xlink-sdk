@@ -1,5 +1,5 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { Program, AnchorProvider, web3, Idl, Wallet } from "@coral-xyz/anchor";
+import { Program, AnchorProvider, web3, Idl } from "@coral-xyz/anchor";
 import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
 import { numberFromSolanaContractNumber } from "./contractHelpers";
@@ -21,11 +21,15 @@ export class AnchorWrapper {
     programId: string
   ) {
     // Create a dummy wallet since we're only reading data
-    const dummyWallet = new web3.Keypair();
-    
+    const dummyWallet = {
+      publicKey: PublicKey.default,
+      signTransaction: () => Promise.reject(),
+      signAllTransactions: () => Promise.reject(),
+    };
+
     this.provider = new AnchorProvider(
       connection,
-      new Wallet(dummyWallet),
+      dummyWallet,
       { commitment: "confirmed" }
     );
 
