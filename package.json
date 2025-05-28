@@ -62,6 +62,7 @@
     "@stacks/network": "^7.0.2",
     "@stacks/transactions": "^7.0.5",
     "big.js": "^6.2.2",
+    "bs58": "^6.0.0",
     "bs58check": "^4.0.0",
     "c32check": "^2.0.0",
     "clarity-codegen": "^1.1.3",
