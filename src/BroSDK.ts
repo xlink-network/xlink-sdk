@@ -1289,6 +1289,54 @@ export class BroSDK {
     const routes = await getTronSupportedRoutes(this.sdkContext, chain)
     return routes.find((r: TronSupportedRoute) => r.tronTokenAddress === address)?.tronToken
   }
+
+  /**
+   * Retrieves the Solana token address associated with a given `KnownTokenId.SolanaToken`
+   * on a specific Solana blockchain.
+   * This function queries the list of supported Solana tokens for the specified chain,
+   * and returns the token address mapped to the provided Solana token ID.
+   *
+   * Always use this function to retrieve a Solana token address at runtime.
+   * Do not hardcode or cache token addresses, as supported tokens may change dynamically.
+   *
+   * @param chain - The Solana blockchain (`solana-mainnet` or `solana-testnet`) to search in.
+   * @param token - The Solana token ID to look up.
+   *
+   * @returns A promise that resolves with the corresponding Solana token address,
+   * or `undefined` if the token is not recognized or the chain is not supported.
+   */
+  async solanaTokenToSolanaTokenAddress(
+    chain: ChainId,
+    token: KnownTokenId.SolanaToken,
+  ): Promise<undefined | string> {
+    if (!KnownChainId.isSolanaChain(chain)) return
+    const routes = await getSolanaSupportedRoutes(this.sdkContext, chain)
+    return routes.find((r: SolanaSupportedRoute) => r.solanaToken === token)?.solanaTokenAddress
+  }
+
+  /**
+   * Retrieves the Tron token address associated with a given `KnownTokenId.TronToken`
+   * on a specific Tron blockchain.
+   * This function queries the list of supported Tron tokens for the specified chain,
+   * and returns the token address mapped to the provided Tron token ID.
+   *
+   * Always use this function to retrieve a Tron token address at runtime.
+   * Do not hardcode or cache token addresses, as supported tokens may change dynamically.
+   *
+   * @param chain - The Tron blockchain (`tron-mainnet` or `tron-testnet`) to search in.
+   * @param token - The Tron token ID to look up.
+   *
+   * @returns A promise that resolves with the corresponding Tron token address,
+   * or `undefined` if the token is not recognized or the chain is not supported.
+   */
+  async tronTokenToTronTokenAddress(
+    chain: ChainId,
+    token: KnownTokenId.TronToken,
+  ): Promise<undefined | string> {
+    if (!KnownChainId.isTronChain(chain)) return
+    const routes = await getTronSupportedRoutes(this.sdkContext, chain)
+    return routes.find((r: TronSupportedRoute) => r.tronToken === token)?.tronTokenAddress
+  }
 }
 
 async function stacksAddressFromStacksToken(
