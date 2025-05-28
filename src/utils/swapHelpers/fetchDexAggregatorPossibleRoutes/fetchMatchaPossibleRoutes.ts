@@ -10,6 +10,9 @@ export class FetchMatchaPossibleRoutesFailedError extends BroSDKErrorBase {
   }
 }
 
+/**
+ * @deprecated Use `fetchKyberSwapPossibleRoutesFactory` instead
+ */
 export const fetchMatchaPossibleRoutesFactory = (options: {
   apiKey: string
   /**

@@ -1,13 +1,13 @@
 # Changelog
 
-## [Unreleased (0.5.0-x)]
+## [0.5.0]
 
 ### Breaking Changes
 
 - **Project Rebranded to Brotocol**:
-    - The package scope changed from `@xlink-network` to `@brotocol-xyz`.
-    - The main SDK class `XLinkSDK` has been renamed to `BroSDK`.
-- **Upgraded @stacks/* dependencies to v7.x**
+  - The package scope changed from `@xlink-network` to `@brotocol-xyz`.
+  - The main SDK class `XLinkSDK` has been renamed to `BroSDK`.
+- **Upgraded @stacks/\* dependencies to v7.x**
   - `bridgeFromStacks.sendTransaction` type signature changed
 
 ### Major New Features
@@ -28,29 +28,27 @@
   - Optimized swap transaction flow with improved fee estimation
 
 - **DEX Aggregator Integrations**
-  - Added Matcha.xyz (0x Protocol) integration for optimal swap routing
+  - Added KyberSwap integration for optimal swap routing
   - Enhanced swap parameter helpers for DEX interactions
   - Added multi-hop routing capabilities for better exchange rates
 
-- **New Token Support**
-  - Added support for WBTC on Arbitrum
-  - Added STX token on EVM chains
-  - Added support for TRUMP token
-  - Expanded token mapping logic between chains
+- **New EVM Chains Support**
+  - Added support for Avalanche, Mezo chains
+  - Added support for vLiaBTC, STX, TRUMP, GHIBLICZ, WETH, SOL, LINK, and more tokens on EVM chains
 
 - **Dependencies upgrades**
   - Viem -> v2.23.10
 
 ### Security Enhancements
 
-- Added hard linkage support to Bitcoin/BRC-20/Runes > * routes
+- Added hard linkage support to Bitcoin/BRC-20/Runes > \* routes
 - Disabled Replace-By-Fee (RBF) for Bitcoin transactions by default
 - Enhanced validation for bridge transactions
 - Improved error handling for malformed transaction data
 
 ### Bug Fixes
 
-- Fixed reserve limitation not working on * > EVM routes
+- Fixed reserve limitation not working on \* > EVM routes
 - Fixed fixed fee rate token incorrect for Stacks > Meta routes
 - Resolved edge cases in cross-chain transaction validation
 - Fixed various minor issues and edge cases

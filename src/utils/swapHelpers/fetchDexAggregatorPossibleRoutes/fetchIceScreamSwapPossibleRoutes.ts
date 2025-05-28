@@ -10,6 +10,9 @@ export class FetchIceScreamSwapPossibleRoutesFailedError extends BroSDKErrorBase
   }
 }
 
+/**
+ * @deprecated Use `fetchKyberSwapPossibleRoutesFactory` instead
+ */
 export const fetchIceScreamSwapPossibleRoutesFactory = (options: {
   /**
    * The maximum number of routes to fetch in same time
