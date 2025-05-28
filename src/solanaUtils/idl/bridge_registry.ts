@@ -5,6 +5,7 @@
  * IDL can be found at `target/idl/bridge_registry.json`.
  */
 export type BridgeRegistry = {
+  "address": "2FSuDUk6QZioVmGQfasK5mhNkb1vt7WxDy8s7zkB5vch",
   "metadata": {
     "name": "bridgeRegistry",
     "version": "0.1.0",
