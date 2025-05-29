@@ -1,7 +1,9 @@
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider, web3, Idl } from "@coral-xyz/anchor";
 import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
+import bridgeEndpointIdl from "./idl/bridge_endpoint.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
+import { BridgeEndpoint } from "./idl/bridge_endpoint";
 import { numberFromSolanaContractNumber } from "./contractHelpers";
 import { BigNumber } from "../utils/BigNumber";
 
@@ -13,12 +15,14 @@ export interface TokenConfigAccount {
 }
 
 export class AnchorWrapper {
-  private program: Program<BridgeRegistry>;
+  private registryProgram: Program<BridgeRegistry>;
+  private endpointProgram: Program<BridgeEndpoint>;
   private provider: AnchorProvider;
 
   constructor(
     rpcEndpoint: string,
-    programId: string
+    registryProgramId: string,
+    endpointProgramId: string
   ) {
     // Create a dummy wallet since we're only reading data
     const dummyWallet = {
@@ -35,11 +39,20 @@ export class AnchorWrapper {
       { commitment: "confirmed" }
     );
 
-    // Initialize the program with the bridge registry IDL
-    this.program = new Program<BridgeRegistry>(
+    // Initialize the registry program with the bridge registry IDL
+    this.registryProgram = new Program<BridgeRegistry>(
       {
         ...bridgeRegistryIdl,
-        address: programId,
+        address: registryProgramId,
+      },
+      this.provider
+    );
+
+    // Initialize the endpoint program with the bridge endpoint IDL
+    this.endpointProgram = new Program<BridgeEndpoint>(
+      {
+        ...bridgeEndpointIdl,
+        address: endpointProgramId,
       },
       this.provider
     );
@@ -56,11 +69,11 @@ export class AnchorWrapper {
         new TextEncoder().encode("token_config"),
         mintAddress.toBuffer(),
       ],
-      this.program.programId
+      this.registryProgram.programId
     );
 
     try {
-      const tokenConfigAccount = await this.program.account.tokenConfigAccount.fetch(tokenConfigPda);
+      const tokenConfigAccount = await this.registryProgram.account.tokenConfigAccount.fetch(tokenConfigPda);
       
       // Map BN values to BigNumber
       return {
