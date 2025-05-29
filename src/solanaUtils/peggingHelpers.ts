@@ -238,7 +238,8 @@ const _getSolana2StacksFeeInfo = async (
   
   const anchorWrapper = new AnchorWrapper(
     solanaConfig.rpcEndpoint,
-    solanaConfig.programIds.registry
+    solanaConfig.programIds.registry,
+    solanaConfig.programIds.bridgeEndpoint
   )
   
   // Get token config from cache or fetch it
