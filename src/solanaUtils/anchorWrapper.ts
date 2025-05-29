@@ -119,13 +119,17 @@ export class AnchorWrapper {
     // Check if mint authority exists and equals the bridge registry PDA
 
     // Get the bridge endpoint PDA
+    const [bridgeRegistryPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("bridge_registry")],
+      this.registryProgram.programId
+    );
+    const isBurnable = mintInfo.mintAuthority?.equals(bridgeRegistryPda) ?? false;
+
+    // Get the peg-in ATA
     const [bridgeEndpointPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("bridge_endpoint")],
       this.endpointProgram.programId
     );
-    const isBurnable = mintInfo.mintAuthority?.equals(bridgeEndpointPda) ?? false;
-
-    // Get the peg-in ATA
     const bridgeEndpoint = await this.endpointProgram.account.bridgeEndpoint.fetch(bridgeEndpointPda);
 
     // Create the instruction
@@ -140,7 +144,7 @@ export class AnchorWrapper {
         senderTokenAccount: senderTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         bridgeRegistryProgram: this.registryProgram.programId,
-        pegInAddress: isBurnable ? bridgeEndpoint.pegInAddress : null,
+        pegInAddress: isBurnable ? null : bridgeEndpoint.pegInAddress,
      })
       .instruction();
 
