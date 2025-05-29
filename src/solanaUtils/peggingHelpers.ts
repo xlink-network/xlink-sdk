@@ -27,7 +27,6 @@ import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
 import { unwrapResponse } from "clarity-codegen"
 import { getSolanaConfigs } from "./getSolanaSupportedRoutes"
 import { AnchorWrapper } from "./anchorWrapper"
-import type { PublicKey } from "@solana/web3.js"
 import { TokenConfigAccount } from "./types"
 
 export const isSupportedSolanaRoute: IsSupportedFn = async (ctx, route) => {
