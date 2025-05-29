@@ -9,6 +9,7 @@ import { BridgeEndpoint } from "./idl/bridge_endpoint";
 import bridgeEndpointIdl from "./idl/bridge_endpoint.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
 import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 export interface TokenConfigAccount {
   mint: PublicKey;
@@ -114,23 +115,34 @@ export class AnchorWrapper {
     const sender = new PublicKey(params.sender);
     const senderTokenAccount = new PublicKey(params.senderTokenAccount);
 
+    console.log(`Using mint: ${mint.toString()}`);
+    console.log(`Sender: ${sender.toString()}`);
+    console.log(`Sender token account: ${senderTokenAccount.toString()}`);
+
     const mintInfo = await getMint(this.provider.connection, mint);
 
-    // Check if mint authority exists and equals the bridge registry PDA
-
-    // Get the bridge endpoint PDA
+    // Get the bridge registry PDA
     const [bridgeRegistryPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("bridge_registry")],
       this.registryProgram.programId
     );
+    console.log(`Bridge Registry: ${bridgeRegistryPda.toString()}`);
     const isBurnable = mintInfo.mintAuthority?.equals(bridgeRegistryPda) ?? false;
 
-    // Get the peg-in ATA
+    // Get the bridge endpoint PDA
     const [bridgeEndpointPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("bridge_endpoint")],
       this.endpointProgram.programId
     );
+    console.log(`Bridge Endpoint: ${bridgeEndpointPda.toString()}`);
+
     const bridgeEndpoint = await this.endpointProgram.account.bridgeEndpoint.fetch(bridgeEndpointPda);
+    const pegInAddress = bridgeEndpoint.pegInAddress;
+    console.log(`Peg In Address: ${pegInAddress.toString()}`);
+
+    // Get registry fee ATA
+    const registryFeeAta = getAssociatedTokenAddressSync(mint, bridgeRegistryPda, true);
+    console.log(`Registry fee ATA: ${registryFeeAta.toString()}`);
 
     // Create the instruction
     const ix = await this.endpointProgram.methods
@@ -144,8 +156,10 @@ export class AnchorWrapper {
         senderTokenAccount: senderTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         bridgeRegistryProgram: this.registryProgram.programId,
-        pegInAddress: isBurnable ? null : bridgeEndpoint.pegInAddress,
-     })
+        pegInAddress: isBurnable ? null : pegInAddress,
+        // @ts-ignore - registryFeeAta is defined in IDL but not in TypeScript types
+        registryFeeAta: registryFeeAta,
+      })
       .instruction();
 
     // Create and return the transaction
