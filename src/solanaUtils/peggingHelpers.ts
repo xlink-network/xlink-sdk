@@ -228,15 +228,11 @@ const _getSolana2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromSolana_ToStacks,
 ): Promise<undefined | TransferProphet> => {
-  if (!ctx.solana.connection) {
-    throw new Error("Solana connection not available")
-  }
-
   // Get Solana config
-  const solanaConfig = await getSolanaConfigs(ctx, KnownChainId.Solana.Mainnet)
+  const solanaConfig = await getSolanaConfigs(ctx, route.fromChain)
   
   const anchorWrapper = new AnchorWrapper(
-    ctx.solana.connection,
+    solanaConfig.rpcEndpoint,
     solanaConfig.programIds.registry
   )
   
