@@ -230,6 +230,11 @@ const _getSolana2StacksFeeInfo = async (
 ): Promise<undefined | TransferProphet> => {
   // Get Solana config
   const solanaConfig = await getSolanaConfigs(ctx, route.fromChain)
+  const solanaRoutes = await getSolanaSupportedRoutes(ctx, route.fromChain)
+  const solanaRoute = solanaRoutes.find(r => r.solanaToken === route.fromToken)
+  if (!solanaRoute) {
+    throw new Error(`Solana route not found for token ${route.fromToken}`)
+  }
   
   const anchorWrapper = new AnchorWrapper(
     solanaConfig.rpcEndpoint,
@@ -237,7 +242,7 @@ const _getSolana2StacksFeeInfo = async (
   )
   
   // Get token config from cache or fetch it
-  const tokenMint = new PublicKey(route.fromToken)
+  const tokenMint = new PublicKey(solanaRoute.solanaTokenAddress)
   const cacheKey = tokenMint.toBase58()
   let tokenConfig: TokenConfigAccount
   
