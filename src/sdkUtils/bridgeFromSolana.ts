@@ -1,22 +1,15 @@
-import { encodeFunctionData, Hex, hexToBytes, toHex } from "viem"
-import { estimateGas } from "viem/actions"
+import type { Transaction } from "@solana/web3.js"
+import { encodeFunctionData, hexToBytes, toHex } from "viem"
 import { SDK_NAME } from "../bitcoinUtils/constants"
-import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
-import { NativeBridgeEndpointAbi } from "../evmUtils/contractAbi/nativeBridgeEndpoint"
 import {
-  getEVMContractCallInfo,
-  getEVMTokenContractInfo,
-  numberToSolidityContractNumber,
+  getEVMTokenContractInfo
 } from "../evmUtils/contractHelpers"
 import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
-import { isSupportedSolanaRoute } from "../solanaUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
-import { getSolanaSupportedRoutes, getSolanaConfigs } from "../solanaUtils/getSolanaSupportedRoutes"
-import { solanaTokenToCorrespondingStacksToken } from "../solanaUtils/peggingHelpers"
+import { AnchorWrapper } from "../solanaUtils/anchorWrapper"
+import { getSolanaConfigs, getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
+import { isSupportedSolanaRoute } from "../solanaUtils/peggingHelpers"
 import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
-import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
-import { addressToBuffer } from "../utils/addressHelpers"
-import { BigNumber } from "../utils/BigNumber"
 import {
   checkRouteValid,
   KnownRoute_FromSolana_ToBitcoin,
@@ -31,7 +24,6 @@ import {
   InvalidMethodParametersError,
   UnsupportedBridgeRouteError,
 } from "../utils/errors"
-import { decodeHex, encodeZeroPrefixedHex } from "../utils/hexHelpers"
 import { assertExclude, checkNever } from "../utils/typeHelpers"
 import {
   _knownChainIdToErrorMessagePart,
@@ -40,15 +32,11 @@ import {
 } from "../utils/types/knownIds"
 import {
   ChainId,
-  EVMAddress,
   evmNativeCurrencyAddress,
   SDKNumber,
-  TokenId,
-  toSDKNumberOrUndefined,
+  TokenId
 } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { Transaction, PublicKey } from "@solana/web3.js"
-import { AnchorWrapper } from "../solanaUtils/anchorWrapper"
 
 export type BridgeFromSolanaInput = {
   fromChain: ChainId
@@ -242,11 +230,11 @@ async function bridgeFromSolana_toStacks(
 
   // Create the transaction
   const tx = await anchorWrapper.createSendMessageWithTokenTx({
-    mint: new PublicKey(fromTokenContractInfo.solanaTokenAddress),
+    mint: fromTokenContractInfo.solanaTokenAddress,
     amount: Number(info.amount),
     payload: hexToBytes(message),
-    sender: new PublicKey(info.fromAddress),
-    senderTokenAccount: new PublicKey(info.senderTokenAccount)
+    sender: info.fromAddress,
+    senderTokenAccount: info.senderTokenAccount
   })
 
   // Send the transaction

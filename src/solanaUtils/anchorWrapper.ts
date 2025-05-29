@@ -19,11 +19,11 @@ export interface TokenConfigAccount {
 }
 
 export interface SendMessageWithTokenParams {
-  mint: PublicKey;
+  mint: string;
   amount: number;
   payload: Uint8Array;
-  sender: PublicKey;
-  senderTokenAccount: PublicKey;
+  sender: string;
+  senderTokenAccount: string;
 }
 
 export class AnchorWrapper {
@@ -75,11 +75,11 @@ export class AnchorWrapper {
    * @param mintAddress The mint address of the token
    * @returns The token config account data with BigNumber values
    */
-  async getTokenConfigAccount(mintAddress: PublicKey): Promise<TokenConfigAccount> {
+  async getTokenConfigAccount(mintAddress: string): Promise<TokenConfigAccount> {
     const [tokenConfigPda] = PublicKey.findProgramAddressSync(
       [
         Buffer.from("token_config"),
-        mintAddress.toBuffer(),
+        new PublicKey(mintAddress).toBuffer(),
       ],
       this.registryProgram.programId
     );
@@ -107,12 +107,12 @@ export class AnchorWrapper {
    */
   async createSendMessageWithTokenTx(params: SendMessageWithTokenParams): Promise<web3.Transaction> {
     const {
-      mint,
       amount,
       payload,
-      sender,
-      senderTokenAccount,
     } = params;
+    const mint = new PublicKey(params.mint);
+    const sender = new PublicKey(params.sender);
+    const senderTokenAccount = new PublicKey(params.senderTokenAccount);
 
     const mintInfo = await getMint(this.provider.connection, mint);
 
