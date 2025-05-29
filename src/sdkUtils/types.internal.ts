@@ -1,18 +1,16 @@
 import { Client } from "viem"
-import { Connection } from "@solana/web3.js"
 import { EVMOnChainConfigByEVMChain } from "../evmUtils/apiHelpers/getEVMOnChainConfig"
 import { EVMSupportedRoute } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import type { BRC20SupportedRoute } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import type { RunesSupportedRoute } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
+import { SolanaSupportedRoutesAndConfig, TokenConfigAccount } from "../solanaUtils/types"
 import { StacksTokenInfo } from "../stacksUtils/apiHelpers/getAllStacksTokens"
+import { TronSupportedRoute } from "../tronUtils/types"
 import { DefinedRoute, KnownRoute } from "../utils/buildSupportedRoutes"
 import { pMemoizeImpl } from "../utils/pMemoize"
 import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
 import { TransferProphet } from "../utils/types/TransferProphet"
-import { TronSupportedRoute } from "../tronUtils/types"
-import { SolanaSupportedRoute, SolanaSupportedRoutesAndConfig } from "../solanaUtils/types"
-import { TokenConfigAccount } from "../solanaUtils/types"
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SDKGlobalContextCache<K, V>
@@ -110,6 +108,5 @@ export interface SDKGlobalContext {
       string,
       Promise<TokenConfigAccount>
     >
-    connection?: Connection
   }
 }

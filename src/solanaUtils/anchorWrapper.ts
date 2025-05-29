@@ -17,7 +17,7 @@ export class AnchorWrapper {
   private provider: AnchorProvider;
 
   constructor(
-    connection: Connection,
+    rpcEndpoint: string,
     programId: string
   ) {
     // Create a dummy wallet since we're only reading data
@@ -26,6 +26,8 @@ export class AnchorWrapper {
       signTransaction: () => Promise.reject(),
       signAllTransactions: () => Promise.reject(),
     };
+
+    const connection = new Connection(rpcEndpoint);
 
     this.provider = new AnchorProvider(
       connection,
