@@ -27,7 +27,7 @@ import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
 import { unwrapResponse } from "clarity-codegen"
 import { getSolanaConfigs } from "./getSolanaSupportedRoutes"
 import { AnchorWrapper } from "./anchorWrapper"
-import { PublicKey } from "@solana/web3.js"
+import type { PublicKey } from "@solana/web3.js"
 import { TokenConfigAccount } from "./types"
 
 export const isSupportedSolanaRoute: IsSupportedFn = async (ctx, route) => {
@@ -243,8 +243,8 @@ const _getSolana2StacksFeeInfo = async (
   )
   
   // Get token config from cache or fetch it
-  const tokenMint = new PublicKey(solanaRoute.solanaTokenAddress)
-  const cacheKey = tokenMint.toBase58()
+  const tokenMint = solanaRoute.solanaTokenAddress
+  const cacheKey = tokenMint
   let tokenConfig: TokenConfigAccount
   
   if (ctx.solana.tokenConfigCache?.has(cacheKey)) {
