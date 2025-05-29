@@ -231,7 +231,7 @@ async function bridgeFromSolana_toStacks(
   // Create the transaction
   const tx = await anchorWrapper.createSendMessageWithTokenTx({
     mint: fromTokenContractInfo.solanaTokenAddress,
-    amount: Number(info.amount),
+    amount: info.amount,
     payload: hexToBytes(message),
     sender: info.fromAddress,
     senderTokenAccount: info.senderTokenAccount
