@@ -120,15 +120,12 @@ export class AnchorWrapper {
     console.log(`Sender: ${sender.toString()}`);
     console.log(`Sender token account: ${senderTokenAccount.toString()}`);
 
-    const mintInfo = await getMint(this.provider.connection, mint);
-
     // Get the bridge registry PDA
     const [bridgeRegistryPda] = PublicKey.findProgramAddressSync(
       [Buffer.from("bridge_registry")],
       this.registryProgram.programId
     );
     console.log(`Bridge Registry: ${bridgeRegistryPda.toString()}`);
-    const isBurnable = mintInfo.mintAuthority?.equals(bridgeRegistryPda) ?? false;
 
     // Get the bridge endpoint PDA
     const [bridgeEndpointPda] = PublicKey.findProgramAddressSync(
@@ -157,7 +154,7 @@ export class AnchorWrapper {
         senderTokenAccount: senderTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
         bridgeRegistryProgram: this.registryProgram.programId,
-        pegInAddress: isBurnable ? null : pegInAddress,
+        pegInAddress: pegInAddress,
         // @ts-ignore - registryFeeAta is defined in IDL but not in TypeScript types
         registryFeeAta: registryFeeAta,
       })
