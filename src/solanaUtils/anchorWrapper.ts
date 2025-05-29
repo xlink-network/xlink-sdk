@@ -1,17 +1,28 @@
 import { Connection, PublicKey } from "@solana/web3.js";
-import { Program, AnchorProvider, web3, Idl } from "@coral-xyz/anchor";
+import { Program, AnchorProvider, web3, Idl, BN } from "@coral-xyz/anchor";
 import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
 import bridgeEndpointIdl from "./idl/bridge_endpoint.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
 import { BridgeEndpoint } from "./idl/bridge_endpoint";
 import { numberFromSolanaContractNumber } from "./contractHelpers";
 import { BigNumber } from "../utils/BigNumber";
+import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
+import { Buffer } from 'buffer'
 
 export interface TokenConfigAccount {
+  mint: PublicKey;
   feePct: BigNumber;
   minFee: BigNumber;
   minAmount: BigNumber;
   maxAmount: BigNumber;
+}
+
+export interface SendMessageWithTokenParams {
+  mint: PublicKey;
+  amount: number;
+  payload: Uint8Array;
+  sender: PublicKey;
+  senderTokenAccount: PublicKey;
 }
 
 export class AnchorWrapper {
@@ -66,7 +77,7 @@ export class AnchorWrapper {
   async getTokenConfigAccount(mintAddress: PublicKey): Promise<TokenConfigAccount> {
     const [tokenConfigPda] = PublicKey.findProgramAddressSync(
       [
-        new TextEncoder().encode("token_config"),
+        Buffer.from("token_config"),
         mintAddress.toBuffer(),
       ],
       this.registryProgram.programId
@@ -77,6 +88,7 @@ export class AnchorWrapper {
       
       // Map BN values to BigNumber
       return {
+        mint: tokenConfigAccount.tokenMint,
         feePct: numberFromSolanaContractNumber(tokenConfigAccount.feePct),
         minFee: numberFromSolanaContractNumber(tokenConfigAccount.minFee),
         minAmount: numberFromSolanaContractNumber(tokenConfigAccount.minAmount),
@@ -85,6 +97,55 @@ export class AnchorWrapper {
     } catch (error) {
       throw new Error(`Failed to fetch token config account: ${error}`);
     }
+  }
+
+  /**
+   * Creates a transaction for sending a message with token transfer/burn
+   * @param params Parameters for the send message with token transaction
+   * @returns The transaction object (not broadcast)
+   */
+  async createSendMessageWithTokenTx(params: SendMessageWithTokenParams): Promise<web3.Transaction> {
+    const {
+      mint,
+      amount,
+      payload,
+      sender,
+      senderTokenAccount,
+    } = params;
+
+    const mintInfo = await getMint(this.provider.connection, mint);
+
+    // Check if mint authority exists and equals the bridge registry PDA
+
+    // Get the bridge endpoint PDA
+    const [bridgeEndpointPda] = PublicKey.findProgramAddressSync(
+      [Buffer.from("bridge_endpoint")],
+      this.endpointProgram.programId
+    );
+    const isBurnable = mintInfo.mintAuthority?.equals(bridgeEndpointPda) ?? false;
+
+    // Get the peg-in ATA
+    const bridgeEndpoint = await this.endpointProgram.account.bridgeEndpoint.fetch(bridgeEndpointPda);
+
+    // Create the instruction
+    const ix = await this.endpointProgram.methods
+      .sendMessageWithToken(
+        new BN(amount),
+        Buffer.from(payload)
+      )
+      .accounts({
+        sender: sender,
+        mint: mint,
+        senderTokenAccount: senderTokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        bridgeRegistryProgram: this.registryProgram.programId,
+        pegInAddress: isBurnable ? bridgeEndpoint.pegInAddress : null,
+     })
+      .instruction();
+
+    // Create and return the transaction
+    const tx = new web3.Transaction().add(ix);
+    return tx;
   }
 } 
 

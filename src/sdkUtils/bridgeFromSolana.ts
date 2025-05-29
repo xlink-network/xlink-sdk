@@ -1,4 +1,4 @@
-import { encodeFunctionData, Hex, toHex } from "viem"
+import { encodeFunctionData, Hex, hexToBytes, toHex } from "viem"
 import { estimateGas } from "viem/actions"
 import { SDK_NAME } from "../bitcoinUtils/constants"
 import { BridgeEndpointAbi } from "../evmUtils/contractAbi/bridgeEndpoint"
@@ -11,7 +11,7 @@ import {
 import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
 import { isSupportedSolanaRoute } from "../solanaUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
-import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
+import { getSolanaSupportedRoutes, getSolanaConfigs } from "../solanaUtils/getSolanaSupportedRoutes"
 import { solanaTokenToCorrespondingStacksToken } from "../solanaUtils/peggingHelpers"
 import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import { contractAssignedChainIdFromKnownChain } from "../stacksUtils/crossContractDataMapping"
@@ -47,6 +47,8 @@ import {
   toSDKNumberOrUndefined,
 } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { Transaction, PublicKey } from "@solana/web3.js"
+import { AnchorWrapper } from "../solanaUtils/anchorWrapper"
 
 export type BridgeFromSolanaInput = {
   fromChain: ChainId
@@ -59,20 +61,20 @@ export type BridgeFromSolanaInput = {
    * **Required** when `toChain` is one of bitcoin chains
    */
   toAddressScriptPubKey?: Uint8Array
+  /**
+   * The token account that holds the tokens to be bridged
+   */
+  senderTokenAccount: string
   amount: SDKNumber
   sendTransaction: (tx: {
-    from: string
-    to: string
-    data: Uint8Array
-    recommendedGasLimit: SDKNumber
-    value?: SDKNumber
+    transaction: Transaction
   }) => Promise<{
-    txHash: string
+    signature: string
   }>
 }
 
 export interface BridgeFromSolanaOutput {
-  txHash: string
+  signature: string
 }
 
 export async function bridgeFromSolana(
@@ -221,46 +223,40 @@ async function bridgeFromSolana_toStacks(
     )
   }
 
-  // const message = await encodeFunctionData({
-  //   abi: sendMessageAbi,
-  //   functionName: "transferToStacks",
-  //   args: [info.toAddress],
-  // })
+  // Get Solana config
+  const solanaConfig = await getSolanaConfigs(ctx, info.fromChain)
 
-  // const functionData = await encodeFunctionData({
-  //   abi: BridgeEndpointAbi,
-  //   functionName: "sendMessageWithToken",
-  //   args: [
-  //     fromTokenContractInfo.solanaTokenAddress,
-  //     numberToSolidityContractNumber(info.amount),
-  //     message,
-  //   ],
-  // })
+  // Create AnchorWrapper instance
+  const anchorWrapper = new AnchorWrapper(
+    solanaConfig.rpcEndpoint,
+    solanaConfig.programIds.registry,
+    solanaConfig.programIds.bridgeEndpoint
+  )
 
-  // const fallbackGasLimit = 200_000
-  // const estimated = await estimateGas(fromTokenContractInfo.client, {
-  //   account: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: functionData,
-  // })
-  //   .then(n =>
-  //     BigNumber.round(
-  //       { precision: 0 },
-  //       BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
-  //     ),
-  //   )
-  //   .catch(
-  //     // add a fallback in case estimate failed
-  //     () => fallbackGasLimit,
-  //   )
+  // Create the message payload for transferToStacks
+  const message = encodeFunctionData({
+    abi: sendMessageAbi,
+    functionName: "transferToStacks",
+    args: [info.toAddress],
+  })
 
-  // return await info.sendTransaction({
-  //   from: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: decodeHex(functionData),
-  //   recommendedGasLimit: toSDKNumberOrUndefined(estimated),
-  // })
-  throw new Error("WIP")
+  // Create the transaction
+  const tx = await anchorWrapper.createSendMessageWithTokenTx({
+    mint: new PublicKey(fromTokenContractInfo.solanaTokenAddress),
+    amount: Number(info.amount),
+    payload: hexToBytes(message),
+    sender: new PublicKey(info.fromAddress),
+    senderTokenAccount: new PublicKey(info.senderTokenAccount)
+  })
+
+  // Send the transaction
+  const result = await info.sendTransaction({
+    transaction: tx
+  })
+
+  return {
+    signature: result.signature
+  }
 }
 
 async function bridgeFromSolana_toBitcoin(
