@@ -147,6 +147,11 @@ import {
 } from "./sdkUtils/bridgeInfoFromSolana"
 
 export {
+  BridgeFromSolanaInput,
+  BridgeFromSolanaOutput,
+} from "./sdkUtils/bridgeFromSolana"
+
+export {
   GetSupportedRoutesFn_Conditions,
   KnownRoute,
 } from "./utils/buildSupportedRoutes"
