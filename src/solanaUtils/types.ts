@@ -1,7 +1,6 @@
 import { BigNumber } from "../utils/BigNumber"
 import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { StacksContractAddress } from "../sdkUtils/types"
-import { PublicKey } from "@solana/web3.js"
 
 export interface SolanaSupportedRoute {
   solanaToken: KnownTokenId.SolanaToken

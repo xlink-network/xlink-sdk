@@ -1,14 +1,14 @@
-import './solanaLibraryBufferFix'
+import './solanaLibraryBufferFix';
+import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
+import { getMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
-import { Program, AnchorProvider, web3, Idl, BN } from "@coral-xyz/anchor";
-import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
+import { Buffer } from 'buffer';
+import { BigNumber } from "../utils/BigNumber";
+import { numberFromSolanaContractNumber } from "./contractHelpers";
+import { BridgeEndpoint } from "./idl/bridge_endpoint";
 import bridgeEndpointIdl from "./idl/bridge_endpoint.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
-import { BridgeEndpoint } from "./idl/bridge_endpoint";
-import { numberFromSolanaContractNumber } from "./contractHelpers";
-import { BigNumber } from "../utils/BigNumber";
-import { TOKEN_PROGRAM_ID, ASSOCIATED_TOKEN_PROGRAM_ID, getMint } from "@solana/spl-token";
-import { Buffer } from 'buffer'
+import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
 
 export interface TokenConfigAccount {
   mint: PublicKey;
