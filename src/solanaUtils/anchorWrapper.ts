@@ -1,3 +1,4 @@
+import './solanaLibraryBufferFix'
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Program, AnchorProvider, web3, Idl, BN } from "@coral-xyz/anchor";
 import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
