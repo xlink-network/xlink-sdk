@@ -28,6 +28,7 @@ import { unwrapResponse } from "clarity-codegen"
 import { getSolanaConfigs } from "./getSolanaSupportedRoutes"
 import { AnchorWrapper } from "./anchorWrapper"
 import { TokenConfigAccount } from "./types"
+import { isStacksContractAddressEqual, type StacksContractAddress } from "../sdkUtils/types"
 
 export const isSupportedSolanaRoute: IsSupportedFn = async (ctx, route) => {
   const { fromChain, toChain, fromToken, toToken } = route
@@ -212,6 +213,46 @@ export async function solanaTokenFromCorrespondingStacksToken(
   )
 }
 
+export const getTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  info: {
+    solanaChain: KnownChainId.SolanaChain
+    solanaToken: KnownTokenId.SolanaToken
+    stacksChain: KnownChainId.StacksChain
+  },
+): Promise<undefined | StacksContractAddress> => {
+  const supportedRoutes = await getSolanaSupportedRoutes(sdkContext, info.solanaChain)
+
+  return (
+    supportedRoutes.find(r => r.solanaToken === info.solanaToken)
+      ?.proxyStacksTokenContractAddress ?? undefined
+  )
+}
+
+export const getStacksTokenFromTerminatingStacksTokenContractAddress = async (
+  sdkContext: SDKGlobalContext,
+  info: {
+    stacksChain: KnownChainId.StacksChain
+    stacksTokenAddress: StacksContractAddress
+  },
+): Promise<undefined | KnownTokenId.StacksToken> => {
+  const routes = await getSolanaSupportedRoutes(
+    sdkContext,
+    info.stacksChain === KnownChainId.Stacks.Mainnet ? KnownChainId.Solana.Mainnet : KnownChainId.Solana.Testnet,
+  )
+
+  return (
+    routes.find(r =>
+      r.proxyStacksTokenContractAddress == null
+        ? false
+        : isStacksContractAddressEqual(
+            r.proxyStacksTokenContractAddress,
+            info.stacksTokenAddress,
+          ),
+    )?.stacksToken ?? undefined
+  )
+}
+
 export const getSolana2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromSolana_ToStacks,
@@ -234,18 +275,18 @@ const _getSolana2StacksFeeInfo = async (
   if (!solanaRoute) {
     throw new Error(`Solana route not found for token ${route.fromToken}`)
   }
-  
+
   const anchorWrapper = new AnchorWrapper(
     solanaConfig.rpcEndpoint,
     solanaConfig.programIds.registry,
     solanaConfig.programIds.bridgeEndpoint
   )
-  
+
   // Get token config from cache or fetch it
   const tokenMint = solanaRoute.solanaTokenAddress
   const cacheKey = tokenMint
   let tokenConfig: TokenConfigAccount
-  
+
   if (ctx.solana.tokenConfigCache?.has(cacheKey)) {
     tokenConfig = await ctx.solana.tokenConfigCache.get(cacheKey)!
   } else {
@@ -318,7 +359,11 @@ const _getStacks2SolanaFeeInfo = async (
     return
   }
 
-  const terminatingStacksTokenAddress = stacksTokenContractCallInfo
+  const terminatingStacksTokenAddress = (await getTerminatingStacksTokenContractAddress(ctx, {
+    solanaChain: route.toChain,
+    solanaToken: route.toToken,
+    stacksChain: route.fromChain,
+  })) ?? stacksTokenContractCallInfo
 
   const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
     initialRoute: options.initialRoute,
@@ -393,12 +438,12 @@ const _getStacks2SolanaFeeInfo = async (
         ...(specialFeeInfo.gasFee == null
           ? []
           : [
-              {
-                type: "fixed",
-                token: specialFeeInfo.gasFee.token,
-                amount: specialFeeInfo.gasFee.amount,
-              } satisfies TransferProphet_Fee_Fixed,
-            ]),
+            {
+              type: "fixed",
+              token: specialFeeInfo.gasFee.token,
+              amount: specialFeeInfo.gasFee.amount,
+            } satisfies TransferProphet_Fee_Fixed,
+          ]),
       ],
       minBridgeAmount: BigNumber.isZero(minAmount)
         ? specialFeeInfo.minFeeAmount
