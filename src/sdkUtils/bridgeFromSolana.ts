@@ -34,9 +34,11 @@ import {
   ChainId,
   evmNativeCurrencyAddress,
   SDKNumber,
-  TokenId
+  TokenId,
+  type EVMAddress
 } from "./types"
 import { SDKGlobalContext } from "./types.internal"
+import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
 
 export type BridgeFromSolanaInput = {
   fromChain: ChainId
@@ -281,46 +283,40 @@ async function bridgeFromSolana_toBitcoin(
 
   const toAddressHex = toHex(info.toAddressScriptPubKey)
 
-  // const message = await encodeFunctionData({
-  //   abi: sendMessageAbi,
-  //   functionName: "transferToBTC",
-  //   args: [toAddressHex],
-  // })
+  // Get Solana config
+  const solanaConfig = await getSolanaConfigs(ctx, info.fromChain)
 
-  // const functionData = await encodeFunctionData({
-  //   abi: BridgeEndpointAbi,
-  //   functionName: "sendMessageWithToken",
-  //   args: [
-  //     fromTokenContractInfo.solanaTokenAddress,
-  //     numberToSolidityContractNumber(info.amount),
-  //     message,
-  //   ],
-  // })
+  // Create AnchorWrapper instance
+  const anchorWrapper = new AnchorWrapper(
+    solanaConfig.rpcEndpoint,
+    solanaConfig.programIds.registry,
+    solanaConfig.programIds.bridgeEndpoint
+  )
 
-  // const fallbackGasLimit = 200_000
-  // const estimated = await estimateGas(fromTokenContractInfo.client, {
-  //   account: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: functionData,
-  // })
-  //   .then(n =>
-  //     BigNumber.round(
-  //       { precision: 0 },
-  //       BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
-  //     ),
-  //   )
-  //   .catch(
-  //     // add a fallback in case estimate failed
-  //     () => fallbackGasLimit,
-  //   )
+  // Create the message payload for transferToBTC
+  const message = encodeFunctionData({
+    abi: sendMessageAbi,
+    functionName: "transferToBTC",
+    args: [toAddressHex],
+  })
 
-  // return await info.sendTransaction({
-  //   from: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: decodeHex(functionData),
-  //   recommendedGasLimit: toSDKNumberOrUndefined(estimated),
-  // })
-  throw new Error("WIP")
+  // Create the transaction
+  const tx = await anchorWrapper.createSendMessageWithTokenTx({
+    mint: fromTokenContractInfo.solanaTokenAddress,
+    amount: info.amount,
+    payload: hexToBytes(message),
+    sender: info.fromAddress,
+    senderTokenAccount: info.senderTokenAccount
+  })
+
+  // Send the transaction
+  const result = await info.sendTransaction({
+    transaction: tx
+  })
+
+  return {
+    signature: result.signature
+  }
 }
 
 async function bridgeFromSolana_toEVM(
@@ -352,50 +348,44 @@ async function bridgeFromSolana_toEVM(
     )
   }
 
-  // const message = await encodeFunctionData({
-  //   abi: sendMessageAbi,
-  //   functionName: "transferToEVM",
-  //   args: [
-  //     contractAssignedChainIdFromKnownChain(info.toChain),
-  //     toTokenContractInfo.tokenContractAddress,
-  //     info.toAddress as EVMAddress,
-  //   ],
-  // })
+  // Get Solana config
+  const solanaConfig = await getSolanaConfigs(ctx, info.fromChain)
 
-  // const functionData = await encodeFunctionData({
-  //   abi: BridgeEndpointAbi,
-  //   functionName: "sendMessageWithToken",
-  //   args: [
-  //     fromTokenContractInfo.solanaTokenAddress,
-  //     numberToSolidityContractNumber(info.amount),
-  //     message,
-  //   ],
-  // })
+  // Create AnchorWrapper instance
+  const anchorWrapper = new AnchorWrapper(
+    solanaConfig.rpcEndpoint,
+    solanaConfig.programIds.registry,
+    solanaConfig.programIds.bridgeEndpoint
+  )
 
-  // const fallbackGasLimit = 200_000
-  // const estimated = await estimateGas(fromTokenContractInfo.client, {
-  //   account: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: functionData,
-  // })
-  //   .then(n =>
-  //     BigNumber.round(
-  //       { precision: 0 },
-  //       BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
-  //     ),
-  //   )
-  //   .catch(
-  //     // add a fallback in case estimate failed
-  //     () => fallbackGasLimit,
-  //   )
+  // Create the message payload for transferToEVM
+  const message = encodeFunctionData({
+    abi: sendMessageAbi,
+    functionName: "transferToEVM",
+    args: [
+      contractAssignedChainIdFromKnownChain(info.toChain),
+      toTokenContractInfo.tokenContractAddress,
+      info.toAddress as EVMAddress,
+    ],
+  })
 
-  // return await info.sendTransaction({
-  //   from: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: decodeHex(functionData),
-  //   recommendedGasLimit: toSDKNumberOrUndefined(estimated),
-  // })
-  throw new Error("WIP")
+  // Create the transaction
+  const tx = await anchorWrapper.createSendMessageWithTokenTx({
+    mint: fromTokenContractInfo.solanaTokenAddress,
+    amount: info.amount,
+    payload: hexToBytes(message),
+    sender: info.fromAddress,
+    senderTokenAccount: info.senderTokenAccount
+  })
+
+  // Send the transaction
+  const result = await info.sendTransaction({
+    transaction: tx
+  })
+
+  return {
+    signature: result.signature
+  }
 }
 
 async function bridgeFromSolana_toMeta(
@@ -456,51 +446,45 @@ async function bridgeFromSolana_toMeta(
 
   const toAddressHex = toHex(info.toAddressScriptPubKey)
 
-  // const message = await encodeFunctionData({
-  //   abi: sendMessageAbi,
-  //   functionName: KnownChainId.isBRC20Chain(info.toChain)
-  //     ? "transferToBRC20"
-  //     : "transferToRunes",
-  //   args: [
-  //     toAddressHex,
-  //     `${toTokenStacksAddress.deployerAddress}.${toTokenStacksAddress.contractName}`,
-  //   ],
-  // })
+  // Get Solana config
+  const solanaConfig = await getSolanaConfigs(ctx, info.fromChain)
 
-  // const functionData = await encodeFunctionData({
-  //   abi: BridgeEndpointAbi,
-  //   functionName: "sendMessageWithToken",
-  //   args: [
-  //     fromTokenContractInfo.solanaTokenAddress,
-  //     numberToSolidityContractNumber(info.amount),
-  //     message,
-  //   ],
-  // })
+  // Create AnchorWrapper instance
+  const anchorWrapper = new AnchorWrapper(
+    solanaConfig.rpcEndpoint,
+    solanaConfig.programIds.registry,
+    solanaConfig.programIds.bridgeEndpoint
+  )
 
-  // const fallbackGasLimit = 200_000
-  // const estimated = await estimateGas(fromTokenContractInfo.client, {
-  //   account: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: functionData,
-  // })
-  //   .then(n =>
-  //     BigNumber.round(
-  //       { precision: 0 },
-  //       BigNumber.max([fallbackGasLimit, BigNumber.mul(n, 1.2)]),
-  //     ),
-  //   )
-  //   .catch(
-  //     // add a fallback in case estimate failed
-  //     () => fallbackGasLimit,
-  //   )
+  // Create the message payload for transferToBRC20 or transferToRunes
+  const message = encodeFunctionData({
+    abi: sendMessageAbi,
+    functionName: KnownChainId.isBRC20Chain(info.toChain)
+      ? "transferToBRC20"
+      : "transferToRunes",
+    args: [
+      toAddressHex,
+      `${toTokenStacksAddress.deployerAddress}.${toTokenStacksAddress.contractName}`,
+    ],
+  })
 
-  // return await info.sendTransaction({
-  //   from: info.fromAddress,
-  //   to: fromTokenContractInfo.bridgeEndpointAddress,
-  //   data: decodeHex(functionData),
-  //   recommendedGasLimit: toSDKNumberOrUndefined(estimated),
-  // })
-  throw new Error("WIP")
+  // Create the transaction
+  const tx = await anchorWrapper.createSendMessageWithTokenTx({
+    mint: fromTokenContractInfo.solanaTokenAddress,
+    amount: info.amount,
+    payload: hexToBytes(message),
+    sender: info.fromAddress,
+    senderTokenAccount: info.senderTokenAccount
+  })
+
+  // Send the transaction
+  const result = await info.sendTransaction({
+    transaction: tx
+  })
+
+  return {
+    signature: result.signature
+  }
 }
 
 async function bridgeFromSolana_toSolana(
