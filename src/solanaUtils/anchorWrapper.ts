@@ -1,6 +1,6 @@
 import './solanaLibraryBufferFix';
 import { AnchorProvider, BN, Program, web3 } from "@coral-xyz/anchor";
-import { getMint, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { getMint, TOKEN_2022_PROGRAM_ID, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import { Connection, PublicKey } from "@solana/web3.js";
 import { Buffer } from 'buffer';
 import { BigNumber } from "../utils/BigNumber";
@@ -138,8 +138,11 @@ export class AnchorWrapper {
     const pegInAddress = bridgeEndpoint.pegInAddress;
     console.log(`Peg In Address: ${pegInAddress.toString()}`);
 
+    const tokenProgramId = await getTokenProgramId(this.provider.connection, mint);
+    console.log(`Token program ID: ${tokenProgramId.toString()}`);
+
     // Get registry fee ATA
-    const registryFeeAta = getAssociatedTokenAddressSync(mint, bridgeRegistryPda, true);
+    const registryFeeAta = getAssociatedTokenAddressSync(mint, bridgeRegistryPda, true, tokenProgramId);
     console.log(`Registry fee ATA: ${registryFeeAta.toString()}`);
 
     // Create the instruction
@@ -152,7 +155,7 @@ export class AnchorWrapper {
         sender: sender,
         mint: mint,
         senderTokenAccount: senderTokenAccount,
-        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenProgram: tokenProgramId,
         bridgeRegistryProgram: this.registryProgram.programId,
         pegInAddress: pegInAddress,
         // @ts-ignore - registryFeeAta is defined in IDL but not in TypeScript types
@@ -165,6 +168,25 @@ export class AnchorWrapper {
     return tx;
   }
 } 
+
+async function getTokenProgramId(
+  connection: Connection,
+  mintAddress: PublicKey,
+) {
+  const mintInfo = await connection.getAccountInfo(mintAddress)
+  if (mintInfo == null) {
+    throw new Error(`Mint address ${mintAddress.toString()} not found`)
+  }
+  const owner = mintInfo.owner.toString()
+
+  if (owner === TOKEN_PROGRAM_ID.toString()) {
+    return TOKEN_PROGRAM_ID
+  } else if (owner === TOKEN_2022_PROGRAM_ID.toString()) {
+    return TOKEN_2022_PROGRAM_ID
+  } else {
+    throw new Error("Unknown token program")
+  }
+}
 
 // if (require.main === module) {
 //   (async () => {
