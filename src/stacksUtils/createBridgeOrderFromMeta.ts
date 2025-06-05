@@ -219,7 +219,7 @@ export async function createBridgeOrder_MetaToSolana(
   return createBridgeOrderFromMetaImpl(sdkContext, {
     ...info,
     fromAddressBuffer: info.fromBitcoinScriptPubKey,
-    toAddressBuffer: decodeHex(info.toSolanaAddress as `0x${string}`),
+    toAddressBuffer: addressToBuffer(info.toChain, info.toSolanaAddress),
   })
 }
 
