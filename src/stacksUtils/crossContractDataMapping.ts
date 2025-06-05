@@ -201,13 +201,14 @@ export function contractAssignedChainIdToKnownChain(
   assertExclude(resPossibilities, KnownChainId.Runes.Mainnet)
   assertExclude(resPossibilities, KnownChainId.Runes.Testnet)
 
-  if (chainId === 17n) {
+  if (chainId === 19n) {
     return [KnownChainId.Solana.Mainnet, KnownChainId.Solana.Testnet]
   }
   assertExclude(resPossibilities, KnownChainId.Solana.Mainnet)
   assertExclude(resPossibilities, KnownChainId.Solana.Testnet)
 
-  if (chainId === 18n) {
+  // TBD
+  if (chainId === 999n) {
     return [KnownChainId.Tron.Mainnet, KnownChainId.Tron.Testnet]
   }
   assertExclude(resPossibilities, KnownChainId.Tron.Mainnet)
