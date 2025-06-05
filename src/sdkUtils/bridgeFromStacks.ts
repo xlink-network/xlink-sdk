@@ -1,7 +1,7 @@
 import * as btc from "@scure/btc-signer"
 import { FungiblePostConditionWire } from "@stacks/transactions"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
-import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
+import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressEVM } from "../evmUtils/peggingHelpers"
 import {
   composeTxBro,
   ContractCallOptions,
@@ -28,6 +28,7 @@ import { KnownChainId, KnownTokenId } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId } from "./types"
 import { SDKGlobalContext } from "./types.internal"
 import { addressToBuffer } from "../lowlevelUnstableInfos"
+import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressSolana } from "../solanaUtils/peggingHelpers"
 
 export type BridgeFromStacksInput_ContractCallOptions = ContractCallOptions
 
@@ -227,7 +228,7 @@ async function bridgeFromStacks_toEVM(
   }
 
   const terminatingTokenContractAddress =
-    (await getTerminatingStacksTokenContractAddress(ctx, {
+    (await getTerminatingStacksTokenContractAddressEVM(ctx, {
       stacksChain: info.fromChain,
       evmChain: info.toChain,
       evmToken: info.toToken,
@@ -277,7 +278,12 @@ async function bridgeFromStacks_toSolana(
     )
   }
 
-  const terminatingTokenContractAddress = fromTokenContractInfo
+  const terminatingTokenContractAddress =
+    (await getTerminatingStacksTokenContractAddressSolana(ctx, {
+      stacksChain: info.fromChain,
+      solanaToken: info.toToken,
+      solanaChain: info.toChain,
+    })) ?? fromTokenContractInfo
 
   const options = composeTxBro(
     contractCallInfo.contractName,
