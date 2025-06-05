@@ -1,5 +1,6 @@
 import { unwrapResponse } from "clarity-codegen"
-import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
+import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressEVM } from "../evmUtils/peggingHelpers"
+import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressSolana } from "../solanaUtils/peggingHelpers"
 import { addressToBuffer } from "../utils/addressHelpers"
 import {
   KnownRoute_FromBitcoin,
@@ -326,10 +327,17 @@ async function createBridgeOrderFromBitcoinImpl(
   const tokenOutStacksAddress =
     (KnownChainId.isEVMChain(info.toChain) &&
     KnownTokenId.isEVMToken(info.toToken)
-      ? await getTerminatingStacksTokenContractAddress(sdkContext, {
+      ? await getTerminatingStacksTokenContractAddressEVM(sdkContext, {
           stacksChain: transitStacksChain,
           evmChain: info.toChain,
           evmToken: info.toToken,
+        })
+      : KnownChainId.isSolanaChain(info.toChain) &&
+        KnownTokenId.isSolanaToken(info.toToken)
+      ? await getTerminatingStacksTokenContractAddressSolana(sdkContext, {
+          stacksChain: transitStacksChain,
+          solanaChain: info.toChain,
+          solanaToken: info.toToken,
         })
       : undefined) ?? bridgedToStacksTokenAddress
 
@@ -369,13 +377,13 @@ async function createBridgeOrderFromBitcoinImpl(
     ).then(unwrapResponse)
   } else if (swapInfo.via === "evmDexAggregator") {
     const swapFromTokenStacksAddress =
-      (await getTerminatingStacksTokenContractAddress(sdkContext, {
+      (await getTerminatingStacksTokenContractAddressEVM(sdkContext, {
         stacksChain: transitStacksChain,
         evmChain: swapInfo.evmChain,
         evmToken: swapInfo.fromEVMToken,
       })) ?? bridgedFromStacksTokenAddress
     const swapToTokenStacksAddress =
-      (await getTerminatingStacksTokenContractAddress(sdkContext, {
+      (await getTerminatingStacksTokenContractAddressEVM(sdkContext, {
         stacksChain: transitStacksChain,
         evmChain: swapInfo.evmChain,
         evmToken: swapInfo.toEVMToken,
