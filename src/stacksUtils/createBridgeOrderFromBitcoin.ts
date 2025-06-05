@@ -225,7 +225,7 @@ export async function createBridgeOrder_BitcoinToSolana(
   return createBridgeOrderFromBitcoinImpl(sdkContext, {
     ...info,
     fromAddressBuffer: info.fromBitcoinScriptPubKey,
-    toAddressBuffer: decodeHex(info.toSolanaAddress),
+    toAddressBuffer: addressToBuffer(info.toChain, info.toSolanaAddress),
   })
 }
 
