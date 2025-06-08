@@ -1,19 +1,26 @@
+import { getInstantSwapFees } from "../bitcoinUtils/apiHelpers/getInstantSwapFees"
 import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import {
+  SDKGlobalContext,
+  withGlobalContextCache,
+} from "../sdkUtils/types.internal"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
-  SwapRoute,
+  SwapRoute_GoThroughStacks,
 } from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
   KnownRoute_FromBRC20_ToStacks,
+  KnownRoute_FromRunes_ToBitcoin,
+  KnownRoute_FromRunes_ToRunes,
   KnownRoute_FromRunes_ToStacks,
   KnownRoute_FromStacks_ToBRC20,
   KnownRoute_FromStacks_ToRunes,
@@ -31,10 +38,6 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import {
-  SDKGlobalContext,
-  withGlobalContextCache,
-} from "../sdkUtils/types.internal"
 import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
 import { getMetaPegInAddress } from "./btcAddresses"
@@ -78,7 +81,7 @@ export const getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   return withGlobalContextCache(
@@ -91,7 +94,7 @@ const _getMeta2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   if (options.swapRoute != null) {
@@ -156,7 +159,7 @@ const getMeta2StacksSwapFeeInfo = async (
   ctx: SDKGlobalContext,
   route1: KnownRoute_FromBRC20_ToStacks | KnownRoute_FromRunes_ToStacks,
   options: {
-    swapRoute: Pick<SwapRoute, "via">
+    swapRoute: Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksSwapContractCallInfo = getStacksContractCallInfo(
@@ -246,7 +249,7 @@ export const getStacks2MetaFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   return withGlobalContextCache(
@@ -286,7 +289,7 @@ const _getStacks2MetaFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const filteredRoutes = KnownChainId.isBRC20Chain(route.toChain)
@@ -353,6 +356,13 @@ const _getStacks2MetaFeeInfo = async (
     minBridgeAmount: BigNumber.ZERO,
     maxBridgeAmount: null,
   }
+}
+
+export const getInstantSwapFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromRunes_ToBitcoin | KnownRoute_FromRunes_ToRunes,
+): Promise<undefined | TransferProphet> => {
+  return getInstantSwapFees(ctx, route)
 }
 
 export const isSupportedBRC20Route: IsSupportedFn = async (ctx, route) => {

@@ -1,8 +1,9 @@
-import { SDK_NAME } from "../bitcoinUtils/constants"
+import { SDK_NAME } from "../constants"
 import { ChainId, TokenId } from "../sdkUtils/types"
 import {
   SwapRouteViaALEX,
   SwapRouteViaEVMDexAggregator,
+  SwapRouteViaInstantSwap,
 } from "./SwapRouteHelpers"
 
 /** Extends the Error class and serves as the base for all custom errors within the SDK. */
@@ -68,7 +69,10 @@ export class UnsupportedBridgeRouteError extends BroSDKErrorBase {
     public toChain: ChainId,
     public fromToken: TokenId,
     public toToken?: TokenId,
-    public swap?: SwapRouteViaALEX | SwapRouteViaEVMDexAggregator,
+    public swap?:
+      | SwapRouteViaALEX
+      | SwapRouteViaEVMDexAggregator
+      | SwapRouteViaInstantSwap,
   ) {
     super(
       `Unsupported chain combination: ${fromToken}(${fromChain})${swap ? ` via ${swap.via}` : ""} -> ${toToken ?? "Unknown Token"}(${toChain})`,
