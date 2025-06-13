@@ -1,4 +1,4 @@
-import { SDK_NAME } from "../../bitcoinUtils/constants"
+import { SDK_NAME } from "../../constants"
 import {
   SDKNumber,
   SDKNumberifyNestly,

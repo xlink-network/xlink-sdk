@@ -1,4 +1,4 @@
-import { unwrapResponse } from "clarity-codegen"
+import { bufferT, traitT, tupleT, uintT, unwrapResponse } from "clarity-codegen"
 import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
 import { addressToBuffer } from "../utils/addressHelpers"
 import {
@@ -32,6 +32,7 @@ import {
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./contractHelpers"
+import { serializeCVBytes } from "@stacks/transactions"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -353,6 +354,23 @@ async function createBridgeOrderFromBitcoinImpl(
       },
       contractAggCallInfo.executeOptions,
     ).then(unwrapResponse)
+  } else if (swapInfo.via === "instantSwap") {
+    if (
+      KnownChainId.isBitcoinChain(info.toChain) ||
+      KnownChainId.isRunesChain(info.toChain)
+    ) {
+      const cv = instantSwapOrderSchema.encode({
+        v: 0n,
+        fc: contractAssignedChainIdFromKnownChain(info.fromChain),
+        ft: `${bridgedFromStacksTokenAddress.deployerAddress}.${bridgedFromStacksTokenAddress.contractName}`,
+        fa: info.fromAddressBuffer,
+        tc: contractAssignedChainIdFromKnownChain(info.toChain),
+        tt: `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
+        ta: info.toAddressBuffer,
+        tn: numberToStacksContractNumber(swapInfo.minimumAmountsToReceive),
+      })
+      data = serializeCVBytes(cv)
+    }
   } else {
     checkNever(swapInfo)
     throw new UnsupportedBridgeRouteError(
@@ -372,3 +390,14 @@ async function createBridgeOrderFromBitcoinImpl(
     data: data!,
   }
 }
+
+export const instantSwapOrderSchema = tupleT({
+  v: uintT, // version
+  fc: uintT, // fromChain
+  ft: traitT, // fromTokenId
+  fa: bufferT, // fromAddress
+  tc: uintT, // toChain
+  tt: traitT, // toTokenId
+  ta: bufferT, // toAddress
+  tn: uintT, // toAmountMinimum
+})

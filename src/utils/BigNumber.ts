@@ -52,8 +52,8 @@ export namespace BigNumber {
     return fromBig(toBig(value as any))
   }
 
-  export const toString = (value: BigNumberSource): string => {
-    return toBig(value).toString()
+  export const toString = (value: BigNumberSource): `${number}` => {
+    return toBig(value).toString() as `${number}`
   }
 
   export const toNumber = (value: BigNumberSource): number => {

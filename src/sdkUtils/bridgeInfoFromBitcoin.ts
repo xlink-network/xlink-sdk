@@ -1,5 +1,6 @@
 import {
   getBtc2StacksFeeInfo,
+  getInstantSwapFeeInfo,
   isSupportedBitcoinRoute,
 } from "../bitcoinUtils/peggingHelpers"
 import {
@@ -8,12 +9,12 @@ import {
   getStacks2EvmFeeInfo,
 } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
@@ -238,6 +239,16 @@ async function bridgeInfoFromBitcoin_toStacks(
     )
   }
 
+  if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
+
   checkNever(info.swapRoute)
   throw new UnsupportedBridgeRouteError(
     info.fromChain,
@@ -369,6 +380,14 @@ async function bridgeInfoFromBitcoin_toEVM(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
   } else {
     checkNever(info.swapRoute)
     routes = []
@@ -525,6 +544,38 @@ async function bridgeInfoFromBitcoin_toMeta(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    if (KnownChainId.isBRC20Chain(info.toChain)) {
+      throw new UnsupportedBridgeRouteError(
+        info.fromChain,
+        info.toChain,
+        info.fromToken,
+        info.toToken,
+        info.swapRoute,
+      )
+    } else if (KnownChainId.isRunesChain(info.toChain)) {
+      const _routes = [
+        {
+          fromChain: info.fromChain,
+          fromToken: info.fromToken,
+          toChain: info.toChain,
+          toToken: info.toToken as KnownTokenId.RunesToken,
+        },
+      ] as const satisfies KnownRoute[]
+
+      const _steps = await Promise.all([getInstantSwapFeeInfo(ctx, _routes[0])])
+
+      routes = _routes
+      steps = _steps
+      exchangeRates = [
+        BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
+      ]
+    } else {
+      checkNever(info.toChain)
+      routes = []
+      steps = []
+      exchangeRates = []
+    }
   } else {
     checkNever(info.swapRoute)
     routes = []

@@ -1,4 +1,4 @@
-import { SDK_NAME } from "../bitcoinUtils/constants"
+import { SDK_NAME } from "../constants"
 import { BigNumber } from "./BigNumber"
 import { concat, last, reduce } from "./arrayHelpers"
 import { checkNever, OneOrMore } from "./typeHelpers"

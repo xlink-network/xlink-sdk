@@ -1,5 +1,8 @@
+import { serializeCVBytes } from "@stacks/transactions"
 import { unwrapResponse } from "clarity-codegen"
 import { getTerminatingStacksTokenContractAddress } from "../evmUtils/peggingHelpers"
+import { EVMAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { addressToBuffer } from "../utils/addressHelpers"
 import {
   KnownRoute_FromMeta,
@@ -20,17 +23,18 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { EVMAddress } from "../sdkUtils/types"
-import { SDKGlobalContext } from "../sdkUtils/types.internal"
-import { CreateBridgeOrderResult } from "./createBridgeOrderFromBitcoin"
-import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
-import { StacksContractName } from "./stxContractAddresses"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./contractHelpers"
+import {
+  CreateBridgeOrderResult,
+  instantSwapOrderSchema,
+} from "./createBridgeOrderFromBitcoin"
+import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
+import { StacksContractName } from "./stxContractAddresses"
 
 export async function createBridgeOrderFromMeta(
   sdkContext: SDKGlobalContext,
@@ -349,6 +353,23 @@ async function createBridgeOrderFromMetaImpl(
       },
       contractAggCallInfo.executeOptions,
     ).then(unwrapResponse)
+  } else if (swapInfo.via === "instantSwap") {
+    if (
+      KnownChainId.isBitcoinChain(info.toChain) ||
+      KnownChainId.isRunesChain(info.toChain)
+    ) {
+      const cv = instantSwapOrderSchema.encode({
+        v: 0n,
+        fc: contractAssignedChainIdFromKnownChain(info.fromChain),
+        ft: `${bridgedFromStacksTokenAddress.deployerAddress}.${bridgedFromStacksTokenAddress.contractName}`,
+        fa: info.fromAddressBuffer,
+        tc: contractAssignedChainIdFromKnownChain(info.toChain),
+        tt: `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
+        ta: info.toAddressBuffer,
+        tn: numberToStacksContractNumber(swapInfo.minimumAmountsToReceive),
+      })
+      data = serializeCVBytes(cv)
+    }
   } else {
     checkNever(swapInfo)
     throw new UnsupportedBridgeRouteError(
