@@ -226,27 +226,31 @@ const _getStacks2BtcFeeInfo = async (
     return
   }
 
-  const feeDetails = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
+  const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
     initialRoute: options.initialRoute,
     swapRoute: options.swapRoute,
-  }).then(
-    async (info): Promise<SpecialFeeDetailsForSwapRoute> =>
-      info ??
-      props({
-        feeRate: executeReadonlyCallBro(
-          stacksContractCallInfo.contractName,
-          "get-peg-out-fee",
-          {},
-          stacksContractCallInfo.executeOptions,
-        ).then(numberFromStacksContractNumber),
-        minFeeAmount: executeReadonlyCallBro(
-          stacksContractCallInfo.contractName,
-          "get-peg-out-min-fee",
-          {},
-          stacksContractCallInfo.executeOptions,
-        ).then(numberFromStacksContractNumber),
-      }),
-  )
+  })
+
+  if (ctx.debugLog) {
+    console.log("[getStacks2BtcFeeInfo/specialFeeInfo]", route, specialFeeInfo)
+  }
+
+  const feeDetails: SpecialFeeDetailsForSwapRoute =
+    specialFeeInfo ??
+    (await props({
+      feeRate: executeReadonlyCallBro(
+        stacksContractCallInfo.contractName,
+        "get-peg-out-fee",
+        {},
+        stacksContractCallInfo.executeOptions,
+      ).then(numberFromStacksContractNumber),
+      minFeeAmount: executeReadonlyCallBro(
+        stacksContractCallInfo.contractName,
+        "get-peg-out-min-fee",
+        {},
+        stacksContractCallInfo.executeOptions,
+      ).then(numberFromStacksContractNumber),
+    }))
 
   const resp = await props({
     ...feeDetails,
