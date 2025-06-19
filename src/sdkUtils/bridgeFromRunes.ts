@@ -581,6 +581,16 @@ async function bridgeFromRunes_toSolana(
 ): Promise<BridgeFromRunesOutput> {
   const swapRoute = info.swapRoute
 
+  if (swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
+
   const createdOrder = await createBridgeOrder_MetaToSolana(sdkContext, {
     ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
@@ -610,9 +620,10 @@ async function bridgeFromRunes_toSolana(
     sdkContext,
     {
       ...info,
+      toAddressScriptPubKey: info.toAddressScriptPubKey,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
-      swapRoute: info.swapRoute,
+      swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
@@ -628,6 +639,16 @@ async function bridgeFromRunes_toTron(
     KnownRoute_FromRunes_ToTron,
 ): Promise<BridgeFromRunesOutput> {
   const swapRoute = info.swapRoute
+
+  if (swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
 
   const createdOrder = await createBridgeOrder_MetaToTron(sdkContext, {
     ...info,
@@ -658,9 +679,10 @@ async function bridgeFromRunes_toTron(
     sdkContext,
     {
       ...info,
+      toAddressScriptPubKey: info.toAddressScriptPubKey,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
-      swapRoute: info.swapRoute,
+      swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,

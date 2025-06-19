@@ -66,6 +66,7 @@ import {
   SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
   SwapRouteViaEVMDexAggregator,
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
+  SwapRoute_GoThroughStacks_WithMinimumAmountsToReceive_Public,
   SwapRoute_WithMinimumAmountsToReceive_Public,
   toCorrespondingStacksToken,
 } from "../utils/SwapRouteHelpers"
@@ -716,6 +717,16 @@ async function bridgeFromBRC20_toSolana(
 ): Promise<BridgeFromBRC20Output> {
   const swapRoute = info.swapRoute
 
+  if (swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
+
   const createdOrder = await createBridgeOrder_MetaToSolana(sdkContext, {
     ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
@@ -747,7 +758,7 @@ async function bridgeFromBRC20_toSolana(
       ...info,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
-      swapRoute: info.swapRoute,
+      swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
@@ -763,6 +774,16 @@ async function bridgeFromBRC20_toTron(
     KnownRoute_FromBRC20_ToTron,
 ): Promise<BridgeFromBRC20Output> {
   const swapRoute = info.swapRoute
+
+  if (swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
 
   const createdOrder = await createBridgeOrder_MetaToTron(sdkContext, {
     ...info,
@@ -795,7 +816,7 @@ async function bridgeFromBRC20_toTron(
       ...info,
       withHardLinkageOutput: false,
       bridgeFeeOutput,
-      swapRoute: info.swapRoute,
+      swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,

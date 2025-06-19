@@ -1,10 +1,11 @@
 import type { Transaction } from "@solana/web3.js"
 import { encodeFunctionData, hexToBytes, toHex } from "viem"
-import { SDK_NAME } from "../bitcoinUtils/constants"
+import { SDK_NAME } from "../constants"
 import {
   getEVMTokenContractInfo
 } from "../evmUtils/contractHelpers"
 import { sendMessageAbi } from "../evmUtils/contractMessageHelpers"
+import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
 import { AnchorWrapper } from "../solanaUtils/anchorWrapper"
 import { getSolanaConfigs, getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
@@ -38,7 +39,6 @@ import {
   type EVMAddress
 } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { contractAssignedChainIdFromKnownChain } from "../lowlevelUnstableInfos"
 
 export type BridgeFromSolanaInput = {
   fromChain: ChainId

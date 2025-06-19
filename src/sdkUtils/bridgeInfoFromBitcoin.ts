@@ -8,9 +8,7 @@ import {
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
 } from "../evmUtils/peggingHelpers"
-import {
-  getStacks2SolanaFeeInfo,
-} from "../solanaUtils/peggingHelpers"
+import { getStacks2SolanaFeeInfo } from "../solanaUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import {
   executeReadonlyCallBro,
@@ -763,6 +761,14 @@ async function bridgeInfoFromBitcoin_toSolana(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
   } else {
     checkNever(info.swapRoute)
     routes = []

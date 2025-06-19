@@ -1067,6 +1067,14 @@ async function bridgeInfoFromMeta_toSolana(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
   } else {
     checkNever(info.swapRoute)
     routes = []

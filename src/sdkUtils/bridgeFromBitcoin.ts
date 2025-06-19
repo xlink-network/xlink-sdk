@@ -481,6 +481,16 @@ async function bridgeFromBitcoin_toSolana(
 ): Promise<BridgeFromBitcoinOutput> {
   const swapRoute = info.swapRoute
 
+  if (swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
+
   const createdOrder = await createBridgeOrder_BitcoinToSolana(sdkContext, {
     ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
@@ -508,8 +518,9 @@ async function bridgeFromBitcoin_toSolana(
     sdkContext,
     {
       ...info,
+      toAddressScriptPubKey: info.toAddressScriptPubKey,
       withHardLinkageOutput: false,
-      swapRoute: info.swapRoute,
+      swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,
@@ -525,6 +536,16 @@ async function bridgeFromBitcoin_toTron(
     KnownRoute_FromBitcoin_ToTron,
 ): Promise<BridgeFromBitcoinOutput> {
   const swapRoute = info.swapRoute
+
+  if (swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
 
   const createdOrder = await createBridgeOrder_BitcoinToTron(sdkContext, {
     ...info,
@@ -553,8 +574,9 @@ async function bridgeFromBitcoin_toTron(
     sdkContext,
     {
       ...info,
+      toAddressScriptPubKey: info.toAddressScriptPubKey,
       withHardLinkageOutput: false,
-      swapRoute: info.swapRoute,
+      swapRoute,
       extraOutputs: info.extraOutputs ?? [],
     },
     createdOrder,

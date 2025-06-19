@@ -469,6 +469,16 @@ async function estimateFromRunes_toSolana(
   > &
     KnownRoute_FromRunes_ToSolana,
 ): Promise<EstimateBridgeTransactionFromRunesOutput> {
+  if (info.swapRoute?.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
+
   const createdOrder = await createBridgeOrder_MetaToSolana(sdkContext, {
     ...info,
     fromBitcoinScriptPubKey: info.fromAddressScriptPubKey,
@@ -496,10 +506,12 @@ async function estimateFromRunes_toSolana(
 
   return estimateRunesTransaction(sdkContext, {
     ...info,
+    toAddressScriptPubKey: info.toAddressScriptPubKey,
     orderData: createdOrder.data,
     withHardLinkageOutput: true,
     bridgeFeeOutput,
     extraOutputs: info.extraOutputs ?? [],
+    swapRoute: info.swapRoute ?? undefined,
   })
 }
 
