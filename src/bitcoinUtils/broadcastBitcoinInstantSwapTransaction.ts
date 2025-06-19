@@ -168,8 +168,8 @@ async function constructBitcoinInstantSwapTransaction(
 
   const getSignPsbtInputs = (idx: number): SignPsbtInput[] => {
     if (idx === 0) return []
-    if (idx === 1) return [idx, SignPsbtInput_SigHash.SINGLE_ANYONECANPAY]
-    return [idx, SignPsbtInput_SigHash.NONE_ANYONECANPAY]
+    if (idx === 1) return [[idx, SignPsbtInput_SigHash.SINGLE_ANYONECANPAY]]
+    return [[idx, SignPsbtInput_SigHash.NONE_ANYONECANPAY]]
   }
   const { psbt } = await info.signPsbt({
     psbt: tx.toPSBT(),

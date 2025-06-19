@@ -15,9 +15,7 @@ export enum SignPsbtInput_SigHash {
   SINGLE_ANYONECANPAY = SigHash.SINGLE_ANYONECANPAY,
 }
 
-export type SignPsbtInput =
-  | number
-  | [inputIndex: number, sigHash: SignPsbtInput_SigHash]
+export type SignPsbtInput = [inputIndex: number, sigHash: SignPsbtInput_SigHash]
 
 export type BridgeFromBitcoinInput_signPsbtFn = (tx: {
   psbt: Uint8Array

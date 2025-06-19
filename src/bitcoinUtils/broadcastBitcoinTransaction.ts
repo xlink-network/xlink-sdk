@@ -27,6 +27,7 @@ import {
   PrepareBitcoinTransactionInput,
   prepareBitcoinTransaction,
 } from "./prepareBitcoinTransaction"
+import { SignPsbtInput_SigHash } from "./types"
 
 export async function broadcastBitcoinTransaction(
   sdkContext: SDKGlobalContext,
@@ -182,7 +183,10 @@ async function constructBitcoinTransaction(
 
   const { psbt } = await info.signPsbt({
     psbt: tx.toPSBT(),
-    signInputs: range(0, tx.inputsLength),
+    signInputs: range(0, tx.inputsLength).map(inputIndex => [
+      inputIndex,
+      SignPsbtInput_SigHash.DEFAULT,
+    ]),
   })
 
   const signedTx = btc.Transaction.fromPSBT(psbt, {

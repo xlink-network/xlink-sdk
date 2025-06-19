@@ -31,6 +31,7 @@ import {
   BridgeFromRunesInput_sendTransactionFn,
   BridgeFromRunesInput_signPsbtFn,
 } from "./types"
+import { SignPsbtInput_SigHash } from "../bitcoinUtils/types"
 
 export async function broadcastRunesTransaction(
   sdkContext: SDKGlobalContext,
@@ -206,8 +207,13 @@ async function constructRunesTransaction(
 
   const { psbt } = await info.signPsbt({
     psbt: tx.toPSBT(),
-    signRunesInputs: range(0, info.inputRuneUTXOs.length),
-    signBitcoinInputs: range(info.inputRuneUTXOs.length, tx.inputsLength),
+    signRunesInputs: range(0, info.inputRuneUTXOs.length).map(inputIndex => [
+      inputIndex,
+      SignPsbtInput_SigHash.DEFAULT,
+    ]),
+    signBitcoinInputs: range(info.inputRuneUTXOs.length, tx.inputsLength).map(
+      inputIndex => [inputIndex, SignPsbtInput_SigHash.DEFAULT],
+    ),
   })
 
   const signedTx = btc.Transaction.fromPSBT(psbt, {
