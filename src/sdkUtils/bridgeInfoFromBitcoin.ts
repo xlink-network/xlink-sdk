@@ -56,6 +56,7 @@ export interface BridgeInfoFromBitcoinInput {
   swapRoute?: SwapRoute_WithExchangeRate_Public
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BridgeInfoFromBitcoinOutput
   extends PublicTransferProphetAggregated {}
 

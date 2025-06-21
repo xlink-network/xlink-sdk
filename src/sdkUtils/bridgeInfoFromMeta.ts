@@ -66,6 +66,7 @@ export interface BridgeInfoFromMetaInput {
   swapRoute?: SwapRoute_WithExchangeRate_Public
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BridgeInfoFromMetaOutput
   extends PublicTransferProphetAggregated {}
 

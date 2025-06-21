@@ -194,17 +194,15 @@ export const transformToPublicTransferProphetAggregated = (
   if (transferProphets.length === 1) {
     const [route] = routes
     const [transferProphet] = transferProphets
-    const applyResult = applyTransferProphet(
-      transferProphet,
-      BigNumber.mul(fromAmount, exchangeRates[0]),
-    )
+    const applyResult = applyTransferProphet(transferProphet, fromAmount)
+    const toAmount = BigNumber.mul(fromAmount, exchangeRates[0])
     return {
       fromChain: route.fromChain,
       fromToken: route.fromToken,
       toChain: route.toChain,
       toToken: route.toToken,
       fromAmount: toSDKNumberOrUndefined(fromAmount),
-      toAmount: toSDKNumberOrUndefined(applyResult.netAmount),
+      toAmount: toSDKNumberOrUndefined(toAmount),
       isPaused: transferProphet.isPaused,
       fees: transformFees(applyResult.fees),
       minBridgeAmount: toSDKNumberOrUndefined(transferProphet.minBridgeAmount),
