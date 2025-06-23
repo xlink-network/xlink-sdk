@@ -3,7 +3,6 @@ import {
   isSupportedBitcoinRoute,
 } from "../bitcoinUtils/peggingHelpers"
 import {
-  evmTokenFromCorrespondingStacksToken,
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
 } from "../evmUtils/peggingHelpers"
@@ -11,12 +10,12 @@ import {
   getStacks2SolanaFeeInfo,
 } from "../solanaUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
