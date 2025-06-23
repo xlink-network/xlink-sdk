@@ -195,7 +195,7 @@ export const transformToPublicTransferProphetAggregated = (
     const [route] = routes
     const [transferProphet] = transferProphets
     const applyResult = applyTransferProphet(transferProphet, fromAmount)
-    const toAmount = BigNumber.mul(fromAmount, exchangeRates[0])
+    const toAmount = BigNumber.mul(applyResult.netAmount, exchangeRates[0])
     return {
       fromChain: route.fromChain,
       fromToken: route.fromToken,
