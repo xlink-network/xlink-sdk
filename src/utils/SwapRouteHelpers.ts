@@ -347,7 +347,7 @@ export async function getSpecialFeeDetailsForSwapRoute(
      *     1. btc > stacks (initialRoute)
      *     2. stacks > runes
      * * BTC > Runes (`via: evmDexAggregator`):
-     *     1. btc > stacks (initialRoute as well, but not what we want)
+     *     1. btc > stacks (it's also an initialRoute, but not what we want)
      *     2. stacks > evm
      *     3. evm swap
      *     4. evm > stacks (initialRoute for this partition)

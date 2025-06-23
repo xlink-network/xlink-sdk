@@ -3,17 +3,16 @@ import {
   isSupportedBitcoinRoute,
 } from "../bitcoinUtils/peggingHelpers"
 import {
-  evmTokenFromCorrespondingStacksToken,
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
 } from "../evmUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
@@ -577,31 +576,13 @@ export async function constructDexAggregatorIntermediaryInfo(
     lastStepFromStacksToken,
   } = info
 
-  const swapFromEVMTokenId = (
-    await evmTokenFromCorrespondingStacksToken(
-      ctx,
-      swapRoute.evmChain,
-      firstStepToStacksToken,
-    )
-  )[0]
-  const swapToEVMTokenId = (
-    await evmTokenFromCorrespondingStacksToken(
-      ctx,
-      swapRoute.evmChain,
-      lastStepFromStacksToken,
-    )
-  )[0]
-  if (swapFromEVMTokenId == null || swapToEVMTokenId == null) {
-    return null
-  }
-
   const routes = [
     // evm peg out agg
     {
       fromChain: transitStacksChainId,
       fromToken: firstStepToStacksToken,
       toChain: swapRoute.evmChain,
-      toToken: swapFromEVMTokenId,
+      toToken: swapRoute.fromEVMToken,
     },
     //
     // swap
@@ -609,7 +590,7 @@ export async function constructDexAggregatorIntermediaryInfo(
     // evm peg in
     {
       fromChain: swapRoute.evmChain,
-      fromToken: swapToEVMTokenId,
+      fromToken: swapRoute.toEVMToken,
       toChain: transitStacksChainId,
       toToken: lastStepFromStacksToken,
     },
