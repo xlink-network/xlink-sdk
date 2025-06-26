@@ -11,7 +11,7 @@ import {
   KnownChainId,
   KnownTokenId,
 } from "../utils/types/knownIds"
-import { getAndCheckTransitStacksTokens } from "../utils/SwapRouteHelpers"
+import { getAndCheckTransitStacksTokens, normalizeSpecialFeeDetails } from "../utils/SwapRouteHelpers"
 import {
   KnownRoute_FromSolana_ToStacks,
   KnownRoute_FromStacks_ToSolana,
@@ -427,7 +427,16 @@ const _getStacks2SolanaFeeInfo = async (
     reserve,
   ])
 
+  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
+  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
+
   if (specialFeeInfo != null) {
+    const normalizedFeeDetails = await normalizeSpecialFeeDetails(
+      ctx,
+      specialFeeInfo,
+      { getFeeRate: async () => feeRate },
+    )
+
     return {
       isPaused,
       bridgeToken: route.fromToken,
@@ -435,28 +444,25 @@ const _getStacks2SolanaFeeInfo = async (
         {
           type: "rate",
           token: route.fromToken,
-          rate: specialFeeInfo.feeRate,
-          minimumAmount: specialFeeInfo.minFeeAmount,
+          rate: normalizedFeeDetails.feeRate,
+          minimumAmount: normalizedFeeDetails.minFeeAmount,
         },
-        ...(specialFeeInfo.gasFee == null
+        ...(normalizedFeeDetails.gasFee == null
           ? []
           : [
             {
               type: "fixed",
-              token: specialFeeInfo.gasFee.token,
-              amount: specialFeeInfo.gasFee.amount,
+              token: normalizedFeeDetails.gasFee.token,
+              amount: normalizedFeeDetails.gasFee.amount,
             } satisfies TransferProphet_Fee_Fixed,
           ]),
       ],
       minBridgeAmount: BigNumber.isZero(minAmount)
-        ? specialFeeInfo.minFeeAmount
-        : BigNumber.max([minAmount, specialFeeInfo.minFeeAmount]),
+        ? normalizedFeeDetails.minFeeAmount
+        : BigNumber.max([minAmount, normalizedFeeDetails.minFeeAmount]),
       maxBridgeAmount: maxAmount,
     }
   }
-
-  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
-  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
 
   return {
     isPaused,

@@ -5,6 +5,7 @@ import {
   SDKGlobalContext,
   withGlobalContextCache,
 } from "../sdkUtils/types.internal"
+import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
@@ -12,6 +13,7 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
 import { BigNumber } from "../utils/BigNumber"
 import {
   IsSupportedFn,
@@ -39,8 +41,6 @@ import {
   TransferProphet_Fee_Rate,
 } from "../utils/types/TransferProphet"
 import { getBTCPegInAddress } from "./btcAddresses"
-import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
-import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 
 export const getBtc2StacksFeeInfo = async (
   ctx: SDKGlobalContext,

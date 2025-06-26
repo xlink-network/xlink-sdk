@@ -338,11 +338,19 @@ export async function toCorrespondingStacksToken(
     }
   } else if (KnownChainId.isTronChain(chain)) {
     if (KnownTokenId.isTronToken(token)) {
-      toStacksTokenPromise = tronTokenToCorrespondingStacksToken(ctx, chain, token)
+      toStacksTokenPromise = tronTokenToCorrespondingStacksToken(
+        ctx,
+        chain,
+        token,
+      )
     }
   } else if (KnownChainId.isSolanaChain(chain)) {
     if (KnownTokenId.isSolanaToken(token)) {
-      toStacksTokenPromise = solanaTokenToCorrespondingStacksToken(ctx, chain, token)
+      toStacksTokenPromise = solanaTokenToCorrespondingStacksToken(
+        ctx,
+        chain,
+        token,
+      )
     }
   } else {
     checkNever(chain)
