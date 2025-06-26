@@ -4,16 +4,20 @@ import {
   SDKGlobalContext,
   withGlobalContextCache,
 } from "../sdkUtils/types.internal"
+import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
 import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
+  NormalizedSpecialFeeDetails,
+  normalizeSpecialFeeDetails,
   SwapRoute_GoThroughStacks,
 } from "../utils/SwapRouteHelpers"
 import {
@@ -41,8 +45,6 @@ import {
 import { getBRC20SupportedRoutes } from "./apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "./apiHelpers/getRunesSupportedRoutes"
 import { getMetaPegInAddress } from "./btcAddresses"
-import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
-import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 
 export async function metaTokenFromCorrespondingStacksToken(
   ctx: SDKGlobalContext,
@@ -320,19 +322,22 @@ const _getStacks2MetaFeeInfo = async (
     console.log("[getStacks2MetaFeeInfo/specialFeeInfo]", route, specialFeeInfo)
   }
 
-  const feeDetails =
-    specialFeeInfo ??
-    (await props({
-      feeRate: filteredRoute.pegOutFeeRate,
-      minFeeAmount: BigNumber.ZERO,
-      gasFee:
-        filteredRoute.pegOutFeeBitcoinAmount == null
-          ? undefined
-          : props({
-              token: KnownTokenId.Stacks.aBTC,
-              amount: filteredRoute.pegOutFeeBitcoinAmount,
-            }),
-    }))
+  const feeDetails: NormalizedSpecialFeeDetails =
+    specialFeeInfo != null
+      ? await normalizeSpecialFeeDetails(ctx, specialFeeInfo, {
+          getFeeRate: async () => filteredRoute.pegOutFeeRate,
+        })
+      : await props({
+          feeRate: filteredRoute.pegOutFeeRate,
+          minFeeAmount: BigNumber.ZERO,
+          gasFee:
+            filteredRoute.pegOutFeeBitcoinAmount == null
+              ? undefined
+              : props({
+                  token: KnownTokenId.Stacks.aBTC,
+                  amount: filteredRoute.pegOutFeeBitcoinAmount,
+                }),
+        })
   if (ctx.debugLog) {
     console.log("[getStacks2MetaFeeInfo]", route, feeDetails)
   }
