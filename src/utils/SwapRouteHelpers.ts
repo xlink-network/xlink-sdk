@@ -1,15 +1,15 @@
 import { EVM_BARE_PEG_IN_USE_SWAP_CONTRACT } from "../config"
 import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import { SDKNumber, StacksContractAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksToken,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
-import { SDKNumber, StacksContractAddress } from "../sdkUtils/types"
-import { SDKGlobalContext } from "../sdkUtils/types.internal"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { last } from "./arrayHelpers"
 import { BigNumber } from "./BigNumber"
 import {
@@ -327,8 +327,9 @@ export async function toCorrespondingStacksToken(
   return toStacksTokenPromise
 }
 
+const inheritFeeInfoSymbol = Symbol("inheritFeeInfo")
 export interface SpecialFeeDetailsForSwapRoute {
-  feeRate: BigNumber
+  feeRate: BigNumber | typeof inheritFeeInfoSymbol
   minFeeAmount: BigNumber
   gasFee?: { token: KnownTokenId.KnownToken; amount: BigNumber }
 }
@@ -381,22 +382,14 @@ export async function getSpecialFeeDetailsForSwapRoute(
 
       return getFeeInfo(
         {
-          fromEVM: {
-            getFeeRate: () =>
-              executeReadonlyCallBro(
-                evmPegInContractCallInfo.contractName,
-                "get-peg-out-fee",
-                {},
-                evmPegInContractCallInfo.executeOptions,
-              ).then(numberFromStacksContractNumber),
-            getFixedFeeAmount: () =>
-              executeReadonlyCallBro(
-                evmPegInContractCallInfo.contractName,
-                "get-peg-out-gas-fee",
-                {},
-                evmPegInContractCallInfo.executeOptions,
-              ).then(numberFromStacksContractNumber),
-          },
+          fromEVM:
+            KnownChainId.isBRC20Chain(route.toChain) ||
+            KnownChainId.isRunesChain(route.toChain)
+              ? {
+                  getFeeRate: async () => inheritFeeInfoSymbol,
+                  getFixedFeeAmount: async () => BigNumber.ZERO,
+                }
+              : undefined,
         },
         {
           initialRoute: options.initialRoute,
@@ -458,22 +451,14 @@ export async function getSpecialFeeDetailsForSwapRoute(
                 metaPegInSwapContractCallInfo.executeOptions,
               ).then(numberFromStacksContractNumber),
           },
-          fromEVM: {
-            getFeeRate: () =>
-              executeReadonlyCallBro(
-                evmPegInSwapContractCallInfo.contractName,
-                "get-peg-out-fee",
-                {},
-                evmPegInSwapContractCallInfo.executeOptions,
-              ).then(numberFromStacksContractNumber),
-            getFixedFeeAmount: () =>
-              executeReadonlyCallBro(
-                evmPegInSwapContractCallInfo.contractName,
-                "get-peg-out-gas-fee",
-                {},
-                evmPegInSwapContractCallInfo.executeOptions,
-              ).then(numberFromStacksContractNumber),
-          },
+          fromEVM:
+            KnownChainId.isBRC20Chain(route.toChain) ||
+            KnownChainId.isRunesChain(route.toChain)
+              ? {
+                  getFeeRate: async () => inheritFeeInfoSymbol,
+                  getFixedFeeAmount: async () => BigNumber.ZERO,
+                }
+              : undefined,
         },
         {
           initialRoute: options.initialRoute,
@@ -491,15 +476,15 @@ export async function getSpecialFeeDetailsForSwapRoute(
   async function getFeeInfo(
     context: {
       fromBitcoin?: {
-        getFeeRate: () => Promise<BigNumber>
+        getFeeRate: () => Promise<BigNumber | typeof inheritFeeInfoSymbol>
         getFixedFeeAmount: () => Promise<BigNumber>
       }
       fromMeta?: {
-        getFeeRate: () => Promise<BigNumber>
+        getFeeRate: () => Promise<BigNumber | typeof inheritFeeInfoSymbol>
         getFixedFeeAmount: () => Promise<BigNumber>
       }
       fromEVM?: {
-        getFeeRate: () => Promise<BigNumber>
+        getFeeRate: () => Promise<BigNumber | typeof inheritFeeInfoSymbol>
         getFixedFeeAmount: () => Promise<BigNumber>
       }
     },
@@ -616,5 +601,29 @@ export async function getSpecialFeeDetailsForSwapRoute(
     }
 
     return feeInfo
+  }
+}
+
+export interface NormalizedSpecialFeeDetails {
+  feeRate: BigNumber
+  minFeeAmount: BigNumber
+  gasFee?: { token: KnownTokenId.KnownToken; amount: BigNumber }
+}
+export async function normalizeSpecialFeeDetails(
+  ctx: SDKGlobalContext,
+  rawFeeDetails: SpecialFeeDetailsForSwapRoute,
+  getters: {
+    getFeeRate: () => Promise<BigNumber>
+  },
+): Promise<NormalizedSpecialFeeDetails> {
+  const feeRate =
+    rawFeeDetails.feeRate === inheritFeeInfoSymbol
+      ? await getters.getFeeRate()
+      : rawFeeDetails.feeRate
+
+  return {
+    feeRate,
+    minFeeAmount: rawFeeDetails.minFeeAmount,
+    gasFee: rawFeeDetails.gasFee,
   }
 }

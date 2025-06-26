@@ -10,6 +10,7 @@ import { GeneralCacheInterface } from "../utils/types/GeneralCacheInterface"
 import { KnownChainId } from "../utils/types/knownIds"
 import { TransferProphet } from "../utils/types/TransferProphet"
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface SDKGlobalContextCache<K, V>
   extends GeneralCacheInterface<K, V> {}
 

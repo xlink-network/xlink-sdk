@@ -1,13 +1,17 @@
 import { getEVMSupportedRoutes } from "../evmUtils/apiHelpers/getEVMSupportedRoutes"
 import { getBRC20SupportedRoutes } from "../metaUtils/apiHelpers/getBRC20SupportedRoutes"
 import { getRunesSupportedRoutes } from "../metaUtils/apiHelpers/getRunesSupportedRoutes"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import {
+  SDKGlobalContext,
+  withGlobalContextCache,
+} from "../sdkUtils/types.internal"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import { BigNumber } from "../utils/BigNumber"
 import {
   IsSupportedFn,
@@ -19,7 +23,8 @@ import { props } from "../utils/promiseHelpers"
 import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
-  SpecialFeeDetailsForSwapRoute,
+  NormalizedSpecialFeeDetails,
+  normalizeSpecialFeeDetails,
   SwapRoute,
 } from "../utils/SwapRouteHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
@@ -33,10 +38,6 @@ import {
   TransferProphet_Fee_Fixed,
   TransferProphet_Fee_Rate,
 } from "../utils/types/TransferProphet"
-import {
-  SDKGlobalContext,
-  withGlobalContextCache,
-} from "../sdkUtils/types.internal"
 import { getBTCPegInAddress } from "./btcAddresses"
 
 export const getBtc2StacksFeeInfo = async (
@@ -235,22 +236,31 @@ const _getStacks2BtcFeeInfo = async (
     console.log("[getStacks2BtcFeeInfo/specialFeeInfo]", route, specialFeeInfo)
   }
 
-  const feeDetails: SpecialFeeDetailsForSwapRoute =
-    specialFeeInfo ??
-    (await props({
-      feeRate: executeReadonlyCallBro(
-        stacksContractCallInfo.contractName,
-        "get-peg-out-fee",
-        {},
-        stacksContractCallInfo.executeOptions,
-      ).then(numberFromStacksContractNumber),
-      minFeeAmount: executeReadonlyCallBro(
-        stacksContractCallInfo.contractName,
-        "get-peg-out-min-fee",
-        {},
-        stacksContractCallInfo.executeOptions,
-      ).then(numberFromStacksContractNumber),
-    }))
+  const feeDetails: NormalizedSpecialFeeDetails =
+    specialFeeInfo != null
+      ? await normalizeSpecialFeeDetails(ctx, specialFeeInfo, {
+          getFeeRate: () =>
+            executeReadonlyCallBro(
+              stacksContractCallInfo.contractName,
+              "get-peg-out-fee",
+              {},
+              stacksContractCallInfo.executeOptions,
+            ).then(numberFromStacksContractNumber),
+        })
+      : await props({
+          feeRate: executeReadonlyCallBro(
+            stacksContractCallInfo.contractName,
+            "get-peg-out-fee",
+            {},
+            stacksContractCallInfo.executeOptions,
+          ).then(numberFromStacksContractNumber),
+          minFeeAmount: executeReadonlyCallBro(
+            stacksContractCallInfo.contractName,
+            "get-peg-out-min-fee",
+            {},
+            stacksContractCallInfo.executeOptions,
+          ).then(numberFromStacksContractNumber),
+        })
 
   const resp = await props({
     ...feeDetails,
