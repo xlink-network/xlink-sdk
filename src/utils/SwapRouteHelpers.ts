@@ -1,17 +1,17 @@
 import { EVM_BARE_PEG_IN_USE_SWAP_CONTRACT } from "../config"
 import { evmTokenToCorrespondingStacksToken } from "../evmUtils/peggingHelpers"
 import { metaTokenToCorrespondingStacksToken } from "../metaUtils/peggingHelpers"
-import { SDKNumber, StacksContractAddress } from "../sdkUtils/types"
-import { SDKGlobalContext } from "../sdkUtils/types.internal"
+import { tronTokenToCorrespondingStacksToken } from "../tronUtils/peggingHelpers"
 import { solanaTokenToCorrespondingStacksToken } from "../solanaUtils/peggingHelpers"
+import { StacksContractName } from "../stacksUtils/stxContractAddresses"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksToken,
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
-import { StacksContractName } from "../stacksUtils/stxContractAddresses"
-import { tronTokenToCorrespondingStacksToken } from "../tronUtils/peggingHelpers"
+import { SDKNumber, StacksContractAddress } from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { last } from "./arrayHelpers"
 import { BigNumber } from "./BigNumber"
 import {
@@ -83,25 +83,80 @@ export interface SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
 
 // ----------- SwapRouteViaEVMDexAggregator end -----------
 
+// ----------- SwapRouteViaInstantSwap start -----------
+
+export interface SwapRouteViaInstantSwap {
+  via: "instantSwap"
+}
+
+export interface SwapRouteViaInstantSwap_WithExchangeRate
+  extends SwapRouteViaInstantSwap {
+  composedExchangeRate: BigNumber
+}
+export interface SwapRouteViaInstantSwap_WithExchangeRate_Public
+  extends SwapRouteViaInstantSwap {
+  composedExchangeRate: SDKNumber
+}
+
+export interface SwapRouteViaInstantSwap_WithMinimumAmountsToReceive
+  extends SwapRouteViaInstantSwap {
+  minimumAmountsToReceive: BigNumber
+}
+export interface SwapRouteViaInstantSwap_WithMinimumAmountsToReceive_Public
+  extends SwapRouteViaInstantSwap {
+  minimumAmountsToReceive: SDKNumber
+}
+
+// ----------- SwapRouteViaInstantSwap end -----------
+
 // ----------- SwapRoute start -----------
 
-export type SwapRoute = SwapRouteViaALEX | SwapRouteViaEVMDexAggregator
+export type SwapRoute =
+  | SwapRouteViaALEX
+  | SwapRouteViaEVMDexAggregator
+  | SwapRouteViaInstantSwap
+
+export type SwapRoute_GoThroughStacks = Exclude<
+  SwapRoute,
+  SwapRouteViaInstantSwap
+>
 
 export type SwapRoute_WithExchangeRate =
   | SwapRouteViaALEX_WithExchangeRate
   | SwapRouteViaEVMDexAggregator_WithExchangeRate
-
+  | SwapRouteViaInstantSwap_WithExchangeRate
 export type SwapRoute_WithExchangeRate_Public =
   | SwapRouteViaALEX_WithExchangeRate_Public
   | SwapRouteViaEVMDexAggregator_WithExchangeRate_Public
+  | SwapRouteViaInstantSwap_WithExchangeRate_Public
+
+export type SwapRoute_GoThroughStacks_WithExchangeRate = Exclude<
+  SwapRoute_WithExchangeRate,
+  SwapRouteViaInstantSwap
+>
+export type SwapRoute_GoThroughStacks_WithExchangeRate_Public = Exclude<
+  SwapRoute_WithExchangeRate_Public,
+  SwapRouteViaInstantSwap
+>
 
 export type SwapRoute_WithMinimumAmountsToReceive =
   | SwapRouteViaALEX_WithMinimumAmountsToReceive
   | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive
-
+  | SwapRouteViaInstantSwap_WithMinimumAmountsToReceive
 export type SwapRoute_WithMinimumAmountsToReceive_Public =
   | SwapRouteViaALEX_WithMinimumAmountsToReceive_Public
   | SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public
+  | SwapRouteViaInstantSwap_WithMinimumAmountsToReceive_Public
+
+export type SwapRoute_GoThroughStacks_WithMinimumAmountsToReceive = Exclude<
+  SwapRoute_WithMinimumAmountsToReceive,
+  SwapRouteViaInstantSwap_WithMinimumAmountsToReceive
+>
+export type SwapRoute_GoThroughStacks_WithMinimumAmountsToReceive_Public =
+  Exclude<
+    SwapRoute_WithMinimumAmountsToReceive_Public,
+    SwapRouteViaInstantSwap_WithMinimumAmountsToReceive_Public
+  >
 
 // ----------- SwapRoute end -----------
 
@@ -205,6 +260,17 @@ export async function getAndCheckTransitStacksTokens(
       via: "evmDexAggregator",
       swap: info.swapRoute,
     })
+  } else if (info.swapRoute.via === "instantSwap") {
+    swapStartTokenPromise = toCorrespondingStacksToken(
+      ctx,
+      info.fromChain,
+      info.fromToken,
+    )
+    swapEndTokenPromise = toCorrespondingStacksToken(
+      ctx,
+      info.toChain,
+      info.toToken,
+    )
   } else {
     checkNever(info.swapRoute)
   }
@@ -338,19 +404,11 @@ export async function toCorrespondingStacksToken(
     }
   } else if (KnownChainId.isTronChain(chain)) {
     if (KnownTokenId.isTronToken(token)) {
-      toStacksTokenPromise = tronTokenToCorrespondingStacksToken(
-        ctx,
-        chain,
-        token,
-      )
+      toStacksTokenPromise = tronTokenToCorrespondingStacksToken(ctx, chain, token)
     }
   } else if (KnownChainId.isSolanaChain(chain)) {
     if (KnownTokenId.isSolanaToken(token)) {
-      toStacksTokenPromise = solanaTokenToCorrespondingStacksToken(
-        ctx,
-        chain,
-        token,
-      )
+      toStacksTokenPromise = solanaTokenToCorrespondingStacksToken(ctx, chain, token)
     }
   } else {
     checkNever(chain)
@@ -359,9 +417,8 @@ export async function toCorrespondingStacksToken(
   return toStacksTokenPromise
 }
 
-const inheritFeeInfoSymbol = Symbol("inheritFeeInfo")
 export interface SpecialFeeDetailsForSwapRoute {
-  feeRate: BigNumber | typeof inheritFeeInfoSymbol
+  feeRate: BigNumber
   minFeeAmount: BigNumber
   gasFee?: { token: KnownTokenId.KnownToken; amount: BigNumber }
 }
@@ -380,7 +437,7 @@ export async function getSpecialFeeDetailsForSwapRoute(
      *     1. btc > stacks (initialRoute)
      *     2. stacks > runes
      * * BTC > Runes (`via: evmDexAggregator`):
-     *     1. btc > stacks (it's also an initialRoute, but not what we want)
+     *     1. btc > stacks (initialRoute as well, but not what we want)
      *     2. stacks > evm
      *     3. evm swap
      *     4. evm > stacks (initialRoute for this partition)
@@ -390,7 +447,7 @@ export async function getSpecialFeeDetailsForSwapRoute(
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | SpecialFeeDetailsForSwapRoute> {
   let feeInfo: undefined | SpecialFeeDetailsForSwapRoute
@@ -414,14 +471,22 @@ export async function getSpecialFeeDetailsForSwapRoute(
 
       return getFeeInfo(
         {
-          fromEVM:
-            KnownChainId.isBRC20Chain(route.toChain) ||
-            KnownChainId.isRunesChain(route.toChain)
-              ? {
-                  getFeeRate: async () => inheritFeeInfoSymbol,
-                  getFixedFeeAmount: async () => BigNumber.ZERO,
-                }
-              : undefined,
+          fromEVM: {
+            getFeeRate: () =>
+              executeReadonlyCallBro(
+                evmPegInContractCallInfo.contractName,
+                "get-peg-out-fee",
+                {},
+                evmPegInContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+            getFixedFeeAmount: () =>
+              executeReadonlyCallBro(
+                evmPegInContractCallInfo.contractName,
+                "get-peg-out-gas-fee",
+                {},
+                evmPegInContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+          },
         },
         {
           initialRoute: options.initialRoute,
@@ -483,14 +548,22 @@ export async function getSpecialFeeDetailsForSwapRoute(
                 metaPegInSwapContractCallInfo.executeOptions,
               ).then(numberFromStacksContractNumber),
           },
-          fromEVM:
-            KnownChainId.isBRC20Chain(route.toChain) ||
-            KnownChainId.isRunesChain(route.toChain)
-              ? {
-                  getFeeRate: async () => inheritFeeInfoSymbol,
-                  getFixedFeeAmount: async () => BigNumber.ZERO,
-                }
-              : undefined,
+          fromEVM: {
+            getFeeRate: () =>
+              executeReadonlyCallBro(
+                evmPegInSwapContractCallInfo.contractName,
+                "get-peg-out-fee",
+                {},
+                evmPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+            getFixedFeeAmount: () =>
+              executeReadonlyCallBro(
+                evmPegInSwapContractCallInfo.contractName,
+                "get-peg-out-gas-fee",
+                {},
+                evmPegInSwapContractCallInfo.executeOptions,
+              ).then(numberFromStacksContractNumber),
+          },
         },
         {
           initialRoute: options.initialRoute,
@@ -508,15 +581,15 @@ export async function getSpecialFeeDetailsForSwapRoute(
   async function getFeeInfo(
     context: {
       fromBitcoin?: {
-        getFeeRate: () => Promise<BigNumber | typeof inheritFeeInfoSymbol>
+        getFeeRate: () => Promise<BigNumber>
         getFixedFeeAmount: () => Promise<BigNumber>
       }
       fromMeta?: {
-        getFeeRate: () => Promise<BigNumber | typeof inheritFeeInfoSymbol>
+        getFeeRate: () => Promise<BigNumber>
         getFixedFeeAmount: () => Promise<BigNumber>
       }
       fromEVM?: {
-        getFeeRate: () => Promise<BigNumber | typeof inheritFeeInfoSymbol>
+        getFeeRate: () => Promise<BigNumber>
         getFixedFeeAmount: () => Promise<BigNumber>
       }
     },
@@ -657,29 +730,5 @@ export async function getSpecialFeeDetailsForSwapRoute(
     }
 
     return feeInfo
-  }
-}
-
-export interface NormalizedSpecialFeeDetails {
-  feeRate: BigNumber
-  minFeeAmount: BigNumber
-  gasFee?: { token: KnownTokenId.KnownToken; amount: BigNumber }
-}
-export async function normalizeSpecialFeeDetails(
-  ctx: SDKGlobalContext,
-  rawFeeDetails: SpecialFeeDetailsForSwapRoute,
-  getters: {
-    getFeeRate: () => Promise<BigNumber>
-  },
-): Promise<NormalizedSpecialFeeDetails> {
-  const feeRate =
-    rawFeeDetails.feeRate === inheritFeeInfoSymbol
-      ? await getters.getFeeRate()
-      : rawFeeDetails.feeRate
-
-  return {
-    feeRate,
-    minFeeAmount: rawFeeDetails.minFeeAmount,
-    gasFee: rawFeeDetails.gasFee,
   }
 }

@@ -1,14 +1,14 @@
 import {
   getBtc2StacksFeeInfo,
+  getInstantSwapFeeInfo,
   isSupportedBitcoinRoute,
 } from "../bitcoinUtils/peggingHelpers"
 import {
+  evmTokenFromCorrespondingStacksToken,
   getEvm2StacksFeeInfo,
   getStacks2EvmFeeInfo,
 } from "../evmUtils/peggingHelpers"
-import {
-  getStacks2SolanaFeeInfo,
-} from "../solanaUtils/peggingHelpers"
+import { getStacks2SolanaFeeInfo } from "../solanaUtils/peggingHelpers"
 import { getStacks2MetaFeeInfo } from "../metaUtils/peggingHelpers"
 import {
   executeReadonlyCallBro,
@@ -56,6 +56,7 @@ export interface BridgeInfoFromBitcoinInput {
   swapRoute?: SwapRoute_WithExchangeRate_Public
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface BridgeInfoFromBitcoinOutput
   extends PublicTransferProphetAggregated {}
 
@@ -270,6 +271,16 @@ async function bridgeInfoFromBitcoin_toStacks(
     )
   }
 
+  if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
+  }
+
   checkNever(info.swapRoute)
   throw new UnsupportedBridgeRouteError(
     info.fromChain,
@@ -401,6 +412,14 @@ async function bridgeInfoFromBitcoin_toEVM(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
   } else {
     checkNever(info.swapRoute)
     routes = []
@@ -557,6 +576,38 @@ async function bridgeInfoFromBitcoin_toMeta(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    if (KnownChainId.isBRC20Chain(info.toChain)) {
+      throw new UnsupportedBridgeRouteError(
+        info.fromChain,
+        info.toChain,
+        info.fromToken,
+        info.toToken,
+        info.swapRoute,
+      )
+    } else if (KnownChainId.isRunesChain(info.toChain)) {
+      const _routes = [
+        {
+          fromChain: info.fromChain,
+          fromToken: info.fromToken,
+          toChain: info.toChain,
+          toToken: info.toToken as KnownTokenId.RunesToken,
+        },
+      ] as const satisfies KnownRoute[]
+
+      const _steps = await Promise.all([getInstantSwapFeeInfo(ctx, _routes[0])])
+
+      routes = _routes
+      steps = _steps
+      exchangeRates = [
+        BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
+      ]
+    } else {
+      checkNever(info.toChain)
+      routes = []
+      steps = []
+      exchangeRates = []
+    }
   } else {
     checkNever(info.swapRoute)
     routes = []
@@ -711,6 +762,14 @@ async function bridgeInfoFromBitcoin_toSolana(
       BigNumber.from(info.swapRoute?.composedExchangeRate ?? BigNumber.ONE),
       BigNumber.ONE,
     ]
+  } else if (info.swapRoute.via === "instantSwap") {
+    throw new UnsupportedBridgeRouteError(
+      info.fromChain,
+      info.toChain,
+      info.fromToken,
+      info.toToken,
+      info.swapRoute,
+    )
   } else {
     checkNever(info.swapRoute)
     routes = []
@@ -774,13 +833,31 @@ export async function constructDexAggregatorIntermediaryInfo(
     lastStepFromStacksToken,
   } = info
 
+  const swapFromEVMTokenId = (
+    await evmTokenFromCorrespondingStacksToken(
+      ctx,
+      swapRoute.evmChain,
+      firstStepToStacksToken,
+    )
+  )[0]
+  const swapToEVMTokenId = (
+    await evmTokenFromCorrespondingStacksToken(
+      ctx,
+      swapRoute.evmChain,
+      lastStepFromStacksToken,
+    )
+  )[0]
+  if (swapFromEVMTokenId == null || swapToEVMTokenId == null) {
+    return null
+  }
+
   const routes = [
     // evm peg out agg
     {
       fromChain: transitStacksChainId,
       fromToken: firstStepToStacksToken,
       toChain: swapRoute.evmChain,
-      toToken: swapRoute.fromEVMToken,
+      toToken: swapFromEVMTokenId,
     },
     //
     // swap
@@ -788,7 +865,7 @@ export async function constructDexAggregatorIntermediaryInfo(
     // evm peg in
     {
       fromChain: swapRoute.evmChain,
-      fromToken: swapRoute.toEVMToken,
+      fromToken: swapToEVMTokenId,
       toChain: transitStacksChainId,
       toToken: lastStepFromStacksToken,
     },

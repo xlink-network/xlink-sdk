@@ -3,12 +3,12 @@ import {
 defineContract,
 booleanT,
 responseSimpleT,
-tupleT,
-uintT,
-optionalT,
-bufferT,
-listT,
 principalT,
+bufferT,
+uintT,
+tupleT,
+optionalT,
+listT,
 traitT,
 stringT,
 noneT
@@ -21,8 +21,26 @@ export const crossPegInEndpointV204Swap = defineContract({
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
+  callback: {
+    input: [
+      { name: 'sender', type: principalT },
+      { name: 'payload', type: bufferT }
+    ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
   'set-paused': {
     input: [ { name: 'paused', type: booleanT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-peg-out-fee': {
+    input: [ { name: 'new-peg-out-fee', type: uintT } ],
+    output: responseSimpleT(booleanT, ),
+    mode: 'public'
+  },
+  'set-peg-out-gas-fee': {
+    input: [ { name: 'new-peg-out-gas-fee', type: uintT } ],
     output: responseSimpleT(booleanT, ),
     mode: 'public'
   },
@@ -154,6 +172,8 @@ export const crossPegInEndpointV204Swap = defineContract({
     mode: 'readonly'
   },
   'get-paused': { input: [], output: booleanT, mode: 'readonly' },
+  'get-peg-out-fee': { input: [], output: uintT, mode: 'readonly' },
+  'get-peg-out-gas-fee': { input: [], output: uintT, mode: 'readonly' },
   'get-required-validators': { input: [], output: uintT, mode: 'readonly' },
   'get-token-reserve-or-default': {
     input: [
@@ -249,6 +269,8 @@ export const crossPegInEndpointV204Swap = defineContract({
     mode: 'mapEntry'
   },
   'is-paused': { input: noneT, output: booleanT, mode: 'variable' },
+  'peg-out-fee': { input: noneT, output: uintT, mode: 'variable' },
+  'peg-out-gas-fee': { input: noneT, output: uintT, mode: 'variable' },
   'use-whitelist': { input: noneT, output: booleanT, mode: 'variable' }
 }
 } as const)

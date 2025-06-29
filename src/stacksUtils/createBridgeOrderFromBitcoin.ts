@@ -1,5 +1,13 @@
-import { unwrapResponse } from "clarity-codegen"
+import { serializeCVBytes } from "@stacks/transactions"
+import bs58check from "bs58check"
+import { bufferT, traitT, tupleT, uintT, unwrapResponse } from "clarity-codegen"
 import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressEVM } from "../evmUtils/peggingHelpers"
+import {
+  EVMAddress,
+  isEVMAddress,
+  StacksContractAddress,
+} from "../sdkUtils/types"
+import { SDKGlobalContext } from "../sdkUtils/types.internal"
 import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressSolana } from "../solanaUtils/peggingHelpers"
 import { addressToBuffer } from "../utils/addressHelpers"
 import {
@@ -20,20 +28,13 @@ import {
   KnownTokenId,
 } from "../utils/types/knownIds"
 import {
-  EVMAddress,
-  isEVMAddress,
-  StacksContractAddress,
-} from "../sdkUtils/types"
-import { SDKGlobalContext } from "../sdkUtils/types.internal"
-import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
-import { StacksContractName } from "./stxContractAddresses"
-import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./contractHelpers"
-import bs58check from "bs58check"
+import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
+import { StacksContractName } from "./stxContractAddresses"
 
 export interface BridgeSwapRouteNode {
   poolId: bigint
@@ -333,13 +334,13 @@ async function createBridgeOrderFromBitcoinImpl(
           evmToken: info.toToken,
         })
       : KnownChainId.isSolanaChain(info.toChain) &&
-        KnownTokenId.isSolanaToken(info.toToken)
-      ? await getTerminatingStacksTokenContractAddressSolana(sdkContext, {
-          stacksChain: transitStacksChain,
-          solanaChain: info.toChain,
-          solanaToken: info.toToken,
-        })
-      : undefined) ?? bridgedToStacksTokenAddress
+          KnownTokenId.isSolanaToken(info.toToken)
+        ? await getTerminatingStacksTokenContractAddressSolana(sdkContext, {
+            stacksChain: transitStacksChain,
+            solanaChain: info.toChain,
+            solanaToken: info.toToken,
+          })
+        : undefined) ?? bridgedToStacksTokenAddress
 
   let data: undefined | Uint8Array
   if (swapInfo == null) {
@@ -424,6 +425,23 @@ async function createBridgeOrderFromBitcoinImpl(
       },
       contractAggCallInfo.executeOptions,
     ).then(unwrapResponse)
+  } else if (swapInfo.via === "instantSwap") {
+    if (
+      KnownChainId.isBitcoinChain(info.toChain) ||
+      KnownChainId.isRunesChain(info.toChain)
+    ) {
+      const cv = instantSwapOrderSchema.encode({
+        v: 0n,
+        fc: contractAssignedChainIdFromKnownChain(info.fromChain),
+        ft: `${bridgedFromStacksTokenAddress.deployerAddress}.${bridgedFromStacksTokenAddress.contractName}`,
+        fa: info.fromAddressBuffer,
+        tc: contractAssignedChainIdFromKnownChain(info.toChain),
+        tt: `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
+        ta: info.toAddressBuffer,
+        tn: numberToStacksContractNumber(swapInfo.minimumAmountsToReceive),
+      })
+      data = serializeCVBytes(cv)
+    }
   } else {
     checkNever(swapInfo)
     throw new UnsupportedBridgeRouteError(
@@ -443,3 +461,14 @@ async function createBridgeOrderFromBitcoinImpl(
     data: data!,
   }
 }
+
+export const instantSwapOrderSchema = tupleT({
+  v: uintT, // version
+  fc: uintT, // fromChain
+  ft: traitT, // fromTokenId
+  fa: bufferT, // fromAddress
+  tc: uintT, // toChain
+  tt: traitT, // toTokenId
+  ta: bufferT, // toAddress
+  tn: uintT, // toAmountMinimum
+})

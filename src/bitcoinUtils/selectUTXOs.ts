@@ -2,8 +2,8 @@ import { sortBy } from "../utils/arrayHelpers"
 import { MAX_BIGINT, sum } from "../utils/bigintHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { isNotNull } from "../utils/typeHelpers"
-import { ReselectSpendableUTXOsFn_Public } from "../sdkUtils/bridgeFromBitcoin"
 import {
+  excludeUTXOs,
   isSameUTXO,
   sumUTXO,
   UTXOBasic,
@@ -65,28 +65,34 @@ export const reselectSpendableUTXOsWithSafePadFactory = (
 
     const difference = satsToSend - selectedAmount
     if (difference > 0n) {
-      return utxos.concat({
-        addressType: "p2pkh",
-        txId: "0000000000000000000000000000000000000000000000000000000000000000",
-        index: 0,
-        amount: MAX_BIGINT,
-        /**
-         * OutScript.encode({
-         *   type: 'pkh',
-         *   hash: hash160(secp256k1.getPublicKey(
-         *     hex.decode('0000000000000000000000000000000000000000000000000000000000000001'),
-         *     false,
-         *   ))
-         * })
-         */
-        scriptPubKey: decodeHex(
-          "76a91491b24bf9f5288532960ac687abb035127b1d28a588ac",
-        ),
-        isPublicKeyCompressed: false,
-      })
+      return utxos.concat(getPlaceholderUTXO({ amount: MAX_BIGINT }))
     }
 
     return utxos
+  }
+}
+
+export const getPlaceholderUTXO = (options: {
+  amount: bigint
+}): UTXOSpendable => {
+  return {
+    addressType: "p2pkh",
+    txId: "0000000000000000000000000000000000000000000000000000000000000000",
+    index: 0,
+    amount: options.amount,
+    /**
+     * OutScript.encode({
+     *   type: 'pkh',
+     *   hash: hash160(secp256k1.getPublicKey(
+     *     hex.decode('0000000000000000000000000000000000000000000000000000000000000001'),
+     *     false,
+     *   ))
+     * })
+     */
+    scriptPubKey: decodeHex(
+      "76a91491b24bf9f5288532960ac687abb035127b1d28a588ac",
+    ),
+    isPublicKeyCompressed: false,
   }
 }
 
@@ -117,4 +123,24 @@ export function selectUTXOs(
   }
 
   return inputs
+}
+
+export type ReselectSpendableUTXOsFn_Public = (
+  satsToSend: bigint,
+  lastTimeSelectedUTXOs: UTXOSpendable[],
+) => Promise<UTXOSpendable[]>
+export function reselectSpendableUTXOsFactory_public(
+  reselectSpendableUTXOs_public: ReselectSpendableUTXOsFn_Public,
+): ReselectSpendableUTXOsFn {
+  return async (satsToSend, pinnedUTXOs, lastTimeSelectedUTXOs) => {
+    satsToSend = satsToSend - sumUTXO(pinnedUTXOs)
+    lastTimeSelectedUTXOs = lastTimeSelectedUTXOs.filter(
+      excludeUTXOs(pinnedUTXOs),
+    )
+    const selected = await reselectSpendableUTXOs_public(
+      satsToSend,
+      lastTimeSelectedUTXOs,
+    )
+    return [...pinnedUTXOs, ...selected]
+  }
 }

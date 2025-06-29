@@ -15,7 +15,6 @@ import { BigNumber } from "../utils/BigNumber"
 import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
-  normalizeSpecialFeeDetails,
 } from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
@@ -388,16 +387,7 @@ const _getStacks2EvmFeeInfo = async (
     reserve,
   ])
 
-  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
-  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
-
   if (specialFeeInfo != null) {
-    const normalizedFeeDetails = await normalizeSpecialFeeDetails(
-      ctx,
-      specialFeeInfo,
-      { getFeeRate: async () => feeRate },
-    )
-
     return {
       isPaused,
       bridgeToken: route.fromToken,
@@ -405,25 +395,28 @@ const _getStacks2EvmFeeInfo = async (
         {
           type: "rate",
           token: route.fromToken,
-          rate: normalizedFeeDetails.feeRate,
-          minimumAmount: normalizedFeeDetails.minFeeAmount,
+          rate: specialFeeInfo.feeRate,
+          minimumAmount: specialFeeInfo.minFeeAmount,
         },
-        ...(normalizedFeeDetails.gasFee == null
+        ...(specialFeeInfo.gasFee == null
           ? []
           : [
               {
                 type: "fixed",
-                token: normalizedFeeDetails.gasFee.token,
-                amount: normalizedFeeDetails.gasFee.amount,
+                token: specialFeeInfo.gasFee.token,
+                amount: specialFeeInfo.gasFee.amount,
               } satisfies TransferProphet_Fee_Fixed,
             ]),
       ],
       minBridgeAmount: BigNumber.isZero(minAmount)
-        ? normalizedFeeDetails.minFeeAmount
-        : BigNumber.max([minAmount, normalizedFeeDetails.minFeeAmount]),
+        ? specialFeeInfo.minFeeAmount
+        : BigNumber.max([minAmount, specialFeeInfo.minFeeAmount]),
       maxBridgeAmount: maxAmount,
     }
   }
+
+  const feeRate = numberFromStacksContractNumber(tokenConf.fee)
+  const minFee = numberFromStacksContractNumber(tokenConf["min-fee"])
 
   return {
     isPaused,

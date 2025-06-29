@@ -157,10 +157,12 @@ export {
 } from "./utils/buildSupportedRoutes"
 export {
   BridgeFromBitcoinInput,
-  BridgeFromBitcoinInput_signPsbtFn,
-  BridgeFromBitcoinInput_reselectSpendableUTXOs,
   BridgeFromBitcoinOutput,
 } from "./sdkUtils/bridgeFromBitcoin"
+export {
+  BridgeFromBitcoinInput_signPsbtFn,
+  BridgeFromBitcoinInput_reselectSpendableUTXOs,
+} from "./bitcoinUtils/types"
 export {
   BridgeFromBRC20Input,
   BridgeFromBRC20Input_signPsbtFn,
@@ -173,11 +175,13 @@ export {
 } from "./sdkUtils/bridgeFromEVM"
 export {
   BridgeFromRunesInput,
+  BridgeFromRunesOutput,
+} from "./sdkUtils/bridgeFromRunes"
+export {
   BridgeFromRunesInput_signPsbtFn,
   BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
-  BridgeFromRunesOutput,
   RunesUTXOSpendable,
-} from "./sdkUtils/bridgeFromRunes"
+} from "./metaUtils/types"
 export {
   BridgeFromStacksInput,
   BridgeFromStacksInput_ContractCallOptions,
@@ -1254,7 +1258,11 @@ export class BroSDK {
     token: KnownTokenId.StacksToken,
   ): Promise<KnownTokenId.SolanaToken[]> {
     if (!KnownChainId.isSolanaChain(chain)) return []
-    return solanaTokenFromCorrespondingStacksToken(this.sdkContext, chain, token)
+    return solanaTokenFromCorrespondingStacksToken(
+      this.sdkContext,
+      chain,
+      token,
+    )
   }
 
   /**
@@ -1278,7 +1286,9 @@ export class BroSDK {
   ): Promise<undefined | KnownTokenId.SolanaToken> {
     if (!KnownChainId.isSolanaChain(chain)) return
     const routes = await getSolanaSupportedRoutes(this.sdkContext, chain)
-    return routes.find((r: SolanaSupportedRoute) => r.solanaTokenAddress === address)?.solanaToken
+    return routes.find(
+      (r: SolanaSupportedRoute) => r.solanaTokenAddress === address,
+    )?.solanaToken
   }
 
   /**
@@ -1302,7 +1312,9 @@ export class BroSDK {
   ): Promise<undefined | KnownTokenId.TronToken> {
     if (!KnownChainId.isTronChain(chain)) return
     const routes = await getTronSupportedRoutes(this.sdkContext, chain)
-    return routes.find((r: TronSupportedRoute) => r.tronTokenAddress === address)?.tronToken
+    return routes.find(
+      (r: TronSupportedRoute) => r.tronTokenAddress === address,
+    )?.tronToken
   }
 
   /**
@@ -1326,7 +1338,8 @@ export class BroSDK {
   ): Promise<undefined | string> {
     if (!KnownChainId.isSolanaChain(chain)) return
     const routes = await getSolanaSupportedRoutes(this.sdkContext, chain)
-    return routes.find((r: SolanaSupportedRoute) => r.solanaToken === token)?.solanaTokenAddress
+    return routes.find((r: SolanaSupportedRoute) => r.solanaToken === token)
+      ?.solanaTokenAddress
   }
 
   /**
@@ -1350,7 +1363,8 @@ export class BroSDK {
   ): Promise<undefined | string> {
     if (!KnownChainId.isTronChain(chain)) return
     const routes = await getTronSupportedRoutes(this.sdkContext, chain)
-    return routes.find((r: TronSupportedRoute) => r.tronToken === token)?.tronTokenAddress
+    return routes.find((r: TronSupportedRoute) => r.tronToken === token)
+      ?.tronTokenAddress
   }
 
   /**

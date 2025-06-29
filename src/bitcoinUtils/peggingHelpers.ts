@@ -5,7 +5,6 @@ import {
   SDKGlobalContext,
   withGlobalContextCache,
 } from "../sdkUtils/types.internal"
-import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
@@ -13,10 +12,10 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
-import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
 import { BigNumber } from "../utils/BigNumber"
 import {
   IsSupportedFn,
+  KnownRoute_FromBitcoin_ToRunes,
   KnownRoute_FromBitcoin_ToStacks,
   KnownRoute_FromStacks_ToBitcoin,
   KnownRoute_ToStacks,
@@ -25,9 +24,8 @@ import { props } from "../utils/promiseHelpers"
 import {
   getAndCheckTransitStacksTokens,
   getSpecialFeeDetailsForSwapRoute,
-  NormalizedSpecialFeeDetails,
-  normalizeSpecialFeeDetails,
-  SwapRoute,
+  SpecialFeeDetailsForSwapRoute,
+  SwapRoute_GoThroughStacks,
 } from "../utils/SwapRouteHelpers"
 import { checkNever, isNotNull } from "../utils/typeHelpers"
 import {
@@ -40,13 +38,16 @@ import {
   TransferProphet_Fee_Fixed,
   TransferProphet_Fee_Rate,
 } from "../utils/types/TransferProphet"
+import { getInstantSwapFees } from "./apiHelpers/getInstantSwapFees"
 import { getBTCPegInAddress } from "./btcAddresses"
+import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
+import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 
 export const getBtc2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   return withGlobalContextCache(
@@ -59,7 +60,7 @@ const _getBtc2StacksFeeInfo = async (
   ctx: SDKGlobalContext,
   route: KnownRoute_FromBitcoin_ToStacks,
   options: {
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksBaseContractCallInfo = getStacksContractCallInfo(
@@ -88,6 +89,7 @@ const _getBtc2StacksFeeInfo = async (
     options.swapRoute?.via === 'evmDexAggregator' ? stacksAggContractCallInfo :
     options.swapRoute == null ? stacksBaseContractCallInfo :
     (checkNever(options.swapRoute.via), stacksBaseContractCallInfo)
+  if (contractCallInfo == null) return
 
   const resp = await props({
     isPaused: executeReadonlyCallBro(
@@ -166,7 +168,7 @@ export const getStacks2BtcFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   return withGlobalContextCache(
@@ -206,7 +208,7 @@ const _getStacks2BtcFeeInfo = async (
     /**
      * the swap step between the previous route and the current one
      */
-    swapRoute: null | Pick<SwapRoute, "via">
+    swapRoute: null | Pick<SwapRoute_GoThroughStacks, "via">
   },
 ): Promise<undefined | TransferProphet> => {
   const stacksContractCallInfo = getStacksContractCallInfo(
@@ -238,31 +240,22 @@ const _getStacks2BtcFeeInfo = async (
     console.log("[getStacks2BtcFeeInfo/specialFeeInfo]", route, specialFeeInfo)
   }
 
-  const feeDetails: NormalizedSpecialFeeDetails =
-    specialFeeInfo != null
-      ? await normalizeSpecialFeeDetails(ctx, specialFeeInfo, {
-          getFeeRate: () =>
-            executeReadonlyCallBro(
-              stacksContractCallInfo.contractName,
-              "get-peg-out-fee",
-              {},
-              stacksContractCallInfo.executeOptions,
-            ).then(numberFromStacksContractNumber),
-        })
-      : await props({
-          feeRate: executeReadonlyCallBro(
-            stacksContractCallInfo.contractName,
-            "get-peg-out-fee",
-            {},
-            stacksContractCallInfo.executeOptions,
-          ).then(numberFromStacksContractNumber),
-          minFeeAmount: executeReadonlyCallBro(
-            stacksContractCallInfo.contractName,
-            "get-peg-out-min-fee",
-            {},
-            stacksContractCallInfo.executeOptions,
-          ).then(numberFromStacksContractNumber),
-        })
+  const feeDetails: SpecialFeeDetailsForSwapRoute =
+    specialFeeInfo ??
+    (await props({
+      feeRate: executeReadonlyCallBro(
+        stacksContractCallInfo.contractName,
+        "get-peg-out-fee",
+        {},
+        stacksContractCallInfo.executeOptions,
+      ).then(numberFromStacksContractNumber),
+      minFeeAmount: executeReadonlyCallBro(
+        stacksContractCallInfo.contractName,
+        "get-peg-out-min-fee",
+        {},
+        stacksContractCallInfo.executeOptions,
+      ).then(numberFromStacksContractNumber),
+    }))
 
   const resp = await props({
     ...feeDetails,
@@ -310,6 +303,13 @@ const _getStacks2BtcFeeInfo = async (
       : resp.minFeeAmount,
     maxBridgeAmount: null,
   }
+}
+
+export const getInstantSwapFeeInfo = async (
+  ctx: SDKGlobalContext,
+  route: KnownRoute_FromBitcoin_ToRunes,
+): Promise<undefined | TransferProphet> => {
+  return getInstantSwapFees(ctx, route)
 }
 
 export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {

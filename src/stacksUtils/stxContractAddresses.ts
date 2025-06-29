@@ -15,9 +15,6 @@ export const contractsMultisigMainnet =
 export const contractsMultisigTestnet =
   "ST2QXSK64YQX3CQPC530K79XWQ98XFAM9W3XKEH3N"
 
-export const contractsDeployerMainnet_v2 =
-  "SP2FGHFNGMH6NF2427Y20271Q6CKJ67FDX2V2JG6X"
-
 export const alexContractDeployerMainnet =
   "SP102V8P0F7JX67ARQ77WEA3D3CFB5XW39REDT0AM"
 export const alexContractDeployerTestnet =
@@ -131,7 +128,7 @@ export const stxContractAddresses = {
   },
   [StacksContractName.EVMPegInEndpointSwap]: {
     [KnownChainId.Stacks.Mainnet]: wrapContractAddress("mainnet", {
-      deployerAddress: contractsDeployerMainnet_v2,
+      deployerAddress: contractsMultisigMainnet,
       contractName: StacksContractName.EVMPegInEndpointSwap,
     }),
     [KnownChainId.Stacks.Testnet]: wrapContractAddress("testnet", {
