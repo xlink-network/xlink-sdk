@@ -84,6 +84,7 @@ export {
 } from "./utils/feeRateHelpers"
 
 export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
+export { tokenIdFromBuffer, tokenIdToBuffer } from "./utils/tokenIdHelpers"
 
 export { bridgeFromEVM_toLaunchpad } from "./sdkUtils/bridgeFromEVM"
 export { bridgeInfoFromEVM_toLaunchpad } from "./sdkUtils/bridgeInfoFromEVM"
