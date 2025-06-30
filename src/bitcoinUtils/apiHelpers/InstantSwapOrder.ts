@@ -1,9 +1,10 @@
 import { ClarityValue } from "@stacks/transactions"
 import {
-  traitT,
   bufferT,
-  uintT,
+  optionalT,
+  traitT,
   tupleT,
+  uintT,
 } from "../../../generated/smartContractHelpers/codegenImport"
 import { StacksContractAddress } from "../../sdkUtils/types"
 import { numberToStacksContractNumber } from "../../stacksUtils/contractHelpers"
@@ -13,8 +14,10 @@ import {
 } from "../../stacksUtils/crossContractDataMapping"
 import { BigNumber } from "../../utils/BigNumber"
 import { decodeHex, encodeZeroPrefixedHex } from "../../utils/hexHelpers"
-import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
 import { deserializeAssetIdentifier } from "../../utils/stacksHelpers"
+import { KnownChainId, KnownTokenId } from "../../utils/types/knownIds"
+import { SDKGlobalContext } from "../../sdkUtils/types.internal"
+import { tokenIdFromBuffer, tokenIdToBuffer } from "../../utils/tokenIdHelpers"
 
 export type InstantSwapChain =
   | KnownChainId.BitcoinChain
@@ -82,101 +85,88 @@ export const deserializeInstantSwapOrder = async (
 
 const instantSwapOrderSchema = tupleT({
   v: uintT, // version
-  fc: uintT, // fromChain
-  ft: traitT, // fromTokenId
+  fc: optionalT(uintT), // fromChain
+  ft: bufferT, // fromTokenId
   fa: bufferT, // fromAddress
-  tc: uintT, // toChain
-  tt: traitT, // toTokenId
+  tc: optionalT(uintT), // toChain
+  tt: bufferT, // toTokenId
   ta: bufferT, // toAddress
   tn: uintT, // toAmountMinimum
 })
 export interface InstantSwapOrderData {
-  fromChain: InstantSwapChain
-  fromAddressBuffer: Uint8Array
-  fromCorrespondingTokenAddress: StacksContractAddress
+  fromChain: KnownChainId.KnownChain
+  fromAddress: Uint8Array
+  fromToken: KnownTokenId.KnownToken
 
-  toChain: InstantSwapChain
-  toAddressBuffer: Uint8Array
-  toCorrespondingTokenAddress: StacksContractAddress
+  toChain: KnownChainId.KnownChain
+  toAddress: Uint8Array
+  toToken: KnownTokenId.KnownToken
 
   minimumAmountsToReceive: BigNumber
 }
 export const encodeInstantSwapOrderData = async (
+  ctx: SDKGlobalContext,
   stacksNetwork: KnownChainId.StacksChain,
   info: InstantSwapOrderData,
-): Promise<ClarityValue> => {
-  const fromTokenAddress = info.fromCorrespondingTokenAddress
-  const toTokenAddress = info.toCorrespondingTokenAddress
+): Promise<undefined | ClarityValue> => {
+  const fromToken = await tokenIdToBuffer(ctx, info.fromChain, info.fromToken)
+  const toToken = await tokenIdToBuffer(ctx, info.toChain, info.toToken)
+  if (fromToken == null || toToken == null) return
 
   return instantSwapOrderSchema.encode({
     v: 0n,
-    fc: contractAssignedChainIdFromKnownChain(info.fromChain),
-    ft: `${fromTokenAddress.deployerAddress}.${fromTokenAddress.contractName}`,
-    fa: info.fromAddressBuffer,
-    tc: contractAssignedChainIdFromKnownChain(info.toChain),
-    tt: `${toTokenAddress.deployerAddress}.${toTokenAddress.contractName}`,
-    ta: info.toAddressBuffer,
+    fc: getChainId(info.fromChain),
+    ft: fromToken,
+    fa: info.fromAddress,
+    tc: getChainId(info.toChain),
+    tt: toToken,
+    ta: info.toAddress,
     tn: numberToStacksContractNumber(info.minimumAmountsToReceive),
   })
+
+  function getChainId(chain: KnownChainId.KnownChain): undefined | bigint {
+    if (KnownChainId.isStacksChain(chain)) return
+    return contractAssignedChainIdFromKnownChain(chain)
+  }
 }
 export const decodeInstantSwapOrderData = async (
+  ctx: SDKGlobalContext,
   stacksNetwork: KnownChainId.StacksChain,
   data: ClarityValue,
 ): Promise<undefined | InstantSwapOrderData> => {
-  const res = instantSwapOrderSchema.decode(data)
+  let res: ReturnType<typeof instantSwapOrderSchema.decode>
+  try {
+    res = instantSwapOrderSchema.decode(data)
+  } catch (e) {
+    return
+  }
 
-  const fromChain = getChain(contractAssignedChainIdToKnownChain(res.fc))
-  const toChain = getChain(contractAssignedChainIdToKnownChain(res.tc))
+  // if is not supported version
+  if (res.v !== 0n) return
+
+  const fromChain = getChain(res.fc)
+  const toChain = getChain(res.tc)
   if (fromChain == null || toChain == null) return
-  if (
-    !(
-      KnownChainId.isBitcoinChain(fromChain) ||
-      KnownChainId.isRunesChain(fromChain)
-    )
-  ) {
-    return
-  }
-  if (
-    !(
-      KnownChainId.isBitcoinChain(toChain) || KnownChainId.isRunesChain(toChain)
-    )
-  ) {
-    return
-  }
 
-  const fromTokenAddress = deserializeAssetIdentifier(res.ft)
-  const toTokenAddress = deserializeAssetIdentifier(res.tt)
-  if (fromTokenAddress == null || toTokenAddress == null) return
+  const fromToken = await tokenIdFromBuffer(ctx, fromChain, res.ft)
+  const toToken = await tokenIdFromBuffer(ctx, toChain, res.tt)
+  if (fromToken == null || toToken == null) return
 
   return {
     fromChain,
-    fromAddressBuffer: res.fa,
-    fromCorrespondingTokenAddress: {
-      deployerAddress: fromTokenAddress.deployerAddress,
-      contractName: fromTokenAddress.contractName,
-    },
+    fromAddress: res.fa,
+    fromToken,
     toChain,
-    toAddressBuffer: res.ta,
-    toCorrespondingTokenAddress: {
-      deployerAddress: toTokenAddress.deployerAddress,
-      contractName: toTokenAddress.contractName,
-    },
+    toAddress: res.ta,
+    toToken,
     minimumAmountsToReceive: BigNumber.from(res.tn),
   }
 
   function getChain(
-    chains: [KnownChainId.KnownChain, KnownChainId.KnownChain?],
-  ): null | KnownChainId.KnownChain {
-    if (stacksNetwork === KnownChainId.Stacks.Mainnet) {
-      if (chains[0] == null) return KnownChainId.Stacks.Mainnet
-      return chains[0]
-    }
-
-    if (chains.length >= 2) {
-      if (chains[1] == null) return KnownChainId.Stacks.Testnet
-      return chains[1]
-    }
-
-    return null
+    chainId: undefined | bigint,
+  ): undefined | KnownChainId.KnownChain {
+    if (chainId == null) return stacksNetwork
+    const chains = contractAssignedChainIdToKnownChain(chainId)
+    return stacksNetwork === KnownChainId.Stacks.Mainnet ? chains[0] : chains[1]
   }
 }

@@ -15,8 +15,19 @@ import {
   metaTokenToCorrespondingStacksToken,
 } from "./metaUtils/peggingHelpers"
 import { KnownChainId, KnownTokenId } from "./utils/types/knownIds"
-import { StacksContractAddress } from "./sdkUtils/types"
+import {
+  SDKNumber,
+  StacksContractAddress,
+  toSDKNumberOrUndefined,
+} from "./sdkUtils/types"
 import { SDKGlobalContext } from "./sdkUtils/types.internal"
+import {
+  InstantSwapOrderData as _InstantSwapOrderData,
+  decodeInstantSwapOrderData as _decodeInstantSwapOrderData,
+  encodeInstantSwapOrderData as _encodeInstantSwapOrderData,
+} from "./bitcoinUtils/apiHelpers/InstantSwapOrder"
+import { BigNumber } from "./utils/BigNumber"
+import { deserializeCV, serializeCVBytes } from "@stacks/transactions"
 
 export {
   contractAssignedChainIdFromKnownChain,
@@ -79,12 +90,6 @@ export { bridgeInfoFromEVM_toLaunchpad } from "./sdkUtils/bridgeInfoFromEVM"
 export { bridgeInfoFromBitcoin_toLaunchpad } from "./sdkUtils/bridgeInfoFromBitcoin"
 
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
-
-export {
-  InstantSwapOrderData,
-  decodeInstantSwapOrderData,
-  encodeInstantSwapOrderData,
-} from "./bitcoinUtils/apiHelpers/InstantSwapOrder"
 
 export const getSDKContext = (
   sdk: import("./BroSDK").BroSDK,
@@ -198,4 +203,43 @@ export const metaTokenToStacksToken = async (
     },
   )
   return { stacksTokens: stacksTokens == null ? [] : [stacksTokens] }
+}
+
+export interface InstantSwapOrderData
+  extends Omit<_InstantSwapOrderData, "minimumAmountsToReceive"> {
+  minimumAmountsToReceive: SDKNumber
+}
+export const encodeInstantSwapOrderData = async (
+  sdk: import("./BroSDK").BroSDK,
+  stacksNetwork: KnownChainId.StacksChain,
+  data: InstantSwapOrderData,
+): Promise<undefined | Uint8Array> => {
+  const res = await _encodeInstantSwapOrderData(
+    getSDKContext(sdk),
+    stacksNetwork,
+    {
+      ...data,
+      minimumAmountsToReceive: BigNumber.from(data.minimumAmountsToReceive),
+    },
+  )
+  if (res == null) return
+  return serializeCVBytes(res)
+}
+export const decodeInstantSwapOrderData = async (
+  sdk: import("./BroSDK").BroSDK,
+  stacksNetwork: KnownChainId.StacksChain,
+  data: Uint8Array,
+): Promise<undefined | InstantSwapOrderData> => {
+  const res = await _decodeInstantSwapOrderData(
+    getSDKContext(sdk),
+    stacksNetwork,
+    deserializeCV(data),
+  )
+  if (res == null) return
+  return {
+    ...res,
+    minimumAmountsToReceive: toSDKNumberOrUndefined(
+      res.minimumAmountsToReceive,
+    ),
+  }
 }

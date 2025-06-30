@@ -423,17 +423,21 @@ async function createBridgeOrderFromMetaImpl(
       (KnownChainId.isBitcoinChain(info.toChain) ||
         KnownChainId.isRunesChain(info.toChain))
     ) {
-      data = serializeCVBytes(
-        await encodeInstantSwapOrderData(transitStacksChain, {
+      const orderData = await encodeInstantSwapOrderData(
+        sdkContext,
+        transitStacksChain,
+        {
           fromChain: info.fromChain,
-          fromAddressBuffer: info.fromAddressBuffer,
-          fromCorrespondingTokenAddress: bridgedFromStacksTokenAddress,
+          fromAddress: info.fromAddressBuffer,
+          fromToken: info.fromToken,
           toChain: info.toChain,
-          toAddressBuffer: info.toAddressBuffer,
-          toCorrespondingTokenAddress: bridgedToStacksTokenAddress,
+          toAddress: info.toAddressBuffer,
+          toToken: info.toToken,
           minimumAmountsToReceive: swapInfo.minimumAmountsToReceive,
-        }),
+        },
       )
+      if (orderData == null) return
+      data = serializeCVBytes(orderData)
     }
   } else {
     checkNever(swapInfo)
