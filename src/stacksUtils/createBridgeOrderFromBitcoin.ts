@@ -1,6 +1,7 @@
 import { serializeCVBytes } from "@stacks/transactions"
 import bs58check from "bs58check"
-import { bufferT, traitT, tupleT, uintT, unwrapResponse } from "clarity-codegen"
+import { unwrapResponse } from "clarity-codegen"
+import { encodeInstantSwapOrderData } from "../bitcoinUtils/apiHelpers/InstantSwapOrder"
 import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressEVM } from "../evmUtils/peggingHelpers"
 import {
   EVMAddress,
@@ -430,17 +431,17 @@ async function createBridgeOrderFromBitcoinImpl(
       KnownChainId.isBitcoinChain(info.toChain) ||
       KnownChainId.isRunesChain(info.toChain)
     ) {
-      const cv = instantSwapOrderSchema.encode({
-        v: 0n,
-        fc: contractAssignedChainIdFromKnownChain(info.fromChain),
-        ft: `${bridgedFromStacksTokenAddress.deployerAddress}.${bridgedFromStacksTokenAddress.contractName}`,
-        fa: info.fromAddressBuffer,
-        tc: contractAssignedChainIdFromKnownChain(info.toChain),
-        tt: `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
-        ta: info.toAddressBuffer,
-        tn: numberToStacksContractNumber(swapInfo.minimumAmountsToReceive),
-      })
-      data = serializeCVBytes(cv)
+      data = serializeCVBytes(
+        await encodeInstantSwapOrderData(transitStacksChain, {
+          fromChain: info.fromChain,
+          fromAddressBuffer: info.fromAddressBuffer,
+          fromCorrespondingTokenAddress: bridgedFromStacksTokenAddress,
+          toChain: info.toChain,
+          toAddressBuffer: info.toAddressBuffer,
+          toCorrespondingTokenAddress: bridgedToStacksTokenAddress,
+          minimumAmountsToReceive: swapInfo.minimumAmountsToReceive,
+        }),
+      )
     }
   } else {
     checkNever(swapInfo)
@@ -461,14 +462,3 @@ async function createBridgeOrderFromBitcoinImpl(
     data: data!,
   }
 }
-
-export const instantSwapOrderSchema = tupleT({
-  v: uintT, // version
-  fc: uintT, // fromChain
-  ft: traitT, // fromTokenId
-  fa: bufferT, // fromAddress
-  tc: uintT, // toChain
-  tt: traitT, // toTokenId
-  ta: bufferT, // toAddress
-  tn: uintT, // toAmountMinimum
-})

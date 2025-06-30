@@ -80,6 +80,12 @@ export { bridgeInfoFromBitcoin_toLaunchpad } from "./sdkUtils/bridgeInfoFromBitc
 
 export { getBitcoinHardLinkageAddress } from "./bitcoinUtils/btcAddresses"
 
+export {
+  InstantSwapOrderData,
+  decodeInstantSwapOrderData,
+  encodeInstantSwapOrderData,
+} from "./bitcoinUtils/apiHelpers/InstantSwapOrder"
+
 export const getSDKContext = (
   sdk: import("./BroSDK").BroSDK,
 ): SDKGlobalContext => {

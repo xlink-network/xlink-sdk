@@ -1,6 +1,7 @@
 import { serializeCVBytes } from "@stacks/transactions"
 import bs58check from "bs58check"
 import { unwrapResponse } from "clarity-codegen"
+import { encodeInstantSwapOrderData } from "../bitcoinUtils/apiHelpers/InstantSwapOrder"
 import { getTerminatingStacksTokenContractAddress as getTerminatingStacksTokenContractAddressEVM } from "../evmUtils/peggingHelpers"
 import { EVMAddress, isEVMAddress } from "../sdkUtils/types"
 import { SDKGlobalContext } from "../sdkUtils/types.internal"
@@ -33,10 +34,7 @@ import {
   getStacksTokenContractInfo,
   numberToStacksContractNumber,
 } from "./contractHelpers"
-import {
-  CreateBridgeOrderResult,
-  instantSwapOrderSchema,
-} from "./createBridgeOrderFromBitcoin"
+import { CreateBridgeOrderResult } from "./createBridgeOrderFromBitcoin"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { StacksContractName } from "./stxContractAddresses"
 
@@ -420,20 +418,22 @@ async function createBridgeOrderFromMetaImpl(
     ).then(unwrapResponse)
   } else if (swapInfo.via === "instantSwap") {
     if (
-      KnownChainId.isBitcoinChain(info.toChain) ||
-      KnownChainId.isRunesChain(info.toChain)
+      (KnownChainId.isBitcoinChain(info.fromChain) ||
+        KnownChainId.isRunesChain(info.fromChain)) &&
+      (KnownChainId.isBitcoinChain(info.toChain) ||
+        KnownChainId.isRunesChain(info.toChain))
     ) {
-      const cv = instantSwapOrderSchema.encode({
-        v: 0n,
-        fc: contractAssignedChainIdFromKnownChain(info.fromChain),
-        ft: `${bridgedFromStacksTokenAddress.deployerAddress}.${bridgedFromStacksTokenAddress.contractName}`,
-        fa: info.fromAddressBuffer,
-        tc: contractAssignedChainIdFromKnownChain(info.toChain),
-        tt: `${bridgedToStacksTokenAddress.deployerAddress}.${bridgedToStacksTokenAddress.contractName}`,
-        ta: info.toAddressBuffer,
-        tn: numberToStacksContractNumber(swapInfo.minimumAmountsToReceive),
-      })
-      data = serializeCVBytes(cv)
+      data = serializeCVBytes(
+        await encodeInstantSwapOrderData(transitStacksChain, {
+          fromChain: info.fromChain,
+          fromAddressBuffer: info.fromAddressBuffer,
+          fromCorrespondingTokenAddress: bridgedFromStacksTokenAddress,
+          toChain: info.toChain,
+          toAddressBuffer: info.toAddressBuffer,
+          toCorrespondingTokenAddress: bridgedToStacksTokenAddress,
+          minimumAmountsToReceive: swapInfo.minimumAmountsToReceive,
+        }),
+      )
     }
   } else {
     checkNever(swapInfo)
