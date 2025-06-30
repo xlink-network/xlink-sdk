@@ -27,6 +27,20 @@ import {
   BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
   RunesUTXOSpendable,
 } from "./types"
+import { Runestone } from "../utils/RunesProtocol/RunesProtocol.types"
+
+export type BuildRunestoneFn = (info: {
+  sendingRuneInfo: {
+    id: RuneIdCombined
+    divisibility: number
+  }
+  runeRawAmountToPegIn: bigint
+  runeRawAmountsInTotal: Partial<Record<RuneIdCombined, bigint>>
+  pegInRuneTokensOutputIndex: number
+  runesChangeOutputIndex: number
+  extraOutputsStartIndex: number
+  originalRunestone: Runestone
+}) => Runestone
 
 export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
   fromAddress: string
@@ -60,10 +74,12 @@ export type PrepareRunesTransactionInput = KnownRoute_FromRunes & {
     address: BitcoinAddress
     satsAmount: bigint
   }[]
+
+  buildRunestone?: BuildRunestoneFn
 }
 
 /**
- * Bitcoin Tx Structure:
+ * Bitcoin Tx Structure by default:
  *
  * * Inputs: ...
  * * Outputs:
@@ -157,8 +173,8 @@ export async function prepareRunesTransaction(
     { roundingMode: BigNumber.roundUp },
     BigNumber.rightMoveDecimals(runeDivisibility, info.amount),
   )
-  const runeAmountsInTotal = sumRuneUTXOs(info.inputRuneUTXOs)
-  const runeRawAmountToSend = runeAmountsInTotal[runeIdCombined] ?? 0n
+  const runeRawAmountsInTotal = sumRuneUTXOs(info.inputRuneUTXOs)
+  const runeRawAmountToSend = runeRawAmountsInTotal[runeIdCombined] ?? 0n
 
   if (runeRawAmountToSend < runeRawAmountToPegIn) {
     throw new InvalidMethodParametersError(
@@ -170,7 +186,7 @@ export async function prepareRunesTransaction(
         {
           name: "inputRuneUTXOs",
           expected: `contains enough rune with id ${runeIdCombined}`,
-          received: String(runeAmountsInTotal[runeIdCombined] ?? 0n),
+          received: String(runeRawAmountsInTotal[runeIdCombined] ?? 0n),
         },
       ],
     )
@@ -200,7 +216,7 @@ export async function prepareRunesTransaction(
   const pegInRuneTokensCausedOffset = hardLinkageCausedOffset + 1
   const extraOutputsStartOffset = pegInRuneTokensCausedOffset
 
-  const runesOpReturnScript = toBitcoinOpReturnScript({
+  const originalRunestone: Runestone = {
     edicts: [
       {
         id: runeId.id,
@@ -210,7 +226,22 @@ export async function prepareRunesTransaction(
     ],
     // collect all remaining runes to the change address output
     pointer: 0n,
-  })
+  }
+  const buildRunestone = info.buildRunestone ?? (info => info.originalRunestone)
+  const runesOpReturnScript = toBitcoinOpReturnScript(
+    buildRunestone({
+      sendingRuneInfo: {
+        id: runeIdCombined,
+        divisibility: runeDivisibility,
+      },
+      runeRawAmountToPegIn,
+      runeRawAmountsInTotal,
+      runesChangeOutputIndex: 0,
+      pegInRuneTokensOutputIndex: pegInRuneTokensCausedOffset - 1,
+      extraOutputsStartIndex: extraOutputsStartOffset,
+      originalRunestone,
+    }),
+  )
 
   const result = await prepareTransaction({
     pinnedUTXOs: [

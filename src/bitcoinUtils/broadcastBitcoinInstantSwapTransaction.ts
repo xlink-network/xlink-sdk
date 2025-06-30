@@ -234,18 +234,18 @@ export async function estimateBitcoinInstantSwapTransaction(
   }
 }
 
-type PrepareTransactionCommonInput = Omit<
-  PrepareBitcoinTransactionInput,
-  | "fromChain"
-  | "fromToken"
-  | "toChain"
-  | "toToken"
-  | "hardLinkageOutput"
-  | "pinnedInputs"
-  | "pinnedOutputs"
-  | "appendOutputs"
-> &
-  KnownRoute_FromBitcoin_ToRunes & {
+type PrepareTransactionCommonInput = KnownRoute_FromBitcoin_ToRunes &
+  Omit<
+    PrepareBitcoinTransactionInput,
+    | "fromChain"
+    | "fromToken"
+    | "toChain"
+    | "toToken"
+    | "hardLinkageOutput"
+    | "pinnedInputs"
+    | "pinnedOutputs"
+    | "appendOutputs"
+  > & {
     extraOutputs: {
       address: BitcoinAddress
       satsAmount: bigint

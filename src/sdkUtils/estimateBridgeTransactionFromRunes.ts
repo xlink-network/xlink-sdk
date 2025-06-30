@@ -1,6 +1,10 @@
 import { BitcoinAddress } from "../bitcoinUtils/btcAddresses"
 import { SDK_NAME } from "../constants"
-import { estimateRunesInstantSwapTransaction } from "../metaUtils/broadcastRunesInstantSwapTransaction"
+import {
+  estimateRunesInstantSwapTransaction,
+  getRunes2BitcoinInstantSwapTransactionParams,
+  getRunes2RunesInstantSwapTransactionParams,
+} from "../metaUtils/broadcastRunesInstantSwapTransaction"
 import {
   estimateRunesTransaction,
   EstimateRunesTransactionOutput,
@@ -355,13 +359,21 @@ async function estimateFromRunes_toBitcoin(
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
   if (info.swapRoute?.via === "instantSwap") {
+    const { params } = await getRunes2BitcoinInstantSwapTransactionParams(
+      sdkContext,
+      {
+        fromChain: info.fromChain,
+        extraOutputs: info.extraOutputs ?? [],
+      },
+    )
+
     return estimateRunesInstantSwapTransaction(sdkContext, {
       ...info,
       toAddressScriptPubKey: info.toAddressScriptPubKey,
       orderData: createdOrder.data,
       bridgeFeeOutput,
-      extraOutputs: info.extraOutputs ?? [],
       swapRoute: info.swapRoute,
+      ...params,
     })
   }
 
@@ -426,21 +438,33 @@ async function estimateFromRunes_toMeta(
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
   if (info.swapRoute?.via === "instantSwap") {
+    // TODO: implement instantSwap for Runes>BRC20
+
     if (
-      KnownChainId.isBitcoinChain(info.toChain) &&
-      KnownTokenId.isBitcoinToken(info.toToken)
+      KnownChainId.isRunesChain(info.toChain) &&
+      KnownTokenId.isRunesToken(info.toToken)
     ) {
+      const { params } = await getRunes2RunesInstantSwapTransactionParams(
+        sdkContext,
+        {
+          toAddress: info.toAddress,
+          toAddressScriptPubKey: info.toAddressScriptPubKey,
+          extraOutputs: info.extraOutputs ?? [],
+        },
+      )
+
       return estimateRunesInstantSwapTransaction(sdkContext, {
         ...info,
-        toChain: info.toChain,
-        toToken: info.toToken,
+        toChain: info.toChain as any,
+        toToken: info.toToken as any,
         toAddressScriptPubKey: info.toAddressScriptPubKey,
         orderData: createdOrder.data,
         bridgeFeeOutput,
-        extraOutputs: info.extraOutputs ?? [],
         swapRoute: info.swapRoute,
+        ...params,
       })
     }
+
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
       info.toChain,

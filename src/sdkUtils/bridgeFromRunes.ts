@@ -1,9 +1,16 @@
 import * as btc from "@scure/btc-signer"
-import { equalBytes } from "@scure/btc-signer/utils"
-import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
+import { equalBytes, NETWORK, TEST_NETWORK } from "@scure/btc-signer/utils"
+import {
+  addressToScriptPubKey,
+  scriptPubKeyToAddress,
+} from "../bitcoinUtils/bitcoinHelpers"
 import { BitcoinAddress } from "../bitcoinUtils/btcAddresses"
 import { SDK_NAME } from "../constants"
-import { broadcastRunesInstantSwapTransaction } from "../metaUtils/broadcastRunesInstantSwapTransaction"
+import {
+  broadcastRunesInstantSwapTransaction,
+  getRunes2BitcoinInstantSwapTransactionParams,
+  getRunes2RunesInstantSwapTransactionParams,
+} from "../metaUtils/broadcastRunesInstantSwapTransaction"
 import { broadcastRunesTransaction } from "../metaUtils/broadcastRunesTransaction"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
@@ -37,6 +44,7 @@ import {
   KnownChainId,
   KnownTokenId,
   _knownChainIdToErrorMessagePart,
+  getChainIdNetworkType,
 } from "../utils/types/knownIds"
 import { getBridgeFeeOutput } from "./bridgeFromBRC20"
 import { ChainId, SDKNumber, TokenId, isEVMAddress } from "./types"
@@ -47,6 +55,11 @@ import {
   BridgeFromRunesInput_signPsbtFn,
   RunesUTXOSpendable,
 } from "../metaUtils/types"
+import { Edict } from "../utils/RunesProtocol/RunesProtocol.types"
+import { entries } from "../utils/objectHelper"
+import { parseRuneId } from "../runesHelpers"
+import { getPlaceholderUTXO } from "../bitcoinUtils/selectUTXOs"
+import { getOutputDustThreshold } from "@c4/btc-utils"
 
 export interface BridgeFromRunesInput {
   fromChain: ChainId
@@ -464,20 +477,28 @@ async function bridgeFromRunes_toBitcoin(
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
   if (swapRoute?.via === "instantSwap") {
-    return broadcastRunesInstantSwapTransaction(
+    const { params, transformResponse } =
+      await getRunes2BitcoinInstantSwapTransactionParams(sdkContext, {
+        fromChain: info.fromChain,
+        extraOutputs: info.extraOutputs ?? [],
+      })
+
+    const resp = await broadcastRunesInstantSwapTransaction(
       sdkContext,
       {
         ...info,
         toAddressScriptPubKey: info.toAddressScriptPubKey,
         bridgeFeeOutput,
-        extraOutputs: info.extraOutputs ?? [],
         swapRoute,
+        ...params,
       },
       {
         orderData: createdOrder,
         swapRoute,
       },
     )
+
+    return transformResponse(resp)
   }
 
   return broadcastRunesTransaction(
@@ -546,7 +567,37 @@ async function bridgeFromRunes_toMeta(
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
   if (swapRoute?.via === "instantSwap") {
     // TODO: implement instantSwap for Runes>BRC20
-    // TODO: implement instantSwap for Runes>Runes
+
+    if (
+      KnownChainId.isRunesChain(info.toChain) &&
+      KnownTokenId.isRunesToken(info.toToken)
+    ) {
+      const { params, transformResponse } =
+        await getRunes2RunesInstantSwapTransactionParams(sdkContext, {
+          toAddress: info.toAddress,
+          toAddressScriptPubKey: info.toAddressScriptPubKey,
+          extraOutputs: info.extraOutputs ?? [],
+        })
+
+      const resp = await broadcastRunesInstantSwapTransaction(
+        sdkContext,
+        {
+          ...info,
+          toChain: info.toChain as any,
+          toToken: info.toToken as any,
+          toAddressScriptPubKey: info.toAddressScriptPubKey,
+          bridgeFeeOutput,
+          swapRoute,
+          ...params,
+        },
+        {
+          orderData: createdOrder,
+          swapRoute,
+        },
+      )
+
+      return transformResponse(resp)
+    }
 
     throw new UnsupportedBridgeRouteError(
       info.fromChain,
