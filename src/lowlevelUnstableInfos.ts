@@ -210,28 +210,21 @@ export interface InstantSwapOrderData
   minimumAmountsToReceive: SDKNumber
 }
 export const encodeInstantSwapOrderData = async (
-  sdk: import("./BroSDK").BroSDK,
   stacksNetwork: KnownChainId.StacksChain,
   data: InstantSwapOrderData,
 ): Promise<undefined | Uint8Array> => {
-  const res = await _encodeInstantSwapOrderData(
-    getSDKContext(sdk),
-    stacksNetwork,
-    {
-      ...data,
-      minimumAmountsToReceive: BigNumber.from(data.minimumAmountsToReceive),
-    },
-  )
+  const res = await _encodeInstantSwapOrderData(stacksNetwork, {
+    ...data,
+    minimumAmountsToReceive: BigNumber.from(data.minimumAmountsToReceive),
+  })
   if (res == null) return
   return serializeCVBytes(res)
 }
 export const decodeInstantSwapOrderData = async (
-  sdk: import("./BroSDK").BroSDK,
   stacksNetwork: KnownChainId.StacksChain,
   data: Uint8Array,
 ): Promise<undefined | InstantSwapOrderData> => {
   const res = await _decodeInstantSwapOrderData(
-    getSDKContext(sdk),
     stacksNetwork,
     deserializeCV(data),
   )

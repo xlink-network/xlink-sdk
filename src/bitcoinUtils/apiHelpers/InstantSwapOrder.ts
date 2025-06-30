@@ -96,30 +96,25 @@ const instantSwapOrderSchema = tupleT({
 export interface InstantSwapOrderData {
   fromChain: KnownChainId.KnownChain
   fromAddress: Uint8Array
-  fromToken: KnownTokenId.KnownToken
+  fromToken: Uint8Array
 
   toChain: KnownChainId.KnownChain
   toAddress: Uint8Array
-  toToken: KnownTokenId.KnownToken
+  toToken: Uint8Array
 
   minimumAmountsToReceive: BigNumber
 }
 export const encodeInstantSwapOrderData = async (
-  ctx: SDKGlobalContext,
   stacksNetwork: KnownChainId.StacksChain,
   info: InstantSwapOrderData,
 ): Promise<undefined | ClarityValue> => {
-  const fromToken = await tokenIdToBuffer(ctx, info.fromChain, info.fromToken)
-  const toToken = await tokenIdToBuffer(ctx, info.toChain, info.toToken)
-  if (fromToken == null || toToken == null) return
-
   return instantSwapOrderSchema.encode({
     v: 0n,
     fc: getChainId(info.fromChain),
-    ft: fromToken,
+    ft: info.fromToken,
     fa: info.fromAddress,
     tc: getChainId(info.toChain),
-    tt: toToken,
+    tt: info.toToken,
     ta: info.toAddress,
     tn: numberToStacksContractNumber(info.minimumAmountsToReceive),
   })
@@ -130,7 +125,6 @@ export const encodeInstantSwapOrderData = async (
   }
 }
 export const decodeInstantSwapOrderData = async (
-  ctx: SDKGlobalContext,
   stacksNetwork: KnownChainId.StacksChain,
   data: ClarityValue,
 ): Promise<undefined | InstantSwapOrderData> => {
@@ -148,17 +142,13 @@ export const decodeInstantSwapOrderData = async (
   const toChain = getChain(res.tc)
   if (fromChain == null || toChain == null) return
 
-  const fromToken = await tokenIdFromBuffer(ctx, fromChain, res.ft)
-  const toToken = await tokenIdFromBuffer(ctx, toChain, res.tt)
-  if (fromToken == null || toToken == null) return
-
   return {
     fromChain,
     fromAddress: res.fa,
-    fromToken,
+    fromToken: res.ft,
     toChain,
     toAddress: res.ta,
-    toToken,
+    toToken: res.tt,
     minimumAmountsToReceive: BigNumber.from(res.tn),
   }
 

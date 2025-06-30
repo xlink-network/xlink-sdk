@@ -37,6 +37,7 @@ import {
 import { CreateBridgeOrderResult } from "./createBridgeOrderFromBitcoin"
 import { contractAssignedChainIdFromKnownChain } from "./crossContractDataMapping"
 import { StacksContractName } from "./stxContractAddresses"
+import { tokenIdToBuffer } from "../utils/tokenIdHelpers"
 
 export async function createBridgeOrderFromMeta(
   sdkContext: SDKGlobalContext,
@@ -423,20 +424,29 @@ async function createBridgeOrderFromMetaImpl(
       (KnownChainId.isBitcoinChain(info.toChain) ||
         KnownChainId.isRunesChain(info.toChain))
     ) {
-      const orderData = await encodeInstantSwapOrderData(
+      const fromToken = await tokenIdToBuffer(
         sdkContext,
-        transitStacksChain,
-        {
-          fromChain: info.fromChain,
-          fromAddress: info.fromAddressBuffer,
-          fromToken: info.fromToken,
-          toChain: info.toChain,
-          toAddress: info.toAddressBuffer,
-          toToken: info.toToken,
-          minimumAmountsToReceive: swapInfo.minimumAmountsToReceive,
-        },
+        info.fromChain,
+        info.fromToken,
       )
+      const toToken = await tokenIdToBuffer(
+        sdkContext,
+        info.toChain,
+        info.toToken,
+      )
+      if (fromToken == null || toToken == null) return
+
+      const orderData = await encodeInstantSwapOrderData(transitStacksChain, {
+        fromChain: info.fromChain,
+        fromAddress: info.fromAddressBuffer,
+        fromToken,
+        toChain: info.toChain,
+        toAddress: info.toAddressBuffer,
+        toToken,
+        minimumAmountsToReceive: swapInfo.minimumAmountsToReceive,
+      })
       if (orderData == null) return
+
       data = serializeCVBytes(orderData)
     }
   } else {
