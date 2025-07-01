@@ -21,11 +21,6 @@ import {
   toSDKNumberOrUndefined,
 } from "./sdkUtils/types"
 import { SDKGlobalContext } from "./sdkUtils/types.internal"
-import {
-  InstantSwapOrderData as _InstantSwapOrderData,
-  decodeInstantSwapOrderData as _decodeInstantSwapOrderData,
-  encodeInstantSwapOrderData as _encodeInstantSwapOrderData,
-} from "./bitcoinUtils/apiHelpers/InstantSwapOrder"
 import { BigNumber } from "./utils/BigNumber"
 import { deserializeCV, serializeCVBytes } from "@stacks/transactions"
 
@@ -83,8 +78,14 @@ export {
   composeTransferProphets,
 } from "./utils/feeRateHelpers"
 
+export {
+  createStacksToken,
+  createBRC20Token,
+  createRunesToken,
+  createEVMToken,
+} from "./utils/types/knownIds"
+
 export { addressFromBuffer, addressToBuffer } from "./utils/addressHelpers"
-export { tokenIdFromBuffer, tokenIdToBuffer } from "./utils/tokenIdHelpers"
 
 export { bridgeFromEVM_toLaunchpad } from "./sdkUtils/bridgeFromEVM"
 export { bridgeInfoFromEVM_toLaunchpad } from "./sdkUtils/bridgeInfoFromEVM"
@@ -206,6 +207,11 @@ export const metaTokenToStacksToken = async (
   return { stacksTokens: stacksTokens == null ? [] : [stacksTokens] }
 }
 
+import {
+  InstantSwapOrderData as _InstantSwapOrderData,
+  decodeInstantSwapOrderData as _decodeInstantSwapOrderData,
+  encodeInstantSwapOrderData as _encodeInstantSwapOrderData,
+} from "./bitcoinUtils/apiHelpers/InstantSwapOrder"
 export interface InstantSwapOrderData
   extends Omit<_InstantSwapOrderData, "minimumAmountsToReceive"> {
   minimumAmountsToReceive: SDKNumber
@@ -236,4 +242,23 @@ export const decodeInstantSwapOrderData = async (
       res.minimumAmountsToReceive,
     ),
   }
+}
+
+import {
+  tokenIdFromBuffer as _tokenIdFromBuffer,
+  tokenIdToBuffer as _tokenIdToBuffer,
+} from "./utils/tokenIdHelpers"
+export function tokenIdFromBuffer(
+  sdk: import("./BroSDK").BroSDK,
+  chain: KnownChainId.KnownChain,
+  buffer: Uint8Array,
+): Promise<undefined | KnownTokenId.KnownToken> {
+  return _tokenIdFromBuffer(getSDKContext(sdk), chain, buffer)
+}
+export function tokenIdToBuffer(
+  sdk: import("./BroSDK").BroSDK,
+  chain: KnownChainId.KnownChain,
+  token: KnownTokenId.KnownToken,
+): Promise<undefined | Uint8Array> {
+  return _tokenIdToBuffer(getSDKContext(sdk), chain, token)
 }
