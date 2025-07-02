@@ -7,7 +7,10 @@ import {
   EstimateBitcoinTransactionOutput,
 } from "../bitcoinUtils/broadcastBitcoinTransaction"
 import { BitcoinAddress } from "../bitcoinUtils/btcAddresses"
-import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
+import {
+  getInstantSwapFeeInfo,
+  isSupportedBitcoinRoute,
+} from "../bitcoinUtils/peggingHelpers"
 import { BridgeFromBitcoinInput_reselectSpendableUTXOs } from "../bitcoinUtils/types"
 import { SDK_NAME } from "../constants"
 import {
@@ -331,9 +334,25 @@ async function estimateFromBitcoin_toMeta(
       KnownChainId.isRunesChain(info.toChain) &&
       KnownTokenId.isRunesToken(info.toToken)
     ) {
+      const instantSwapFee = await getInstantSwapFeeInfo(sdkContext, {
+        fromChain: info.fromChain,
+        fromToken: info.fromToken,
+        toChain: info.toChain,
+        toToken: info.toToken,
+      })
+      if (instantSwapFee == null) {
+        throw new UnsupportedBridgeRouteError(
+          info.fromChain,
+          info.toChain,
+          info.fromToken,
+          info.toToken,
+        )
+      }
+
       const { params } = await getBitcoin2RunesInstantSwapTransactionParams(
         sdkContext,
         {
+          transferProphet: instantSwapFee,
           fromChain: info.fromChain,
           toChain: info.toChain,
           toAddress: info.toAddress,

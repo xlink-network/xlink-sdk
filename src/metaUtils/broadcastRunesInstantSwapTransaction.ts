@@ -29,9 +29,15 @@ import {
 import { entries } from "../utils/objectHelper"
 import { parseRuneId } from "../runesHelpers"
 import { Edict } from "../utils/RunesProtocol/RunesProtocol.types"
-import { getChainIdNetworkType, KnownChainId } from "../utils/types/knownIds"
+import {
+  getChainIdNetworkType,
+  KnownChainId,
+  KnownTokenId,
+} from "../utils/types/knownIds"
 import { NETWORK, TEST_NETWORK } from "@scure/btc-signer"
 import { scriptPubKeyToAddress } from "../bitcoinUtils/bitcoinHelpers"
+import { TransferProphet } from "../utils/types/TransferProphet"
+import { max } from "../utils/bigintHelpers"
 
 export interface BroadcastRunesInstantSwapTransactionResponse {
   txid: string
@@ -253,6 +259,7 @@ export type Runes2BitcoinInstantSwapTransactionParams = Pick<
 export async function getRunes2BitcoinInstantSwapTransactionParams(
   sdkContext: SDKGlobalContext,
   info: {
+    transferProphet: TransferProphet
     fromChain: KnownChainId.RunesChain
     extraOutputs: {
       address: BitcoinAddress
@@ -269,6 +276,15 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
     network: info.fromChain,
     amount: 546n,
   })
+
+  const bitcoinFeeAmount = BigNumber.sum(
+    info.transferProphet.fees
+      .filter(
+        (f): f is typeof f & { type: "fixed" } =>
+          f.type === "fixed" && f.token === KnownTokenId.Bitcoin.BTC,
+      )
+      .map(f => f.amount),
+  )
 
   const transformResponse = async (
     resp: BroadcastRunesInstantSwapTransactionResponse,
@@ -316,7 +332,10 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
           address: marketMakerPlaceholderUTXO.address,
           scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
         },
-        satsAmount: marketMakerPlaceholderUTXO.amount,
+        satsAmount: max([
+          marketMakerPlaceholderUTXO.amount,
+          bitcoinToSatoshi(bitcoinFeeAmount),
+        ]),
       },
       // extra outputs
       ...(info.extraOutputs ?? []),
@@ -340,6 +359,7 @@ export type Runes2RunesInstantSwapTransactionParams = Pick<
 export async function getRunes2RunesInstantSwapTransactionParams(
   sdkContext: SDKGlobalContext,
   info: {
+    transferProphet: TransferProphet
     fromChain: KnownChainId.RunesChain
     toAddress: string
     toAddressScriptPubKey: Uint8Array
@@ -358,6 +378,15 @@ export async function getRunes2RunesInstantSwapTransactionParams(
     network: info.fromChain,
     amount: 546n,
   })
+
+  const bitcoinFeeAmount = BigNumber.sum(
+    info.transferProphet.fees
+      .filter(
+        (f): f is typeof f & { type: "fixed" } =>
+          f.type === "fixed" && f.token === KnownTokenId.Bitcoin.BTC,
+      )
+      .map(f => f.amount),
+  )
 
   const transformResponse = async (
     resp: BroadcastRunesInstantSwapTransactionResponse,
@@ -400,7 +429,10 @@ export async function getRunes2RunesInstantSwapTransactionParams(
           address: marketMakerPlaceholderUTXO.address,
           scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
         },
-        satsAmount: marketMakerPlaceholderUTXO.amount,
+        satsAmount: max([
+          marketMakerPlaceholderUTXO.amount,
+          bitcoinToSatoshi(bitcoinFeeAmount),
+        ]),
       },
       // user receive rune tokens output
       {

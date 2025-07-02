@@ -10,11 +10,15 @@ import { UnsupportedBridgeRouteError } from "../utils/errors"
 import { encodeHex } from "../utils/hexHelpers"
 import { SwapRouteViaInstantSwap_WithMinimumAmountsToReceive_Public } from "../utils/SwapRouteHelpers"
 import { isNotNull } from "../utils/typeHelpers"
-import { getChainIdNetworkType, KnownChainId } from "../utils/types/knownIds"
+import {
+  getChainIdNetworkType,
+  KnownChainId,
+  KnownTokenId,
+} from "../utils/types/knownIds"
 import { broadcastRevealableTransaction } from "./apiHelpers/broadcastRevealableTransaction"
 import { createInstantSwapTx } from "./apiHelpers/createInstantSwapTx"
 import { InstantSwapOrder } from "./apiHelpers/InstantSwapOrder"
-import { scriptPubKeyToAddress } from "./bitcoinHelpers"
+import { bitcoinToSatoshi, scriptPubKeyToAddress } from "./bitcoinHelpers"
 import { EstimateBitcoinTransactionOutput } from "./broadcastBitcoinTransaction"
 import { BitcoinAddress, getBTCPegInAddress } from "./btcAddresses"
 import { createTransaction } from "./createTransaction"
@@ -29,6 +33,8 @@ import {
   SignPsbtInput_SigHash,
 } from "./types"
 import { getOutputDustThreshold } from "@c4/btc-utils"
+import { TransferProphet } from "../utils/types/TransferProphet"
+import { max } from "../utils/bigintHelpers"
 
 export interface BroadcastBitcoinInstantSwapTransactionResponse {
   txid: string
@@ -249,6 +255,7 @@ export type Bitcoin2RunesInstantSwapTransactionParams = Pick<
 export async function getBitcoin2RunesInstantSwapTransactionParams(
   sdkContext: SDKGlobalContext,
   info: {
+    transferProphet: TransferProphet
     fromChain: KnownChainId.BitcoinChain
     toChain: KnownChainId.RunesChain
     toAddress: string
@@ -268,6 +275,15 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
     network: info.fromChain,
     amount: 546n,
   })
+
+  const bitcoinFeeAmount = BigNumber.sum(
+    info.transferProphet.fees
+      .filter(
+        (f): f is typeof f & { type: "fixed" } =>
+          f.type === "fixed" && f.token === KnownTokenId.Bitcoin.BTC,
+      )
+      .map(f => f.amount),
+  )
 
   /**
    * Transaction Structure:
@@ -307,11 +323,10 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
           address: marketMakerPlaceholderUTXO.address,
           scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
         },
-        satsAmount: BigInt(
-          getOutputDustThreshold({
-            scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
-          }),
-        ),
+        satsAmount: max([
+          marketMakerPlaceholderUTXO.amount,
+          bitcoinToSatoshi(bitcoinFeeAmount),
+        ]),
       },
       // user receive runes output
       {

@@ -10,7 +10,10 @@ import {
 } from "../metaUtils/broadcastRunesInstantSwapTransaction"
 import { broadcastRunesTransaction } from "../metaUtils/broadcastRunesTransaction"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
-import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
+import {
+  getInstantSwapFeeInfo,
+  isSupportedRunesRoute,
+} from "../metaUtils/peggingHelpers"
 import {
   BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
   BridgeFromRunesInput_sendTransactionFn,
@@ -468,8 +471,24 @@ async function bridgeFromRunes_toBitcoin(
   const bridgeFeeOutput = await getBridgeFeeOutput(sdkContext, info)
 
   if (swapRoute?.via === "instantSwap") {
+    const instantSwapFee = await getInstantSwapFeeInfo(sdkContext, {
+      fromChain: info.fromChain,
+      fromToken: info.fromToken,
+      toChain: info.toChain,
+      toToken: info.toToken,
+    })
+    if (instantSwapFee == null) {
+      throw new UnsupportedBridgeRouteError(
+        info.fromChain,
+        info.toChain,
+        info.fromToken,
+        info.toToken,
+      )
+    }
+
     const { params, transformResponse } =
       await getRunes2BitcoinInstantSwapTransactionParams(sdkContext, {
+        transferProphet: instantSwapFee,
         fromChain: info.fromChain,
         extraOutputs: info.extraOutputs ?? [],
       })
@@ -563,8 +582,24 @@ async function bridgeFromRunes_toMeta(
       KnownChainId.isRunesChain(info.toChain) &&
       KnownTokenId.isRunesToken(info.toToken)
     ) {
+      const instantSwapFee = await getInstantSwapFeeInfo(sdkContext, {
+        fromChain: info.fromChain,
+        fromToken: info.fromToken,
+        toChain: info.toChain,
+        toToken: info.toToken,
+      })
+      if (instantSwapFee == null) {
+        throw new UnsupportedBridgeRouteError(
+          info.fromChain,
+          info.toChain,
+          info.fromToken,
+          info.toToken,
+        )
+      }
+
       const { params, transformResponse } =
         await getRunes2RunesInstantSwapTransactionParams(sdkContext, {
+          transferProphet: instantSwapFee,
           fromChain: info.fromChain,
           toAddress: info.toAddress,
           toAddressScriptPubKey: info.toAddressScriptPubKey,
