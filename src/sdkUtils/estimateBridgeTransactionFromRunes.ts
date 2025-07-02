@@ -447,6 +447,7 @@ async function estimateFromRunes_toMeta(
       const { params } = await getRunes2RunesInstantSwapTransactionParams(
         sdkContext,
         {
+          fromChain: info.fromChain,
           toAddress: info.toAddress,
           toAddressScriptPubKey: info.toAddressScriptPubKey,
           extraOutputs: info.extraOutputs ?? [],

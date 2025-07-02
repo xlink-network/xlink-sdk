@@ -1,9 +1,6 @@
 import * as btc from "@scure/btc-signer"
-import { equalBytes, NETWORK, TEST_NETWORK } from "@scure/btc-signer/utils"
-import {
-  addressToScriptPubKey,
-  scriptPubKeyToAddress,
-} from "../bitcoinUtils/bitcoinHelpers"
+import { equalBytes } from "@scure/btc-signer/utils"
+import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
 import { BitcoinAddress } from "../bitcoinUtils/btcAddresses"
 import { SDK_NAME } from "../constants"
 import {
@@ -14,13 +11,19 @@ import {
 import { broadcastRunesTransaction } from "../metaUtils/broadcastRunesTransaction"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import { isSupportedRunesRoute } from "../metaUtils/peggingHelpers"
+import {
+  BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
+  BridgeFromRunesInput_sendTransactionFn,
+  BridgeFromRunesInput_signPsbtFn,
+  RunesUTXOSpendable,
+} from "../metaUtils/types"
 import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import {
   createBridgeOrder_MetaToBitcoin,
   createBridgeOrder_MetaToEVM,
   createBridgeOrder_MetaToMeta,
-  createBridgeOrder_MetaToStacks,
   createBridgeOrder_MetaToSolana,
+  createBridgeOrder_MetaToStacks,
   createBridgeOrder_MetaToTron,
 } from "../stacksUtils/createBridgeOrderFromMeta"
 import { BigNumber } from "../utils/BigNumber"
@@ -29,8 +32,8 @@ import {
   KnownRoute_FromRunes_ToBitcoin,
   KnownRoute_FromRunes_ToEVM,
   KnownRoute_FromRunes_ToRunes,
-  KnownRoute_FromRunes_ToStacks,
   KnownRoute_FromRunes_ToSolana,
+  KnownRoute_FromRunes_ToStacks,
   KnownRoute_FromRunes_ToTron,
   checkRouteValid,
 } from "../utils/buildSupportedRoutes"
@@ -44,22 +47,10 @@ import {
   KnownChainId,
   KnownTokenId,
   _knownChainIdToErrorMessagePart,
-  getChainIdNetworkType,
 } from "../utils/types/knownIds"
 import { getBridgeFeeOutput } from "./bridgeFromBRC20"
 import { ChainId, SDKNumber, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import {
-  BridgeFromRunesInput_reselectSpendableNetworkFeeUTXOs,
-  BridgeFromRunesInput_sendTransactionFn,
-  BridgeFromRunesInput_signPsbtFn,
-  RunesUTXOSpendable,
-} from "../metaUtils/types"
-import { Edict } from "../utils/RunesProtocol/RunesProtocol.types"
-import { entries } from "../utils/objectHelper"
-import { parseRuneId } from "../runesHelpers"
-import { getPlaceholderUTXO } from "../bitcoinUtils/selectUTXOs"
-import { getOutputDustThreshold } from "@c4/btc-utils"
 
 export interface BridgeFromRunesInput {
   fromChain: ChainId
@@ -574,6 +565,7 @@ async function bridgeFromRunes_toMeta(
     ) {
       const { params, transformResponse } =
         await getRunes2RunesInstantSwapTransactionParams(sdkContext, {
+          fromChain: info.fromChain,
           toAddress: info.toAddress,
           toAddressScriptPubKey: info.toAddressScriptPubKey,
           extraOutputs: info.extraOutputs ?? [],

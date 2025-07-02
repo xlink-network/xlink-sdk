@@ -265,7 +265,10 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
     resp: BroadcastRunesInstantSwapTransactionResponse,
   ) => Promise<BroadcastRunesInstantSwapTransactionResponse>
 }> {
-  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({ amount: 546n })
+  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({
+    network: info.fromChain,
+    amount: 546n,
+  })
 
   const transformResponse = async (
     resp: BroadcastRunesInstantSwapTransactionResponse,
@@ -283,14 +286,13 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
    *   * ...USER bitcoin input (SIGHASH_NONE | SIGHASH_ANYONECANPAY)
    *   * MARKET MAKER bitcoin input PLACEHOLDER
    * outputs:
-   *   * USER runes change (sealed)
+   *   * USER runes change (sealed) // if runestone invalid, the first output position can insure user still have the runes funds
    *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
-   *   * bridge fee (optional)
-   *   * MARKET MAKER receive rune tokens PLACEHOLDER // a.k.a. peg-in rune token output
+   *   * MARKET MAKER receive rune tokens PLACEHOLDER // a.k.a. peg-in token amount output
+   *   * MARKET MAKER bitcoin change PLACEHOLDER + bridge fee
    *   * ...extra outputs (optional)
    *   * USER bitcoin change + receive bitcoin output
    *   * runestone
-   *   * MARKET MAKER bitcoin change PLACEHOLDER
    */
   const params: Runes2BitcoinInstantSwapTransactionParams = {
     pinnedInputs: [],
@@ -300,20 +302,24 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
     ],
     pinnedOutputs: [],
     appendOutputs: [
-      ...(info.extraOutputs ?? []),
-      // market maker bitcoin change output placeholder
+      // market maker receive rune tokens output placeholder
       {
         address: {
-          address: scriptPubKeyToAddress(
-            getChainIdNetworkType(info.fromChain) === "mainnet"
-              ? NETWORK
-              : TEST_NETWORK,
-            marketMakerPlaceholderUTXO.scriptPubKey,
-          ),
+          address: marketMakerPlaceholderUTXO.address,
           scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
         },
-        satsAmount: 546n,
+        satsAmount: marketMakerPlaceholderUTXO.amount,
       },
+      // market maker bitcoin change output placeholder + bridge fee
+      {
+        address: {
+          address: marketMakerPlaceholderUTXO.address,
+          scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
+        },
+        satsAmount: marketMakerPlaceholderUTXO.amount,
+      },
+      // extra outputs
+      ...(info.extraOutputs ?? []),
     ],
   }
 
@@ -334,6 +340,7 @@ export type Runes2RunesInstantSwapTransactionParams = Pick<
 export async function getRunes2RunesInstantSwapTransactionParams(
   sdkContext: SDKGlobalContext,
   info: {
+    fromChain: KnownChainId.RunesChain
     toAddress: string
     toAddressScriptPubKey: Uint8Array
     extraOutputs: {
@@ -347,7 +354,10 @@ export async function getRunes2RunesInstantSwapTransactionParams(
     resp: BroadcastRunesInstantSwapTransactionResponse,
   ) => Promise<BroadcastRunesInstantSwapTransactionResponse>
 }> {
-  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({ amount: 546n })
+  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({
+    network: info.fromChain,
+    amount: 546n,
+  })
 
   const transformResponse = async (
     resp: BroadcastRunesInstantSwapTransactionResponse,
@@ -370,7 +380,7 @@ export async function getRunes2RunesInstantSwapTransactionParams(
    * outputs:
    *   * MARKET MAKER runes change PLACEHOLDER + receive rune tokens
    *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
-   *   * bridge fee (optional)
+   *   * MARKET MAKER receive bridge fee output PLACEHOLDER
    *   * USER receive rune tokens
    *   * ...extra outputs (optional)
    *   * USER bitcoin change
@@ -384,6 +394,15 @@ export async function getRunes2RunesInstantSwapTransactionParams(
     ],
     pinnedOutputs: [],
     appendOutputs: [
+      // market maker receive bridge fee output placeholder
+      {
+        address: {
+          address: marketMakerPlaceholderUTXO.address,
+          scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
+        },
+        satsAmount: marketMakerPlaceholderUTXO.amount,
+      },
+      // user receive rune tokens output
       {
         address: {
           address: info.toAddress,

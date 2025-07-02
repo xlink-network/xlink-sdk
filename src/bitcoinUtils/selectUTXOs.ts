@@ -1,10 +1,13 @@
+import { NETWORK, TEST_NETWORK } from "@scure/btc-signer"
 import { sortBy } from "../utils/arrayHelpers"
 import { MAX_BIGINT, sum } from "../utils/bigintHelpers"
 import { decodeHex } from "../utils/hexHelpers"
 import { isNotNull } from "../utils/typeHelpers"
+import { getChainIdNetworkType, KnownChainId } from "../utils/types/knownIds"
 import {
   excludeUTXOs,
   isSameUTXO,
+  scriptPubKeyToAddress,
   sumUTXO,
   UTXOBasic,
   UTXOConfirmed,
@@ -72,26 +75,55 @@ export const reselectSpendableUTXOsWithSafePadFactory = (
   }
 }
 
-export const getPlaceholderUTXO = (options: {
+export function getPlaceholderUTXO(options: { amount: bigint }): UTXOSpendable
+export function getPlaceholderUTXO(options: {
+  network:
+    | KnownChainId.BitcoinChain
+    | KnownChainId.BRC20Chain
+    | KnownChainId.RunesChain
   amount: bigint
-}): UTXOSpendable => {
+}): UTXOSpendable & {
+  address: string
+}
+export function getPlaceholderUTXO(options: {
+  network?:
+    | KnownChainId.BitcoinChain
+    | KnownChainId.BRC20Chain
+    | KnownChainId.RunesChain
+  amount: bigint
+}): UTXOSpendable & {
+  address?: string
+} {
+  /**
+   * OutScript.encode({
+   *   type: 'pkh',
+   *   hash: hash160(secp256k1.getPublicKey(
+   *     hex.decode('0000000000000000000000000000000000000000000000000000000000000001'),
+   *     false,
+   *   ))
+   * })
+   */
+  const scriptPubKey = decodeHex(
+    "76a91491b24bf9f5288532960ac687abb035127b1d28a588ac",
+  )
+
+  const address =
+    options.network == null
+      ? undefined
+      : scriptPubKeyToAddress(
+          getChainIdNetworkType(options.network) === "mainnet"
+            ? NETWORK
+            : TEST_NETWORK,
+          scriptPubKey,
+        )
+
   return {
     addressType: "p2pkh",
     txId: "0000000000000000000000000000000000000000000000000000000000000000",
     index: 0,
     amount: options.amount,
-    /**
-     * OutScript.encode({
-     *   type: 'pkh',
-     *   hash: hash160(secp256k1.getPublicKey(
-     *     hex.decode('0000000000000000000000000000000000000000000000000000000000000001'),
-     *     false,
-     *   ))
-     * })
-     */
-    scriptPubKey: decodeHex(
-      "76a91491b24bf9f5288532960ac687abb035127b1d28a588ac",
-    ),
+    address,
+    scriptPubKey,
     isPublicKeyCompressed: false,
   }
 }

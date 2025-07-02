@@ -22,6 +22,8 @@ import {
 } from "../utils/SwapRouteHelpers"
 import {
   IsSupportedFn,
+  KnownRoute,
+  KnownRoute_FromBitcoin_ToRunes,
   KnownRoute_FromBRC20_ToStacks,
   KnownRoute_FromRunes_ToBitcoin,
   KnownRoute_FromRunes_ToRunes,
@@ -367,9 +369,30 @@ const _getStacks2MetaFeeInfo = async (
 
 export const getInstantSwapFeeInfo = async (
   ctx: SDKGlobalContext,
-  route: KnownRoute_FromRunes_ToBitcoin | KnownRoute_FromRunes_ToRunes,
+  route: KnownRoute,
 ): Promise<undefined | TransferProphet> => {
-  return getInstantSwapFees(ctx, route)
+  if (
+    KnownChainId.isBitcoinChain(route.fromChain) &&
+    KnownChainId.isRunesChain(route.toChain)
+  ) {
+    return getInstantSwapFees(ctx, route as KnownRoute_FromBitcoin_ToRunes)
+  }
+
+  if (
+    KnownChainId.isRunesChain(route.fromChain) &&
+    KnownChainId.isBitcoinChain(route.toChain)
+  ) {
+    return getInstantSwapFees(ctx, route as KnownRoute_FromRunes_ToBitcoin)
+  }
+
+  if (
+    KnownChainId.isRunesChain(route.fromChain) &&
+    KnownChainId.isRunesChain(route.toChain)
+  ) {
+    return getInstantSwapFees(ctx, route as KnownRoute_FromRunes_ToRunes)
+  }
+
+  return
 }
 
 export const isSupportedBRC20Route: IsSupportedFn = async (ctx, route) => {

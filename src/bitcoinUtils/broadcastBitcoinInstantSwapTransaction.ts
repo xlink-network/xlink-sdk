@@ -264,26 +264,26 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
     resp: BroadcastBitcoinInstantSwapTransactionResponse,
   ) => Promise<BroadcastBitcoinInstantSwapTransactionResponse>
 }> {
-  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({ amount: 546n })
+  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({
+    network: info.fromChain,
+    amount: 546n,
+  })
 
   /**
    * Transaction Structure:
    *
    * inputs:
-   *   * USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY) // for swap
-   *   * ...USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY)
-   *   * USER bitcoin input (SIGHASH_SINGLE or SIGHASH_NONE | SIGHASH_ANYONECANPAY) // for network fee
+   *   * MARKET MAKER runes input PLACEHOLDER
+   *   * USER bitcoin input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY)
    *   * ...USER bitcoin input (SIGHASH_NONE | SIGHASH_ANYONECANPAY)
-   *   * MARKET MAKER bitcoin input PLACEHOLDER
    * outputs:
-   *   * USER runes change (sealed)
+   *   * MARKET MAKER runes change PLACEHOLDER
    *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
-   *   * bridge fee (optional)
-   *   * MARKET MAKER receive rune tokens PLACEHOLDER // a.k.a. peg-in rune token output
+   *   * MARKET MAKER receive bitcoin output PLACEHOLDER + bridge fee // a.k.a. peg-in token amount output
+   *   * USER receive runes output
    *   * ...extra outputs (optional)
-   *   * USER bitcoin change + receive bitcoin output
-   *   * runestone
-   *   * MARKET MAKER bitcoin change PLACEHOLDER
+   *   * USER bitcoin change
+   *   * runestone PLACEHOLDER
    */
   const params: Bitcoin2RunesInstantSwapTransactionParams = {
     pinnedInputs: [
@@ -294,18 +294,25 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
       // market maker runes change output placeholder
       {
         address: {
-          address: scriptPubKeyToAddress(
-            getChainIdNetworkType(info.fromChain) === "mainnet"
-              ? NETWORK
-              : TEST_NETWORK,
-            marketMakerPlaceholderUTXO.scriptPubKey,
-          ),
+          address: marketMakerPlaceholderUTXO.address,
           scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
         },
         satsAmount: marketMakerPlaceholderUTXO.amount,
       },
     ],
     appendOutputs: [
+      // market maker receive bitcoin output placeholder + bridge fee
+      {
+        address: {
+          address: marketMakerPlaceholderUTXO.address,
+          scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
+        },
+        satsAmount: BigInt(
+          getOutputDustThreshold({
+            scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
+          }),
+        ),
+      },
       // user receive runes output
       {
         address: {

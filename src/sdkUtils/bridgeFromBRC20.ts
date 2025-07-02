@@ -22,6 +22,7 @@ import {
   ReselectSpendableUTXOsFn_Public,
   reselectSpendableUTXOsFactory_public,
 } from "../bitcoinUtils/selectUTXOs"
+import { SignPsbtInput, SignPsbtInput_SigHash } from "../bitcoinUtils/types"
 import { BITCOIN_OUTPUT_MINIMUM_AMOUNT, SDK_NAME } from "../constants"
 import { getMetaPegInAddress } from "../metaUtils/btcAddresses"
 import {
@@ -35,8 +36,8 @@ import {
   createBridgeOrder_MetaToBitcoin,
   createBridgeOrder_MetaToEVM,
   createBridgeOrder_MetaToMeta,
-  createBridgeOrder_MetaToStacks,
   createBridgeOrder_MetaToSolana,
+  createBridgeOrder_MetaToStacks,
   createBridgeOrder_MetaToTron,
 } from "../stacksUtils/createBridgeOrderFromMeta"
 import { validateBridgeOrderFromMeta } from "../stacksUtils/validateBridgeOrderFromMeta"
@@ -48,8 +49,8 @@ import {
   KnownRoute_FromBRC20_ToBitcoin,
   KnownRoute_FromBRC20_ToEVM,
   KnownRoute_FromBRC20_ToRunes,
-  KnownRoute_FromBRC20_ToStacks,
   KnownRoute_FromBRC20_ToSolana,
+  KnownRoute_FromBRC20_ToStacks,
   KnownRoute_FromBRC20_ToTron,
   KnownRoute_FromMeta,
   checkRouteValid,
@@ -66,7 +67,6 @@ import {
   SwapRouteViaALEX_WithMinimumAmountsToReceive_Public,
   SwapRouteViaEVMDexAggregator,
   SwapRouteViaEVMDexAggregator_WithMinimumAmountsToReceive_Public,
-  SwapRoute_GoThroughStacks_WithMinimumAmountsToReceive_Public,
   SwapRoute_WithMinimumAmountsToReceive_Public,
   toCorrespondingStacksToken,
 } from "../utils/SwapRouteHelpers"
@@ -83,7 +83,6 @@ import {
 } from "../utils/types/TransferProphet"
 import { ChainId, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { SignPsbtInput, SignPsbtInput_SigHash } from "../bitcoinUtils/types"
 
 export type BridgeFromBRC20Input_reselectSpendableNetworkFeeUTXOs =
   ReselectSpendableUTXOsFn_Public
@@ -343,31 +342,7 @@ export async function getBridgeFeeOutput(
 
   let transferProphet: undefined | TransferProphet
   if (info.swapRoute?.via === "instantSwap") {
-    if (
-      !KnownChainId.isRunesChain(info.fromChain) ||
-      !KnownTokenId.isRunesToken(info.fromToken)
-    ) {
-      return null
-    }
-
-    if (
-      !(
-        (KnownChainId.isBitcoinChain(info.toChain) &&
-          KnownTokenId.isBitcoinToken(info.toToken)) ||
-        (KnownChainId.isRunesChain(info.toChain) &&
-          KnownTokenId.isRunesToken(info.toToken))
-      )
-    ) {
-      return null
-    }
-
-    transferProphet = await getInstantSwapFeeInfo(sdkContext, {
-      ...info,
-      fromChain: info.fromChain,
-      fromToken: info.fromToken,
-      toChain: info.toChain as KnownChainId.BitcoinChain,
-      toToken: info.toToken as KnownTokenId.BitcoinToken,
-    })
+    transferProphet = await getInstantSwapFeeInfo(sdkContext, info)
   } else {
     const transitStacksChain =
       getChainIdNetworkType(info.fromChain) === "mainnet"
