@@ -1,15 +1,16 @@
 import * as btc from "@scure/btc-signer"
 import { equalBytes } from "@scure/btc-signer/utils"
 import { addressToScriptPubKey } from "../bitcoinUtils/bitcoinHelpers"
+import {
+  broadcastBitcoinInstantSwapTransaction,
+  getBitcoin2RunesInstantSwapTransactionParams,
+} from "../bitcoinUtils/broadcastBitcoinInstantSwapTransaction"
 import { broadcastBitcoinTransaction } from "../bitcoinUtils/broadcastBitcoinTransaction"
 import {
   BitcoinAddress,
   getBTCPegInAddress,
 } from "../bitcoinUtils/btcAddresses"
-import {
-  getInstantSwapFeeInfo,
-  isSupportedBitcoinRoute,
-} from "../bitcoinUtils/peggingHelpers"
+import { isSupportedBitcoinRoute } from "../bitcoinUtils/peggingHelpers"
 import {
   BridgeFromBitcoinInput_reselectSpendableUTXOs,
   BridgeFromBitcoinInput_sendTransactionFn,
@@ -20,8 +21,8 @@ import { getStacksTokenContractInfo } from "../stacksUtils/contractHelpers"
 import {
   createBridgeOrder_BitcoinToEVM,
   createBridgeOrder_BitcoinToMeta,
-  createBridgeOrder_BitcoinToStacks,
   createBridgeOrder_BitcoinToSolana,
+  createBridgeOrder_BitcoinToStacks,
   createBridgeOrder_BitcoinToTron,
 } from "../stacksUtils/createBridgeOrderFromBitcoin"
 import { BigNumber } from "../utils/BigNumber"
@@ -29,8 +30,8 @@ import {
   KnownRoute_FromBitcoin_ToBRC20,
   KnownRoute_FromBitcoin_ToEVM,
   KnownRoute_FromBitcoin_ToRunes,
-  KnownRoute_FromBitcoin_ToStacks,
   KnownRoute_FromBitcoin_ToSolana,
+  KnownRoute_FromBitcoin_ToStacks,
   KnownRoute_FromBitcoin_ToTron,
   checkRouteValid,
 } from "../utils/buildSupportedRoutes"
@@ -47,10 +48,6 @@ import {
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import {
-  broadcastBitcoinInstantSwapTransaction,
-  getBitcoin2RunesInstantSwapTransactionParams,
-} from "../bitcoinUtils/broadcastBitcoinInstantSwapTransaction"
 
 export interface BridgeFromBitcoinInput {
   fromChain: ChainId
@@ -438,25 +435,10 @@ async function bridgeFromBitcoin_toMeta(
       KnownChainId.isRunesChain(info.toChain) &&
       KnownTokenId.isRunesToken(info.toToken)
     ) {
-      const instantSwapFee = await getInstantSwapFeeInfo(sdkContext, {
-        fromChain: info.fromChain,
-        fromToken: info.fromToken,
-        toChain: info.toChain,
-        toToken: info.toToken,
-      })
-      if (instantSwapFee == null) {
-        throw new UnsupportedBridgeRouteError(
-          info.fromChain,
-          info.toChain,
-          info.fromToken,
-          info.toToken,
-        )
-      }
-
       const { params, transformResponse } =
         await getBitcoin2RunesInstantSwapTransactionParams(sdkContext, {
-          transferProphet: instantSwapFee,
           fromChain: info.fromChain,
+          fromAmount: BigNumber.from(info.amount),
           toChain: info.toChain,
           toAddress: info.toAddress,
           toAddressScriptPubKey: info.toAddressScriptPubKey,

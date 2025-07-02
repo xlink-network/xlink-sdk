@@ -34,7 +34,7 @@ import {
 } from "./types"
 import { getOutputDustThreshold } from "@c4/btc-utils"
 import { TransferProphet } from "../utils/types/TransferProphet"
-import { max } from "../utils/bigintHelpers"
+import { max, sum } from "../utils/bigintHelpers"
 
 export interface BroadcastBitcoinInstantSwapTransactionResponse {
   txid: string
@@ -255,8 +255,8 @@ export type Bitcoin2RunesInstantSwapTransactionParams = Pick<
 export async function getBitcoin2RunesInstantSwapTransactionParams(
   sdkContext: SDKGlobalContext,
   info: {
-    transferProphet: TransferProphet
     fromChain: KnownChainId.BitcoinChain
+    fromAmount: BigNumber
     toChain: KnownChainId.RunesChain
     toAddress: string
     toAddressScriptPubKey: Uint8Array
@@ -276,15 +276,6 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
     amount: 546n,
   })
 
-  const bitcoinFeeAmount = BigNumber.sum(
-    info.transferProphet.fees
-      .filter(
-        (f): f is typeof f & { type: "fixed" } =>
-          f.type === "fixed" && f.token === KnownTokenId.Bitcoin.BTC,
-      )
-      .map(f => f.amount),
-  )
-
   /**
    * Transaction Structure:
    *
@@ -295,7 +286,7 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
    * outputs:
    *   * MARKET MAKER runes change PLACEHOLDER
    *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
-   *   * MARKET MAKER bitcoin change output PLACEHOLDER + bridge fee
+   *   * MARKET MAKER receive bitcoin output // a.k.a. peg-in amount
    *   * USER receive runes output
    *   * ...extra outputs (optional)
    *   * USER bitcoin change
@@ -317,7 +308,7 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
       },
     ],
     appendOutputs: [
-      // market maker bitcoin change output placeholder + bridge fee
+      // MARKET MAKER receive bitcoin output
       {
         address: {
           address: marketMakerPlaceholderUTXO.address,
@@ -325,7 +316,7 @@ export async function getBitcoin2RunesInstantSwapTransactionParams(
         },
         satsAmount: max([
           marketMakerPlaceholderUTXO.amount,
-          bitcoinToSatoshi(bitcoinFeeAmount),
+          bitcoinToSatoshi(info.fromAmount),
         ]),
       },
       // user receive runes output
