@@ -409,7 +409,7 @@ export async function getRunes2RunesInstantSwapTransactionParams(
    * outputs:
    *   * MARKET MAKER runes change PLACEHOLDER + receive rune tokens
    *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
-   *   * MARKET MAKER receive bridge fee output PLACEHOLDER
+   *   * MARKET MAKER receive bridge fee output
    *   * USER receive rune tokens
    *   * ...extra outputs (optional)
    *   * USER bitcoin change
@@ -423,7 +423,7 @@ export async function getRunes2RunesInstantSwapTransactionParams(
     ],
     pinnedOutputs: [],
     appendOutputs: [
-      // market maker receive bridge fee output placeholder
+      // market maker receive bridge fee output
       {
         address: {
           address: marketMakerPlaceholderUTXO.address,
