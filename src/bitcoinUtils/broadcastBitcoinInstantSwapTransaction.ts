@@ -30,6 +30,13 @@ import {
 } from "./types"
 import { getOutputDustThreshold } from "@c4/btc-utils"
 
+export interface BroadcastBitcoinInstantSwapTransactionResponse {
+  txid: string
+  extraOutputs: {
+    index: number
+    satsAmount: bigint
+  }[]
+}
 export async function broadcastBitcoinInstantSwapTransaction(
   sdkContext: SDKGlobalContext,
   info: Omit<
@@ -42,13 +49,7 @@ export async function broadcastBitcoinInstantSwapTransaction(
     orderData: CreateBridgeOrderResult
     swapRoute: SwapRouteViaInstantSwap_WithMinimumAmountsToReceive_Public
   },
-): Promise<{
-  txid: string
-  extraOutputs: {
-    index: number
-    satsAmount: bigint
-  }[]
-}> {
+): Promise<BroadcastBitcoinInstantSwapTransactionResponse> {
   const pegInAddress = getBTCPegInAddress(info.fromChain, info.toChain)
   if (pegInAddress == null) {
     throw new UnsupportedBridgeRouteError(
@@ -133,10 +134,6 @@ export async function broadcastBitcoinInstantSwapTransaction(
 type ConstructBitcoinInstantSwapTransactionInput =
   PrepareTransactionCommonInput & {
     toAddressScriptPubKey: Uint8Array
-    extraOutputs: {
-      address: BitcoinAddress
-      satsAmount: bigint
-    }[]
     signPsbt: BridgeFromBitcoinInput_signPsbtFn
     pegInAddress: BitcoinAddress
     swapRoute: SwapRouteViaInstantSwap_WithMinimumAmountsToReceive_Public
@@ -197,10 +194,6 @@ type EstimateBitcoinInstantSwapTransactionInput = Omit<
   PrepareTransactionCommonInput,
   "pegInAddress"
 > & {
-  extraOutputs: {
-    address: BitcoinAddress
-    satsAmount: bigint
-  }[]
   orderData: Uint8Array
   swapRoute:
     | undefined
@@ -237,71 +230,96 @@ export async function estimateBitcoinInstantSwapTransaction(
 type PrepareTransactionCommonInput = KnownRoute_FromBitcoin_ToRunes &
   Omit<
     PrepareBitcoinTransactionInput,
-    | "fromChain"
-    | "fromToken"
-    | "toChain"
-    | "toToken"
-    | "hardLinkageOutput"
-    | "pinnedInputs"
-    | "pinnedOutputs"
-    | "appendOutputs"
-  > & {
-    extraOutputs: {
-      address: BitcoinAddress
-      satsAmount: bigint
-    }[]
-  }
+    "fromChain" | "fromToken" | "toChain" | "toToken" | "hardLinkageOutput"
+  >
 async function prepareTransactionCommon(
   sdkContext: SDKGlobalContext,
   info: PrepareTransactionCommonInput,
 ): ReturnType<typeof prepareBitcoinTransaction> {
-  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({ amount: 546n })
-
   return await prepareBitcoinTransaction(sdkContext, {
     ...info,
-    toChain: info.toChain as any,
-    toToken: info.toToken as any,
+    hardLinkageOutput: null,
+  })
+}
+
+export type Bitcoin2RunesInstantSwapTransactionParams = Pick<
+  ConstructBitcoinInstantSwapTransactionInput,
+  "pinnedInputs" | "pinnedOutputs" | "appendOutputs" | "opReturnScripts"
+>
+export async function getBitcoin2RunesInstantSwapTransactionParams(
+  sdkContext: SDKGlobalContext,
+  info: {
+    fromChain: KnownChainId.BitcoinChain
+    toChain: KnownChainId.RunesChain
+    toAddress: string
+    toAddressScriptPubKey: Uint8Array
+    extraOutputs: {
+      address: BitcoinAddress
+      satsAmount: bigint
+    }[]
+  },
+): Promise<{
+  params: Bitcoin2RunesInstantSwapTransactionParams
+  transformResponse: (
+    resp: BroadcastBitcoinInstantSwapTransactionResponse,
+  ) => Promise<BroadcastBitcoinInstantSwapTransactionResponse>
+}> {
+  const marketMakerPlaceholderUTXO = getPlaceholderUTXO({ amount: 546n })
+
+  /**
+   * Transaction Structure:
+   *
+   * inputs:
+   *   * USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY) // for swap
+   *   * ...USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY)
+   *   * USER bitcoin input (SIGHASH_SINGLE or SIGHASH_NONE | SIGHASH_ANYONECANPAY) // for network fee
+   *   * ...USER bitcoin input (SIGHASH_NONE | SIGHASH_ANYONECANPAY)
+   *   * MARKET MAKER bitcoin input PLACEHOLDER
+   * outputs:
+   *   * USER runes change (sealed)
+   *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
+   *   * bridge fee (optional)
+   *   * MARKET MAKER receive rune tokens PLACEHOLDER // a.k.a. peg-in rune token output
+   *   * ...extra outputs (optional)
+   *   * USER bitcoin change + receive bitcoin output
+   *   * runestone
+   *   * MARKET MAKER bitcoin change PLACEHOLDER
+   */
+  const params: Bitcoin2RunesInstantSwapTransactionParams = {
     pinnedInputs: [
       // market maker runes input placeholder
       marketMakerPlaceholderUTXO,
     ],
     pinnedOutputs: [
       // market maker runes change output placeholder
-      ...(!KnownChainId.isRunesChain(info.toChain)
-        ? []
-        : [
-            {
-              address: {
-                address: scriptPubKeyToAddress(
-                  getChainIdNetworkType(info.fromChain) === "mainnet"
-                    ? NETWORK
-                    : TEST_NETWORK,
-                  marketMakerPlaceholderUTXO.scriptPubKey,
-                ),
-                scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
-              },
-              satsAmount: marketMakerPlaceholderUTXO.amount,
-            },
-          ]),
+      {
+        address: {
+          address: scriptPubKeyToAddress(
+            getChainIdNetworkType(info.fromChain) === "mainnet"
+              ? NETWORK
+              : TEST_NETWORK,
+            marketMakerPlaceholderUTXO.scriptPubKey,
+          ),
+          scriptPubKey: marketMakerPlaceholderUTXO.scriptPubKey,
+        },
+        satsAmount: marketMakerPlaceholderUTXO.amount,
+      },
     ],
     appendOutputs: [
-      ...info.extraOutputs,
       // user receive runes output
-      ...(!KnownChainId.isRunesChain(info.toChain)
-        ? []
-        : [
-            {
-              address: {
-                address: info.toAddress,
-                scriptPubKey: info.toAddressScriptPubKey!,
-              },
-              satsAmount: BigInt(
-                getOutputDustThreshold({
-                  scriptPubKey: info.toAddressScriptPubKey!,
-                }),
-              ),
-            },
-          ]),
+      {
+        address: {
+          address: info.toAddress,
+          scriptPubKey: info.toAddressScriptPubKey,
+        },
+        satsAmount: BigInt(
+          getOutputDustThreshold({
+            scriptPubKey: info.toAddressScriptPubKey,
+          }),
+        ),
+      },
+      // extra outputs
+      ...info.extraOutputs,
     ],
     opReturnScripts: [
       // runestone placeholder output
@@ -315,6 +333,19 @@ async function prepareTransactionCommon(
           )
         : null,
     ].filter(isNotNull),
-    hardLinkageOutput: null,
-  })
+  }
+
+  const transformResponse = async (
+    resp: BroadcastBitcoinInstantSwapTransactionResponse,
+  ): Promise<BroadcastBitcoinInstantSwapTransactionResponse> => {
+    return {
+      ...resp,
+      extraOutputs: resp.extraOutputs.slice(1),
+    }
+  }
+
+  return {
+    params,
+    transformResponse,
+  }
 }

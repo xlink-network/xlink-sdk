@@ -1,4 +1,7 @@
-import { estimateBitcoinInstantSwapTransaction } from "../bitcoinUtils/broadcastBitcoinInstantSwapTransaction"
+import {
+  estimateBitcoinInstantSwapTransaction,
+  getBitcoin2RunesInstantSwapTransactionParams,
+} from "../bitcoinUtils/broadcastBitcoinInstantSwapTransaction"
 import {
   estimateBitcoinTransaction,
   EstimateBitcoinTransactionOutput,
@@ -328,14 +331,25 @@ async function estimateFromBitcoin_toMeta(
       KnownChainId.isRunesChain(info.toChain) &&
       KnownTokenId.isRunesToken(info.toToken)
     ) {
+      const { params } = await getBitcoin2RunesInstantSwapTransactionParams(
+        sdkContext,
+        {
+          fromChain: info.fromChain,
+          toChain: info.toChain,
+          toAddress: info.toAddress,
+          toAddressScriptPubKey: info.toAddressScriptPubKey,
+          extraOutputs: info.extraOutputs ?? [],
+        },
+      )
+
       return estimateBitcoinInstantSwapTransaction(sdkContext, {
         ...info,
         toChain: info.toChain,
         toToken: info.toToken,
         toAddressScriptPubKey: info.toAddressScriptPubKey,
         orderData: createdOrder.data,
-        extraOutputs: info.extraOutputs ?? [],
         swapRoute: info.swapRoute,
+        ...params,
       })
     }
     throw new UnsupportedBridgeRouteError(

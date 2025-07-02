@@ -274,7 +274,9 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
   }
 
   /**
-   *  * inputs:
+   * Transaction Structure:
+   *
+   * inputs:
    *   * USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY) // for swap
    *   * ...USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY)
    *   * USER bitcoin input (SIGHASH_SINGLE or SIGHASH_NONE | SIGHASH_ANYONECANPAY) // for network fee
@@ -284,7 +286,7 @@ export async function getRunes2BitcoinInstantSwapTransactionParams(
    *   * USER runes change (sealed)
    *   * peg-in order data (sealed) // this is the proof of user intent, should be sealed by user and not be tampered by the market maker
    *   * bridge fee (optional)
-   *   * MARKET MAKER receive rune tokens PLACEHOLDER // peg-in rune token output
+   *   * MARKET MAKER receive rune tokens PLACEHOLDER // a.k.a. peg-in rune token output
    *   * ...extra outputs (optional)
    *   * USER bitcoin change + receive bitcoin output
    *   * runestone
@@ -357,7 +359,9 @@ export async function getRunes2RunesInstantSwapTransactionParams(
   }
 
   /**
-   * * inputs:
+   * Transaction Structure:
+   *
+   * inputs:
    *   * USER runes input (SIGHASH_NONE | SIGHASH_ANYONECANPAY) // for swap
    *   * ...USER runes input (SIGHASH_SINGLE | SIGHASH_ANYONECANPAY)
    *   * USER bitcoin input (SIGHASH_SINGLE or SIGHASH_NONE | SIGHASH_ANYONECANPAY) // for network fee

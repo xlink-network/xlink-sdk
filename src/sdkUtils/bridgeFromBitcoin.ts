@@ -44,7 +44,10 @@ import {
 } from "../utils/types/knownIds"
 import { ChainId, SDKNumber, TokenId, isEVMAddress } from "./types"
 import { SDKGlobalContext } from "./types.internal"
-import { broadcastBitcoinInstantSwapTransaction } from "../bitcoinUtils/broadcastBitcoinInstantSwapTransaction"
+import {
+  broadcastBitcoinInstantSwapTransaction,
+  getBitcoin2RunesInstantSwapTransactionParams,
+} from "../bitcoinUtils/broadcastBitcoinInstantSwapTransaction"
 
 export interface BridgeFromBitcoinInput {
   fromChain: ChainId
@@ -432,21 +435,32 @@ async function bridgeFromBitcoin_toMeta(
       KnownChainId.isRunesChain(info.toChain) &&
       KnownTokenId.isRunesToken(info.toToken)
     ) {
-      return broadcastBitcoinInstantSwapTransaction(
+      const { params, transformResponse } =
+        await getBitcoin2RunesInstantSwapTransactionParams(sdkContext, {
+          fromChain: info.fromChain,
+          toChain: info.toChain,
+          toAddress: info.toAddress,
+          toAddressScriptPubKey: info.toAddressScriptPubKey,
+          extraOutputs: info.extraOutputs ?? [],
+        })
+
+      const resp = await broadcastBitcoinInstantSwapTransaction(
         sdkContext,
         {
           ...info,
           toChain: info.toChain,
           toToken: info.toToken,
           toAddressScriptPubKey: info.toAddressScriptPubKey,
-          extraOutputs: info.extraOutputs ?? [],
           swapRoute,
+          ...params,
         },
         {
           orderData: createdOrder,
           swapRoute,
         },
       )
+
+      return transformResponse(resp)
     }
 
     throw new UnsupportedBridgeRouteError(
