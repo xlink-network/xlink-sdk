@@ -6,9 +6,9 @@ import { Buffer } from 'buffer';
 import { BigNumber } from "../utils/BigNumber";
 import { numberFromSolanaContractNumber, numberToSolanaContractNumber } from "./contractHelpers";
 import { BridgeEndpoint } from "./idl/bridge_endpoint";
-import bridgeEndpointIdl from "./idl/bridge_endpoint.idl.json";
+import * as bridgeEndpointIdl from "./idl/bridge_endpoint.idl.json";
 import { BridgeRegistry } from "./idl/bridge_registry";
-import bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
+import * as bridgeRegistryIdl from "./idl/bridge_registry.idl.json";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import type { SDKNumber } from '../sdkUtils/types';
 

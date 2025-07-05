@@ -21,7 +21,6 @@
     "skipLibCheck": true,
     "lib": ["ES2023", "WebWorker"],
     "noEmit": true,
-    "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true
+    "resolveJsonModule": true
   }
 }

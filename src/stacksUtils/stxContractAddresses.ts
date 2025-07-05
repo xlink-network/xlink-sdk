@@ -201,7 +201,7 @@ export const stxContractAddresses = {
   },
 } satisfies Record<
   StacksContractName,
-  Record<typeof KnownChainId.Stacks.Mainnet | typeof KnownChainId.Stacks.Testnet, StacksContractAddress>
+  Record<KnownChainId.StacksChain, StacksContractAddress>
 >
 
 /**
