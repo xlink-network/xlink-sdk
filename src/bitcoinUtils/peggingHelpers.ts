@@ -230,40 +230,8 @@ const _getStacks2BtcFeeInfo = async (
   }
 
   const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
-  const specialFeeInfo = await getSpecialFeeDetailsForSwapRoute(ctx, route, {
     initialRoute: options.initialRoute,
     swapRoute: options.swapRoute,
-  })
-
-  if (ctx.debugLog) {
-    console.log("[getStacks2BtcFeeInfo/specialFeeInfo]", route, specialFeeInfo)
-  }
-
-  const feeDetails: NormalizedSpecialFeeDetails =
-    specialFeeInfo != null
-      ? await normalizeSpecialFeeDetails(ctx, specialFeeInfo, {
-          getFeeRate: () =>
-            executeReadonlyCallBro(
-              stacksContractCallInfo.contractName,
-              "get-peg-out-fee",
-              {},
-              stacksContractCallInfo.executeOptions,
-            ).then(numberFromStacksContractNumber),
-        })
-      : await props({
-          feeRate: executeReadonlyCallBro(
-            stacksContractCallInfo.contractName,
-            "get-peg-out-fee",
-            {},
-            stacksContractCallInfo.executeOptions,
-          ).then(numberFromStacksContractNumber),
-          minFeeAmount: executeReadonlyCallBro(
-            stacksContractCallInfo.contractName,
-            "get-peg-out-min-fee",
-            {},
-            stacksContractCallInfo.executeOptions,
-          ).then(numberFromStacksContractNumber),
-        })
   })
 
   if (ctx.debugLog) {
