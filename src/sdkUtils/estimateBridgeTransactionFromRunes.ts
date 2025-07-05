@@ -443,7 +443,7 @@ async function estimateFromRunes_toSolana(
   return estimateRunesTransaction(sdkContext, {
     ...info,
     orderData: createdOrder.data,
-    withHardLinkageOutput: true,
+    withHardLinkageOutput: false,
     bridgeFeeOutput,
     extraOutputs: info.extraOutputs ?? [],
   })
