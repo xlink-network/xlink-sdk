@@ -5,6 +5,7 @@ import {
   SDKGlobalContext,
   withGlobalContextCache,
 } from "../sdkUtils/types.internal"
+import { getSolanaSupportedRoutes } from "../solanaUtils/getSolanaSupportedRoutes"
 import {
   executeReadonlyCallBro,
   getStacksContractCallInfo,
@@ -12,6 +13,7 @@ import {
   numberFromStacksContractNumber,
 } from "../stacksUtils/contractHelpers"
 import { StacksContractName } from "../stacksUtils/stxContractAddresses"
+import { getTronSupportedRoutes } from "../tronUtils/getTronSupportedRoutes"
 import { BigNumber } from "../utils/BigNumber"
 import {
   IsSupportedFn,
@@ -381,6 +383,13 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
     )
   }
 
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+
+    // TODO: implement tron support
+    return false
+  }
+
   // btc -> btc
   if (KnownChainId.isBitcoinChain(toChain)) {
     return false
@@ -413,6 +422,38 @@ export const isSupportedBitcoinRoute: IsSupportedFn = async (ctx, route) => {
       toRoutes.some(
         route =>
           route.runesToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
+    )
+  }
+
+  // btc -> tron
+  if (KnownChainId.isTronChain(toChain)) {
+    if (!KnownTokenId.isTronToken(toToken)) return false
+
+    const toRoutes = await getTronSupportedRoutes(ctx, toChain)
+
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.tronToken === toToken &&
+          route.stacksToken === lastStepFromStacksToken,
+      )
+    )
+  }
+
+  // btc -> solana
+  if (KnownChainId.isSolanaChain(toChain)) {
+    if (!KnownTokenId.isSolanaToken(toToken)) return false
+
+    const toRoutes = await getSolanaSupportedRoutes(ctx, toChain)
+
+    return (
+      firstStepToStacksToken === KnownTokenId.Stacks.aBTC &&
+      toRoutes.some(
+        route =>
+          route.solanaToken === toToken &&
           route.stacksToken === lastStepFromStacksToken,
       )
     )
