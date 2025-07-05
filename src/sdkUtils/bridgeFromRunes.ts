@@ -297,13 +297,13 @@ export async function bridgeFromRunes(
         })
       }
     } else {
-      assertExclude(route.toChain, assertExclude.i<KnownChainId.RunesChain>())
+      assertExclude(route.toChain, assertExclude.i<KnownChainId.BitcoinChain>())
       checkNever(route)
     }
   } else {
-    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.EVMChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.StacksChain>())
+    assertExclude(route.fromChain, assertExclude.i<KnownChainId.BitcoinChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.BRC20Chain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.SolanaChain>())
     assertExclude(route.fromChain, assertExclude.i<KnownChainId.TronChain>())
