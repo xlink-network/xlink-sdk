@@ -1,4 +1,3 @@
-import type { Transaction } from "@solana/web3.js"
 import { encodeFunctionData, hexToBytes, toHex } from "viem"
 import { SDK_NAME } from "../bitcoinUtils/constants"
 import {
@@ -57,7 +56,7 @@ export type BridgeFromSolanaInput = {
   senderTokenAccount: string
   amount: SDKNumber
   sendTransaction: (tx: {
-    transaction: Transaction
+    serializedTransaction: Uint8Array
   }) => Promise<{
     signature: string
   }>
@@ -239,9 +238,12 @@ async function bridgeFromSolana_toStacks(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction
+  const serializedTransaction = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    serializedTransaction
   })
 
   return {
@@ -309,9 +311,12 @@ async function bridgeFromSolana_toBitcoin(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction
+  const serializedTransaction = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    serializedTransaction
   })
 
   return {
@@ -378,9 +383,12 @@ async function bridgeFromSolana_toEVM(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction
+  const serializedTransaction = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    serializedTransaction
   })
 
   return {
@@ -477,9 +485,12 @@ async function bridgeFromSolana_toMeta(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction
+  const serializedTransaction = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    serializedTransaction
   })
 
   return {
@@ -553,7 +564,12 @@ async function bridgeFromSolana_toSolana(
   //   data: decodeHex(functionData),
   //   recommendedGasLimit: toSDKNumberOrUndefined(estimated),
   // })
-  throw new Error("WIP")
+  throw new UnsupportedBridgeRouteError(
+    info.fromChain,
+    info.toChain,
+    info.fromToken,
+    info.toToken,
+  )
 }
 
 async function bridgeFromSolana_toTron(
@@ -564,5 +580,10 @@ async function bridgeFromSolana_toTron(
   > &
     KnownRoute_FromSolana_ToTron,
 ): Promise<BridgeFromSolanaOutput> {
-  throw new Error("WIP")
+  throw new UnsupportedBridgeRouteError(
+    info.fromChain,
+    info.toChain,
+    info.fromToken,
+    info.toToken,
+  )
 } 
