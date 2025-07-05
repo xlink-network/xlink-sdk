@@ -1,4 +1,3 @@
-import type { Transaction } from "@solana/web3.js"
 import { encodeFunctionData, hexToBytes, toHex } from "viem"
 import { SDK_NAME } from "../bitcoinUtils/constants"
 import {
@@ -52,12 +51,13 @@ export type BridgeFromSolanaInput = {
    */
   toAddressScriptPubKey?: Uint8Array
   /**
-   * The token account that holds the tokens to be bridged
+   * The token account that holds the tokens to be bridged.
+   * If not provided, it will be automatically derived using the associated token address.
    */
-  senderTokenAccount: string
+  senderTokenAccount?: string
   amount: SDKNumber
   sendTransaction: (tx: {
-    transaction: Transaction
+    transaction: Uint8Array
   }) => Promise<{
     signature: string
   }>
@@ -239,9 +239,12 @@ async function bridgeFromSolana_toStacks(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction to Uint8Array
+  const serializedTx = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    transaction: serializedTx
   })
 
   return {
@@ -309,9 +312,12 @@ async function bridgeFromSolana_toBitcoin(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction to Uint8Array
+  const serializedTx = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    transaction: serializedTx
   })
 
   return {
@@ -378,9 +384,12 @@ async function bridgeFromSolana_toEVM(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction to Uint8Array
+  const serializedTx = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    transaction: serializedTx
   })
 
   return {
@@ -477,9 +486,12 @@ async function bridgeFromSolana_toMeta(
     senderTokenAccount: info.senderTokenAccount
   })
 
+  // Serialize the transaction to Uint8Array
+  const serializedTx = tx.serialize({ requireAllSignatures: false })
+
   // Send the transaction
   const result = await info.sendTransaction({
-    transaction: tx
+    transaction: serializedTx
   })
 
   return {
@@ -553,7 +565,12 @@ async function bridgeFromSolana_toSolana(
   //   data: decodeHex(functionData),
   //   recommendedGasLimit: toSDKNumberOrUndefined(estimated),
   // })
-  throw new Error("WIP")
+  throw new UnsupportedBridgeRouteError(
+    info.fromChain,
+    info.toChain,
+    info.fromToken,
+    info.toToken,
+  )
 }
 
 async function bridgeFromSolana_toTron(
@@ -564,5 +581,10 @@ async function bridgeFromSolana_toTron(
   > &
     KnownRoute_FromSolana_ToTron,
 ): Promise<BridgeFromSolanaOutput> {
-  throw new Error("WIP")
+  throw new UnsupportedBridgeRouteError(
+    info.fromChain,
+    info.toChain,
+    info.fromToken,
+    info.toToken,
+  )
 } 

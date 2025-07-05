@@ -595,7 +595,7 @@ export const isSupportedEVMRoute: IsSupportedFn = async (ctx, route) => {
   if (KnownChainId.isSolanaChain(toChain)) {
     if (!KnownTokenId.isSolanaToken(toToken)) return false
 
-    // Waiting for backend support
+    // TODO: Waiting for backend support
     return false
     // const fromRoutes = await getEVMSupportedRoutes(ctx, fromChain)
     // const toRoutes = await getSolanaSupportedRoutes(ctx, toChain)

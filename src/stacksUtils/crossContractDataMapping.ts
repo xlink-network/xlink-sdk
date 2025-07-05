@@ -207,8 +207,8 @@ export function contractAssignedChainIdToKnownChain(
   assertExclude(resPossibilities, KnownChainId.Solana.Mainnet)
   assertExclude(resPossibilities, KnownChainId.Solana.Testnet)
 
-  // TBD
-  if (chainId === 999n) {
+  // Tron
+  if (chainId === 20n) {
     return [KnownChainId.Tron.Mainnet, KnownChainId.Tron.Testnet]
   }
   assertExclude(resPossibilities, KnownChainId.Tron.Mainnet)

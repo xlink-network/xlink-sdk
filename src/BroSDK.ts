@@ -121,14 +121,6 @@ import { SDKGlobalContext } from "./sdkUtils/types.internal"
 import { DumpableCache, getCacheInside } from "./utils/DumpableCache"
 import { isNotNull } from "./utils/typeHelpers"
 import { SwapRoute } from "./utils/SwapRouteHelpers"
-import {
-  tronTokenToCorrespondingStacksToken,
-  tronTokenFromCorrespondingStacksToken,
-} from "./tronUtils/peggingHelpers"
-import {
-  solanaTokenToCorrespondingStacksToken,
-  solanaTokenFromCorrespondingStacksToken,
-} from "./solanaUtils/peggingHelpers"
 import { isSupportedTronRoute } from "./tronUtils/peggingHelpers"
 import { isSupportedSolanaRoute } from "./solanaUtils/peggingHelpers"
 import { getSolanaSupportedRoutes } from "./solanaUtils/getSolanaSupportedRoutes"
@@ -226,6 +218,9 @@ export interface BroSDKOptions {
   debugLog?: boolean
   __experimental?: {
     backendAPI?: {
+      /**
+       * @internal - For internal testing only. Do not use in production.
+       */
       runtimeEnv?: "prod" | "dev"
     }
     btc?: {
@@ -1185,77 +1180,6 @@ export class BroSDK {
     return runesIdToRunesToken(this.sdkContext, chain, id)
   }
 
-  /**
-   * This function retrieves the Stacks token ID corresponding to a given Tron token on a specific Tron chain.
-   * It queries the list of supported Tron tokens for the specified chain and returns the corresponding Stacks token.
-   *
-   * @param chain - The Tron chain to search in (must be a Tron chain like `tron-mainnet` or `tron-testnet`).
-   * @param token - The Tron token ID to look up.
-   *
-   * @returns A promise that resolves with the corresponding Stacks token ID if found,
-   * or `undefined` if the token is not supported or the chain is invalid.
-   */
-  async tronTokenToStacksToken(
-    chain: ChainId,
-    token: KnownTokenId.TronToken,
-  ): Promise<undefined | KnownTokenId.StacksToken> {
-    if (!KnownChainId.isTronChain(chain)) return
-    return tronTokenToCorrespondingStacksToken(this.sdkContext, chain, token)
-  }
-
-  /**
-   * This function retrieves all Tron tokens corresponding to a given Stacks token on a specific Tron chain.
-   * It queries the list of supported Tron tokens for the specified chain and returns all matching Tron tokens.
-   *
-   * @param chain - The Tron chain to search in (must be a Tron chain like `tron-mainnet` or `tron-testnet`).
-   * @param token - The Stacks token ID to look up.
-   *
-   * @returns A promise that resolves with an array of corresponding Tron token IDs if found,
-   * or an empty array if no matches are found or the chain is invalid.
-   */
-  async stacksTokenToTronTokens(
-    chain: ChainId,
-    token: KnownTokenId.StacksToken,
-  ): Promise<KnownTokenId.TronToken[]> {
-    if (!KnownChainId.isTronChain(chain)) return []
-    return tronTokenFromCorrespondingStacksToken(this.sdkContext, chain, token)
-  }
-
-  /**
-   * This function retrieves the Stacks token ID corresponding to a given Solana token on a specific Solana chain.
-   * It queries the list of supported Solana tokens for the specified chain and returns the corresponding Stacks token.
-   *
-   * @param chain - The Solana chain to search in (must be a Solana chain like `solana-mainnet` or `solana-testnet`).
-   * @param token - The Solana token ID to look up.
-   *
-   * @returns A promise that resolves with the corresponding Stacks token ID if found,
-   * or `undefined` if the token is not supported or the chain is invalid.
-   */
-  async solanaTokenToStacksToken(
-    chain: ChainId,
-    token: KnownTokenId.SolanaToken,
-  ): Promise<undefined | KnownTokenId.StacksToken> {
-    if (!KnownChainId.isSolanaChain(chain)) return
-    return solanaTokenToCorrespondingStacksToken(this.sdkContext, chain, token)
-  }
-
-  /**
-   * This function retrieves all Solana tokens corresponding to a given Stacks token on a specific Solana chain.
-   * It queries the list of supported Solana tokens for the specified chain and returns all matching Solana tokens.
-   *
-   * @param chain - The Solana chain to search in (must be a Solana chain like `solana-mainnet` or `solana-testnet`).
-   * @param token - The Stacks token ID to look up.
-   *
-   * @returns A promise that resolves with an array of corresponding Solana token IDs if found,
-   * or an empty array if no matches are found or the chain is invalid.
-   */
-  async stacksTokenToSolanaTokens(
-    chain: ChainId,
-    token: KnownTokenId.StacksToken,
-  ): Promise<KnownTokenId.SolanaToken[]> {
-    if (!KnownChainId.isSolanaChain(chain)) return []
-    return solanaTokenFromCorrespondingStacksToken(this.sdkContext, chain, token)
-  }
 
   /**
    * Retrieves the `KnownTokenId.SolanaToken` associated with a given Solana token address

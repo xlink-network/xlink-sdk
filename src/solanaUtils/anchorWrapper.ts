@@ -25,7 +25,7 @@ export interface SendMessageWithTokenParams {
   amount: SDKNumber;
   payload: Uint8Array;
   sender: string;
-  senderTokenAccount: string;
+  senderTokenAccount?: string;
 }
 
 export class AnchorWrapper {
@@ -114,7 +114,11 @@ export class AnchorWrapper {
     } = params;
     const mint = new PublicKey(params.mint);
     const sender = new PublicKey(params.sender);
-    const senderTokenAccount = new PublicKey(params.senderTokenAccount);
+    
+    // Calculate associated token address if not provided
+    const senderTokenAccount = params.senderTokenAccount 
+      ? new PublicKey(params.senderTokenAccount)
+      : getAssociatedTokenAddressSync(mint, sender);
 
     console.log(`Using mint: ${mint.toString()}`);
     console.log(`Sender: ${sender.toString()}`);
