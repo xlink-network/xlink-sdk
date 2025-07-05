@@ -36,7 +36,7 @@ export interface SDKGlobalContext {
     detectedCache: SDKGlobalContextCache<"mainnet" | "testnet", KnownRoute[]>
   }
   backendAPI: {
-    runtimeEnv: "prod" | "dev" | "beta" | "next" | "preview" | "local"
+    runtimeEnv: "prod" | "dev" | string
   }
   stacks: {
     tokensCache?: SDKGlobalContextCache<
